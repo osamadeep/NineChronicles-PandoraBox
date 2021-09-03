@@ -247,6 +247,12 @@ namespace Nekoyume.UI
 
         public void ShopClick()
         {
+            Find<SystemPopup>().Show(
+                L10nManager.Localize("UI_MAINTENANCE"),
+                L10nManager.Localize("UI_MAINTENANCE_CONTENT"),
+                L10nManager.Localize("UI_OK"), false);
+            return;
+            
             if (!btnShop.IsUnlocked)
             {
                 btnShop.JingleTheCat();

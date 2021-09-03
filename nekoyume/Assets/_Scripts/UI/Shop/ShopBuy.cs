@@ -84,6 +84,7 @@ namespace Nekoyume.UI
 
         public override void Show(bool ignoreShowAnimation = false)
         {
+            return;
             AsyncShow();
         }
 
