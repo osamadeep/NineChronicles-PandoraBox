@@ -23,6 +23,7 @@ using Toggle = Nekoyume.UI.Module.Toggle;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Model.Mail;
     using UniRx;
 
     public class QuestPreparation : Widget
@@ -51,6 +52,17 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private GameObject equipSlotGlow = null;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private Button sweepButton = null;
+
+        [SerializeField]
+        private TextMeshProUGUI countText;
+
+        [SerializeField]
+        private Button fillButton = null;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private TextMeshProUGUI requiredPointText = null;
@@ -152,6 +164,10 @@ namespace Nekoyume.UI
             _stageId.Subscribe(SubscribeStage).AddTo(gameObject);
 
             questButton.OnClickAsObservable().Subscribe(_ => QuestClick(repeatToggle.isOn)).AddTo(gameObject);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            sweepButton.OnClickAsObservable().Subscribe(_ => QuestV2()).AddTo(gameObject);
+            fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Game.Event.OnRoomEnter.AddListener(b => Close());
 
@@ -239,6 +255,9 @@ namespace Nekoyume.UI
             _tempStats = _player.Model.Stats.Clone() as CharacterStats;
             inventory.SharedModel.UpdateEquipmentNotification();
             questButton.gameObject.SetActive(true);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            sweepButton.gameObject.SetActive(true);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -698,6 +717,73 @@ namespace Nekoyume.UI
             Find<LoadingScreen>().Close();
             Close(true);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void AvailableAP()
+        {
+            sweepButton.GetComponentInParent<Slider>().value = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
+        }
+        private void QuestV2()
+        {
+            int x = int.Parse(countText.text);
+            if (x == 0)
+                return;
+            Find<BottomMenu>().Close(true);
+            Find<LoadingScreen>().Show();
+
+            questButton.gameObject.SetActive(false);
+            sweepButton.gameObject.SetActive(false);
+
+            _player.StartRun();
+            ActionCamera.instance.ChaseX(_player.transform);
+            StartCoroutine(instant(x));
+        }
+
+        IEnumerator instant(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var costumes = _player.Costumes;
+
+                var equipments = equipmentSlots
+                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                    .Select(slot => (Equipment)slot.Item)
+                    .ToList();
+
+                var consumables = consumableSlots
+                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                    .Select(slot => (Consumable)slot.Item)
+                    .ToList();
+
+                _stage.isExitReserved = true;
+                _stage.repeatStage = false;
+                _stage.foodCount = consumables.Count;
+                ActionRenderHandler.Instance.Pending = true;
+                Game.Game.instance.ActionManager
+                    .HackAndSlash(
+                        costumes,
+                        equipments,
+                        consumables,
+                        _worldId,
+                        _stageId.Value
+                    )
+                    .Subscribe(
+                        _ =>
+                        {
+                            LocalLayerModifier.ModifyAvatarActionPoint(
+                                States.Instance.CurrentAvatarState.address, _requiredCost);
+                        }, e => ActionRenderHandler.BackToMain(false, e))
+                    .AddTo(this);
+
+                LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -5);
+
+                OneLinePopup.Push(MailType.System, "Pandora Box: Sending Battle Fight " + (i + 1) + "/" + count);
+
+                yield return new WaitForSeconds(2f);
+            }
+            OneLinePopup.Push(MailType.System, "Pandora Box: " + count + " Fights Sent, Please Hold ...");
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void SimulateBattle()
         {

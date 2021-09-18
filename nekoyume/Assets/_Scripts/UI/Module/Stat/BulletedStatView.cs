@@ -37,5 +37,24 @@ namespace Nekoyume.UI.Module
         {
             gameObject.SetActive(false);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void Show(StatMapEx statMapEx, bool isMainStat, Nekoyume.Model.Item.Equipment equipment)
+        {
+            if (statMapEx is null)
+            {
+                Hide();
+                return;
+            }
+
+            bulletMainImage.enabled = isMainStat;
+            bulletSubImage.enabled = !isMainStat;
+
+            if (isMainStat)
+                Show(statMapEx.StatType, statMapEx.ValueAsInt, statMapEx.AdditionalValueAsInt, equipment);
+            else
+                Show(statMapEx.StatType, statMapEx.TotalValueAsInt, 0, equipment);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

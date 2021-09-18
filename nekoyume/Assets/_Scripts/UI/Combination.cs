@@ -176,6 +176,14 @@ namespace Nekoyume.UI
             combinationPanel.submitButton.OnSubmitClick.Subscribe(_ => OnCombinationSubmit(combinationPanel))
                 .AddTo(gameObject);
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            for (int i = 0; i < 4; i++)
+            {
+                combinationPanel.submitButtonMax.OnSubmitClick.Subscribe(_ => OnCombinationSubmit(combinationPanel))
+        .AddTo(gameObject);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             combinationPanel.RequiredBlockIndexSubject.ObserveOnMainThread()
                 .Subscribe(ShowBlockIndex).AddTo(gameObject);
 
@@ -185,6 +193,18 @@ namespace Nekoyume.UI
                 var itemBase = elementalCombinationPanel.recipeCellView.ItemView.Model.ItemBase.Value;
                 StartCoroutine(CoCombineNPCAnimation(itemBase, elementalCombinationPanel.SubscribeOnClickSubmit));
             }).AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            for (int i = 0; i < 4; i++)
+            {
+                elementalCombinationPanel.submitButtonMax.OnSubmitClick.Subscribe(_ =>
+                {
+                    ActionCombinationEquipment(elementalCombinationPanel);
+                    var itemBase = elementalCombinationPanel.recipeCellView.ItemView.Model.ItemBase.Value;
+                    StartCoroutine(CoCombineNPCAnimation(itemBase, elementalCombinationPanel.SubscribeOnClickSubmit));
+                }).AddTo(gameObject);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             elementalCombinationPanel.RequiredBlockIndexSubject.ObserveOnMainThread()
                 .Subscribe(ShowBlockIndex).AddTo(gameObject);

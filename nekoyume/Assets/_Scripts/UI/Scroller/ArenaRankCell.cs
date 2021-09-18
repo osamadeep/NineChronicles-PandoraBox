@@ -66,6 +66,17 @@ namespace Nekoyume.UI.Scroller
         [SerializeField]
         private SubmitButton challengeButton = null;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private SubmitButton maxChallengeButton = null;
+
+        [SerializeField]
+        private GameObject paidMember = null;
+
+        [SerializeField]
+        private TextMeshProUGUI gainPointText = null;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private RectTransform _rectTransformCache;
         private bool _isCurrentUser;
         private readonly Subject<ArenaRankCell> _onClickAvatarInfo = new Subject<ArenaRankCell>();
@@ -117,6 +128,22 @@ namespace Nekoyume.UI.Scroller
                     _onClickChallenge.OnNext(this);
                 })
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            for (int i = 0; i < 5; i++)
+            //for (int i = 0; i < ArenaInfo.DailyChallengeCount; i++)
+            {
+                maxChallengeButton.OnSubmitClick
+               .ThrottleFirst(new TimeSpan(0, 0, 2))
+               .Subscribe(_ =>
+               {
+                   AudioController.PlayClick();
+                   Context.OnClickChallenge.OnNext(this);
+                   _onClickChallenge.OnNext(this);
+               })
+               .AddTo(gameObject);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Game.Event.OnUpdatePlayerEquip
                 .Where(_ => _isCurrentUser)
@@ -181,7 +208,50 @@ namespace Nekoyume.UI.Scroller
             UpdateRank(itemData.rank);
             nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
-            cpText.text = GetCP(ArenaInfo);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (nameText.text.Contains("Lambo") || nameText.text.Contains("Yoink") || nameText.text.Contains("AndrewLW")
+                || nameText.text.Contains("Wabbs") || nameText.text.Contains("BagOfKittens"))
+                paidMember.SetActive(true);
+            else
+                paidMember.SetActive(false);
+
+            int temp = CPHelper.GetCPV2(
+                        States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
+                        Game.Game.instance.TableSheets.CostumeStatSheet);
+            if (int.Parse(GetCP(ArenaInfo)) > temp + 10000)
+                cpText.text = "<color=red>" + GetCP(ArenaInfo) + "</color>";
+            else if (int.Parse(GetCP(ArenaInfo)) < temp - 10000)
+                cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
+            else
+                cpText.text = "<color=#FFA200>" + GetCP(ArenaInfo) + "</color>";
+
+
+            if (ArenaInfo.Score > currentAvatarArenaInfo.Score)
+            {
+                gainPointText.text = "<color=green>+60</color>";
+            }
+            else if (ArenaInfo.Score == currentAvatarArenaInfo.Score)
+            {
+                gainPointText.text = "<color=#FFA200>+15</color>";
+            }
+            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score)
+            {
+                gainPointText.text = "<color=#FFA200>+8</color>";
+            }
+            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 100)
+            {
+                gainPointText.text = "<color=#FFA200>+4</color>";
+            }
+            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 200)
+            {
+                gainPointText.text = "<color=#FFA200>+2</color>";
+            }
+            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 300)
+            {
+                gainPointText.text = "<color=#FFA200>+1</color>";
+            }
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             challengeCountTextContainer.SetActive(_isCurrentUser);
             challengeButton.gameObject.SetActive(!_isCurrentUser);
@@ -211,10 +281,16 @@ namespace Nekoyume.UI.Scroller
                 if (itemData.currentAvatarArenaInfo is null)
                 {
                     challengeButton.SetSubmittable(true);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    maxChallengeButton.SetSubmittable(true);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
                 else
                 {
                     challengeButton.SetSubmittable(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    maxChallengeButton.SetSubmittable(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
             }
 

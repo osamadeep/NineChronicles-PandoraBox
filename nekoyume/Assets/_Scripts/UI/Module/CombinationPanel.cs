@@ -37,6 +37,9 @@ namespace Nekoyume.UI.Module
         public Button cancelButton;
         public TextMeshProUGUI cancelButtonText;
         public SubmitWithCostButton submitButton;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public SubmitWithCostButton submitButtonMax;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         protected GameObject cellViewFrontVfx = null;

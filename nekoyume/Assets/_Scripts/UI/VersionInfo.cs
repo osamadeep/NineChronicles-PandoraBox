@@ -7,7 +7,7 @@ namespace Nekoyume.UI
 {
     public class VersionInfo : SystemInfoWidget
     {
-        public TextMeshProUGUI informationText;
+        public TextMeshProUGUI InformationText;
         private int _version;
         private long _blockIndex;
         private BlockHash _hash;
@@ -35,18 +35,19 @@ namespace Nekoyume.UI
         {
             _hash = hash;
             UpdateText();
+            
         }
 
         private void UpdateText()
-        {
-            const string format = "APV: {0} / #{1} / Hash: {2}";
+        {       
+            const string format = "PandoraBox {0} / #{1} / Hash: {2}";
             var hash = _hash.ToString();
             var text = string.Format(
                 format,
-                _version,
+                PandoraBox.PandoraBoxMaster.VersionId,
                 _blockIndex,
                 hash.Length >= 4 ? hash.Substring(0, 4) : "...");
-            informationText.text = text;
+            InformationText.text = text;
         }
     }
 }

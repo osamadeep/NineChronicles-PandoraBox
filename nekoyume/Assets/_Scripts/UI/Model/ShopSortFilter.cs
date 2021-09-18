@@ -5,5 +5,6 @@ namespace Nekoyume.UI.Model
         Class = 0,
         CP = 1,
         Price = 2,
+        Time = 3,
     }
 }

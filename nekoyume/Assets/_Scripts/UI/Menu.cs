@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using Nekoyume.Game.Character;
 using Nekoyume.State.Subjects;
 using UnityEngine.UI;
+using TMPro;
+using Nekoyume.Helper;
 
 namespace Nekoyume.UI
 {
@@ -75,6 +77,14 @@ namespace Nekoyume.UI
         public SpriteRenderer combinationSpriteRenderer;
         public SpriteRenderer hasSpriteRenderer;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private TextMeshProUGUI arenaRemains;
+
+        [SerializeField]
+        private TextMeshProUGUI dailyRewardTimer;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         protected override void Awake()
         {
             base.Awake();
@@ -91,6 +101,62 @@ namespace Nekoyume.UI
                 .Subscribe(tuple => GoToCombinationEquipmentRecipe(tuple.quest.RecipeId))
                 .AddTo(gameObject);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void OnEnable()
+        {
+            StartCoroutine(arenaRemainsTime());
+            StartCoroutine(dailyRewardTime());
+        }
+
+        IEnumerator arenaRemainsTime()
+        {
+
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
+                var weeklyArenaState = States.Instance.WeeklyArenaState;
+                long _resetIndex = weeklyArenaState.ResetIndex;
+                float value;
+
+                value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
+                var remainBlock = gameConfigState.DailyArenaInterval - value;
+                var time = Util.GetBlockToTime((int)remainBlock);
+                arenaRemains.text = time;
+                yield return new WaitForSeconds(10);
+            }
+        }
+
+        IEnumerator dailyRewardTime()
+        {
+            dailyRewardTimer.text = "";
+
+            while ((States.Instance.CurrentAvatarState is null))
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            //yield return new WaitForSeconds(5);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                float maxTime = States.Instance.GameConfigState.DailyRewardInterval;
+                var dailyState = States.Instance.CurrentAvatarState.dailyRewardReceivedIndex;
+
+
+                //long _resetIndex = weeklyArenaState.ResetIndex;
+                float value;
+
+                value = Game.Game.instance.Agent.BlockIndex - dailyState;
+                var remainBlock = gameConfigState.DailyRewardInterval - value;
+                var time = Util.GetBlockToTime((int)remainBlock);
+                dailyRewardTimer.text = time;
+                yield return new WaitForSeconds(10);
+            }
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
         private void HackAndSlash(int stageId)

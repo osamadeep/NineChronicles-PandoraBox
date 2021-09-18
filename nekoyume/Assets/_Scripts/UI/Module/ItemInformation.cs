@@ -173,7 +173,7 @@ namespace Nekoyume.UI.Module
                     if (!statMapEx.StatType.Equals(uniqueStatType))
                         continue;
 
-                    AddStat(statMapEx, true);
+                    AddStat(statMapEx, equipment, true);//|||| PANDORA CODE |||||
                     statCount++;
                 }
 
@@ -182,7 +182,7 @@ namespace Nekoyume.UI.Module
                     if (statMapEx.StatType.Equals(uniqueStatType))
                         continue;
 
-                    AddStat(statMapEx);
+                    AddStat(statMapEx, equipment);//|||| PANDORA CODE |||||
                     statCount++;
                 }
             }
@@ -289,6 +289,16 @@ namespace Nekoyume.UI.Module
                 throw new NotFoundComponentException<BulletedStatView>();
             statView.Show(model, isMainStat);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void AddStat(StatMapEx model, Equipment equipment, bool isMainStat = false)
+        {
+            var statView = GetDisabledStatView();
+            if (statView is null)
+                throw new NotFoundComponentException<BulletedStatView>();
+            statView.Show(model, isMainStat, equipment);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private BulletedStatView GetDisabledStatView()
         {

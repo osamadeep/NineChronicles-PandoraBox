@@ -292,6 +292,14 @@ namespace Nekoyume.State
                         digests.OrderByDescending(digest => digest.Price).ToList(),
                         shopItemsPerPage)
                 },
+                {
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    ShopSortFilter.Time,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.ExpiredBlockIndex).ToList(),
+                        shopItemsPerPage)
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                },
             };
         }
 

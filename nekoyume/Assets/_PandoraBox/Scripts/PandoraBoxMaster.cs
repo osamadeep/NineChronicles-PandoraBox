@@ -2,35 +2,18 @@ using UnityEngine;
 
 namespace PandoraBox
 {
-    public class PandoraBoxController : MonoBehaviour
+    public class PandoraBoxMaster : MonoBehaviour
     {
-        public static PandoraBoxController instance;
-
-        public static string supportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
-        public PB_Settings settingsButton;
+        public static PandoraBoxMaster Instance;
+        public static string VersionId = "v1.0.5";
+        public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
 
         private void Awake()
         {
-            if (instance == null)
+            if (Instance == null)
             {
-                instance = this;
+                Instance = this;
             }
-        }
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
-        public void ShowPBSettingsButton()
-        {
-            settingsButton.Show();
         }
     }
 }
