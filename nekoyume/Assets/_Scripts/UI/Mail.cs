@@ -18,6 +18,7 @@ using UnityEngine;
 namespace Nekoyume.UI
 {
     using UniRx;
+    using UnityEngine.UI;
 
     public class Mail : XTweenWidget, IMail
     {
@@ -34,6 +35,11 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private CategoryTabButton allButton = null;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private Button getAllButton = null;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
         [SerializeField]
         private CategoryTabButton workshopButton = null;
@@ -89,8 +95,38 @@ namespace Nekoyume.UI
                 .Subscribe(UpdateNotification)
                 .AddTo(gameObject);
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            getAllButton.OnClickAsObservable().Subscribe(_ => ReceiveAllMails()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             emptyText.text = L10nManager.Localize(emptyTextL10nKey);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void ReceiveAllMails()
+        {
+            MailBox.CleanUp();
+            //StartCoroutine(ReceiveAllMailsEnum());
+        }
+
+        System.Collections.IEnumerator ReceiveAllMailsEnum()
+        {
+            bool stillAvailable = true;
+            while (stillAvailable)
+            {
+                Button temp = scroll.transform.Find("Viewport/Contents/").GetChild(0).Find("Box/ButtonContainer/Button").GetComponent<Button>();
+                if (temp.gameObject.activeInHierarchy)
+                {
+                    temp.onClick.Invoke();
+                }
+                else
+                    stillAvailable = false;
+                yield return new WaitForSeconds(0.05f);
+            }
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         public override void Show(bool ignoreShowAnimation = false)
         {

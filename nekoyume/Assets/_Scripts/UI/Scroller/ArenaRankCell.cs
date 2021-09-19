@@ -236,17 +236,21 @@ namespace Nekoyume.UI.Scroller
             }
             else if (ArenaInfo.Score < currentAvatarArenaInfo.Score)
             {
-                gainPointText.text = "<color=#FFA200>+8</color>";
+                gainPointText.text = "<color=#FFA200>+15</color>";
             }
             else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 100)
             {
-                gainPointText.text = "<color=#FFA200>+4</color>";
+                gainPointText.text = "<color=#FFA200>+8</color>";
             }
             else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 200)
             {
-                gainPointText.text = "<color=#FFA200>+2</color>";
+                gainPointText.text = "<color=#FFA200>+4</color>";
             }
             else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 300)
+            {
+                gainPointText.text = "<color=#FFA200>+2</color>";
+            }
+            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 400)
             {
                 gainPointText.text = "<color=#FFA200>+1</color>";
             }

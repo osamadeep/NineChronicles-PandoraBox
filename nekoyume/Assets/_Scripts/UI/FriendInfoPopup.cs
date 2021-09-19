@@ -5,6 +5,7 @@ using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.UI.Model;
@@ -48,6 +49,20 @@ namespace Nekoyume.UI
         [SerializeField]
         private AvatarStats avatarStats = null;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private Button copyButton = null;
+
+        [SerializeField]
+        private TextMeshProUGUI blockText = null;
+
+        [SerializeField]
+        private TextMeshProUGUI dateText = null;
+
+        [SerializeField]
+        private TextMeshProUGUI versionText = null;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private CharacterStats _tempStats;
         private GameObject _cachedCharacterTitle;
         private Player _player;
@@ -64,6 +79,10 @@ namespace Nekoyume.UI
             blurButton.OnClickAsObservable()
                 .Subscribe(_ => Close())
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            copyButton.OnClickAsObservable().Subscribe(_ => CopyPlayerInfo()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Show(bool ignoreShowAnimation = false)
@@ -130,7 +149,29 @@ namespace Nekoyume.UI
 
             costumeSlots.SetPlayerCostumes(playerModel, ShowTooltip, null);
             equipmentSlots.SetPlayerEquipments(playerModel, ShowTooltip, null);
+
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            blockText.text = "Block #" + Game.Game.instance.Agent.BlockIndex.ToString();
+            dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
+            versionText.text = "APV: " + PandoraBox.PandoraBoxMaster.OriginalVersionId;
+            tempAvatarState = avatarState;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        AvatarState tempAvatarState;
+        void CopyPlayerInfo()
+        {
+            string playerInfo =
+                "Avatar Name   : " + tempAvatarState.NameWithHash + "\n" +
+                "Player Address: " + tempAvatarState.address + "\n" +
+                "Date & Time   : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
+                "Block         : #" + Game.Game.instance.Agent.BlockIndex.ToString();
+            ClipboardHelper.CopyToClipboard(playerInfo);
+            OneLinePopup.Push(MailType.System, "Pandora Box: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateStatViews()
         {

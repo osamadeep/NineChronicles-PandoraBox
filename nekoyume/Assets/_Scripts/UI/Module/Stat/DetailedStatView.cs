@@ -120,14 +120,14 @@ namespace Nekoyume.UI.Module
                         : $"{value:0.#\\%}";
                 case StatType.SPD:
                     return isSigned
-                        ? (value / 100f).ToString("+0.##;-0.##", CultureInfo.InvariantCulture) + GetMinMaxValues(equipment, value / 100, statType)
-                        : (value / 100f).ToString(CultureInfo.InvariantCulture) + GetMinMaxValues(equipment, value / 100, statType);
+                        ? (value / 100f).ToString("+0.##;-0.##", CultureInfo.InvariantCulture) + GetMinMaxValues(equipment, value / 100f, statType)
+                        : (value / 100f).ToString(CultureInfo.InvariantCulture) + GetMinMaxValues(equipment, value / 100f, statType);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(statType), statType, null);
             }
         }
 
-        string GetMinMaxValues(Nekoyume.Model.Item.Equipment equipment, int value, StatType statType)
+        string GetMinMaxValues(Nekoyume.Model.Item.Equipment equipment, float value, StatType statType)
         {
             CustomItem temp = GetItemData(equipment.Id);
             float minValue = 0, maxValue = 0;
@@ -180,20 +180,20 @@ namespace Nekoyume.UI.Module
             return $"<color=yellow><size=12>[{(int)(minValue)}-{(int)maxValue}]</size></color> {GetPercentage(minValue, maxValue, value)}";
         }
 
-        string GetPercentage(float min, float max, int value)
+        string GetPercentage(float min, float max, float value)
         {
             float per = (value - min) / (max - min);
             if (per < 0.4f)
             {
-                return $"<color=red><size=16>{String.Format("{0:##}%", per * 100)}</size></color>";
+                return $"<color=red><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
             }
             else if (per >= 0.4f && per < 0.7f)
             {
-                return $"<color=#FFA200><size=16>{String.Format("{0:##}%", per * 100)}</size></color>";
+                return $"<color=#FFA200><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
             }
             else
             {
-                return $"<color=green><size=16>{String.Format("{0:##}%", per * 100)}</size></color>";
+                return $"<color=green><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
             }
 
             //return ((value - min) / (max - min)).ToString();
