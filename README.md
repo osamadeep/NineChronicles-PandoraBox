@@ -1,4 +1,4 @@
-Nine Chronicles - Pandora Box MOD (Done by a player for the players)
+Pandora Box (Done by a player for the players)
 ===============
 [![Panorama Box](https://yt-embed.herokuapp.com/embed?v=LHelj7_av2w)](https://www.youtube.com/watch?v=LHelj7_av2w "Panorama Box")
 
