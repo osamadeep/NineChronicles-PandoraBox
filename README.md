@@ -1,171 +1,47 @@
-Nine Chronicles
+Nine Chronicles - Pandora Box MOD (Done by a player for the players)
 ===============
-![Nine Chronicles Banner][9c-banner]
-
-[![CircleCI][ci-badge]][ci]
-[![Discord][Discord-badge]][Discord]
-
-[Nine Chronicles][9c] is a fully open-sourced online RPG without servers — like Bitcoin or BitTorrent,
-the gamers and miners connect to each other to power a distributed game network.
-Set in a vast fantasy world, it is governed by [its players][Discord], and supported by a complex economy
-where supply and demand are the greatest currency.
-
-Decentralized infrastructure has created new possibilities for online gaming, where communities
-can become the actual owners of an online world. By fully open sourcing the repositories for
-Nine Chronicles, players and developers alike can use any part of the game, from the beautiful
-bespoke 2D assets to in-game logic and code.
-
-To learn more about the [codebase][9c-source-code-guide] and the [GraphQL API][9c-api-guide],
-visit [docs.nine-chronicles.com][9c-docs].
-
-[ci-badge]: https://circleci.com/gh/planetarium/nekoyume-unity.svg?style=svg&circle-token=ca79d4f6281fe60cdde55d0f1c3d97d561106bda
-[ci]: https://circleci.com/gh/planetarium/nekoyume-unity
-[Discord-badge]: https://img.shields.io/discord/539405872346955788.svg?color=7289da&logo=discord&logoColor=white
-[Discord]: https://discord.gg/planetarium
-[9c]: https://nine-chronicles.com
-[9c-docs]: https://docs.nine-chronicles.com
-[9c-api-guide]: https://docs.nine-chronicles.com/api-guide
-[9c-source-code-guide]: https://docs.nine-chronicles.com/source-code-guide
-[9c-banner]: docs/9c-banner.jpeg
+[![Panorama Box](https://yt-embed.herokuapp.com/embed?v=LHelj7_av2w)](https://www.youtube.com/watch?v=LHelj7_av2w "Panorama Box")
 
 
-### Dependency
- - [Unity Hub]
+### How to use Pandora Box MOD
+1 - download latest release from : https://github.com/osamadeep/NineChronicles-PandoraBox/releases <br>
+2 - Extract Windows.7z file <br>
+3 - make sure the original launcher is opened, (sometimes you need to close the original client too) <br>
+4 - open 9c.exe file thats in the folder you extracted in step 2 <br>
+5 - Enjoy!
+
+### What is Pandora Box MOD
+This mod offers some extra features for https://github.com/planetarium/NineChronicles client, those features is:
+- Keep your private key secure, this mod working only if your lancher is on, and it will request only your 2nd password
+- Run it side-by-side with your original instance, you can check market on 1st instance while you doing battles on this one
+- Compatable with Almost all new upcoming versions
+- Able to use certain or all AP in single level instantly
+- Able to simulate battle locally without spending AP or food, result will be 100% (exclude RNG) as normal one
+- Speed the simulation of fight (x10 time speed)
+- Able to fight arena 5 times for single target
+- Sorting items in shop by Time (listing time)
+- Craft or Combine items once (there is 4 slots, 1 click to fill it all in single selected item)
 
 
-### Installation
-
- 1. Install [Unity Hub]
- 1. Install Unity 2020.3.4f1 version
- 1. Clone repository
-    ```
-    git clone https://github.com/planetarium/NineChronicles.git
-    ```
- 1. Nagivate to the cloned directory and run the command:
-    ```
-    git config core.hooksPath hooks
-    git submodule update --init --recursive
-    ```
- 1. Run Unity and build project
-
-To launch Nine Chronicles from the Unity editor, please follow the [step-by-step guide][9c-unity-guide].
-
-[9c-unity-guide]: https://docs.nine-chronicles.com/unity-guide
-
-### Command Line Options
-
- - `--private-key`       : private key to use.
- - `--keystore-path`     : path to store private key.
- - `--host`              : host name.
- - `--port`              : port name.
- - `--no-miner`          : disable mining.
- - `--minimum-difficulty`: configure minimum mining difficulty accepted by the network.
- - `--peer`              : add peer. Multiple peers can be added with `--peer peerA peerB ... `.
- - `--ice-servers`       : TURN server information used for NAT traversal. Multiple servers can be added with `--ice-servers serverA serverB`.
- - `--genesis-block-path`: path of genesis block. Supports http(s) paths and uses `Assets/StreamingAssets/genesis-block` if not provided.
- - `--storage-path`      : path to store chain data.
- - `--storage-type`      : storage type name. Currently supports `RocksDBStore` (`--storage-type rocksdb`).
- - `--rpc-client`        : starts client mode that does not store chain data.
- - `--rpc-server-host`   : rpc server host name.
- - `--rpc-server-port`   : rpc server port name.
- - `--auto-play`         : automatically generate character and enter battle stage in the background.
- - `--console-sink`      : print logs on console.
- - `--development`       : run in development mode. Shows debugging UI and log level configuration.
-
-#### Using Command Line Options on Unity Editor
-
-To use the above command line options on Unity Editor or on build player, `Assets/StreamingAssets/clo.json` must be created. Below is an example:
-
-```
-{
-   "privateKey": "",
-   "host": "127.0.0.1",
-   "port": 5555,
-   "noMiner": true,
-   "peers": ["02ed49dbe0f2c34d9dff8335d6dd9097f7a3ef17dfb5f048382eebc7f451a50aa1,nekoyume1.koreacentral.cloudapp.azure.com,58598"]
-}
-```
-
-- `Assets/StreamingAssets/clo.json` is excluded from version control.
-  - `Assets/StreamingAssets/clo_nekoalpha_nominer.json` could be provided as a preset. To use this file, change the name to `clo.json`.
+### Consume all with less Time!
+with Pandora Box you are able now to fight certain stage for any number of tries, just send how much Action points you want to consume and the mod will send it instantly. please note that you need to send number can divided into 5, if you want to fight once send 5, if you want to fight 3 times then send 15 and so on.
+also there is build-in feature that you can simulate your battle without spend any AP , just fill how much level you are on now, and press Simulate button
+![Panorama Box](https://github.com/osamadeep/NineChronicles-PandoraBox/blob/development/nekoyume/Assets/_PandoraBox/Sprites/github/02.JPG?raw=true)
 
 
-### Command Line Build
+### Beat Em All!
+Tired to wait alot of time to consume all your arena points? now you are able to Spend all your 5 tries in single target, no more wait, all 5 tries will done and you wait once
+![Panorama Box](https://github.com/osamadeep/NineChronicles-PandoraBox/blob/development/nekoyume/githubImages/03.JPG?raw=true)
 
-```
-$ /UnityPath/Unity -quit -batchmode -projectPath=/path/to/nekoyume/ -executeMethod Editor.Builder.Build[All, MacOS, Windows, Linux, MacOSHeadless, WindowsHeadless, LinuxHeadless]
-```
+### Combine Like a King!
+if you have multiple characters, normally you switch and then craft 4 items on same time, no need to go back and do it again, click on MAX button and it will fill 4 slots with same items you are on
+![Panorama Box](https://github.com/osamadeep/NineChronicles-PandoraBox/blob/development/nekoyume/githubImages/04.JPG?raw=true)
 
-- Example
+### items Sniper!
+now you are able to know which item is new listed by filtering the items with TIME filter, you have advantage to check the new items if it worth to buy. Get it all!
+![Panorama Box](https://github.com/osamadeep/NineChronicles-PandoraBox/blob/development/nekoyume/githubImages/05.JPG?raw=true)
 
-```
-$ /Applications/Unity/Hub/Editor/2020.3.4f1/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath=~/planetarium/nekoyume-unity/nekoyume/ -executeMethod Editor.Builder.BuildAll
-```
+### More new features is coming. 
+feel free to discuss the current features or the new feature you would like to see in next version on official Discord like here: https://discord.gg/planetarium
 
-### Editor Build
-
-Use the `Build` menu on the Unity Editor.
-
-### Peer Configuration
-
-#### Reading Order
-
-Peer options for network communication is read in the following order:
-
-1. Command Line parameter upon execution (`--peer`)
-2. (On Windows) `peers.dat` in `%USERPROFILE%\AppData\LocalLow\Planetarium`
-3. `Assets\Resources\Config\peers.txt` inside NineChronicles project.
-
-Since the current project doesn't include option 3, the game will run in a single node if peer configuration in either option 1 or 2 are not provided.
-
-#### Format
-
-Peer list is stored in plain text format and each line includes a node's `publickey,host-name,port,version`.
-
-Ex)
-
-```
-   02ed49dbe0f2c34d9dff8335d6dd9097f7a3ef17dfb5f048382eebc7f451a50aa1,nekoyume1.koreacentral.cloudapp.azure.com,58598
-   02d05be62f8593721f5abfd28fb83c043ed9d9585f45b652cb67fd6eee3fd3748f,nekoyume2.koreacentral.cloudapp.azure.com,58599
-```
-
-- Host name and port must be public.
-    - If `--host` is not provided upon execution, the actual host name and port could be different from the original due to the automatic relay communication via STUN/TURN.
-      Therefore, nodes that are used as peers on other nodes must provide its `--host` option on execution.
-- Public key is a hexadecimal string derived from the `PrivateKey` that is used to create a `Swarm` object.
-
-[Unity Hub]: https://unity3d.com/get-unity/download
-
-
-### Docker-compose Miner Test
-
-Seed private key and node host are hardcoded for local testing purposes.
-
-- Build `LinuxHeadless` and run the command below:
-
-```bash
-cd nekoyume/compose
-docker-compose up --build
-```
-
-### Auto Play Option
-
-`--auto-play` option can be used to generate character and automate battle stages in the background.
-Currently, character's name is generated with the first 8 characters of the node's `Address` and repeats stage 1 battle at the `TxProcessInterval`.
-
-### Console Sink Option
-
-`--console-sink` option can send logs via `UnityDebugSink` instead of `ApplicationInsights`.
-
-### White List
-
-You can use `nekoyume/Assets/AddressableAssets/TableCSV/Account/ActivationSheet.csv` to manage white lists.
-
-```
-id,public_key
-1,029d256bc6943cd9d18712b1fe1fdd061705d2ffa644a7705b3cf90f408d1ee278
-```
-
-If `PublicKeys` are registered in `ActivationSheet.csv`, only transactions that have been signed with the PrivateKeys of those PublicKeys can be mined.
-
-White list feature will not be activated if there are no `PublicKeys` registered in `ActivationSheet.csv`.
+if you love this MOD, show some support by sending NCG here: 0x46528E7DEdaC16951bDccb55B20303AB0c729679
