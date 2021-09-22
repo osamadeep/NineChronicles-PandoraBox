@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Bencodex.Types;
 using Lib9c.Model.Order;
@@ -46,6 +46,14 @@ namespace Nekoyume.Helper
             {
                 sb.Append("1m");
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (timeSpan.TotalSeconds <= 0)
+            {
+                sb.Clear();
+                sb.Append("Ready!");
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return sb.ToString();
         }

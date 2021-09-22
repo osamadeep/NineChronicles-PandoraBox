@@ -20,6 +20,7 @@ using UnityEngine.UI;
 using mixpanel;
 using Nekoyume.L10n;
 using Toggle = Nekoyume.UI.Module.Toggle;
+using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -734,7 +735,7 @@ namespace Nekoyume.UI
             questButton.gameObject.SetActive(false);
             sweepButton.gameObject.SetActive(false);
 
-            _player.StartRun();
+            //_player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
             StartCoroutine(instant(x));
         }
@@ -777,11 +778,11 @@ namespace Nekoyume.UI
 
                 LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -5);
 
-                OneLinePopup.Push(MailType.System, "Pandora Box: Sending Battle Fight " + (i + 1) + "/" + count);
-
+                OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Battle Fight <color=green>" + (i + 1) + "</color>/" + count);
                 yield return new WaitForSeconds(2f);
+
             }
-            OneLinePopup.Push(MailType.System, "Pandora Box: " + count + " Fights Sent, Please Hold ...");
+            OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...");
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

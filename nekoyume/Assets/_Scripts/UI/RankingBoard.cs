@@ -18,6 +18,7 @@ using Nekoyume.UI.Scroller;
 using TMPro;
 using UniRx;
 using UnityEngine;
+using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -476,7 +477,7 @@ namespace Nekoyume.UI
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = state.GetArenaInfos(currentAvatarAddress, 500, 20);
+                var infos2 = state.GetArenaInfos(currentAvatarAddress, PandoraBoxMaster.Instance.Settings.ArenaListUpper, PandoraBoxMaster.Instance.Settings.ArenaListLower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
                 {

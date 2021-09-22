@@ -74,6 +74,9 @@ namespace Nekoyume.UI.Scroller
         private GameObject paidMember = null;
 
         [SerializeField]
+        private GameObject paidMember2 = null;
+
+        [SerializeField]
         private TextMeshProUGUI gainPointText = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -209,11 +212,15 @@ namespace Nekoyume.UI.Scroller
             nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (nameText.text.Contains("Lambo") || nameText.text.Contains("Yoink") || nameText.text.Contains("AndrewLW")
-                || nameText.text.Contains("Wabbs") || nameText.text.Contains("BagOfKittens"))
+            if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW") || nameText.text.Contains("bmcdee")) 
                 paidMember.SetActive(true);
             else
                 paidMember.SetActive(false);
+
+            if (nameText.text.Contains("Wabbs"))
+                paidMember2.SetActive(true);
+            else
+                paidMember2.SetActive(false);
 
             int temp = CPHelper.GetCPV2(
                         States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,

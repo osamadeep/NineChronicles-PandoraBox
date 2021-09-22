@@ -14,6 +14,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Nekoyume.Helper;
+    using PandoraBox;
     using UniRx;
 
     public class CombinationSlot : MonoBehaviour
@@ -101,7 +103,16 @@ namespace Nekoyume.UI.Module
 
             progressBar.maxValue = state.RequiredBlockIndex;
             progressBar.value = blockIndex - state.StartBlockIndex;
-            sliderText.text = $"({progressBar.value} / {progressBar.maxValue})";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
+                sliderText.text = $"({progressBar.value} / {progressBar.maxValue})";
+            else
+            {
+                int remainBlock = (int)progressBar.maxValue - (int)progressBar.value;
+                var timeR = Util.GetBlockToTime(remainBlock);
+                sliderText.text = timeR;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void SubscribeOnBlockIndex(long blockIndex)
@@ -156,7 +167,17 @@ namespace Nekoyume.UI.Module
         {
             var value = Math.Min(index - _data?.StartBlockIndex ?? index, progressBar.maxValue);
             progressBar.value = value;
-            sliderText.text = $"({progressBar.value} / {progressBar.maxValue})";
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
+                sliderText.text = $"({progressBar.value} / {progressBar.maxValue})";
+            else
+            {
+                int remainBlock = (int)progressBar.maxValue - (int)progressBar.value;
+                var timeR = Util.GetBlockToTime(remainBlock);
+                sliderText.text = timeR;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void ShowPopup()

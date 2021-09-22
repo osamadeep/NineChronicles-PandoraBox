@@ -34,6 +34,7 @@ using Enemy = Nekoyume.Model.Enemy;
 using EnemyPlayer = Nekoyume.Model.EnemyPlayer;
 using Player = Nekoyume.Game.Character.Player;
 using Random = UnityEngine.Random;
+using PandoraBox;
 
 namespace Nekoyume.Game
 {
@@ -241,6 +242,7 @@ namespace Nekoyume.Game
 
         private void OnRoomEnter(bool showScreen)
         {
+            PandoraBoxMaster.Instance.SpeedTimeScale(false); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             showLoadingScreen = showScreen;
             gameObject.AddComponent<RoomEntering>();
             IsInStage = false;
@@ -321,6 +323,11 @@ namespace Nekoyume.Game
 
         private IEnumerator CoPlayStage(BattleLog log)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBoxMaster.Instance.Settings.IsPVESpeed)
+                PandoraBoxMaster.Instance.SpeedTimeScale();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var avatarState = States.Instance.CurrentAvatarState;
             prevFood = avatarState.inventory.Items
                 .Select(i => i.item)
@@ -601,6 +608,7 @@ namespace Nekoyume.Game
             }
 
             Widget.Find<BattleResult>().Show(_battleResultModel);
+            PandoraBoxMaster.Instance.SpeedTimeScale(false); //|||||||||||||| PANDORA CODE |||||||||||||||||||
 
             yield return null;
 

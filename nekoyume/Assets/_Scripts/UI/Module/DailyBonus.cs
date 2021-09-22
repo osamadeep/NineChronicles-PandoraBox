@@ -16,6 +16,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Nekoyume.Helper;
+    using PandoraBox;
     using UniRx;
 
     public class DailyBonus : AlphaAnimateModule
@@ -130,7 +132,16 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
+                text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
+            else
+            {
+                int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
+                var timeR = Util.GetBlockToTime(remainBlock);
+                text.text = timeR;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _isFull = sliderAnimator.IsFull;
             foreach (var additiveImage in additiveImages)

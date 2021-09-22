@@ -13,6 +13,7 @@ using UniRx;
 using mixpanel;
 using Nekoyume.UI;
 using RedeemCode = Nekoyume.Action.RedeemCode;
+using PandoraBox;
 
 namespace Nekoyume.BlockChain
 {
@@ -68,16 +69,17 @@ namespace Nekoyume.BlockChain
                 name = nickName,
             };
             ProcessAction(action);
-
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||   all down ActionTimeout
             return _renderer.EveryRender<CreateAvatar>()
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e))
                 .Finally(() =>
                 {
-                    var agentAddress = States.Instance.AgentState.address;
+                    
+                      var agentAddress = States.Instance.AgentState.address;
                     var avatarAddress = agentAddress.Derive(
                         string.Format(
                             CultureInfo.InvariantCulture,
@@ -117,7 +119,7 @@ namespace Nekoyume.BlockChain
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -162,7 +164,7 @@ namespace Nekoyume.BlockChain
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -186,7 +188,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -215,7 +217,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e)); // Last() is for completion
         }
 
@@ -238,7 +240,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e)); // Last() is for completion
         }
 
@@ -270,7 +272,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e)); // Last() is for completion
         }
 
@@ -288,7 +290,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e)); // Last() is for completion
         }
 
@@ -309,7 +311,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -339,7 +341,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -369,7 +371,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -406,7 +408,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -423,7 +425,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -439,7 +441,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -455,7 +457,7 @@ namespace Nekoyume.BlockChain
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
+                .Timeout(!PandoraBoxMaster.Instance.Settings.IsPVESpeed ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * (long)PandoraBoxMaster.PVESpeed))
                 .DoOnError(e => HandleException(action.Id, e));
         }
 

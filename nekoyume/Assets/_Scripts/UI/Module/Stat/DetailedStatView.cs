@@ -54,7 +54,7 @@ namespace Nekoyume.UI.Module
             gameObject.SetActive(true);
         }
 
-        protected string GetStatString(StatType statType, int value, bool isSigned = false)
+        protected string GetStatString(StatType statType, float value, bool isSigned = false)
         {
             switch (statType)
             {
@@ -78,7 +78,7 @@ namespace Nekoyume.UI.Module
             }
         }
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void Show(StatType statType, int statValue, int additionalStatValue, Nekoyume.Model.Item.Equipment equipment)
+        public void Show(StatType statType, float statValue, int additionalStatValue, Nekoyume.Model.Item.Equipment equipment)
         {
             statTypeText.text = statType.ToString();
             if (additionalStatValue != 0)
@@ -103,7 +103,7 @@ namespace Nekoyume.UI.Module
             gameObject.SetActive(true);
         }
 
-        protected string GetStatString(StatType statType, int value, Nekoyume.Model.Item.Equipment equipment, bool isSigned = false)
+        protected string GetStatString(StatType statType, float value, Nekoyume.Model.Item.Equipment equipment, bool isSigned = false)
         {
             switch (statType)
             {
@@ -176,24 +176,26 @@ namespace Nekoyume.UI.Module
                 minValue *= 1.3f;
                 maxValue *= 1.3f;
             }
-
-            return $"<color=yellow><size=12>[{(int)(minValue)}-{(int)maxValue}]</size></color> {GetPercentage(minValue, maxValue, value)}";
+            if (statType!=StatType.SPD)
+                return $"<color=yellow><size=12>[{(int)(minValue)}-{(int)maxValue}]</size></color> {GetPercentage(minValue, maxValue, value)}";
+            else
+                return $"<color=yellow><size=12>[{String.Format("{0:0.00}", minValue)}-{String.Format("{0:0.0}", maxValue)}]</size></color> {GetPercentage(minValue, maxValue, value)}";
         }
 
         string GetPercentage(float min, float max, float value)
         {
-            float per = (value - min) / (max - min);
+            float per = (value) / (max);
             if (per < 0.4f)
             {
-                return $"<color=red><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
+                return $"<color=red><size=16>{String.Format("{0:0.0}%", per * 100)}</size></color>";
             }
             else if (per >= 0.4f && per < 0.7f)
             {
-                return $"<color=#FFA200><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
+                return $"<color=#FFA200><size=16>{String.Format("{0:0.0}%", per * 100)}</size></color>";
             }
             else
             {
-                return $"<color=green><size=16>{String.Format("{0:###}%", per * 100)}</size></color>";
+                return $"<color=green><size=16>{String.Format("{0:0.0}%", per * 100)}</size></color>";
             }
 
             //return ((value - min) / (max - min)).ToString();

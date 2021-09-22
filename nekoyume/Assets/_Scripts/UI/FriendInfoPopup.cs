@@ -51,6 +51,9 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
+        private GameObject paidMember = null;
+
+        [SerializeField]
         private Button copyButton = null;
 
         [SerializeField]
@@ -156,6 +159,11 @@ namespace Nekoyume.UI
             dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
             versionText.text = "APV: " + PandoraBox.PandoraBoxMaster.OriginalVersionId;
             tempAvatarState = avatarState;
+            if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee"))
+                paidMember.SetActive(true);
+            else
+                paidMember.SetActive(false);
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

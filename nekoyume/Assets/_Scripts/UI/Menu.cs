@@ -80,9 +80,6 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
         private TextMeshProUGUI arenaRemains;
-
-        [SerializeField]
-        private TextMeshProUGUI dailyRewardTimer;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -106,7 +103,6 @@ namespace Nekoyume.UI
         private void OnEnable()
         {
             StartCoroutine(arenaRemainsTime());
-            StartCoroutine(dailyRewardTime());
         }
 
         IEnumerator arenaRemainsTime()
@@ -127,35 +123,6 @@ namespace Nekoyume.UI
                 yield return new WaitForSeconds(10);
             }
         }
-
-        IEnumerator dailyRewardTime()
-        {
-            dailyRewardTimer.text = "";
-
-            while ((States.Instance.CurrentAvatarState is null))
-            {
-                yield return new WaitForSeconds(0.5f);
-            }
-
-            //yield return new WaitForSeconds(5);
-            var gameConfigState = States.Instance.GameConfigState;
-            while (true)
-            {
-                float maxTime = States.Instance.GameConfigState.DailyRewardInterval;
-                var dailyState = States.Instance.CurrentAvatarState.dailyRewardReceivedIndex;
-
-
-                //long _resetIndex = weeklyArenaState.ResetIndex;
-                float value;
-
-                value = Game.Game.instance.Agent.BlockIndex - dailyState;
-                var remainBlock = gameConfigState.DailyRewardInterval - value;
-                var time = Util.GetBlockToTime((int)remainBlock);
-                dailyRewardTimer.text = time;
-                yield return new WaitForSeconds(10);
-            }
-        }
-
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.

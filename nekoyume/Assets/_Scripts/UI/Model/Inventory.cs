@@ -152,7 +152,13 @@ namespace Nekoyume.UI.Model
                         inventoryItem.Count.Value += count;
                         break;
                     }
+                    if (material.Id == 500000)
+                    {
+                        //UnityEngine.Debug.LogError($"Material ID {itemBase.Id}, Count {count}");
+
+                    }
                     inventoryItem = CreateInventoryItem(itemBase, count);
+                    
                     Materials.Add(inventoryItem);
                     break;
 
