@@ -477,7 +477,12 @@ namespace Nekoyume.UI
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = state.GetArenaInfos(currentAvatarAddress, PandoraBoxMaster.Instance.Settings.ArenaListUpper, PandoraBoxMaster.Instance.Settings.ArenaListLower);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                int upper = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+                var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
                 {

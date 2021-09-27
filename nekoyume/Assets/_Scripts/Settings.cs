@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Nekoyume
@@ -39,13 +39,18 @@ namespace Nekoyume
             }
         }
 
+        //|||||||||||||| PANDORA CODE |||||||||||||||||||
         public readonly List< Resolution> Resolutions = new List< Resolution>()
         {
+            {new Resolution(640, 360)},
+            {new Resolution(960, 540)},
             {new Resolution(1176, 664)},
             {new Resolution(1280, 720)},
             {new Resolution(1366, 768)},
             {new Resolution(1600, 900)},
             {new Resolution(1920, 1080)},
+            {new Resolution(2560, 1440)},
+            {new Resolution(3840, 2160)},
         };
 
         /// <summary>

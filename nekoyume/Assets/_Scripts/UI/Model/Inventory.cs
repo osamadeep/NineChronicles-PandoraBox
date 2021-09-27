@@ -94,7 +94,6 @@ namespace Nekoyume.UI.Model
                 {
                     continue;
                 }
-
                 AddItem(item.item, item.count);
             }
 
@@ -449,7 +448,6 @@ namespace Nekoyume.UI.Model
             }
 
             DeselectItemView();
-
             view.Model.Selected.Value = true;
             SelectedItemView.Value = view;
             SetGlowedAll(false);

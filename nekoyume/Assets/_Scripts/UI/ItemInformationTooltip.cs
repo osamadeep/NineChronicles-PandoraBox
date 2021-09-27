@@ -105,6 +105,9 @@ namespace Nekoyume.UI
             {
                 return;
             }
+            //||||
+            
+            //Game.Game.instance. .TryGetNonFungibleItem("d6c83f2d-a556-4639-8296-b7b6b9c89868", out Nekoyume.Model.Item.ItemUsable xx);
 
             submit.SetActive(submitEnabledFunc != null);
             sell.SetActive(false);

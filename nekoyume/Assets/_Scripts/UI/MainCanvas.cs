@@ -6,6 +6,7 @@ using Nekoyume.EnumType;
 using Nekoyume.Pattern;
 using Nekoyume.UI.Module;
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace Nekoyume.UI
 {
@@ -67,6 +68,9 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private CanvasLayer tutorialMaskLayer = default;
+
+        [SerializeField]
+        private AudioMixer masterMixer; //|||||||||||||| PANDORA CODE |||||||||||||||||||
 
         private List<CanvasLayer> _layers;
         public RectTransform RectTransform { get; private set; }
@@ -142,6 +146,10 @@ namespace Nekoyume.UI
 
         public void InitializeIntro()
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            masterMixer.SetFloat("MusicVolume", Nekoyume.Settings.Instance.volumeMusic);
+            masterMixer.SetFloat("SfxVolume", Nekoyume.Settings.Instance.volumeMusic);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var intro = Widget.Create<Intro>(true);
             intro.Initialize();
 

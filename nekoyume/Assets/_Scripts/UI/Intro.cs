@@ -1,5 +1,7 @@
 using mixpanel;
 using Nekoyume.L10n;
+using PandoraBox;
+using TMPro;
 
 namespace Nekoyume.UI
 {
@@ -12,6 +14,7 @@ namespace Nekoyume.UI
         {
             base.Awake();
             indicator.Close();
+            
         }
 
         public void Show(string keyStorePath, string privateKey)

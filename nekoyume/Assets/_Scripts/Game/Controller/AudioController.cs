@@ -204,7 +204,8 @@ namespace Nekoyume.Game.Controller
 
         public void Initialize()
         {
-            AudioListener.volume = Settings.Instance.volumeMaster;
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            //AudioListener.volume = Settings.Instance.volumeMaster;
 
             if (CurrentState != State.None)
             {

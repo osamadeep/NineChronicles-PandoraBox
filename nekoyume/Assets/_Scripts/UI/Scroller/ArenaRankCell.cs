@@ -209,15 +209,15 @@ namespace Nekoyume.UI.Scroller
             }
 
             UpdateRank(itemData.rank);
-            nameText.text = ArenaInfo.AvatarName;
-            scoreText.text = ArenaInfo.Score.ToString();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            nameText.text = ArenaInfo.AvatarName + " <b><color=green>("+ ArenaInfo.DailyChallengeCount + ")</color></b>";
+            scoreText.text = ArenaInfo.Score.ToString();
             if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW") || nameText.text.Contains("bmcdee")) 
                 paidMember.SetActive(true);
             else
                 paidMember.SetActive(false);
 
-            if (nameText.text.Contains("Wabbs"))
+            if (nameText.text.Contains("Wabbs") || nameText.text.Contains("Farm4Ace") || nameText.text.Contains("Yoink"))
                 paidMember2.SetActive(true);
             else
                 paidMember2.SetActive(false);
@@ -231,8 +231,9 @@ namespace Nekoyume.UI.Scroller
                 cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
             else
                 cpText.text = "<color=#FFA200>" + GetCP(ArenaInfo) + "</color>";
-
-
+           
+            maxChallengeButton.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
+            gainPointText.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
             if (ArenaInfo.Score > currentAvatarArenaInfo.Score)
             {
                 gainPointText.text = "<color=green>+60</color>";

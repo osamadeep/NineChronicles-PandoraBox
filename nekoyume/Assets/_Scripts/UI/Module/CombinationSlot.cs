@@ -104,6 +104,7 @@ namespace Nekoyume.UI.Module
             progressBar.maxValue = state.RequiredBlockIndex;
             progressBar.value = blockIndex - state.StartBlockIndex;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Debug.LogError(state.Result.itemUsable.NonFungibleId);
             if (!PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
                 sliderText.text = $"({progressBar.value} / {progressBar.maxValue})";
             else

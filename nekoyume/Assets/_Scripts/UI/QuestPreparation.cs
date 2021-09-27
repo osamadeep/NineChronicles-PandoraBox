@@ -131,8 +131,8 @@ namespace Nekoyume.UI
             base.Awake();
 
             CloseWidget = null;
-            simulateButton.gameObject.SetActive(GameConfig.IsEditor);
-            levelField.gameObject.SetActive(GameConfig.IsEditor);
+            //simulateButton.gameObject.SetActive(GameConfig.IsEditor);
+            //levelField.gameObject.SetActive(GameConfig.IsEditor);
         }
 
         public override void Initialize()

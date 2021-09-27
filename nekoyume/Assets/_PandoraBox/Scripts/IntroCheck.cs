@@ -13,13 +13,13 @@ namespace PandoraBox
         // Start is called before the first frame update
         void Start()
         {
-            verText.text = PandoraBoxMaster.VersionId.ToString();
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
+            string temp = PandoraBoxMaster.Instance.Settings.VersionId;
+            string textVer = string.Format("v{0}.{1}.{2}",
+                            int.Parse(temp.Substring(0, 2)),
+                            int.Parse(temp.Substring(2, 2)),
+                            int.Parse(temp.Substring(4, 2)));
+            verText.text = textVer;
         }
     }
 }
+

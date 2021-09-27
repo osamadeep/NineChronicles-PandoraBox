@@ -242,7 +242,7 @@ namespace Nekoyume.Game
 
         private void OnRoomEnter(bool showScreen)
         {
-            PandoraBoxMaster.Instance.SpeedTimeScale(false); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            PandoraBoxMaster.Instance.SpeedTimeScale(); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             showLoadingScreen = showScreen;
             gameObject.AddComponent<RoomEntering>();
             IsInStage = false;
@@ -324,8 +324,7 @@ namespace Nekoyume.Game
         private IEnumerator CoPlayStage(BattleLog log)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBoxMaster.Instance.Settings.IsPVESpeed)
-                PandoraBoxMaster.Instance.SpeedTimeScale();
+            PandoraBoxMaster.Instance.SpeedTimeScale(PandoraBoxMaster.Instance.Settings.FightSpeed);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var avatarState = States.Instance.CurrentAvatarState;
@@ -608,7 +607,7 @@ namespace Nekoyume.Game
             }
 
             Widget.Find<BattleResult>().Show(_battleResultModel);
-            PandoraBoxMaster.Instance.SpeedTimeScale(false); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            PandoraBoxMaster.Instance.SpeedTimeScale(); //|||||||||||||| PANDORA CODE |||||||||||||||||||
 
             yield return null;
 

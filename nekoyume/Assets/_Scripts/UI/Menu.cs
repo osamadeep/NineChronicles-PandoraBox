@@ -80,6 +80,9 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
         private TextMeshProUGUI arenaRemains;
+
+        [SerializeField]
+        private TextMeshProUGUI arenaCount;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -103,11 +106,22 @@ namespace Nekoyume.UI
         private void OnEnable()
         {
             StartCoroutine(arenaRemainsTime());
+            StartCoroutine(arenaRemainsCount());
+            StartCoroutine(ShowWhatsNew());
+        }
+
+        IEnumerator ShowWhatsNew()
+        {
+            yield return new WaitForSeconds(5);
+            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.WhatsNewShown)
+            {
+                PandoraBox.PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
+            }
         }
 
         IEnumerator arenaRemainsTime()
         {
-
+            yield return new WaitForSeconds(1);
             var gameConfigState = States.Instance.GameConfigState;
             while (true)
             {
@@ -119,9 +133,38 @@ namespace Nekoyume.UI
                 value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
                 var remainBlock = gameConfigState.DailyArenaInterval - value;
                 var time = Util.GetBlockToTime((int)remainBlock);
-                arenaRemains.text = time;
-                yield return new WaitForSeconds(10);
+                if (PandoraBox.PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
+                    arenaRemains.text = time;
+                else
+                    arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
+                yield return new WaitForSeconds(3);
             }
+        }
+
+        IEnumerator arenaRemainsCount()
+        {
+            yield return new WaitForSeconds(1);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                while (States.Instance == null)
+                {
+                    yield return new WaitForSeconds(1);
+                }
+                var currentAddress = States.Instance.CurrentAvatarState?.address;
+                var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                if (arenaInfo.DailyChallengeCount > 0)
+                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                else
+                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+                yield return new WaitForSeconds(5);
+            }
+        }
+
+        public void ShowPandoraUISettings()
+        {
+            AudioController.PlayClick();
+            PandoraBox.PandoraBoxMaster.Instance.UISettings.SetActive(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -222,8 +265,8 @@ namespace Nekoyume.UI
             {
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
                 rankingExclamationMark.gameObject.SetActive(
-                    btnRanking.IsUnlocked &&
-                    (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
+                    btnRanking.IsUnlocked && (arenaInfo == null) && arenaInfo.DailyChallengeCount > 0);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 
             var worldMap = Find<WorldMap>();
