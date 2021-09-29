@@ -6,22 +6,16 @@ using Nekoyume.Game.Controller;
 using Nekoyume.State;
 using Nekoyume.UI.Module;
 using Nekoyume.Model.BattleStatus;
-using UniRx;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using mixpanel;
 using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
-using System.Collections.Generic;
-using Nekoyume.Game.Character;
-using Nekoyume.State.Subjects;
-using UnityEngine.UI;
-using TMPro;
-using Nekoyume.Helper;
 
 namespace Nekoyume.UI
 {
+    using UniRx;
     public class Menu : Widget
     {
         private const string FirstOpenShopKeyFormat = "Nekoyume.UI.Menu.FirstOpenShopKey_{0}";
@@ -77,14 +71,6 @@ namespace Nekoyume.UI
         public SpriteRenderer combinationSpriteRenderer;
         public SpriteRenderer hasSpriteRenderer;
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [SerializeField]
-        private TextMeshProUGUI arenaRemains;
-
-        [SerializeField]
-        private TextMeshProUGUI arenaCount;
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         protected override void Awake()
         {
             base.Awake();
@@ -101,72 +87,6 @@ namespace Nekoyume.UI
                 .Subscribe(tuple => GoToCombinationEquipmentRecipe(tuple.quest.RecipeId))
                 .AddTo(gameObject);
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        private void OnEnable()
-        {
-            StartCoroutine(arenaRemainsTime());
-            StartCoroutine(arenaRemainsCount());
-            StartCoroutine(ShowWhatsNew());
-        }
-
-        IEnumerator ShowWhatsNew()
-        {
-            yield return new WaitForSeconds(5);
-            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.WhatsNewShown)
-            {
-                PandoraBox.PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
-            }
-        }
-
-        IEnumerator arenaRemainsTime()
-        {
-            yield return new WaitForSeconds(1);
-            var gameConfigState = States.Instance.GameConfigState;
-            while (true)
-            {
-                float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
-                var weeklyArenaState = States.Instance.WeeklyArenaState;
-                long _resetIndex = weeklyArenaState.ResetIndex;
-                float value;
-
-                value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
-                var remainBlock = gameConfigState.DailyArenaInterval - value;
-                var time = Util.GetBlockToTime((int)remainBlock);
-                if (PandoraBox.PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
-                    arenaRemains.text = time;
-                else
-                    arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
-                yield return new WaitForSeconds(3);
-            }
-        }
-
-        IEnumerator arenaRemainsCount()
-        {
-            yield return new WaitForSeconds(1);
-            var gameConfigState = States.Instance.GameConfigState;
-            while (true)
-            {
-                while (States.Instance == null)
-                {
-                    yield return new WaitForSeconds(1);
-                }
-                var currentAddress = States.Instance.CurrentAvatarState?.address;
-                var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-                if (arenaInfo.DailyChallengeCount > 0)
-                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
-                else
-                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
-                yield return new WaitForSeconds(5);
-            }
-        }
-
-        public void ShowPandoraUISettings()
-        {
-            AudioController.PlayClick();
-            PandoraBox.PandoraBoxMaster.Instance.UISettings.SetActive(true);
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
         private void HackAndSlash(int stageId)
@@ -192,12 +112,11 @@ namespace Nekoyume.UI
 
             var worldId = worldRow.Id;
 
-            Find<BottomMenu>().Close(true);
             Find<LoadingScreen>().Show();
 
             var stage = Game.Game.instance.Stage;
-            stage.isExitReserved = false;
-            stage.repeatStage = false;
+            stage.IsExitReserved = false;
+            stage.IsRepeatStage = false;
             var player = stage.GetPlayer();
             player.StartRun();
             ActionCamera.instance.ChaseX(player.transform);
@@ -230,8 +149,7 @@ namespace Nekoyume.UI
         {
             Mixpanel.Track("Unity/Click Guided Quest Combination Equipment");
 
-            CombinationClickInternal(() =>
-                Find<Combination>().ShowByEquipmentRecipe(recipeId));
+            CombinationClickInternal(() => Find<Craft>().Show(recipeId));
         }
 
         private void UpdateButtons()
@@ -245,17 +163,13 @@ namespace Nekoyume.UI
             var addressHex = States.Instance.CurrentAvatarState.address.ToHex();
             var firstOpenCombinationKey = string.Format(FirstOpenCombinationKeyFormat, addressHex);
             var firstOpenShopKey = string.Format(FirstOpenShopKeyFormat, addressHex);
-            var firstOpenRankingKey = string.Format(FirstOpenRankingKeyFormat, addressHex);
             var firstOpenQuestKey = string.Format(FirstOpenQuestKeyFormat, addressHex);
             var firstOpenMimisbrunnrKey = string.Format(FirstOpenMimisbrunnrKeyFormat, addressHex);
-
-            var combination = Find<Combination>();
-            var hasNotificationOnCombination = combination.HasNotification;
 
             combinationExclamationMark.gameObject.SetActive(
                 btnCombination.IsUnlocked &&
                 (PlayerPrefs.GetInt(firstOpenCombinationKey, 0) == 0 ||
-                 hasNotificationOnCombination));
+                 Craft.SharedModel.HasNotification));
             shopExclamationMark.gameObject.SetActive(
                 btnShop.IsUnlocked &&
                 PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
@@ -265,23 +179,23 @@ namespace Nekoyume.UI
             {
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
                 rankingExclamationMark.gameObject.SetActive(
-                    btnRanking.IsUnlocked && (arenaInfo == null) && arenaInfo.DailyChallengeCount > 0);
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    btnRanking.IsUnlocked &&
+                    (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
             }
 
             var worldMap = Find<WorldMap>();
             worldMap.UpdateNotificationInfo();
-            var hasNotificationInWorldmap = worldMap.HasNotification;
+            var hasNotificationInWorldMap = worldMap.HasNotification;
 
             questExclamationMark.gameObject.SetActive(
                 (btnQuest.IsUnlocked &&
                  PlayerPrefs.GetInt(firstOpenQuestKey, 0) == 0) ||
-                hasNotificationInWorldmap);
+                hasNotificationInWorldMap);
 
             mimisbrunnrExclamationMark.gameObject.SetActive(
                 (btnMimisbrunnr.IsUnlocked &&
                  PlayerPrefs.GetInt(firstOpenMimisbrunnrKey, 0) == 0) ||
-                hasNotificationInWorldmap);
+                hasNotificationInWorldMap);
         }
 
         private void HideButtons()
@@ -317,6 +231,7 @@ namespace Nekoyume.UI
             _coLazyClose = StartCoroutine(CoLazyClose());
             var avatarState = States.Instance.CurrentAvatarState;
             Find<WorldMap>().Show(avatarState.worldInformation);
+            Find<HeaderMenu>().UpdateAssets(HeaderMenu.AssetVisibleState.Battle);
             AudioController.PlayClick();
         }
 
@@ -337,23 +252,12 @@ namespace Nekoyume.UI
 
             Close();
             Find<ShopBuy>().Show();
+            Find<HeaderMenu>().UpdateAssets(HeaderMenu.AssetVisibleState.Shop);
             AudioController.PlayClick();
         }
 
-        public void CombinationClick(int slotIndex = -1)
-        {
-            CombinationClickInternal(() =>
-            {
-                if (slotIndex >= 0)
-                {
-                    Find<Combination>().Show(slotIndex);
-                }
-                else
-                {
-                    Find<Combination>().Show();
-                }
-            });
-        }
+        public void CombinationClick() =>
+            CombinationClickInternal(() => Find<CombinationMain>().Show());
 
         private void CombinationClickInternal(System.Action showAction)
         {
@@ -376,6 +280,7 @@ namespace Nekoyume.UI
             }
 
             Close();
+            Find<HeaderMenu>().UpdateAssets(HeaderMenu.AssetVisibleState.Combination);
             showAction();
 
             AudioController.PlayClick();
@@ -389,7 +294,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            Close();
+            Close(true);
             Find<RankingBoard>().Show();
             AudioController.PlayClick();
         }
@@ -454,6 +359,9 @@ namespace Nekoyume.UI
             stageInfo.Show(SharedViewModel, worldRow, StageInformation.StageType.Mimisbrunnr);
             var status = Find<Status>();
             status.Close(true);
+            Find<EventBanner>().Close(true);
+            Find<HeaderMenu>().UpdateAssets(HeaderMenu.AssetVisibleState.Battle);
+            HelpPopup.HelpMe(100019, true);
         }
 
         public void UpdateGuideQuest(AvatarState avatarState)
@@ -496,6 +404,7 @@ namespace Nekoyume.UI
 
             if (nextStageId > 4)
             {
+                HelpPopup.HelpMe(100001, true);
                 return;
             }
 
@@ -526,6 +435,10 @@ namespace Nekoyume.UI
                 if (!States.Instance.CurrentAvatarState.inventory.HasItem(recipeRow.MaterialId))
                 {
                     tutorialController.SaveTutorialProgress(2);
+                    if (!Game.Game.instance.Stage.TutorialController.IsPlaying)
+                    {
+                        HelpPopup.HelpMe(100001, true);
+                    }
                 }
                 else
                 {
@@ -550,17 +463,16 @@ namespace Nekoyume.UI
             StopSpeeches();
 
             guidedQuest.Hide(true);
-            Find<BottomMenu>().Close(true);
             Find<Status>().Close(true);
+            Find<EventBanner>().Close(true);
             base.Close(ignoreCloseAnimation);
         }
 
         private IEnumerator CoLazyClose(float duration = 1f, bool ignoreCloseAnimation = false)
         {
             StopSpeeches();
-
-            Find<BottomMenu>().Close(true);
             Find<Status>().Close(true);
+            Find<EventBanner>().Close(true);
             yield return new WaitForSeconds(duration);
             base.Close(ignoreCloseAnimation);
         }
@@ -610,15 +522,13 @@ namespace Nekoyume.UI
                 return;
             }
 
-            // Temporarily Lock tutorial recipe.
-            var combination = Find<Combination>();
-            combination.LoadRecipeVFXSkipMap();
-            var skipMap = combination.RecipeVFXSkipMap;
-            if (skipMap.ContainsKey(firstRecipeRow.Id))
+            // Temporarily lock tutorial recipe.
+            var skipMap = Craft.SharedModel.RecipeVFXSkipList;
+            if (skipMap.Contains(firstRecipeRow.Id))
             {
                 skipMap.Remove(firstRecipeRow.Id);
             }
-            combination.SaveRecipeVFXSkipMap();
+            Craft.SharedModel.SaveRecipeVFXSkipList();
             GoToCombinationEquipmentRecipe(firstRecipeRow.Id);
         }
 
@@ -628,5 +538,26 @@ namespace Nekoyume.UI
             player.DisableHudContainer();
             HackAndSlash(GuidedQuest.WorldQuest?.Goal ?? 4);
         }
+
+#if UNITY_EDITOR
+        protected override void Update()
+        {
+            base.Update();
+
+            if (!Find<CombinationResult>().gameObject.activeSelf &&
+                !Find<EnhancementResult>().gameObject.activeSelf &&
+                Input.GetKey(KeyCode.LeftControl))
+            {
+                if (Input.GetKeyDown(KeyCode.C))
+                {
+                    Find<CombinationResult>().ShowWithEditorProperty();
+                }
+                else if (Input.GetKeyDown(KeyCode.E))
+                {
+                    Find<EnhancementResult>().ShowWithEditorProperty();
+                }
+            }
+        }
+#endif
     }
 }

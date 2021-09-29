@@ -13,7 +13,6 @@ using UniRx;
 using mixpanel;
 using Nekoyume.UI;
 using RedeemCode = Nekoyume.Action.RedeemCode;
-using PandoraBox;
 
 namespace Nekoyume.BlockChain
 {
@@ -27,6 +26,11 @@ namespace Nekoyume.BlockChain
         private readonly IAgent _agent;
 
         private readonly ActionRenderer _renderer;
+
+        private Guid _lastBattleActionId;
+
+        public static bool IsLastBattleActionId(Guid actionId) =>
+            actionId == Game.Game.instance.ActionManager._lastBattleActionId;
 
         private void ProcessAction(GameAction gameAction)
         {
@@ -69,7 +73,7 @@ namespace Nekoyume.BlockChain
                 name = nickName,
             };
             ProcessAction(action);
-            
+
             return _renderer.EveryRender<CreateAvatar>()
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
@@ -78,8 +82,7 @@ namespace Nekoyume.BlockChain
                 .DoOnError(e => HandleException(action.Id, e))
                 .Finally(() =>
                 {
-                    
-                      var agentAddress = States.Instance.AgentState.address;
+                    var agentAddress = States.Instance.AgentState.address;
                     var avatarAddress = agentAddress.Derive(
                         string.Format(
                             CultureInfo.InvariantCulture,
@@ -115,6 +118,8 @@ namespace Nekoyume.BlockChain
             };
             ProcessAction(action);
 
+            _lastBattleActionId = action.Id;
+
             return _renderer.EveryRender<MimisbrunnrBattle>()
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
@@ -144,9 +149,9 @@ namespace Nekoyume.BlockChain
             int stageId)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            costumes = costumes ?? new List<Costume>();
-            equipments = equipments ?? new List<Equipment>();
-            foods = foods ?? new List<Consumable>();
+            costumes ??= new List<Costume>();
+            equipments ??= new List<Equipment>();
+            foods ??= new List<Consumable>();
 
             var action = new HackAndSlash
             {
@@ -159,12 +164,14 @@ namespace Nekoyume.BlockChain
                 rankingMapAddress = States.Instance.CurrentAvatarState.RankingMapAddress,
             };
             ProcessAction(action);
-            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+
+            _lastBattleActionId = action.Id;
+
             return _renderer.EveryRender<HackAndSlash>()
                 .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
                 .First()
                 .ObserveOnMainThread()
-                .Timeout(PandoraBoxMaster.Instance.Settings.FightSpeed ==1 ? ActionTimeout : new TimeSpan(ActionTimeout.Ticks * 2))
+                .Timeout(ActionTimeout)
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
@@ -179,7 +186,7 @@ namespace Nekoyume.BlockChain
             var action = new CombinationConsumable
             {
                 recipeId = recipeId,
-                AvatarAddress = States.Instance.CurrentAvatarState.address,
+                avatarAddress = States.Instance.CurrentAvatarState.address,
                 slotIndex = slotIndex,
             };
             ProcessAction(action);
@@ -367,6 +374,8 @@ namespace Nekoyume.BlockChain
             };
             ProcessAction(action);
 
+            _lastBattleActionId = action.Id;
+
             return _renderer.EveryRender<RankingBattle>()
                 .Where(eval => eval.Action.Id.Equals(action.Id))
                 .First()
@@ -397,10 +406,10 @@ namespace Nekoyume.BlockChain
 
             var action = new CombinationEquipment
             {
-                AvatarAddress = States.Instance.CurrentAvatarState.address,
-                RecipeId = recipeId,
-                SubRecipeId = subRecipeId,
-                SlotIndex = slotIndex,
+                avatarAddress = States.Instance.CurrentAvatarState.address,
+                slotIndex = slotIndex,
+                recipeId = recipeId,
+                subRecipeId = subRecipeId,
             };
             ProcessAction(action);
 
@@ -412,11 +421,11 @@ namespace Nekoyume.BlockChain
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
-        public IObservable<ActionBase.ActionEvaluation<RapidCombination>> RapidCombination(int slotIndex)
+        public IObservable<ActionBase.ActionEvaluation<RapidCombination>> RapidCombination(Address avatarAddress, int slotIndex)
         {
             var action = new RapidCombination
             {
-                avatarAddress = States.Instance.CurrentAvatarState.address,
+                avatarAddress = avatarAddress,
                 slotIndex = slotIndex
             };
             ProcessAction(action);
