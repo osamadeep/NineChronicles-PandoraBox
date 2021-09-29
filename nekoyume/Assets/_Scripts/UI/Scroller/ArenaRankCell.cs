@@ -78,6 +78,9 @@ namespace Nekoyume.UI.Scroller
 
         [SerializeField]
         private TextMeshProUGUI gainPointText = null;
+
+        [SerializeField]
+        private TextMeshProUGUI winLoseText = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private RectTransform _rectTransformCache;
@@ -89,7 +92,7 @@ namespace Nekoyume.UI.Scroller
             ? _rectTransformCache
             : _rectTransformCache = GetComponent<RectTransform>();
 
-        public ArenaInfo ArenaInfo { get; private set; }
+        public ArenaInfo arenaInfo { get; private set; }
 
         public IObservable<ArenaRankCell> OnClickAvatarInfo => _onClickAvatarInfo;
 
@@ -100,7 +103,7 @@ namespace Nekoyume.UI.Scroller
             characterView.OnClickCharacterIcon
                 .Subscribe(avatarState =>
                 {
-                    avatarState ??= States.TryGetAvatarState(ArenaInfo.AvatarAddress, out var state)
+                    avatarState ??= States.TryGetAvatarState(arenaInfo.AvatarAddress, out var state)
                         ? state
                         : null;
                     if (avatarState is null)
@@ -198,10 +201,10 @@ namespace Nekoyume.UI.Scroller
                 return;
             }
 
-            ArenaInfo = itemData.arenaInfo ?? throw new ArgumentNullException(nameof(itemData.arenaInfo));
+            arenaInfo = itemData.arenaInfo ?? throw new ArgumentNullException(nameof(itemData.arenaInfo));
             var currentAvatarArenaInfo = itemData.currentAvatarArenaInfo;
             _isCurrentUser = currentAvatarArenaInfo is null ?
-                false : ArenaInfo.AvatarAddress == currentAvatarArenaInfo.AvatarAddress;
+                false : arenaInfo.AvatarAddress == currentAvatarArenaInfo.AvatarAddress;
 
             if (controlBackgroundImage)
             {
@@ -210,8 +213,8 @@ namespace Nekoyume.UI.Scroller
 
             UpdateRank(itemData.rank);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            nameText.text = ArenaInfo.AvatarName + " <b><color=green>("+ ArenaInfo.DailyChallengeCount + ")</color></b>";
-            scoreText.text = ArenaInfo.Score.ToString();
+            nameText.text = arenaInfo.AvatarName;
+            scoreText.text = arenaInfo.Score.ToString();
             if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW") || nameText.text.Contains("bmcdee")) 
                 paidMember.SetActive(true);
             else
@@ -225,43 +228,50 @@ namespace Nekoyume.UI.Scroller
             int temp = CPHelper.GetCPV2(
                         States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
                         Game.Game.instance.TableSheets.CostumeStatSheet);
-            if (int.Parse(GetCP(ArenaInfo)) > temp + 10000)
-                cpText.text = "<color=red>" + GetCP(ArenaInfo) + "</color>";
-            else if (int.Parse(GetCP(ArenaInfo)) < temp - 10000)
-                cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
+            if (int.Parse(GetCP(arenaInfo)) > temp + 10000)
+                cpText.text = "<color=red>" + GetCP(arenaInfo) + "</color>";
+            else if (int.Parse(GetCP(arenaInfo)) < temp - 10000)
+                cpText.text = "<color=green>" + GetCP(arenaInfo) + "</color>";
             else
-                cpText.text = "<color=#FFA200>" + GetCP(ArenaInfo) + "</color>";
+                cpText.text = "<color=#FFA200>" + GetCP(arenaInfo) + "</color>";
            
-            maxChallengeButton.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
-            gainPointText.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
-            if (ArenaInfo.Score > currentAvatarArenaInfo.Score)
+            maxChallengeButton.gameObject.SetActive(arenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
+            gainPointText.gameObject.SetActive(arenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
+            if (arenaInfo.Score > currentAvatarArenaInfo.Score)
             {
                 gainPointText.text = "<color=green>+60</color>";
             }
-            else if (ArenaInfo.Score == currentAvatarArenaInfo.Score)
+            else if (arenaInfo.Score == currentAvatarArenaInfo.Score)
             {
                 gainPointText.text = "<color=#FFA200>+15</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score)
+            else if (arenaInfo.Score < currentAvatarArenaInfo.Score)
             {
                 gainPointText.text = "<color=#FFA200>+15</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 100)
+            else if (arenaInfo.Score < currentAvatarArenaInfo.Score - 100)
             {
                 gainPointText.text = "<color=#FFA200>+8</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 200)
+            else if (arenaInfo.Score < currentAvatarArenaInfo.Score - 200)
             {
                 gainPointText.text = "<color=#FFA200>+4</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 300)
+            else if (arenaInfo.Score < currentAvatarArenaInfo.Score - 300)
             {
                 gainPointText.text = "<color=#FFA200>+2</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 400)
+            else if (arenaInfo.Score < currentAvatarArenaInfo.Score - 400)
             {
                 gainPointText.text = "<color=#FFA200>+1</color>";
             }
+
+            string tempTxt = $"(<color=green>{arenaInfo.ArenaRecord.Win}</color>/<color=red>{arenaInfo.ArenaRecord.Lose}</color>)";
+            if (arenaInfo.DailyChallengeCount > 0)
+                tempTxt += " <b><color=green>(" + arenaInfo.DailyChallengeCount + ")</color></b>";
+            else
+                tempTxt += " <b><color=red>(" + arenaInfo.DailyChallengeCount + ")</color></b>";
+            winLoseText.text = tempTxt;
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -283,12 +293,12 @@ namespace Nekoyume.UI.Scroller
                 }
 
                 challengeCountText.text =
-                    $"<color=orange>{ArenaInfo.DailyChallengeCount}</color>/{GameConfig.ArenaChallengeCountMax}";
+                    $"<color=orange>{arenaInfo.DailyChallengeCount}</color>/{GameConfig.ArenaChallengeCountMax}";
             }
             else
             {
                 //FIXME 현재 코스튬대응이 안되있음 lib9c쪽과 함께 고쳐야함
-                characterView.SetByArenaInfo(ArenaInfo);
+                characterView.SetByArenaInfo(arenaInfo);
 
                 if (itemData.currentAvatarArenaInfo is null)
                 {

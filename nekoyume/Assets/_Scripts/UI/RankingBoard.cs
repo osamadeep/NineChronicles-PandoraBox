@@ -123,7 +123,7 @@ namespace Nekoyume.UI
             arenaRankScroll.OnClickAvatarInfo
                 .Subscribe(cell => OnClickAvatarInfo(
                     cell.RectTransform,
-                    cell.ArenaInfo.AvatarAddress))
+                    cell.arenaInfo.AvatarAddress))
                 .AddTo(gameObject);
             arenaRankScroll.OnClickChallenge.Subscribe(OnClickChallenge).AddTo(gameObject);
             expRankScroll.OnClick
@@ -134,7 +134,7 @@ namespace Nekoyume.UI
             currentAvatarCellView.OnClickAvatarInfo
                 .Subscribe(cell => OnClickAvatarInfo(
                     cell.RectTransform,
-                    cell.ArenaInfo.AvatarAddress))
+                    cell.arenaInfo.AvatarAddress))
                 .AddTo(gameObject);
 
             rewardText.text = L10nManager.Localize("UI_REWARDS");
@@ -400,12 +400,12 @@ namespace Nekoyume.UI
         {
             //TODO 소모품장착
             Game.Game.instance.ActionManager.RankingBattle(
-                arenaRankCell.ArenaInfo.AvatarAddress,
+                arenaRankCell.arenaInfo.AvatarAddress,
                 _player.Costumes.Select(i => i.ItemId).ToList(),
                 _player.Equipments.Select(i => i.ItemId).ToList(),
                 new List<Guid>()
             );
-            Find<ArenaBattleLoadingScreen>().Show(arenaRankCell.ArenaInfo);
+            Find<ArenaBattleLoadingScreen>().Show(arenaRankCell.arenaInfo);
         }
 
         private void SubscribeBackButtonClick(BottomMenu bottomMenu)

@@ -105,7 +105,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void ReceiveAllMails()
         {
-            MailBox.CleanUp();
+            //MailBox.CleanUp();
             //StartCoroutine(ReceiveAllMailsEnum());
         }
 

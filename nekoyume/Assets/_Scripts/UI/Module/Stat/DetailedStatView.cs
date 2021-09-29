@@ -184,7 +184,7 @@ namespace Nekoyume.UI.Module
 
         string GetPercentage(float min, float max, float value)
         {
-            float per = (value) / (max);
+            float per = (value - min) / (max - min);
             if (per < 0.4f)
             {
                 return $"<color=red><size=16>{String.Format("{0:0.0}%", per * 100)}</size></color>";
