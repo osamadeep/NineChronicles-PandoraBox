@@ -6,7 +6,7 @@ namespace PandoraBox
     public class PandoraBoxMaster : MonoBehaviour
     {
         public static PandoraBoxMaster Instance;
-        public static string OriginalVersionId = "v100078";
+        public static string OriginalVersionId = "v100080";
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public PandoraSettings Settings;
         public GameObject UISettings;
@@ -39,7 +39,7 @@ namespace PandoraBox
     public class PandoraSettings
     {
         
-        public string VersionId { get; private set; } = "010007"; // parse v1.0.7
+        public string VersionId { get; private set; } = "010008"; // parse v1.0.8
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 

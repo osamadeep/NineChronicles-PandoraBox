@@ -111,7 +111,7 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            getAllButton.OnClickAsObservable().Subscribe(_ => ReceiveAllMails()).AddTo(gameObject);
+            //getAllButton.OnClickAsObservable().Subscribe(_ => ReceiveAllMails()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             emptyText.text = L10nManager.Localize(emptyTextL10nKey);

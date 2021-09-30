@@ -45,7 +45,7 @@ namespace Nekoyume.UI
                             int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(0, 2)),
                             int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(2, 2)),
                             int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(4, 2)));
-            const string format = "PandoraBox {0} / #{1} / Hash: {2}";
+            const string format = "PandoraBox {0} / #{1}";
             var hash = _hash.ToString();
             var text = string.Format(
                 format,

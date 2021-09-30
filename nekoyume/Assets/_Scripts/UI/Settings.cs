@@ -24,8 +24,8 @@ namespace Nekoyume.UI
         public Button privateKeyCopyButton;
         public Button closeButton;
         public TextMeshProUGUI warningText;
-        public TextMeshProUGUI volumeMasterText;
-        public Slider volumeMasterSlider;
+        //public TextMeshProUGUI volumeMasterText;
+        //public Slider volumeMasterSlider;
         public Toggle volumeMasterToggle;
         public List<TextMeshProUGUI> muteTexts;
         public TextMeshProUGUI resetKeyStoreText;
@@ -49,8 +49,8 @@ namespace Nekoyume.UI
             privateKeyTitleText.text = L10nManager.Localize("UI_YOUR_PRIVATE_KEY");
             warningText.text = L10nManager.Localize("UI_ACCOUNT_WARNING");
 
-            volumeMasterSlider.onValueChanged.AddListener(SetVolumeMaster);
-            volumeMasterToggle.onValueChanged.AddListener(SetVolumeMasterMute);
+            //volumeMasterSlider.onValueChanged.AddListener(SetVolumeMaster);
+            //volumeMasterToggle.onValueChanged.AddListener(SetVolumeMasterMute);
 
             resetStoreText.text = L10nManager.Localize("UI_CONFIRM_RESET_STORE_TITLE");
             resetKeyStoreText.text = L10nManager.Localize("UI_CONFIRM_RESET_KEYSTORE_TITLE");
@@ -140,8 +140,8 @@ namespace Nekoyume.UI
             var settings = Nekoyume.Settings.Instance;
             UpdateSoundSettings();
 
-            volumeMasterSlider.value = settings.volumeMaster;
-            volumeMasterToggle.isOn = settings.isVolumeMasterMuted;
+            //volumeMasterSlider.value = settings.volumeMaster;
+            //volumeMasterToggle.isOn = settings.isVolumeMasterMuted;
             windowedToggle.isOn = settings.isWindowed;
 
             base.Show(true);
@@ -220,7 +220,7 @@ namespace Nekoyume.UI
         {
             var volumeString = Mathf.Approximately(AudioListener.volume, 0.0f) ?
                 L10nManager.Localize("UI_MUTE_AUDIO") : $"{Mathf.CeilToInt(AudioListener.volume * 100.0f)}%";
-            volumeMasterText.text = $"{L10nManager.Localize("UI_MASTER_VOLUME")} : {volumeString}";
+            //volumeMasterText.text = $"{L10nManager.Localize("UI_MASTER_VOLUME")} : {volumeString}";
         }
 
         private void SetVolumeSfx(float value)

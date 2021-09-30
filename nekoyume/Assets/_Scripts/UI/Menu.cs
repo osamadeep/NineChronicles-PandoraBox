@@ -88,6 +88,11 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
         }
 
+        public void ShowPandoraSettings()
+        {
+            PandoraBox.PandoraBoxMaster.Instance.UISettings.SetActive(true);
+        }
+
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
         private void HackAndSlash(int stageId)
         {
