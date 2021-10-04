@@ -189,6 +189,7 @@ namespace Nekoyume.UI
             var statOptionRows = ItemOptionHelper.GetStatOptionRows(
                 resultModel.subRecipeId.Value,
                 resultModel.itemUsable);
+
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
                 var optionView = information.StatOptions[i];
@@ -204,8 +205,8 @@ namespace Nekoyume.UI
                     optionView.Hide();
                     continue;
                 }
-
-                var text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax})";
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                var text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
                 optionView.UpdateView(text, string.Empty, 1);
                 optionView.Show();
             }
@@ -225,8 +226,12 @@ namespace Nekoyume.UI
                     optionView.Hide();
                     continue;
                 }
-
+                
+                //var sheet = Game.Game.instance.TableSheets.EquipmentItemOptionSheet;
+                //var row = sheet.OrderedList.FirstOrDefault(x => x.SkillId == itemOptionInfo.SkillOptions[i]. && x.SkillDamageMin == level);
                 var (skillName, _, _) = itemOptionInfo.SkillOptions[i];
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                skillName += $"=<color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
                 optionView.UpdateView(skillName, string.Empty);
                 optionView.Show();
             }

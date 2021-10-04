@@ -15,6 +15,7 @@ namespace Nekoyume.UI
         [SerializeField] private BossStatus bossStatus = null;
         [SerializeField] private Toggle repeatToggle = null;
         [SerializeField] private Toggle exitToggle = null;
+        [SerializeField] private UnityEngine.UI.Button forceExit = null; //|||||||||||||| PANDORA CODE |||||||||||||||||||
         [SerializeField] private HelpButton helpButton = null;
         [SerializeField] private BossStatus enemyPlayerStatus = null;
         [SerializeField] private StageProgressBar stageProgressBar = null;
@@ -50,7 +51,7 @@ namespace Nekoyume.UI
                     stage.IsRepeatStage = false;
                 }
             });
-
+            
             Game.Event.OnGetItem.AddListener(_ =>
             {
                 var headerMenu = Find<HeaderMenu>();
@@ -63,6 +64,8 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
+
+            forceExit.onClick.AddListener(() =>{ ForceExitToMenu();}); //|||||||||||||| PANDORA CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -72,6 +75,13 @@ namespace Nekoyume.UI
             Find<HeaderMenu>().Close();
             base.Close(ignoreCloseAnimation);
         }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ForceExitToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void OnCompleteOfCloseAnimationInternal()
         {

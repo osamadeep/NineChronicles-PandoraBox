@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class PandoraUISettings : MonoBehaviour
 {
-    bool isTimeOverBlock;
+    int blockShowType;
 
     //Time Scale Elements
     [SerializeField]
@@ -13,6 +13,9 @@ public class PandoraUISettings : MonoBehaviour
 
     [SerializeField]
     Image blockImage;
+
+    [SerializeField]
+    Image bothImage;
 
     //Menu Speed Elements
     [SerializeField]
@@ -46,7 +49,7 @@ public class PandoraUISettings : MonoBehaviour
             return;
 
         //Load settings
-        isTimeOverBlock = PandoraBox.PandoraBoxMaster.Instance.Settings.IsTimeOverBlock;
+        blockShowType = PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType;
         LoadTimeScale();
         menuSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed;
         LoadMenuSpeed();
@@ -64,7 +67,7 @@ public class PandoraUISettings : MonoBehaviour
         PandoraBox.PandoraBoxMaster.Instance.Settings.Save();
 
         //Load settings
-        isTimeOverBlock = PandoraBox.PandoraBoxMaster.Instance.Settings.IsTimeOverBlock;
+        blockShowType = PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType;
         LoadTimeScale();
         menuSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed;
         LoadMenuSpeed();
@@ -83,7 +86,7 @@ public class PandoraUISettings : MonoBehaviour
 
     public void SaveSettings()
     {
-        PandoraBox.PandoraBoxMaster.Instance.Settings.IsTimeOverBlock = isTimeOverBlock ? true : false;
+        PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType = blockShowType;
         PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
         PandoraBox.PandoraBoxMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
         PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
@@ -93,16 +96,17 @@ public class PandoraUISettings : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void ChangeTimeScale(bool isTime)
+    public void ChangeTimeScale(int value)
     {
-        isTimeOverBlock = isTime;    
+        blockShowType = value;    
         LoadTimeScale();
     }
 
     void LoadTimeScale()
     {
-        timeImage.color = isTimeOverBlock ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-        blockImage.color = isTimeOverBlock ? new Color(0.5f, 0.5f, 0.5f) : Color.white;
+        timeImage.color = blockShowType  == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        blockImage.color = blockShowType == 1 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        bothImage.color = blockShowType == 2 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
     }
 
     public void ChangeMenuSpeed()
@@ -131,7 +135,7 @@ public class PandoraUISettings : MonoBehaviour
     }
     public void LoadArenaUp()
     {
-        arenaUpText.text = (20 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
+        arenaUpText.text = (90 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
     }
 
     public void ChangeArenaLo()

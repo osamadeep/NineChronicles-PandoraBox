@@ -78,6 +78,9 @@ namespace Nekoyume.UI.Scroller
 
         [SerializeField]
         private TextMeshProUGUI gainPointText = null;
+
+        [SerializeField]
+        private TextMeshProUGUI extraInfoText = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private RectTransform _rectTransformCache;
@@ -210,7 +213,7 @@ namespace Nekoyume.UI.Scroller
 
             UpdateRank(itemData.rank);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            nameText.text = ArenaInfo.AvatarName + " <b><color=green>("+ ArenaInfo.DailyChallengeCount + ")</color></b>";
+            nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
             if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW") || nameText.text.Contains("bmcdee")) 
                 paidMember.SetActive(true);
@@ -222,43 +225,76 @@ namespace Nekoyume.UI.Scroller
             else
                 paidMember2.SetActive(false);
 
-            int temp = CPHelper.GetCPV2(
+            int he, me;
+            me = CPHelper.GetCPV2(
                         States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
                         Game.Game.instance.TableSheets.CostumeStatSheet);
-            if (int.Parse(GetCP(ArenaInfo)) > temp + 10000)
+            he = int.Parse(GetCP(ArenaInfo));
+
+            if (he > me + 10000)
                 cpText.text = "<color=red>" + GetCP(ArenaInfo) + "</color>";
-            else if (int.Parse(GetCP(ArenaInfo)) < temp - 10000)
-                cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
+            else if (he <= me + 10000 && he > me)
+                cpText.text = "<color=#FF4900>" + GetCP(ArenaInfo) + "</color>";
+            else if (he <= me && he > me - 10000)
+                cpText.text = "<color=#4CA94C>" + GetCP(ArenaInfo) + "</color>";
             else
-                cpText.text = "<color=#FFA200>" + GetCP(ArenaInfo) + "</color>";
-           
+                cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
+
+
             maxChallengeButton.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
             gainPointText.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
-            if (ArenaInfo.Score > currentAvatarArenaInfo.Score)
+
+            string tempTxt = $"(<color=green>{ArenaInfo.ArenaRecord.Win}</color>/<color=red>{ArenaInfo.ArenaRecord.Lose}</color>)";
+            if (ArenaInfo.DailyChallengeCount > 0)
+                tempTxt += $" - (<color=green>{ArenaInfo.DailyChallengeCount}</color>)";
+            else
+                tempTxt += $" - (<color=red>{ArenaInfo.DailyChallengeCount}</color>)";
+            extraInfoText.text = tempTxt;
+
+            me = currentAvatarArenaInfo.Score;
+            he = ArenaInfo.Score;
+
+            if (he > me + 500)
             {
                 gainPointText.text = "<color=green>+60</color>";
             }
-            else if (ArenaInfo.Score == currentAvatarArenaInfo.Score)
+            else if (he > me + 400 && he <= me + 500)
             {
-                gainPointText.text = "<color=#FFA200>+15</color>";
+                gainPointText.text = "<color=green>+50</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score)
+            else if (he > me + 300 && he <= me + 400)
             {
-                gainPointText.text = "<color=#FFA200>+15</color>";
+                gainPointText.text = "<color=#FFA200>+40</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 100)
+            else if (he > me + 200 && he <= me + 300)
             {
-                gainPointText.text = "<color=#FFA200>+8</color>";
+                gainPointText.text = "<color=#FFA200>+30</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 200)
+            else if (he > me + 100 && he <= me + 200)
             {
-                gainPointText.text = "<color=#FFA200>+4</color>";
+                gainPointText.text = "<color=#FFA200>+25</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 300)
+            else if (he > me && he <= me + 100)
             {
-                gainPointText.text = "<color=#FFA200>+2</color>";
+                gainPointText.text = "<color=#FFA200>+20</color>";
             }
-            else if (ArenaInfo.Score < currentAvatarArenaInfo.Score - 400)
+            else if (he <= me && he > me - 100)
+            {
+                gainPointText.text = "<color=red>+15</color>";
+            }
+            else if (he <= me - 100 && he > me - 200)
+            {
+                gainPointText.text = "<color=red>+8</color>";
+            }
+            else if (he <= me - 200 && he > me - 300)
+            {
+                gainPointText.text = "<color=red>+4</color>";
+            }
+            else if (he <= me - 300 && he > me - 500)
+            {
+                gainPointText.text = "<color=red>+2</color>";
+            }
+            else if (he <= me - 500)
             {
                 gainPointText.text = "<color=#FFA200>+1</color>";
             }

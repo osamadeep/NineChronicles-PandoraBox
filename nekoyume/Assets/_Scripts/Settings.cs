@@ -1,3 +1,4 @@
+using PandoraBox;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,21 +11,21 @@ namespace Nekoyume
 
         private const string VolumeMasterKey = "SETTINGS_VOLUME_MASTER";
         private const string VolumeMasterIsMutedKey = "SETTINGS_VOLUME_MASTER_ISMUTED";
-        private const string VolumeMusicKey = "SETTINGS_VOLUME_MUSIC";
-        private const string VolumeMusicIsMutedKey = "SETTINGS_VOLUME_MUSIC_ISMUTED";
-        private const string VolumeSfxKey = "SETTINGS_VOLUME_SFX";
-        private const string VolumeSfxIsMutedKey = "SETTINGS_VOLUME_SFX_ISMUTED";
-        private const string ResolutionIndexKey = "SETTINGS_RESOLUTION_INDEX";
+        private const string VolumeMusicKey = "_PandoraBox_General_MusicVolume";
+        private const string VolumeMusicIsMutedKey = "_PandoraBox_General_IsMusicMuted";
+        private const string VolumeSfxKey = "_PandoraBox_General_SfxVolume";
+        private const string VolumeSfxIsMutedKey = "_PandoraBox_General_IsSfxMuted";
+        private const string ResolutionIndexKey = "_PandoraBox_General_ResolutionIndex";
         private const string ResolutionWindowedKey = "SETTINGS_WINDOWED";
 
-        public float volumeMaster;
-        public float volumeMusic;
-        public float volumeSfx;
+        //public float volumeMaster;
+        //public float volumeMusic;
+        //public float volumeSfx;
         public int resolutionIndex = 0;
 
-        public bool isVolumeMasterMuted;
-        public bool isVolumeMusicMuted;
-        public bool isVolumeSfxMuted;
+        //public bool isVolumeMasterMuted;
+        //public bool isVolumeMusicMuted;
+        //public bool isVolumeSfxMuted;
         public bool isWindowed = true;
 
         public class Resolution
@@ -63,13 +64,13 @@ namespace Nekoyume
 
         public void ReloadSettings()
         {
-            volumeMaster = PlayerPrefs.GetFloat(VolumeMasterKey, 1f);
-            volumeMusic = PlayerPrefs.GetFloat(VolumeMusicKey, 1f);
-            volumeSfx = PlayerPrefs.GetFloat(VolumeSfxKey, 1f);
+            ////volumeMaster = PlayerPrefs.GetFloat(VolumeMasterKey, 1f);
+            //volumeMusic = PandoraBoxMaster.Instance.Settings.MusicVolume;
+            //volumeSfx = PlayerPrefs.GetFloat("_PandoraBox_General_SfxVolume", 1f);
 
-            isVolumeMasterMuted = PlayerPrefs.GetInt(VolumeMasterIsMutedKey, 0) == 0 ? false : true;
-            isVolumeMusicMuted = PlayerPrefs.GetInt(VolumeMusicIsMutedKey, 0) == 0 ? false : true;
-            isVolumeSfxMuted = PlayerPrefs.GetInt(VolumeSfxIsMutedKey, 0) == 0 ? false : true;
+            ////isVolumeMasterMuted = PlayerPrefs.GetInt(VolumeMasterIsMutedKey, 0) == 0 ? false : true;
+            //isVolumeMusicMuted = PlayerPrefs.GetInt(VolumeMusicIsMutedKey, 0) == 0 ? false : true;
+            //isVolumeSfxMuted = PlayerPrefs.GetInt(VolumeSfxIsMutedKey, 0) == 0 ? false : true;
 
             resolutionIndex = PlayerPrefs.GetInt(ResolutionIndexKey, 0);
             isWindowed = PlayerPrefs.GetInt(ResolutionWindowedKey, 1) == 1 ? true : false;
@@ -78,25 +79,25 @@ namespace Nekoyume
 
         public void ApplyCurrentSettings()
         {
-            PlayerPrefs.SetFloat(VolumeMasterKey, volumeMaster);
-            PlayerPrefs.SetFloat(VolumeMusicKey, volumeMusic);
-            PlayerPrefs.SetFloat(VolumeSfxKey, volumeSfx);
+            //PlayerPrefs.SetFloat(VolumeMasterKey, volumeMaster);
+            PlayerPrefs.SetFloat(VolumeMusicKey, PandoraBoxMaster.Instance.Settings.MusicVolume);
+            PlayerPrefs.SetFloat(VolumeSfxKey, PandoraBoxMaster.Instance.Settings.SfxVolume);
 
-            PlayerPrefs.SetInt(VolumeMasterIsMutedKey, isVolumeMasterMuted ? 1 : 0);
-            PlayerPrefs.SetInt(VolumeMusicIsMutedKey, isVolumeMusicMuted ? 1 : 0);
-            PlayerPrefs.SetInt(VolumeSfxIsMutedKey, isVolumeSfxMuted ? 1 : 0);
+            //PlayerPrefs.SetInt(VolumeMasterIsMutedKey, isVolumeMasterMuted ? 1 : 0);
+            PlayerPrefs.SetInt(VolumeMusicIsMutedKey, PandoraBoxMaster.Instance.Settings.IsMusicMuted ? 1 : 0);
+            PlayerPrefs.SetInt(VolumeSfxIsMutedKey, PandoraBoxMaster.Instance.Settings.IsSfxMuted ? 1 : 0);
         }
 
         public void ApplyCurrentResolution()
         {
-            PlayerPrefs.SetInt(ResolutionIndexKey, resolutionIndex);
+            PlayerPrefs.SetInt(ResolutionIndexKey, PandoraBoxMaster.Instance.Settings.ResolutionIndex);
             PlayerPrefs.SetInt(ResolutionWindowedKey, isWindowed ? 1 : 0);
             SetResolution();
         }
 
         private void SetResolution()
         {
-            Screen.SetResolution(Resolutions[resolutionIndex].Width, Resolutions[resolutionIndex].Height, !isWindowed);
+            Screen.SetResolution(Resolutions[PandoraBoxMaster.Instance.Settings.ResolutionIndex].Width, Resolutions[PandoraBoxMaster.Instance.Settings.ResolutionIndex].Height, !isWindowed);
         }
     }
 }

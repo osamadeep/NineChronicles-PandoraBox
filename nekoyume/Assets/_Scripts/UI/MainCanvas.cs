@@ -147,10 +147,6 @@ namespace Nekoyume.UI
 
         public void InitializeIntro()
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            masterMixer.SetFloat("MusicVolume", Nekoyume.Settings.Instance.volumeMusic);
-            masterMixer.SetFloat("SfxVolume", Nekoyume.Settings.Instance.volumeMusic);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var intro = Widget.Create<Intro>(true);
             intro.Initialize();
 

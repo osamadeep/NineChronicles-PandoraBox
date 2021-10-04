@@ -486,15 +486,15 @@ namespace Nekoyume.UI
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                int upper = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                int upper = 90 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                int lower = 90 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
                 {
                     var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                    infos2 = state.GetArenaInfos(address, 20, 0);
+                    infos2 = state.GetArenaInfos(address, 90, 0);
                 }
 
                 infos.AddRange(infos2);

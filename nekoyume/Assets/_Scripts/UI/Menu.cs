@@ -15,6 +15,8 @@ using Nekoyume.Model.State;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Helper;
+    using TMPro;
     using UniRx;
     public class Menu : Widget
     {
@@ -71,6 +73,14 @@ namespace Nekoyume.UI
         public SpriteRenderer combinationSpriteRenderer;
         public SpriteRenderer hasSpriteRenderer;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private TextMeshProUGUI arenaRemains;
+
+        [SerializeField]
+        private TextMeshProUGUI arenaCount;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         protected override void Awake()
         {
             base.Awake();
@@ -88,10 +98,77 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void OnEnable()
+        {
+            StartCoroutine(arenaRemainsTime());
+            StartCoroutine(arenaRemainsCount());
+            StartCoroutine(ShowWhatsNew());
+        }
+
+        IEnumerator ShowWhatsNew()
+        {
+            yield return new WaitForSeconds(5);
+            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.WhatsNewShown)
+            {
+                PandoraBox.PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
+            }
+        }
+
+        IEnumerator arenaRemainsTime()
+        {
+            yield return new WaitForSeconds(1);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
+                var weeklyArenaState = States.Instance.WeeklyArenaState;
+                long _resetIndex = weeklyArenaState.ResetIndex;
+                float value;
+
+                value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
+                var remainBlock = gameConfigState.DailyArenaInterval - value;
+                var time = Util.GetBlockToTime((int)remainBlock);
+
+
+                if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+                    arenaRemains.text = time;
+                else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+                    arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
+                else
+                    arenaRemains.text = $"{time} ({value})";
+                yield return new WaitForSeconds(3);
+            }
+        }
+
+        IEnumerator arenaRemainsCount()
+        {
+            yield return new WaitForSeconds(1);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                while (States.Instance == null)
+                {
+                    yield return new WaitForSeconds(1);
+                }
+                var currentAddress = States.Instance.CurrentAvatarState?.address;
+                var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                if (arenaInfo.DailyChallengeCount > 0)
+                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                else
+                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+                yield return new WaitForSeconds(5);
+            }
+        }
+
         public void ShowPandoraSettings()
         {
+            AudioController.PlayClick();
             PandoraBox.PandoraBoxMaster.Instance.UISettings.SetActive(true);
         }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
         private void HackAndSlash(int stageId)

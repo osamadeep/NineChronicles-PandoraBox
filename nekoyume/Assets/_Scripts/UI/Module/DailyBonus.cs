@@ -133,13 +133,27 @@ namespace Nekoyume.UI.Module
         private void OnSliderChange()
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!PandoraBoxMaster.Instance.Settings.IsTimeOverBlock)
-                text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
-            else
+            switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
             {
-                int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
-                var timeR = Util.GetBlockToTime(remainBlock);
-                text.text = timeR;
+                case 0:
+                    {
+                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
+                        var timeR = Util.GetBlockToTime(remainBlock);
+                        text.text = timeR;
+                        break;
+                    }
+                case 1:
+                    {
+                        text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
+                        break;
+                    }
+                case 2:
+                    {
+                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
+                        string timeR = Util.GetBlockToTime(remainBlock) + $"({remainBlock})";
+                        text.text = timeR;
+                        break;
+                    }
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

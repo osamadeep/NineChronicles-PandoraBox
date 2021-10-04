@@ -11,6 +11,8 @@ using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using UniRx;
 using TimeSpan = System.TimeSpan;
+using UnityEngine.Audio;
+using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -26,7 +28,18 @@ namespace Nekoyume.UI
         public TextMeshProUGUI warningText;
         //public TextMeshProUGUI volumeMasterText;
         //public Slider volumeMasterSlider;
-        public Toggle volumeMasterToggle;
+        //public Toggle volumeMasterToggle;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public TextMeshProUGUI volumeMusicText;
+        public Slider volumeMusicSlider;
+        public Toggle volumeMusicToggle;
+        public TextMeshProUGUI volumeSfxText;
+        public Slider volumeSfxSlider;
+        public Toggle volumeSfxToggle;
+        AudioMixer masterMixer;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public List<TextMeshProUGUI> muteTexts;
         public TextMeshProUGUI resetKeyStoreText;
         public TextMeshProUGUI resetStoreText;
@@ -51,6 +64,14 @@ namespace Nekoyume.UI
 
             //volumeMasterSlider.onValueChanged.AddListener(SetVolumeMaster);
             //volumeMasterToggle.onValueChanged.AddListener(SetVolumeMasterMute);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            volumeMusicSlider.onValueChanged.AddListener(SetVolumeMusic);
+            volumeMusicToggle.onValueChanged.AddListener(SetVolumeMusicMute);
+            volumeSfxSlider.onValueChanged.AddListener(SetVolumeSfx);
+            volumeSfxToggle.onValueChanged.AddListener(SetVolumeSfxMute);
+            masterMixer = PandoraBox.PandoraBoxMaster.Instance.Audiomixer;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             resetStoreText.text = L10nManager.Localize("UI_CONFIRM_RESET_STORE_TITLE");
             resetKeyStoreText.text = L10nManager.Localize("UI_CONFIRM_RESET_KEYSTORE_TITLE");
@@ -142,6 +163,14 @@ namespace Nekoyume.UI
 
             //volumeMasterSlider.value = settings.volumeMaster;
             //volumeMasterToggle.isOn = settings.isVolumeMasterMuted;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            volumeMusicSlider.value = PandoraBoxMaster.Instance.Settings.MusicVolume;
+            volumeMusicToggle.isOn = PandoraBoxMaster.Instance.Settings.IsMusicMuted;
+            volumeSfxSlider.value = PandoraBoxMaster.Instance.Settings.SfxVolume;
+            volumeSfxToggle.isOn = PandoraBoxMaster.Instance.Settings.IsSfxMuted;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             windowedToggle.isOn = settings.isWindowed;
 
             base.Show(true);
@@ -169,8 +198,14 @@ namespace Nekoyume.UI
         public void UpdateSoundSettings()
         {
             var settings = Nekoyume.Settings.Instance;
-            SetVolumeMaster(settings.volumeMaster);
-            SetVolumeMasterMute(settings.isVolumeMasterMuted);
+            //SetVolumeMaster(settings.volumeMaster);
+            //SetVolumeMasterMute(settings.isVolumeMasterMuted);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            SetVolumeMusic(PandoraBoxMaster.Instance.Settings.MusicVolume);
+            SetVolumeMusicMute(PandoraBoxMaster.Instance.Settings.IsMusicMuted);
+            SetVolumeSfx(PandoraBoxMaster.Instance.Settings.SfxVolume);
+            SetVolumeSfxMute(PandoraBoxMaster.Instance.Settings.IsSfxMuted);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void UpdateResolution()
@@ -200,40 +235,88 @@ namespace Nekoyume.UI
             // todo: 복사되었습니다. 토스트.
         }
 
-        private void SetVolumeMaster(float value)
+        //private void SetVolumeMaster(float value)
+        //{
+        //    var settings = Nekoyume.Settings.Instance;
+        //    settings.volumeMaster = value;
+        //    AudioListener.volume = settings.isVolumeMasterMuted ? 0f : settings.volumeMaster;
+        //    UpdateVolumeMasterText();
+        //}
+
+        //private void SetVolumeMasterMute(bool value)
+        //{
+        //    var settings = Nekoyume.Settings.Instance;
+        //    settings.isVolumeMasterMuted = value;
+        //    AudioListener.volume = value ? 0f : settings.volumeMaster;
+        //    UpdateVolumeMasterText();
+        //}
+
+        //private void UpdateVolumeMasterText()
+        //{
+        //    var volumeString = Mathf.Approximately(AudioListener.volume, 0.0f) ?
+        //        L10nManager.Localize("UI_MUTE_AUDIO") : $"{Mathf.CeilToInt(AudioListener.volume * 100.0f)}%";
+        //    //volumeMasterText.text = $"{L10nManager.Localize("UI_MASTER_VOLUME")} : {volumeString}";
+        //}
+
+        //private void SetVolumeSfx(float value)
+        //{
+        //    var settings = Nekoyume.Settings.Instance;
+        //    settings.volumeSfx = value;
+        //}
+
+        //private void SetVolumeSfxMute(bool value)
+        //{
+        //    var settings = Nekoyume.Settings.Instance;
+        //    settings.isVolumeSfxMuted = value;
+        //}
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void SetVolumeMusic(float value)
         {
-            var settings = Nekoyume.Settings.Instance;
-            settings.volumeMaster = value;
-            AudioListener.volume = settings.isVolumeMasterMuted ? 0f : settings.volumeMaster;
-            UpdateVolumeMasterText();
+            PandoraBoxMaster.Instance.Settings.MusicVolume = value;
+            if (!PandoraBoxMaster.Instance.Settings.IsMusicMuted)
+                masterMixer.SetFloat("MusicVolume", Mathf.Lerp(-20f, 0, value));
+            UpdateVolumeMusicText(PandoraBoxMaster.Instance.Settings.IsMusicMuted ? 0f : value);
         }
 
-        private void SetVolumeMasterMute(bool value)
+        private void SetVolumeMusicMute(bool value)
         {
-            var settings = Nekoyume.Settings.Instance;
-            settings.isVolumeMasterMuted = value;
-            AudioListener.volume = value ? 0f : settings.volumeMaster;
-            UpdateVolumeMasterText();
+            PandoraBoxMaster.Instance.Settings.IsMusicMuted = value;
+            masterMixer.SetFloat("MusicVolume", value ? -80f : PandoraBoxMaster.Instance.Settings.MusicVolume);
+            UpdateVolumeMusicText(value ? 0f : PandoraBoxMaster.Instance.Settings.MusicVolume);
         }
 
-        private void UpdateVolumeMasterText()
+        private void UpdateVolumeMusicText(float value)
         {
-            var volumeString = Mathf.Approximately(AudioListener.volume, 0.0f) ?
-                L10nManager.Localize("UI_MUTE_AUDIO") : $"{Mathf.CeilToInt(AudioListener.volume * 100.0f)}%";
-            //volumeMasterText.text = $"{L10nManager.Localize("UI_MASTER_VOLUME")} : {volumeString}";
+            var volumeString = Mathf.Approximately(value, 0.0f) ?
+    L10nManager.Localize("UI_MUTE_AUDIO") : $"{Mathf.CeilToInt(value * 100.0f)}%";
+            volumeMusicText.text = $"Music Volume : {volumeString}";
         }
 
         private void SetVolumeSfx(float value)
         {
-            var settings = Nekoyume.Settings.Instance;
-            settings.volumeSfx = value;
+            PandoraBoxMaster.Instance.Settings.SfxVolume = value;
+            if (!PandoraBoxMaster.Instance.Settings.IsSfxMuted)
+                masterMixer.SetFloat("SfxVolume", Mathf.Lerp(-20f, 0, value));
+            UpdateVolumeSfxText(PandoraBoxMaster.Instance.Settings.IsSfxMuted ? 0f : PandoraBoxMaster.Instance.Settings.SfxVolume);
         }
 
         private void SetVolumeSfxMute(bool value)
         {
             var settings = Nekoyume.Settings.Instance;
-            settings.isVolumeSfxMuted = value;
+            PandoraBoxMaster.Instance.Settings.IsSfxMuted = value;
+            masterMixer.SetFloat("SfxVolume", value ? -80f : PandoraBoxMaster.Instance.Settings.SfxVolume);
+            UpdateVolumeSfxText(value ? 0f : PandoraBoxMaster.Instance.Settings.SfxVolume);
         }
+
+        private void UpdateVolumeSfxText(float value)
+        {
+            var volumeString = Mathf.Approximately(value, 0.0f) ?
+                L10nManager.Localize("UI_MUTE_AUDIO") : $"{Mathf.CeilToInt(value * 100.0f)}%";
+            volumeSfxText.text = $"SoundFX Volume : {volumeString}";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         public void SetResolution(int index)
         {

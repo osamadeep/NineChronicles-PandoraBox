@@ -95,14 +95,23 @@ namespace PandoraBox
             }
             else
             {
+                States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
+                if (int.Parse(StageIDText.text) > clearedStage)
+                {
+                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!");
+                    return;
+                }
+                var stage = Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i => i.Id == int.Parse(StageIDText.text));
+
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
                 if (tries <= 0)
                 {
-                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You have "+ "<color=red><b>0</b></color> Action Points!");
+                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
                     return;
                 }
-            
+
                 StartCoroutine(Raid(tries));
+                //StartCoroutine(Raid(24));
             }
         }
 
@@ -150,7 +159,7 @@ namespace PandoraBox
 
                 OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                     +"</color> <color=green>" + (i + 1) + "</color>/" + count + "...");
-                yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(2);
 
             }
             StartCoroutine(Cooldown());

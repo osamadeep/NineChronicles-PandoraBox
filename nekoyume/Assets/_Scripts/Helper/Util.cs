@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,8 +48,12 @@ namespace Nekoyume.Helper
 
             if (sb.Length == 0)
             {
-                sb.Append("1m");
+                if (timeSpan.TotalSeconds == 0)
+                    sb.Append("Ready!");
+                else
+                    sb.Append("1m");
             }
+
 
             return sb.ToString();
         }
