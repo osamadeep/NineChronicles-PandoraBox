@@ -288,7 +288,7 @@ namespace Nekoyume.UI
                     OwnerName.gameObject.SetActive(true);
                     OwnerName.text = avatarState.NameWithHash;
                 }
-                Debug.LogError(avatarState.agentAddress);
+                //Debug.LogError(avatarState.agentAddress);
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -326,6 +326,11 @@ namespace Nekoyume.UI
             scrollbar.value = 1f;
             StartCoroutine(CoUpdate(buy));
             buyTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+                PrepareDiscordBackground();
+            else
+                ResetDiscordBackground();
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
