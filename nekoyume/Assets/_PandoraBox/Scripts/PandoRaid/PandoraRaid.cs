@@ -96,22 +96,23 @@ namespace PandoraBox
             else
             {
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
-                if (int.Parse(StageIDText.text) > clearedStage)
+                if (int.Parse(StageIDText.text) > clearedStage +1)
                 {
                     OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!");
                     return;
                 }
-                var stage = Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i => i.Id == int.Parse(StageIDText.text));
-
+#if !UNITY_EDITOR
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
                 if (tries <= 0)
                 {
                     OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
                     return;
                 }
-
                 StartCoroutine(Raid(tries));
-                //StartCoroutine(Raid(24));
+#else
+                StartCoroutine(Raid(24));
+#endif
+
             }
         }
 

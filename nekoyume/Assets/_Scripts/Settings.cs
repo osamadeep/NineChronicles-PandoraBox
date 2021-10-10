@@ -9,8 +9,8 @@ namespace Nekoyume
         public static Settings Instance => (_instance is null) ? _instance = new Settings() : _instance;
         private static Settings _instance;
 
-        private const string VolumeMasterKey = "SETTINGS_VOLUME_MASTER";
-        private const string VolumeMasterIsMutedKey = "SETTINGS_VOLUME_MASTER_ISMUTED";
+        //private const string VolumeMasterKey = "SETTINGS_VOLUME_MASTER";
+        //private const string VolumeMasterIsMutedKey = "SETTINGS_VOLUME_MASTER_ISMUTED";
         private const string VolumeMusicKey = "_PandoraBox_General_MusicVolume";
         private const string VolumeMusicIsMutedKey = "_PandoraBox_General_IsMusicMuted";
         private const string VolumeSfxKey = "_PandoraBox_General_SfxVolume";
@@ -19,13 +19,13 @@ namespace Nekoyume
         private const string ResolutionWindowedKey = "SETTINGS_WINDOWED";
 
         //public float volumeMaster;
-        //public float volumeMusic;
-        //public float volumeSfx;
-        public int resolutionIndex = 0;
+        public float volumeMusic;
+        public float volumeSfx;
+        public int resolutionIndex = 2;
 
         //public bool isVolumeMasterMuted;
-        //public bool isVolumeMusicMuted;
-        //public bool isVolumeSfxMuted;
+        public bool isVolumeMusicMuted;
+        public bool isVolumeSfxMuted;
         public bool isWindowed = true;
 
         public class Resolution
@@ -64,15 +64,15 @@ namespace Nekoyume
 
         public void ReloadSettings()
         {
-            ////volumeMaster = PlayerPrefs.GetFloat(VolumeMasterKey, 1f);
-            //volumeMusic = PandoraBoxMaster.Instance.Settings.MusicVolume;
-            //volumeSfx = PlayerPrefs.GetFloat("_PandoraBox_General_SfxVolume", 1f);
+            //volumeMaster = PlayerPrefs.GetFloat(VolumeMasterKey, 1f);
+            volumeMusic = PlayerPrefs.GetFloat(VolumeMusicKey, 1f);
+            volumeSfx = PlayerPrefs.GetFloat(VolumeSfxKey, 1f);
 
             ////isVolumeMasterMuted = PlayerPrefs.GetInt(VolumeMasterIsMutedKey, 0) == 0 ? false : true;
-            //isVolumeMusicMuted = PlayerPrefs.GetInt(VolumeMusicIsMutedKey, 0) == 0 ? false : true;
-            //isVolumeSfxMuted = PlayerPrefs.GetInt(VolumeSfxIsMutedKey, 0) == 0 ? false : true;
+            isVolumeMusicMuted = PlayerPrefs.GetInt(VolumeMusicIsMutedKey, 0) == 0 ? false : true;
+            isVolumeSfxMuted = PlayerPrefs.GetInt(VolumeSfxIsMutedKey, 0) == 0 ? false : true;
 
-            resolutionIndex = PlayerPrefs.GetInt(ResolutionIndexKey, 0);
+            resolutionIndex = PlayerPrefs.GetInt(ResolutionIndexKey, 2);
             isWindowed = PlayerPrefs.GetInt(ResolutionWindowedKey, 1) == 1 ? true : false;
             SetResolution();
         }
@@ -80,24 +80,24 @@ namespace Nekoyume
         public void ApplyCurrentSettings()
         {
             //PlayerPrefs.SetFloat(VolumeMasterKey, volumeMaster);
-            PlayerPrefs.SetFloat(VolumeMusicKey, PandoraBoxMaster.Instance.Settings.MusicVolume);
-            PlayerPrefs.SetFloat(VolumeSfxKey, PandoraBoxMaster.Instance.Settings.SfxVolume);
+            PlayerPrefs.SetFloat(VolumeMusicKey, volumeMusic);
+            PlayerPrefs.SetFloat(VolumeSfxKey, volumeSfx);
 
             //PlayerPrefs.SetInt(VolumeMasterIsMutedKey, isVolumeMasterMuted ? 1 : 0);
-            PlayerPrefs.SetInt(VolumeMusicIsMutedKey, PandoraBoxMaster.Instance.Settings.IsMusicMuted ? 1 : 0);
-            PlayerPrefs.SetInt(VolumeSfxIsMutedKey, PandoraBoxMaster.Instance.Settings.IsSfxMuted ? 1 : 0);
+            PlayerPrefs.SetInt(VolumeMusicIsMutedKey, isVolumeMusicMuted ? 1 : 0);
+            PlayerPrefs.SetInt(VolumeSfxIsMutedKey, isVolumeSfxMuted ? 1 : 0);
         }
 
         public void ApplyCurrentResolution()
         {
-            PlayerPrefs.SetInt(ResolutionIndexKey, PandoraBoxMaster.Instance.Settings.ResolutionIndex);
+            PlayerPrefs.SetInt(ResolutionIndexKey, resolutionIndex);
             PlayerPrefs.SetInt(ResolutionWindowedKey, isWindowed ? 1 : 0);
             SetResolution();
         }
 
         private void SetResolution()
         {
-            Screen.SetResolution(Resolutions[PandoraBoxMaster.Instance.Settings.ResolutionIndex].Width, Resolutions[PandoraBoxMaster.Instance.Settings.ResolutionIndex].Height, !isWindowed);
+            Screen.SetResolution(Resolutions[resolutionIndex].Width, Resolutions[resolutionIndex].Height, !isWindowed);
         }
     }
 }

@@ -11,6 +11,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Scroller
 {
+    using PandoraBox;
     using UniRx;
 
     public class ArenaRankCell : RectCell<
@@ -81,6 +82,9 @@ namespace Nekoyume.UI.Scroller
 
         [SerializeField]
         private TextMeshProUGUI extraInfoText = null;
+
+        [SerializeField]
+        private GameObject FavTarget = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private RectTransform _rectTransformCache;
@@ -215,12 +219,14 @@ namespace Nekoyume.UI.Scroller
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
-            if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW") || nameText.text.Contains("bmcdee")) 
+            FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
+
+            if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW")) 
                 paidMember.SetActive(true);
             else
                 paidMember.SetActive(false);
 
-            if (nameText.text.Contains("Wabbs") || nameText.text.Contains("Farm4Ace") || nameText.text.Contains("Yoink"))
+            if (nameText.text.Contains("Wabbs"))
                 paidMember2.SetActive(true);
             else
                 paidMember2.SetActive(false);

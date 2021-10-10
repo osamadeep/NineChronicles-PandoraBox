@@ -12,8 +12,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+
 namespace Nekoyume.UI
 {
+    using Nekoyume.Helper;
     using System.Collections;
     using UniRx;
     using UnityEngine.EventSystems;
@@ -31,6 +33,12 @@ namespace Nekoyume.UI
         [SerializeField] private GameObject sell;
         [SerializeField] private BlockTimer buyTimer;
         [SerializeField] private BlockTimer sellTimer;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField] private TextMeshProUGUI OwnerName;
+        [HideInInspector] public TextMeshProUGUI MarketPriceText;
+        [SerializeField] private RectTransform DiscordHolder;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField] private TextMeshProUGUI priceText;
         [SerializeField] private Scrollbar scrollbar;
@@ -91,6 +99,39 @@ namespace Nekoyume.UI
             Model = null;
             base.OnDestroy();
         }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        void PrepareDiscordBackground()
+        {
+            panel.Find("Content/Spacer1").gameObject.SetActive(false);
+            panel.Find("Content/ScrollArea").gameObject.SetActive(false);
+            panel.Find("Content/Spacer2").gameObject.SetActive(false);
+            panel.Find("Content/TradableText").gameObject.SetActive(false);
+            panel.Find("Footer").gameObject.SetActive(false);
+            MarketPriceText.gameObject.SetActive(true);
+            MarketPriceText.text = "*" + PandoraBox.PandoraBoxMaster.MarketPriceValue + " NCG*"; 
+            panel.GetComponent<Image>().enabled = false;
+            LayoutRebuild();
+            DiscordHolder.sizeDelta = panel.sizeDelta;
+            DiscordHolder.position = panel.position;
+            DiscordHolder.gameObject.SetActive(true);
+        }
+
+        void ResetDiscordBackground()
+        {
+            panel.GetComponent<Image>().enabled = true;
+            panel.Find("Content/Spacer1").gameObject.SetActive(true);
+            panel.Find("Content/ScrollArea").gameObject.SetActive(true);
+            panel.Find("Content/Spacer2").gameObject.SetActive(true);
+            panel.Find("Content/TradableText").gameObject.SetActive(true);
+            MarketPriceText.text = "";
+            panel.Find("Footer").gameObject.SetActive(true);
+            DiscordHolder.gameObject.SetActive(false);
+            LayoutRebuild();
+
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Show(RectTransform target, CountableItem item, Action<ItemInformationTooltip> onClose = null)
         {
@@ -104,14 +145,12 @@ namespace Nekoyume.UI
                          Action<ItemInformationTooltip> onSubmit,
                          Action<ItemInformationTooltip> onClose = null)
         {
+            OwnerName.gameObject.SetActive(false);//|||||||||||||| PANDORA CODE |||||||||||||||||||
+
             if (item?.ItemBase.Value is null)
             {
                 return;
             }
-            //||||
-            
-            //Game.Game.instance. .TryGetNonFungibleItem("d6c83f2d-a556-4639-8296-b7b6b9c89868", out Nekoyume.Model.Item.ItemUsable xx);
-
             submit.SetActive(submitEnabledFunc != null);
             sell.SetActive(false);
             buy.SetActive(false);
@@ -142,6 +181,11 @@ namespace Nekoyume.UI
 
             scrollbar.value = 1f;
             StartCoroutine(CoUpdate(submitButton.gameObject));
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+                PrepareDiscordBackground();
+            else
+                ResetDiscordBackground();
         }
 
         public void ShowForSell(RectTransform target,
@@ -156,6 +200,20 @@ namespace Nekoyume.UI
             {
                 return;
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //ShopItem x = item as ShopItem;
+            //var order = Util.GetOrder(x.OrderId.Value);
+            //OwnerName.text = "";
+            //if (!States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+                OwnerName.gameObject.SetActive(false);
+            //else
+            //{
+            //    OwnerName.text = avatarState.NameWithHash;
+            //    Debug.LogError(avatarState.agentAddress);
+            //    OwnerName.gameObject.SetActive(true);
+            //}
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
             submit.SetActive(false);
             buy.SetActive(false);
@@ -200,6 +258,11 @@ namespace Nekoyume.UI
             scrollbar.value = 1f;
             StartCoroutine(CoUpdate(sell));
             sellTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+                PrepareDiscordBackground();
+            else
+                ResetDiscordBackground();
         }
 
         public void ShowForBuy(RectTransform target,
@@ -213,6 +276,21 @@ namespace Nekoyume.UI
             {
                 return;
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            ShopItem x = item as ShopItem;
+            var order = Util.GetOrder(x.OrderId.Value);
+            OwnerName.text = "";
+            
+            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+            {
+                if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                {
+                    OwnerName.gameObject.SetActive(true);
+                    OwnerName.text = avatarState.NameWithHash;
+                }
+                Debug.LogError(avatarState.agentAddress);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             submit.SetActive(false);
             sell.SetActive(false);

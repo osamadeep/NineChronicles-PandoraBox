@@ -16,8 +16,13 @@ using Nekoyume.Model.State;
 namespace Nekoyume.UI
 {
     using Nekoyume.Helper;
+    using PandoraBox;
+    using System.Collections.Generic;
+    using System.Collections.Immutable;
     using TMPro;
     using UniRx;
+    using UnityEngine.SceneManagement;
+
     public class Menu : Widget
     {
         private const string FirstOpenShopKeyFormat = "Nekoyume.UI.Menu.FirstOpenShopKey_{0}";
@@ -104,14 +109,37 @@ namespace Nekoyume.UI
             StartCoroutine(arenaRemainsTime());
             StartCoroutine(arenaRemainsCount());
             StartCoroutine(ShowWhatsNew());
+            DailyBonus.isTrying = false;
+        }
+
+        public void ShowLoginScreen()
+        {
+            ////Game.Event.OnLoginDetail.Invoke();
+
+            //var deletableWidgets = FindWidgets().Where(widget =>
+            //    !(widget is SystemInfoWidget) && !(widget is QuitPopup) &&
+            //    !(widget is MessageCatManager) && widget.IsActive());
+            //foreach (var widget in deletableWidgets)
+            //{
+            //    widget.Close(true);
+            //}
+
+            //Game.Game.instance.States = new States();
+            //Game.Game.instance.LocalLayer = new LocalLayer();
+            //MainCanvas.instance.InitializeIntro();
+            //var intro = Find<Intro>();
+            //intro.Show(Libplanet.KeyStore.Web3KeyStore.DefaultKeyStore.Path , "");
+            //Close(true);
+            SceneManager.LoadScene(0);
         }
 
         IEnumerator ShowWhatsNew()
         {
-            yield return new WaitForSeconds(5);
-            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.WhatsNewShown)
+            yield return new WaitForSeconds(2);
+            if (!PandoraBoxMaster.Instance.Settings.WhatsNewShown)
             {
-                PandoraBox.PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
+                AudioController.instance.PlaySfx("sfx_bgm_great_success");
+                PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
             }
         }
 
@@ -131,12 +159,12 @@ namespace Nekoyume.UI
                 var time = Util.GetBlockToTime((int)remainBlock);
 
 
-                if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+                if (PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
                     arenaRemains.text = time;
-                else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+                else if (PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
                     arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
                 else
-                    arenaRemains.text = $"{time} ({value})";
+                    arenaRemains.text = $"{time} ({remainBlock})";
                 yield return new WaitForSeconds(3);
             }
         }
@@ -149,22 +177,64 @@ namespace Nekoyume.UI
             {
                 while (States.Instance == null)
                 {
-                    yield return new WaitForSeconds(1);
+                    yield return new WaitForSeconds(5);
                 }
+
+                var state = States.Instance.WeeklyArenaState;
+                var infos = state.GetArenaInfos(1, 3);
+                var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
+                var infos2 = state.GetArenaInfos(currentAvatarAddress, 1, 1);
+                if (!infos2.Any() && state.OrderedArenaInfos.Any())
+                {
+                    var address = state.OrderedArenaInfos.Last().AvatarAddress;
+                    infos2 = state.GetArenaInfos(address, 1, 1);
+                }
+                infos.AddRange(infos2);
+                infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
+
+                List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo =
+            new List<(int rank, ArenaInfo arenaInfo)>();
+                _weeklyCachedInfo = infos
+    .Select(tuple =>
+    {
+        if (!States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress, out var avatarState))
+        {
+            return (0, null);
+        }
+
+        var arenaInfo = tuple.arenaInfo;
+#pragma warning disable 618
+                    arenaInfo.Level = avatarState.level;
+        arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
+            ? fullCostume.Id
+            : avatarState.GetArmorId();
+        arenaInfo.CombatPoint = avatarState.GetCP();
+#pragma warning restore 618
+                    return tuple;
+    })
+    .Where(tuple => tuple.rank > 0)
+    .ToList();
+                var (currentAvatarRank, currentAvatarArenaInfo) = _weeklyCachedInfo
+                    .FirstOrDefault(info =>
+                        info.arenaInfo.AvatarAddress.Equals(currentAvatarAddress));
+
+
+
+
                 var currentAddress = States.Instance.CurrentAvatarState?.address;
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
                 if (arenaInfo.DailyChallengeCount > 0)
-                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
                 else
-                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
-                yield return new WaitForSeconds(5);
+                    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+                yield return new WaitForSeconds(60);
             }
         }
 
         public void ShowPandoraSettings()
         {
             AudioController.PlayClick();
-            PandoraBox.PandoraBoxMaster.Instance.UISettings.SetActive(true);
+            PandoraBoxMaster.Instance.UISettings.SetActive(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -464,6 +534,11 @@ namespace Nekoyume.UI
 
             StartCoroutine(CoStartSpeeches());
             UpdateButtons();
+
+            //save profile name
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
+            PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name);
         }
 
         protected override void OnCompleteOfShowAnimationInternal()

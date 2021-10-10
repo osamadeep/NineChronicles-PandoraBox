@@ -135,7 +135,7 @@ public class PandoraUISettings : MonoBehaviour
     }
     public void LoadArenaUp()
     {
-        arenaUpText.text = (90 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
+        arenaUpText.text = (50 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
     }
 
     public void ChangeArenaLo()

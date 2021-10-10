@@ -137,5 +137,10 @@ namespace Nekoyume.Helper
 
             return count;
         }
+
+        internal static object GetOrder(UniRx.ReactiveProperty<Guid> orderId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

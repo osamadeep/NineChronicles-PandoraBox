@@ -162,6 +162,20 @@ namespace Nekoyume.UI
 
         private async void ShowAsync(StateType stateType)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 3; i++)
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (PlayerPrefs.HasKey(key))
+                {
+                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+                    //Debug.LogError(PandoraBoxMaster.ArenaFavTargets[i]);
+                }
+            }
+            //Debug.LogError(States.Instance.CurrentAvatarState.address);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             Find<DataLoadingScreen>().Show();
 
             var stage = Game.Game.instance.Stage;
@@ -486,15 +500,15 @@ namespace Nekoyume.UI
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                int upper = 90 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                int lower = 90 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
                 {
                     var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                    infos2 = state.GetArenaInfos(address, 90, 0);
+                    infos2 = state.GetArenaInfos(address, 50, 0);
                 }
 
                 infos.AddRange(infos2);

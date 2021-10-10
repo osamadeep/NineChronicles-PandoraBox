@@ -1,6 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.Audio;
+using System.Collections.Generic;
 
 namespace PandoraBox
 {
@@ -12,6 +13,10 @@ namespace PandoraBox
         public static string OriginalVersionId = "v100080";
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public static int ActionCooldown = 2;
+        public static bool MarketPriceHelper = false;
+        public static string MarketPriceValue;
+        public static int LoginIndex;
+        public static List<string> ArenaFavTargets = new List<string>();
 
         //Objects
         public PandoraSettings Settings;
@@ -42,13 +47,22 @@ namespace PandoraBox
                 DOTween.timeScale = 1;
             }
         }
+
+        public bool IsPremium(string address)
+        {
+            List<string> addresses = new List<string>();
+            addresses.Add("0x46528E7DEdaC16951bDccb55B20303AB0c729679"); //s
+            addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
+
+            return addresses.Contains(address);
+        }
     }
 
     public class PandoraSettings
     {
         //General
         [HideInInspector]
-        public string VersionId { get; private set; } = "010009"; // parse v1.0.#
+        public string VersionId { get; private set; } = "010010"; // parse v1.0.#
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
@@ -57,20 +71,20 @@ namespace PandoraBox
         [HideInInspector]
         public int MenuSpeed { get; set; } = 3;
 
-        [HideInInspector]
-        public float MusicVolume { get; set; } = 0.7f;
+        //[HideInInspector]
+        //public float MusicVolume { get; set; } = 0.7f;
 
-        [HideInInspector]
-        public float SfxVolume { get; set; } = 0.7f;
+        //[HideInInspector]
+        //public float SfxVolume { get; set; } = 0.7f;
 
-        [HideInInspector]
-        public bool IsMusicMuted { get; set; } = false;
+        //[HideInInspector]
+        //public bool IsMusicMuted { get; set; } = false;
 
-        [HideInInspector]
-        public bool IsSfxMuted { get; set; } = false;
+        //[HideInInspector]
+        //public bool IsSfxMuted { get; set; } = false;
 
-        [HideInInspector]
-        public int ResolutionIndex { get; set; } = 2;
+        //[HideInInspector]
+        //public int ResolutionIndex { get; set; } = 2;
 
 
 
@@ -98,11 +112,11 @@ namespace PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
-            PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
-            PlayerPrefs.SetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted));
-            PlayerPrefs.SetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
-            PlayerPrefs.SetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted));
-            PlayerPrefs.SetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
+            //PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
+            //PlayerPrefs.SetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted));
+            //PlayerPrefs.SetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
+            //PlayerPrefs.SetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted));
+            //PlayerPrefs.SetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
 
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
@@ -132,11 +146,6 @@ namespace PandoraBox
                 PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
                 PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
-                //revert Original client setting to defauly
-                PlayerPrefs.SetFloat("SETTINGS_VOLUME_MASTER", 0.7f);
-                PlayerPrefs.SetInt("SETTINGS_VOLUME_MASTER_ISMUTED", 0);
-                PlayerPrefs.SetInt("SETTINGS_RESOLUTION_INDEX", 0);
-
                 //fix speed issue later
                 PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", 1);
             }
@@ -144,13 +153,13 @@ namespace PandoraBox
             //General
             VersionId = PlayerPrefs.GetString("_PandoraBox_Ver", VersionId);
             WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown)));
-            IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
-            IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
-            MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
-            SfxVolume = PlayerPrefs.GetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
+            //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
+            //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
+            //MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
+            //SfxVolume = PlayerPrefs.GetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
+            //ResolutionIndex = PlayerPrefs.GetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
             BlockShowType = PlayerPrefs.GetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             MenuSpeed = PlayerPrefs.GetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
-            ResolutionIndex = PlayerPrefs.GetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
 
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
@@ -164,8 +173,6 @@ namespace PandoraBox
 
             //Load ingame changes
             DOTween.timeScale = MenuSpeed;
-            PandoraBoxMaster.Instance.Audiomixer.SetFloat("MusicVolume", IsMusicMuted ? -80f : Mathf.Lerp(-20f, 0, MusicVolume));
-            PandoraBoxMaster.Instance.Audiomixer.SetFloat("SfxVolume", IsSfxMuted ? -80f : Mathf.Lerp(-20f, 0, SfxVolume));
         }
 
 

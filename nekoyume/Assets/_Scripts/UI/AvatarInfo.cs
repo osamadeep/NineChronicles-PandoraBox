@@ -70,6 +70,8 @@ namespace Nekoyume.UI
         [SerializeField]
         private Button closeButton = null;
 
+        public TextMeshProUGUI PriceText;//|||||||||||||| PANDORA CODE |||||||||||||||||||
+
         private EquipmentSlot _weaponSlot;
         private EquipmentSlot _armorSlot;
         private Player _player;
@@ -153,6 +155,14 @@ namespace Nekoyume.UI
                 AudioController.PlayClick();
             });
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnableMarketHelper(TextMeshProUGUI text)
+        {
+            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Show(bool ignoreShowAnimation = false)
         {
@@ -584,6 +594,7 @@ namespace Nekoyume.UI
         private void ShowTooltip(InventoryItemView view)
         {
             var tooltip = Find<ItemInformationTooltip>();
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text; //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (view is null ||
                 view.Model is null ||
                 view.RectTransform == tooltip.Target)
@@ -606,6 +617,7 @@ namespace Nekoyume.UI
         private void ShowTooltip(EquipmentSlot slot)
         {
             var tooltip = Find<ItemInformationTooltip>();
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text; //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (slot is null ||
                 slot.RectTransform == tooltip.Target)
             {

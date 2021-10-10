@@ -8,8 +8,10 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
+using PandoraBox;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -64,6 +66,9 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private TextMeshProUGUI versionText = null;
+
+        [SerializeField]
+        private Button NemesisButton = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private CharacterStats _tempStats;
@@ -85,6 +90,7 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             copyButton.OnClickAsObservable().Subscribe(_ => CopyPlayerInfo()).AddTo(gameObject);
+            NemesisButton.OnClickAsObservable().Subscribe(_ => SetNemesis()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -128,6 +134,8 @@ namespace Nekoyume.UI
 
         private void UpdateSlotView(AvatarState avatarState)
         {
+            tempAvatarState = avatarState;
+
             var game = Game.Game.instance;
             var playerModel = _player.Model;
 
@@ -156,10 +164,12 @@ namespace Nekoyume.UI
 
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
+
             blockText.text = "Block #" + Game.Game.instance.Agent.BlockIndex.ToString();
             dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
-            versionText.text = "APV: " + PandoraBox.PandoraBoxMaster.OriginalVersionId;
-            tempAvatarState = avatarState;
+            versionText.text = "APV: " + PandoraBoxMaster.OriginalVersionId;
             if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee"))
                 paidMember.SetActive(true);
             else
@@ -180,6 +190,46 @@ namespace Nekoyume.UI
             ClipboardHelper.CopyToClipboard(playerInfo);
             OneLinePopup.Push(MailType.System, "Pandora Box: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
         }
+
+        
+        public void SetNemesis()
+        {
+            TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()))
+            {
+                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                {
+                    string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                    PlayerPrefs.DeleteKey(key);
+                    //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                }
+                PandoraBoxMaster.ArenaFavTargets.Remove(tempAvatarState.address.ToString());
+                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                {
+                    string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                    PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                }
+
+                OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " removed from your nemesis list!");
+            }
+            else
+            {
+                if (PandoraBoxMaster.ArenaFavTargets.Count > 2)
+                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!");
+                else
+                {
+                    PandoraBoxMaster.ArenaFavTargets.Add(tempAvatarState.address.ToString());
+                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " added to your nemesis list!");
+                    for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                    {
+                        string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                        PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                    }
+                }
+            }
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
+        }
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateStatViews()

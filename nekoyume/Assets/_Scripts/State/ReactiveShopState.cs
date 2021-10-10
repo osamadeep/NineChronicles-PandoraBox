@@ -86,7 +86,7 @@ namespace Nekoyume.State
                 x.ItemCount.Equals(count));
         }
 
-        private const int buyItemsPerPage = 24;
+        private const int buyItemsPerPage = 36; //24
         private const int sellItemsPerPage = 20;
 
         public static void InitAndUpdateBuyDigests()
@@ -297,6 +297,12 @@ namespace Nekoyume.State
                     ShopSortFilter.Time,
                     GetGroupedShopItemsByPage(
                         digests.OrderByDescending(digest => digest.ExpiredBlockIndex).ToList(),
+                        shopItemsPerPage)
+                },
+                {
+                    ShopSortFilter.Level,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.Level).ToList(),
                         shopItemsPerPage)
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 },

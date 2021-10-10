@@ -39,6 +39,8 @@ namespace Nekoyume.UI
         [SerializeField] private Button buyButton = null;
         [SerializeField] private Button closeButton = null;
 
+        public TextMeshProUGUI PriceText;//|||||||||||||| PANDORA CODE |||||||||||||||||||
+
         private NPC _npc;
         private static readonly Vector2 NPCPosition = new Vector2(2.76f, -1.72f);
         private const int NPCId = 300000;
@@ -116,6 +118,14 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnableMarketHelper(TextMeshProUGUI text)
+        {
+            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public void Show()
         {
             base.Show();
@@ -164,7 +174,7 @@ namespace Nekoyume.UI
         private void ShowTooltip(InventoryItemView view)
         {
             var tooltip = Find<ItemInformationTooltip>();
-
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text; //|||||||||||||| PANDORA CODE |||||||||||||||||||
             shopItems.SharedModel.DeselectItemView();
 
             if (view is null ||
@@ -187,6 +197,7 @@ namespace Nekoyume.UI
         private void ShowTooltip(ShopItemView view)
         {
             var tooltip = Find<ItemInformationTooltip>();
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text; //|||||||||||||| PANDORA CODE |||||||||||||||||||
             inventory.SharedModel.DeselectItemView();
 
             if (view is null || view.RectTransform == tooltip.Target)
@@ -523,8 +534,10 @@ namespace Nekoyume.UI
             }
             else
             {
+                var itemPrice = SharedModel.ItemCountableAndPricePopup.Value.Price.Value;
                 message = string.Format(L10nManager.Localize("NOTIFICATION_SELL_START"),
                     item.ItemBase.Value.GetLocalizedName());
+                message += ", For " + itemPrice + "!";
             }
             OneLinePopup.Push(MailType.Auction, message);
             inventory.SharedModel.ActiveFunc.SetValueAndForceNotify(inventoryItem => (inventoryItem.ItemBase.Value is ITradableItem));

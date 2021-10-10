@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Lib9c.Model.Order;
+    using Nekoyume.Helper;
     using UniRx;
 
     public class ShopItemView : CountableItemView<ShopItem>
@@ -14,6 +16,8 @@ namespace Nekoyume.UI.Module
         public GameObject priceGroup;
         public TextMeshProUGUI priceText;
         [SerializeField] private GameObject expired;
+        [SerializeField] private Image remainsTime; //|||||||||||||| PANDORA CODE |||||||||||||||||||
+        [SerializeField] private Material RedMaterial; //|||||||||||||| PANDORA CODE |||||||||||||||||||
 
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private long _expiredBlockIndex;
@@ -25,13 +29,19 @@ namespace Nekoyume.UI.Module
                 Clear();
                 return;
             }
-
+            remainsTime.gameObject.SetActive(true);
             base.SetData(model);
             SetBg(1f);
             SetLevel(model.ItemBase.Value.Grade, model.Level.Value);
             priceGroup.SetActive(true);
             priceText.text = model.Price.Value.GetQuantityString();
             Model.View = this;
+
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            float x= ((model.ExpiredBlockIndex.Value - Game.Game.instance.Agent.BlockIndex)) * 1f / (Order.ExpirationInterval * 1f);
+            remainsTime.fillAmount = x;
+            if (x < 0.05f)
+                remainsTime.gameObject.SetActive(false);
 
             if (expired)
             {
@@ -75,7 +85,13 @@ namespace Nekoyume.UI.Module
             if (level > 0)
             {
                 var data = itemViewData.GetItemViewData(grade);
-                enhancementImage.GetComponent<Image>().material = data.EnhancementMaterial;
+
+                var order = Util.GetOrder(Model.OrderId.Value);
+
+                if (PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                    enhancementImage.GetComponent<Image>().material = RedMaterial;
+                else
+                    enhancementImage.GetComponent<Image>().material = data.EnhancementMaterial;
                 enhancementImage.SetActive(true);
                 enhancementText.text = $"+{level}";
                 enhancementText.enabled = true;

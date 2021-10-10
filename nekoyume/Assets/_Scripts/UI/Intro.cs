@@ -6,6 +6,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using Nekoyume.Game.Controller;
 
 namespace Nekoyume.UI
 {
@@ -27,6 +28,7 @@ namespace Nekoyume.UI
             indicator.Show("Verifying transaction..");
             _keyStorePath = keyStorePath;
             _privateKey = privateKey;
+            AudioController.instance.PlayMusic(AudioController.MusicCode.PandoraIntro);
             StartLoading();
         }
 
@@ -38,7 +40,15 @@ namespace Nekoyume.UI
 
         private void StartLoading()
         {
+
+#if !UNITY_EDITOR
             StartCoroutine(CheckVersion()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+#else
+            var w = Find<LoginPopup>();
+            w.Show(_keyStorePath, _privateKey);
+#endif
+            //var w = Find<LoginPopup>();
+            //w.Show(_keyStorePath, _privateKey);
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -50,7 +60,7 @@ namespace Nekoyume.UI
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                ErrorWindow.Find("Message").GetComponent<TextMeshProUGUI>().text = "This version of Pandora Mod is outdated. please visit us for more information!";
+                ErrorWindow.Find("Message").GetComponent<TextMeshProUGUI>().text = "Something is wrong. please visit us for more information!";
                 ErrorWindow.gameObject.SetActive(true);
             }
             else
@@ -70,7 +80,7 @@ namespace Nekoyume.UI
 
                 string temp = "";
                 if (myObject.Reason == "")
-                    temp = "This version of Pandora Mod is outdated. please visit us for more information!";
+                    temp = "Something is wrong. please visit us for more information!";
                 else
                     temp = myObject.Reason;
 

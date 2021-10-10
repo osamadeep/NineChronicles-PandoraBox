@@ -49,6 +49,7 @@ namespace Nekoyume.UI
         {
             buyButton.image.enabled = true;
             ShowDefaultView();
+
         }
 
         private void ShowWishList(Unit unit)

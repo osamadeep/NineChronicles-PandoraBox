@@ -17,6 +17,7 @@ using UnityEngine.UI;
 namespace Nekoyume.UI.Module
 {
     using Nekoyume.Helper;
+    using Nekoyume.Model.Mail;
     using PandoraBox;
     using UniRx;
 
@@ -155,6 +156,7 @@ namespace Nekoyume.UI.Module
                         break;
                     }
             }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _isFull = sliderAnimator.IsFull;
@@ -164,9 +166,27 @@ namespace Nekoyume.UI.Module
             }
 
             hasNotificationImage.enabled = _isFull && States.Instance.CurrentAvatarState?.actionPoint == 0;
-
+            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0) //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                if (!isTrying) 
+                    StartCoroutine(TryToAutoCollect());
             animator.SetBool(IsFull, _isFull);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public static bool isTrying = false;
+        IEnumerator TryToAutoCollect()
+        {
+            isTrying = true;
+            yield return new WaitForSeconds(10);
+            if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
+            {
+                GetDailyReward();
+                OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!");
+            }
+            yield return new WaitForSeconds(15);
+            isTrying = false;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void ShowTooltip()
         {
@@ -208,9 +228,9 @@ namespace Nekoyume.UI.Module
 
         private void GetDailyReward()
         {
-            UI.Notification.Push(
-                Nekoyume.Model.Mail.MailType.System,
-                L10nManager.Localize("UI_RECEIVING_DAILY_REWARD"));
+            //UI.Notification.Push(
+            //    Nekoyume.Model.Mail.MailType.System,
+            //    L10nManager.Localize("UI_RECEIVING_DAILY_REWARD"));
 
             Game.Game.instance.ActionManager.DailyReward();
 
