@@ -12,6 +12,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.Stat;
+using Nekoyume.State;
 using Nekoyume.TableData;
 using UnityEngine;
 using MailModel = Nekoyume.Model.Mail.Mail;
@@ -26,16 +27,29 @@ namespace Nekoyume.UI
             switch (mail)
             {
                 case CombinationMail combinationMail:
-                {
-                    string formatKey;
-                    if (combinationMail.attachment.itemUsable is Equipment equipment)
                     {
-                        if (combinationMail.attachment is CombinationConsumable5.ResultModel result &&
-                            result.subRecipeId.HasValue)
+                        string formatKey;
+                        if (combinationMail.attachment.itemUsable is Equipment equipment)
                         {
-                            if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2 is null)
+                            if (combinationMail.attachment is CombinationConsumable5.ResultModel result &&
+                                result.subRecipeId.HasValue)
                             {
-                                if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheet.TryGetValue(
+                                if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2 is null)
+                                {
+                                    if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheet.TryGetValue(
+                                        result.subRecipeId.Value,
+                                        out var row))
+                                    {
+                                        formatKey = equipment.optionCountFromCombination == row.Options.Count
+                                            ? "UI_COMBINATION_NOTIFY_FORMAT_GREATER"
+                                            : "UI_COMBINATION_NOTIFY_FORMAT";
+                                    }
+                                    else
+                                    {
+                                        formatKey = "UI_COMBINATION_NOTIFY_FORMAT";
+                                    }
+                                }
+                                else if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2.TryGetValue(
                                     result.subRecipeId.Value,
                                     out var row))
                                 {
@@ -48,14 +62,6 @@ namespace Nekoyume.UI
                                     formatKey = "UI_COMBINATION_NOTIFY_FORMAT";
                                 }
                             }
-                            else if (Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2.TryGetValue(
-                                result.subRecipeId.Value,
-                                out var row))
-                            {
-                                formatKey = equipment.optionCountFromCombination == row.Options.Count
-                                    ? "UI_COMBINATION_NOTIFY_FORMAT_GREATER"
-                                    : "UI_COMBINATION_NOTIFY_FORMAT";
-                            }
                             else
                             {
                                 formatKey = "UI_COMBINATION_NOTIFY_FORMAT";
@@ -65,66 +71,79 @@ namespace Nekoyume.UI
                         {
                             formatKey = "UI_COMBINATION_NOTIFY_FORMAT";
                         }
-                    }
-                    else
-                    {
-                        formatKey = "UI_COMBINATION_NOTIFY_FORMAT";
-                    }
 
-                    return string.Format(
-                        L10nManager.Localize(formatKey),
-                        GetLocalizedNonColoredName(combinationMail.attachment.itemUsable,
-                            combinationMail.attachment.itemUsable.ItemType.HasElementType()));
-                }
+                        return string.Format(
+                            L10nManager.Localize(formatKey),
+                            GetLocalizedNonColoredName(combinationMail.attachment.itemUsable,
+                                combinationMail.attachment.itemUsable.ItemType.HasElementType()));
+                    }
 
                 case ItemEnhanceMail itemEnhanceMail:
-                {
-                    string formatKey;
-                    switch (itemEnhanceMail.attachment)
                     {
-                        case ItemEnhancement.ResultModel result:
-                            switch (result.enhancementResult)
-                            {
-                                case ItemEnhancement.EnhancementResult.GreatSuccess:
-                                    formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT_GREATER";
-                                    break;
-                                case ItemEnhancement.EnhancementResult.Success:
-                                    formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
-                                    break;
-                                case ItemEnhancement.EnhancementResult.Fail:
-                                    formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT_FAIL";
-                                    break;
-                                default:
-                                    Debug.LogError($"Unexpected result.enhancementResult: {result.enhancementResult}");
-                                    formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
-                                    break;
-                            }
+                        string formatKey;
+                        switch (itemEnhanceMail.attachment)
+                        {
+                            case ItemEnhancement.ResultModel result:
+                                switch (result.enhancementResult)
+                                {
+                                    case ItemEnhancement.EnhancementResult.GreatSuccess:
+                                        formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT_GREATER";
+                                        break;
+                                    case ItemEnhancement.EnhancementResult.Success:
+                                        formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
+                                        break;
+                                    case ItemEnhancement.EnhancementResult.Fail:
+                                        formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT_FAIL";
+                                        break;
+                                    default:
+                                        Debug.LogError($"Unexpected result.enhancementResult: {result.enhancementResult}");
+                                        formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
+                                        break;
+                                }
 
-                            break;
-                        case ItemEnhancement7.ResultModel _:
-                            formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
-                            break;
-                        default:
-                            Debug.LogError("itemEnhanceMail.attachment is not ItemEnhancement.ResultModel");
-                            formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
-                            break;
+                                break;
+                            case ItemEnhancement7.ResultModel _:
+                                formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
+                                break;
+                            default:
+                                Debug.LogError("itemEnhanceMail.attachment is not ItemEnhancement.ResultModel");
+                                formatKey = "UI_ITEM_ENHANCEMENT_MAIL_FORMAT";
+                                break;
+                        }
+
+                        return string.Format(
+                            L10nManager.Localize(formatKey),
+                            GetLocalizedNonColoredName(itemEnhanceMail.attachment.itemUsable));
                     }
-
-                    return string.Format(
-                        L10nManager.Localize(formatKey),
-                        GetLocalizedNonColoredName(itemEnhanceMail.attachment.itemUsable));
-                }
 
                 case OrderBuyerMail orderBuyerMail:
                     var buyerItemName = Util.GetItemNameByOrdierId(orderBuyerMail.OrderId, true);
-                    return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    string x1 = "";
+                    var order1 = Util.GetOrder(orderBuyerMail.OrderId);
+                    if (States.TryGetAvatarState(order1.SellerAvatarAddress, out var avatarState1))
+                    {
+                        x1 = $"[<color=green><size=70%>{orderBuyerMail.blockIndex}</size></color>] Spent <color=red>-{order1.Price}</color> for {buyerItemName}" +
+                            $" from {avatarState1.NameWithHash}";
+                        return x1;
+                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    else
+                        return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),
                         buyerItemName);
 
                 case OrderSellerMail orderSellerMail:
                     var order = Util.GetOrder(orderSellerMail.OrderId);
                     var sellerItemName = Util.GetItemNameByOrdierId(orderSellerMail.OrderId, true);
                     var taxedPrice = order.Price - order.GetTax();
-                    return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    string x = "";
+                    if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+                    {
+                        x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> for your {sellerItemName}";
+                        return x;
+                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    else
+                        return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
 
                 case OrderExpirationMail orderExpirationMail:
                     var expiredItemName = Util.GetItemNameByOrdierId(orderExpirationMail.OrderId, true);

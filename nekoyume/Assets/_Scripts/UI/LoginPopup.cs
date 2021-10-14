@@ -355,7 +355,7 @@ namespace Nekoyume.UI
                     foreach (Transform item in ProfilesHolder)
                         item.gameObject.SetActive(false);
 
-                    for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, 3); i++)
+                    for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
                     {
                         ProfilesHolder.GetChild(i).gameObject.SetActive(true);
                         string tmp= "_PandoraBox_Account_LoginProfile0" + i + "_Name";
@@ -420,7 +420,7 @@ namespace Nekoyume.UI
             SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
 
             //VFX
-            for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, 3); i++)
+            for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
             {
                 Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);
                 ProfilesHolder.GetChild(i).Find("icon").GetComponent<Image>().color = tmp;

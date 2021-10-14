@@ -166,7 +166,7 @@ namespace Nekoyume.UI
 
             var target = SharedModel[0];
             var deltaTime = Time.time - target.addedTime;
-            if (deltaTime < LifeTimeOfEachNotification)
+            if (deltaTime < (LifeTimeOfEachNotification * PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed) )
             {
                 return false;
             }

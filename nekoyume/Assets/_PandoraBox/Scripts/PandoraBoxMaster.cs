@@ -15,6 +15,7 @@ namespace PandoraBox
         public static int ActionCooldown = 2;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
+        public static int NumberOfProfiles=4;
         public static int LoginIndex;
         public static List<string> ArenaFavTargets = new List<string>();
 

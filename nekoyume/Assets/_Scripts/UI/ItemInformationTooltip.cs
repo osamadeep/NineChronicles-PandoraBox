@@ -109,7 +109,7 @@ namespace Nekoyume.UI
             panel.Find("Content/TradableText").gameObject.SetActive(false);
             panel.Find("Footer").gameObject.SetActive(false);
             MarketPriceText.gameObject.SetActive(true);
-            MarketPriceText.text = "*" + PandoraBox.PandoraBoxMaster.MarketPriceValue + " NCG*"; 
+            MarketPriceText.text = PandoraBox.PandoraBoxMaster.MarketPriceValue; 
             panel.GetComponent<Image>().enabled = false;
             LayoutRebuild();
             DiscordHolder.sizeDelta = panel.sizeDelta;
@@ -277,19 +277,19 @@ namespace Nekoyume.UI
                 return;
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            ShopItem x = item as ShopItem;
-            var order = Util.GetOrder(x.OrderId.Value);
-            OwnerName.text = "";
+            //ShopItem x = item as ShopItem;
+            //var order = Util.GetOrder(x.OrderId.Value);
+            //OwnerName.text = "";
             
-            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
-            {
-                if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
-                {
-                    OwnerName.gameObject.SetActive(true);
-                    OwnerName.text = avatarState.NameWithHash;
-                }
-                //Debug.LogError(avatarState.agentAddress);
-            }
+            //if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+            //{
+            //    if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+            //    {
+            //        OwnerName.gameObject.SetActive(true);
+            //        OwnerName.text = avatarState.NameWithHash;
+            //    }
+            //    //Debug.LogError(avatarState.agentAddress);
+            //}
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             submit.SetActive(false);
