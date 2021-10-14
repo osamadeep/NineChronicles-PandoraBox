@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Nekoyume.Helper;
 using Nekoyume.UI.Model;
 using TMPro;
 using UnityEngine;
@@ -84,6 +85,12 @@ namespace Nekoyume.UI.Module
         {
             if (level > 0)
             {
+                enhancementText.text = $"+{level}";
+                enhancementText.enabled = true;
+            }
+
+            if (level >= Util.VisibleEnhancementEffectLevel)
+            {
                 var data = itemViewData.GetItemViewData(grade);
 
                 var order = Util.GetOrder(Model.OrderId.Value);
@@ -93,8 +100,6 @@ namespace Nekoyume.UI.Module
                 else
                     enhancementImage.GetComponent<Image>().material = data.EnhancementMaterial;
                 enhancementImage.SetActive(true);
-                enhancementText.text = $"+{level}";
-                enhancementText.enabled = true;
             }
         }
 

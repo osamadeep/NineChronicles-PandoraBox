@@ -35,7 +35,6 @@ using Enemy = Nekoyume.Model.Enemy;
 using EnemyPlayer = Nekoyume.Model.EnemyPlayer;
 using Player = Nekoyume.Game.Character.Player;
 using Random = UnityEngine.Random;
-using PandoraBox;
 
 namespace Nekoyume.Game
 {
@@ -91,9 +90,7 @@ namespace Nekoyume.Game
         public bool IsExitReserved { get; set; }
         public bool IsRepeatStage { get; set; }
         public bool IsAvatarStateUpdatedAfterBattle { get; set; }
-
-
-
+        public int PlayCount { get; set; }
 
         public Vector3 SelectPositionBegin(int index) =>
             new Vector3(-2.15f + index * 2.22f, -1.79f, 0.0f);
@@ -240,7 +237,6 @@ namespace Nekoyume.Game
 
         private void OnRoomEnter(bool showScreen)
         {
-            PandoraBoxMaster.Instance.SpeedTimeScale(); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             showLoadingScreen = showScreen;
             gameObject.AddComponent<RoomEntering>();
             IsInStage = false;
@@ -321,10 +317,6 @@ namespace Nekoyume.Game
 
         private IEnumerator CoPlayStage(BattleLog log)
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.Instance.SpeedTimeScale(PandoraBoxMaster.Instance.Settings.FightSpeed);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             var avatarState = States.Instance.CurrentAvatarState;
             prevFood = avatarState.inventory.Items
                 .Select(i => i.item)
@@ -556,7 +548,12 @@ namespace Nekoyume.Game
             avatarState.worldInformation.TryGetLastClearedStageId(out var lasStageId);
             _battleResultModel.LastClearedStageId = lasStageId;
             _battleResultModel.IsClear = log.IsClear;
-            _battleResultModel.IsEndStage = false;
+            var succeedToGetWorldRow =
+                Game.instance.TableSheets.WorldSheet.TryGetValue(worldId, out var worldRow);
+            if (succeedToGetWorldRow)
+            {
+                _battleResultModel.IsEndStage = stageId == worldRow.StageEnd;
+            }
 
             if (IsExitReserved)
             {
@@ -584,11 +581,10 @@ namespace Nekoyume.Game
                             BattleResult.NextState.RepeatStage :
                             BattleResult.NextState.NextStage;
 
-                        if (Game.instance.TableSheets.WorldSheet.TryGetValue(worldId, out var worldRow))
+                        if (succeedToGetWorldRow)
                         {
                             if (stageId == worldRow.StageEnd)
                             {
-                                _battleResultModel.IsEndStage = true;
                                 _battleResultModel.NextState = IsRepeatStage ?
                                     BattleResult.NextState.RepeatStage :
                                     BattleResult.NextState.GoToMain;
@@ -604,8 +600,7 @@ namespace Nekoyume.Game
                 }
             }
 
-            Widget.Find<BattleResult>().Show(_battleResultModel);
-            PandoraBoxMaster.Instance.SpeedTimeScale(); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            Widget.Find<BattleResult>().Show(_battleResultModel, PlayCount > 1);
 
             yield return null;
 
@@ -704,7 +699,9 @@ namespace Nekoyume.Game
                     isTutorial = true;
                 }
 
-                battle.Show(stageId, IsRepeatStage, IsExitReserved, isTutorial);
+                battle.Show(stageId, IsRepeatStage, IsExitReserved, isTutorial, PlayCount * Game.instance
+                    .TableSheets.StageSheet.Values.FirstOrDefault(i =>
+                        i.Id == Widget.Find<WorldMap>().SelectedStageId).CostAP);
                 var stageSheet = Game.instance.TableSheets.StageSheet;
                 if (stageSheet.TryGetValue(stageId, out var row))
                 {
@@ -1160,10 +1157,6 @@ namespace Nekoyume.Game
         private IEnumerator CoUnlockMenu()
         {
             var menuNames = new List<string>();
-            if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuCombination)
-            {
-                menuNames.Add(nameof(Combination));
-            }
 
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuShop)
             {

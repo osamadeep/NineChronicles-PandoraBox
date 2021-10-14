@@ -8,8 +8,6 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.Item;
-using Nekoyume.Model.Mail;
-using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.State;
 using Nekoyume.TableData;
@@ -176,20 +174,22 @@ namespace Nekoyume.UI
             {
                 var (type, value, _) = itemOptionInfo.StatOptions[0];
                 information.MainStatView.UpdateView(
-                    $"{type} {value}",
+                    $"{type} {type.ValueToString(value)}",
                     string.Empty);
 
                 return;
             }
 
+            var statType = itemOptionInfo.MainStat.type;
+            var statValueString = statType.ValueToString(itemOptionInfo.MainStat.baseValue);
+
             information.MainStatView.UpdateView(
-                $"{itemOptionInfo.MainStat.type} {itemOptionInfo.MainStat.baseValue}",
+                $"{statType} {statValueString}",
                 string.Empty);
 
             var statOptionRows = ItemOptionHelper.GetStatOptionRows(
                 resultModel.subRecipeId.Value,
                 resultModel.itemUsable);
-
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
                 var optionView = information.StatOptions[i];
@@ -205,8 +205,10 @@ namespace Nekoyume.UI
                     optionView.Hide();
                     continue;
                 }
-                //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                var text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
+
+                var statMin = optionRow.StatType.ValueToString(optionRow.StatMin);
+                var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
+                var text = $"{optionRow.StatType} ({statMin} - {statMax})";
                 optionView.UpdateView(text, string.Empty, 1);
                 optionView.Show();
             }
@@ -226,12 +228,8 @@ namespace Nekoyume.UI
                     optionView.Hide();
                     continue;
                 }
-                
-                //var sheet = Game.Game.instance.TableSheets.EquipmentItemOptionSheet;
-                //var row = sheet.OrderedList.FirstOrDefault(x => x.SkillId == itemOptionInfo.SkillOptions[i]. && x.SkillDamageMin == level);
+
                 var (skillName, _, _) = itemOptionInfo.SkillOptions[i];
-                //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                skillName += $"=<color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
                 optionView.UpdateView(skillName, string.Empty);
                 optionView.Show();
             }

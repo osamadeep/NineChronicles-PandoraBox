@@ -274,7 +274,7 @@ namespace Nekoyume.UI
             ActionCamera.instance.ChaseX(player.transform);
             ActionRenderHandler.Instance.Pending = true;
             Game.Game.instance.ActionManager
-                .HackAndSlash(player, worldId, stageId)
+                .HackAndSlash(player, worldId, stageId, 1)
                 .Subscribe(_ =>
                 {
                     LocalLayerModifier.ModifyAvatarActionPoint(
@@ -589,7 +589,7 @@ namespace Nekoyume.UI
                     return;
                 }
 
-                if (!States.Instance.CurrentAvatarState.inventory.HasItem(recipeRow.MaterialId))
+                if (!States.Instance.CurrentAvatarState.inventory.HasItem(recipeRow.MaterialId, recipeRow.MaterialCount))
                 {
                     tutorialController.SaveTutorialProgress(2);
                     if (!Game.Game.instance.Stage.TutorialController.IsPlaying)
@@ -638,7 +638,7 @@ namespace Nekoyume.UI
         {
             yield return new WaitForSeconds(2.0f);
 
-            while (AnimationState == AnimationStateType.Shown)
+            while (AnimationState.Value == AnimationStateType.Shown)
             {
                 var n = speechBubbles.Length;
                 while (n > 1)
