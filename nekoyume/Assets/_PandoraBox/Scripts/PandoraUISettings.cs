@@ -3,148 +3,152 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PandoraUISettings : MonoBehaviour
+namespace PandoraBox
 {
-    int blockShowType;
 
-    //Time Scale Elements
-    [SerializeField]
-    Image timeImage;
-
-    [SerializeField]
-    Image blockImage;
-
-    [SerializeField]
-    Image bothImage;
-
-    //Menu Speed Elements
-    [SerializeField]
-    TextMeshProUGUI menuSpeedText;
-
-    [SerializeField]
-    Slider menuSpeedSlider;
-
-    //Fight Speed Elements
-    [SerializeField]
-    TextMeshProUGUI fightSpeedText;
-
-    [SerializeField]
-    Slider fightSpeedSlider;
-
-    //Arena Speed Elements
-    [SerializeField]
-    TextMeshProUGUI arenaUpText;
-    [SerializeField]
-    TextMeshProUGUI arenaLoText;
-
-    [SerializeField]
-    Slider arenaUpSlider;
-    [SerializeField]
-    Slider arenaLoSlider;
-
-
-    void OnEnable()
+    public class PandoraUISettings : MonoBehaviour
     {
-        if (PandoraBox.PandoraBoxMaster.Instance == null)
-            return;
+        int blockShowType;
 
-        //Load settings
-        blockShowType = PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType;
-        LoadTimeScale();
-        menuSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed;
-        LoadMenuSpeed();
-        fightSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.FightSpeed;
-        LoadFightSpeed();
-        arenaUpSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListUpper;
-        LoadArenaUp();
-        arenaLoSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListLower;
-        LoadArenaLo();
-    }
+        //Time Scale Elements
+        [SerializeField]
+        Image timeImage;
 
-    public void ResetDefault()
-    {
-        PandoraBox.PandoraBoxMaster.Instance.Settings = new PandoraBox.PandoraSettings();
-        PandoraBox.PandoraBoxMaster.Instance.Settings.Save();
+        [SerializeField]
+        Image blockImage;
 
-        //Load settings
-        blockShowType = PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType;
-        LoadTimeScale();
-        menuSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed;
-        LoadMenuSpeed();
-        fightSpeedSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.FightSpeed;
-        LoadFightSpeed();
-        arenaUpSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListUpper;
-        LoadArenaUp();
-        arenaLoSlider.value = PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListLower;
-        LoadArenaLo();
-    }
+        [SerializeField]
+        Image bothImage;
 
-    private void Start()
-    {
+        //Menu Speed Elements
+        [SerializeField]
+        TextMeshProUGUI menuSpeedText;
 
-    }
+        [SerializeField]
+        Slider menuSpeedSlider;
 
-    public void SaveSettings()
-    {
-        PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType = blockShowType;
-        PandoraBox.PandoraBoxMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
-        PandoraBox.PandoraBoxMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
-        PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
-        PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
+        //Fight Speed Elements
+        [SerializeField]
+        TextMeshProUGUI fightSpeedText;
 
-        PandoraBox.PandoraBoxMaster.Instance.Settings.Save();
-        gameObject.SetActive(false);
-    }
+        [SerializeField]
+        Slider fightSpeedSlider;
 
-    public void ChangeTimeScale(int value)
-    {
-        blockShowType = value;    
-        LoadTimeScale();
-    }
+        //Arena Speed Elements
+        [SerializeField]
+        TextMeshProUGUI arenaUpText;
+        [SerializeField]
+        TextMeshProUGUI arenaLoText;
 
-    void LoadTimeScale()
-    {
-        timeImage.color = blockShowType  == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-        blockImage.color = blockShowType == 1 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-        bothImage.color = blockShowType == 2 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-    }
+        [SerializeField]
+        Slider arenaUpSlider;
+        [SerializeField]
+        Slider arenaLoSlider;
 
-    public void ChangeMenuSpeed()
-    {      
-        LoadMenuSpeed();
-    }
 
-    public void LoadMenuSpeed()
-    {
-        menuSpeedText.text = "Menu Speed : " + (int)(menuSpeedSlider.value * 100) + "%";     
-    }
+        void OnEnable()
+        {
+            if (PandoraBoxMaster.Instance == null)
+                return;
 
-    public void ChangeFightSpeed()
-    {
-        LoadFightSpeed();
-    }
+            //Load settings
+            blockShowType = PandoraBoxMaster.Instance.Settings.BlockShowType;
+            LoadTimeScale();
+            menuSpeedSlider.value = PandoraBoxMaster.Instance.Settings.MenuSpeed;
+            LoadMenuSpeed();
+            fightSpeedSlider.value = PandoraBoxMaster.Instance.Settings.FightSpeed;
+            LoadFightSpeed();
+            arenaUpSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListUpper;
+            LoadArenaUp();
+            arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
+            LoadArenaLo();
+        }
 
-    public void LoadFightSpeed()
-    {
-        fightSpeedText.text = "Fight Speed : X" + (int)fightSpeedSlider.value;
-    }
+        public void ResetDefault()
+        {
+            PandoraBoxMaster.Instance.Settings = new PandoraSettings();
+            PandoraBoxMaster.Instance.Settings.Save();
 
-    public void ChangeArenaUp()
-    {
-        LoadArenaUp();
-    }
-    public void LoadArenaUp()
-    {
-        arenaUpText.text = (50 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
-    }
+            //Load settings
+            blockShowType = PandoraBoxMaster.Instance.Settings.BlockShowType;
+            LoadTimeScale();
+            menuSpeedSlider.value = PandoraBoxMaster.Instance.Settings.MenuSpeed;
+            LoadMenuSpeed();
+            fightSpeedSlider.value = PandoraBoxMaster.Instance.Settings.FightSpeed;
+            LoadFightSpeed();
+            arenaUpSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListUpper;
+            LoadArenaUp();
+            arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
+            LoadArenaLo();
+        }
 
-    public void ChangeArenaLo()
-    {
-        LoadArenaLo();
-    }
+        private void Start()
+        {
 
-    public void LoadArenaLo()
-    {
-        arenaLoText.text = (20 + (PandoraBox.PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
+        }
+
+        public void SaveSettings()
+        {
+            PandoraBoxMaster.Instance.Settings.BlockShowType = blockShowType;
+            PandoraBoxMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
+            PandoraBoxMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
+            PandoraBoxMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
+            PandoraBoxMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
+
+            PandoraBoxMaster.Instance.Settings.Save();
+            gameObject.SetActive(false);
+        }
+
+        public void ChangeTimeScale(int value)
+        {
+            blockShowType = value;
+            LoadTimeScale();
+        }
+
+        void LoadTimeScale()
+        {
+            timeImage.color = blockShowType == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            blockImage.color = blockShowType == 1 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bothImage.color = blockShowType == 2 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeMenuSpeed()
+        {
+            LoadMenuSpeed();
+        }
+
+        public void LoadMenuSpeed()
+        {
+            menuSpeedText.text = "Menu Speed : " + (int)(menuSpeedSlider.value * 100) + "%";
+        }
+
+        public void ChangeFightSpeed()
+        {
+            LoadFightSpeed();
+        }
+
+        public void LoadFightSpeed()
+        {
+            fightSpeedText.text = "Fight Speed : X" + (int)fightSpeedSlider.value;
+        }
+
+        public void ChangeArenaUp()
+        {
+            LoadArenaUp();
+        }
+        public void LoadArenaUp()
+        {
+            arenaUpText.text = (50 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
+        }
+
+        public void ChangeArenaLo()
+        {
+            LoadArenaLo();
+        }
+
+        public void LoadArenaLo()
+        {
+            arenaLoText.text = (20 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
+        }
     }
 }

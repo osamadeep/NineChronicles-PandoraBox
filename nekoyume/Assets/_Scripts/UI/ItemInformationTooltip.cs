@@ -277,19 +277,19 @@ namespace Nekoyume.UI
                 return;
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //ShopItem x = item as ShopItem;
-            //var order = Util.GetOrder(x.OrderId.Value);
-            //OwnerName.text = "";
-            
-            //if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
-            //{
-            //    if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
-            //    {
-            //        OwnerName.gameObject.SetActive(true);
-            //        OwnerName.text = avatarState.NameWithHash;
-            //    }
-            //    //Debug.LogError(avatarState.agentAddress);
-            //}
+            ShopItem x = item as ShopItem;
+            var order = Util.GetOrder(x.OrderId.Value);
+            OwnerName.text = "";
+
+            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+            {
+                if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                {
+                    OwnerName.gameObject.SetActive(true);
+                    OwnerName.text = avatarState.NameWithHash;
+                }
+                //Debug.LogError(avatarState.agentAddress);
+            }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             submit.SetActive(false);

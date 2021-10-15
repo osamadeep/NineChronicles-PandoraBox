@@ -142,21 +142,31 @@ namespace PandoraBox
                 worldID = 5;
 
             int _requiredCost = stage.CostAP;
+
+
+
             for (int i = 0; i < count; i++)
             {
                 if (!isBusy)
                     yield break;
 
                 Game.instance.ActionManager
-                    .HackAndSlash(_player, worldID, stage.Id)
-                    .Subscribe(
-                        _ =>
-                        {
-                            //LocalLayerModifier.ModifyAvatarActionPoint(
-                            //    States.Instance.CurrentAvatarState.address, _requiredCost);
-                        }, e => ActionRenderHandler.BackToMain(false, e))
-                    ;
-                //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -5);
+                .HackAndSlash(_player, worldID, stage.Id, 1).Subscribe(
+                _ =>
+                {
+                    LocalLayerModifier.ModifyAvatarActionPoint(
+                    States.Instance.CurrentAvatarState.address, _requiredCost);
+                }, e => ActionRenderHandler.BackToMain(false, e));
+
+                //Game.instance.ActionManager
+                //    .HackAndSlash(_player, worldID, stage.Id)
+                //    .Subscribe(
+                //        _ =>
+                //        {
+                //            //LocalLayerModifier.ModifyAvatarActionPoint(
+                //            //    States.Instance.CurrentAvatarState.address, _requiredCost);
+                //        }, e => ActionRenderHandler.BackToMain(false, e))
+                //    ;
 
                 OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                     +"</color> <color=green>" + (i + 1) + "</color>/" + count + "...");

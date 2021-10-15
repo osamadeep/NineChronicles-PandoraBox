@@ -45,6 +45,8 @@ namespace Nekoyume.UI
         [SerializeField]
         private TMP_Text boostCountText;
 
+        [SerializeField] private UnityEngine.UI.Button forceExit = null; //|||||||||||||| PANDORA CODE |||||||||||||||||||
+
         public BossStatus BossStatus => bossStatus;
         public BossStatus EnemyPlayerStatus => enemyPlayerStatus;
         public StageProgressBar StageProgressBar => stageProgressBar;
@@ -88,7 +90,17 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
+
+            forceExit.onClick.AddListener(() => { ForceExitToMenu(); }); //|||||||||||||| PANDORA CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ForceExitToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Close(bool ignoreCloseAnimation = false)
         {

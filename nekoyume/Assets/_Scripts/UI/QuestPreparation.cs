@@ -935,28 +935,48 @@ namespace Nekoyume.UI
             _stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
 
+
+
             for (int i = 0; i < count; i++)
             {
-                Game.Game.instance.ActionManager
-                    .HackAndSlash(
-                        costumes,
-                        equipments,
-                        consumables,
-                        _worldId,
-                        _stageId.Value
-                    )
-                    .Subscribe(
-                        _ =>
-                        {
-                            LocalLayerModifier.ModifyAvatarActionPoint(
-                                States.Instance.CurrentAvatarState.address, _requiredCost);
-                        }, e => ActionRenderHandler.BackToMain(false, e))
-                    .AddTo(this);
 
-                LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -5);
+            Game.Game.instance.ActionManager
+                .HackAndSlash(
+                costumes,
+                equipments,
+                consumables,
+                _worldId,
+                _stageId.Value,
+                1
+                )
+                .Subscribe(
+                _ =>
+                {
+                    LocalLayerModifier.ModifyAvatarActionPoint(
+                    States.Instance.CurrentAvatarState.address, _requiredCost);
+                }, e => ActionRenderHandler.BackToMain(false, e))
+            .AddTo(this);
+
+                //Game.Game.instance.ActionManager
+                //    .HackAndSlash(
+                //        costumes,
+                //        equipments,
+                //        consumables,
+                //        _worldId,
+                //        _stageId.Value
+                //    )
+                //    .Subscribe(
+                //        _ =>
+                //        {
+                //            LocalLayerModifier.ModifyAvatarActionPoint(
+                //                States.Instance.CurrentAvatarState.address, _requiredCost);
+                //        }, e => ActionRenderHandler.BackToMain(false, e))
+                //    .AddTo(this);
+
+                //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -5);
 
                 OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Battle Fight <color=green>" + (i + 1) + "</color>/" + count);
-                yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(PandoraBox.PandoraBoxMaster.ActionCooldown);
 
             }
             OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...");

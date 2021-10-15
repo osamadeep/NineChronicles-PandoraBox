@@ -69,6 +69,9 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private Button NemesisButton = null;
+
+        [SerializeField]
+        private Button ResetNemesisButton = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private CharacterStats _tempStats;
@@ -91,6 +94,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             copyButton.OnClickAsObservable().Subscribe(_ => CopyPlayerInfo()).AddTo(gameObject);
             NemesisButton.OnClickAsObservable().Subscribe(_ => SetNemesis()).AddTo(gameObject);
+            ResetNemesisButton.OnClickAsObservable().Subscribe(_ => ResetAllNemesis()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -179,6 +183,18 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ResetAllNemesis()
+        {
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 3; i++)
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                PlayerPrefs.DeleteKey(key);
+            }
+            OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!");
+        }
+
+
         AvatarState tempAvatarState;
         void CopyPlayerInfo()
         {
@@ -188,7 +204,7 @@ namespace Nekoyume.UI
                 "Date & Time   : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
                 "Block         : #" + Game.Game.instance.Agent.BlockIndex.ToString();
             ClipboardHelper.CopyToClipboard(playerInfo);
-            OneLinePopup.Push(MailType.System, "Pandora Box: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
+            OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
         }
 
         

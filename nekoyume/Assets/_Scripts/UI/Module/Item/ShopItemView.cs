@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Coffee.UIEffects;
     using Lib9c.Model.Order;
     using Nekoyume.Helper;
     using UniRx;
@@ -19,6 +20,7 @@ namespace Nekoyume.UI.Module
         [SerializeField] private GameObject expired;
         [SerializeField] private Image remainsTime; //|||||||||||||| PANDORA CODE |||||||||||||||||||
         [SerializeField] private Material RedMaterial; //|||||||||||||| PANDORA CODE |||||||||||||||||||
+        [SerializeField] private UIShiny shiny;
 
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         private long _expiredBlockIndex;
@@ -66,6 +68,7 @@ namespace Nekoyume.UI.Module
             SetBg(0f);
             SetLevel(0, 0);
             priceGroup.SetActive(false);
+            shiny.enabled = false;
             if (expired != null)
             {
                 expired.SetActive(false);
@@ -93,13 +96,20 @@ namespace Nekoyume.UI.Module
             {
                 var data = itemViewData.GetItemViewData(grade);
 
-                var order = Util.GetOrder(Model.OrderId.Value);
-
-                if (PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
-                    enhancementImage.GetComponent<Image>().material = RedMaterial;
-                else
-                    enhancementImage.GetComponent<Image>().material = data.EnhancementMaterial;
+                enhancementImage.GetComponent<Image>().material = data.EnhancementMaterial;
                 enhancementImage.SetActive(true);
+            }
+
+
+            if (Model != null)
+            {
+                var order = Util.GetOrder(Model.OrderId.Value);
+                if (PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                {
+                    enhancementImage.GetComponent<Image>().material = RedMaterial;
+                    enhancementImage.SetActive(true);
+                    shiny.enabled = true;
+                }
             }
         }
 

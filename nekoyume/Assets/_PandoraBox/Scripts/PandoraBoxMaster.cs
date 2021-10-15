@@ -10,7 +10,7 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100080";
+        public static string OriginalVersionId = "v100081";
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public static int ActionCooldown = 2;
         public static bool MarketPriceHelper = false;
@@ -63,7 +63,7 @@ namespace PandoraBox
     {
         //General
         [HideInInspector]
-        public string VersionId { get; private set; } = "010010"; // parse v1.0.#
+        public string VersionId { get; private set; } = "010011"; // parse v1.0.#
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
@@ -143,12 +143,10 @@ namespace PandoraBox
             //check difference
             if (int.Parse(VersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
             {
-                WhatsNewShown = false;
-                PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
-                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+                //WhatsNewShown = false;
+                //PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
+                //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
-                //fix speed issue later
-                PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", 1);
             }
 
             //General
