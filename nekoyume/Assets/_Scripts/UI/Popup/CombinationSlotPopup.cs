@@ -208,7 +208,8 @@ namespace Nekoyume.UI
 
                 var statMin = optionRow.StatType.ValueToString(optionRow.StatMin);
                 var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
-                var text = $"{optionRow.StatType} ({statMin} - {statMax})";
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                var text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
                 optionView.UpdateView(text, string.Empty, 1);
                 optionView.Show();
             }
@@ -230,6 +231,8 @@ namespace Nekoyume.UI
                 }
 
                 var (skillName, _, _) = itemOptionInfo.SkillOptions[i];
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                skillName += $"=<color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
                 optionView.UpdateView(skillName, string.Empty);
                 optionView.Show();
             }
@@ -267,13 +270,14 @@ namespace Nekoyume.UI
             }
             else
             {
-                information.MainStatView.UpdateView(
-                    string.Format(
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                string text = string.Format(
                         format,
                         itemOptionInfo.MainStat.type,
                         row.BaseStatGrowthMin.NormalizeFromTenThousandths() * 100,
-                        row.BaseStatGrowthMax.NormalizeFromTenThousandths() * 100),
-                    string.Empty);
+                        row.BaseStatGrowthMax.NormalizeFromTenThousandths() * 100);
+                text += $"= <color=green>{itemOptionInfo.MainStat.totalValue}</color>";
+                information.MainStatView.UpdateView(text,string.Empty);
                 information.MainStatView.Show();
             }
 
@@ -293,11 +297,13 @@ namespace Nekoyume.UI
                     type,
                     row.ExtraStatGrowthMin.NormalizeFromTenThousandths() * 100,
                     row.ExtraStatGrowthMax.NormalizeFromTenThousandths() * 100);
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                text += $"= <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
                 optionView.UpdateView(text, string.Empty, count);
                 optionView.Show();
             }
 
-            format = "{0} +({1:N0}% - {2:N0}%) / ({3:N0}% - {4:N0}%)";
+            format = "{0} +({1:N0}-{2:N0}%)/({3:N0}-{4:N0}%)";
             for (var i = 0; i < information.SkillOptions.Count; i++)
             {
                 var optionView = information.SkillOptions[i];
@@ -317,6 +323,8 @@ namespace Nekoyume.UI
                     row.ExtraSkillDamageGrowthMax.NormalizeFromTenThousandths() * 100,
                     row.ExtraSkillChanceGrowthMin.NormalizeFromTenThousandths() * 100,
                     row.ExtraSkillChanceGrowthMax.NormalizeFromTenThousandths() * 100);
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                text += $"=<color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
                 optionView.UpdateView(text, string.Empty);
                 optionView.Show();
             }
@@ -327,8 +335,25 @@ namespace Nekoyume.UI
             progressBar.maxValue = Math.Max(state.RequiredBlockIndex, 1);
             var diff = Math.Max(state.UnlockBlockIndex - currentBlockIndex, 1);
             progressBar.value = diff;
-            requiredBlockIndexText.text = $"{diff}.";
-            timeText.text = string.Format(L10nManager.Localize("UI_REMAINING_TIME"), Util.GetBlockToTime((int)diff));
+            //requiredBlockIndexText.text = $"{diff}.";
+            //timeText.text = string.Format(L10nManager.Localize("UI_REMAINING_TIME"), Util.GetBlockToTime((int)diff));
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+            {
+                var timeR = Util.GetBlockToTime((int)diff);
+                requiredBlockIndexText.text = timeR;
+            }
+            else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+            {
+                requiredBlockIndexText.text = $"{diff}";
+            }
+            else
+            {
+                var timeR = Util.GetBlockToTime((int)diff);
+                requiredBlockIndexText.text = $"{timeR} ({diff})";
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void UpdateButtonInformation(CombinationSlotState state, long currentBlockIndex)

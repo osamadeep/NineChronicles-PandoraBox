@@ -221,12 +221,13 @@ namespace Nekoyume.UI.Scroller
             scoreText.text = ArenaInfo.Score.ToString();
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
 
-            if (nameText.text.Contains("Lambo") || nameText.text.Contains("AndrewLW")) 
+
+            if (PandoraBoxMaster.Instance.IsHalloween(ArenaInfo.AgentAddress.ToString())) 
                 paidMember.SetActive(true);
             else
                 paidMember.SetActive(false);
 
-            if (nameText.text.Contains("Wabbs"))
+            if (PandoraBoxMaster.Instance.IsRBG(ArenaInfo.AgentAddress.ToString()))
                 paidMember2.SetActive(true);
             else
                 paidMember2.SetActive(false);
@@ -290,13 +291,17 @@ namespace Nekoyume.UI.Scroller
             }
             else if (he <= me - 100 && he > me - 200)
             {
-                gainPointText.text = "<color=red>+8</color>";
+                gainPointText.text = "<color=red>+15</color>";
             }
             else if (he <= me - 200 && he > me - 300)
             {
+                gainPointText.text = "<color=red>+8</color>";
+            }
+            else if (he <= me - 300 && he > me - 400)
+            {
                 gainPointText.text = "<color=red>+4</color>";
             }
-            else if (he <= me - 300 && he > me - 500)
+            else if (he <= me - 400 && he > me - 500)
             {
                 gainPointText.text = "<color=red>+2</color>";
             }
@@ -346,7 +351,9 @@ namespace Nekoyume.UI.Scroller
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
             }
-
+            //Debug.LogError(ArenaInfo.AgentAddress);
+            if (PandoraBoxMaster.Instance.IsRBG(ArenaInfo.AgentAddress.ToString()))
+                characterView.SetIcon(PandoraBoxMaster.Instance.CosmicIcon);
             characterView.Show();
         }
 

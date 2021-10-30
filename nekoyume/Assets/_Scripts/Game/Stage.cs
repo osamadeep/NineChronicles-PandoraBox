@@ -38,6 +38,7 @@ using Random = UnityEngine.Random;
 
 namespace Nekoyume.Game
 {
+    using PandoraBox;
     using UniRx;
 
     public class Stage : MonoBehaviour, IStage
@@ -1039,6 +1040,9 @@ namespace Nekoyume.Game
                 selectedPlayer &&
                 selectedPlayer.gameObject.activeSelf)
             {
+                var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+                if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                    selectedPlayer.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
                 return selectedPlayer;
             }
 
@@ -1049,6 +1053,10 @@ namespace Nekoyume.Game
 
             var go = PlayerFactory.Create(States.Instance.CurrentAvatarState);
             selectedPlayer = go.GetComponent<Player>();
+
+            var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                selectedPlayer.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
 
             if (selectedPlayer is null)
             {
@@ -1068,6 +1076,7 @@ namespace Nekoyume.Game
         private Player RunPlayer(bool chasePlayer = true)
         {
             _stageRunningPlayer = GetPlayer();
+
             var playerTransform = _stageRunningPlayer.transform;
             Vector2 position = playerTransform.position;
             position.y = StageStartPosition;

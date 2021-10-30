@@ -174,7 +174,7 @@ namespace Nekoyume.UI
             blockText.text = "Block #" + Game.Game.instance.Agent.BlockIndex.ToString();
             dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
             versionText.text = "APV: " + PandoraBoxMaster.OriginalVersionId;
-            if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee"))
+            if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee") || nicknameText.text.Contains("Wabbs"))
                 paidMember.SetActive(true);
             else
                 paidMember.SetActive(false);
@@ -264,7 +264,13 @@ namespace Nekoyume.UI
                 Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet
             );
 
+
+            //Debug.LogError("UPDATE: " +  tempAvatarState.agentAddress.ToString());
             avatarStats.SetData(stats);
+
+            var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(tempAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
         }
 
         private static void ShowTooltip(EquipmentSlot slot)

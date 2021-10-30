@@ -24,6 +24,8 @@ namespace PandoraBox
         public GameObject UISettings;
         public GameObject UIWhatsNew;
         public AudioMixer Audiomixer;
+        public GameObject CosmicSword;
+        public Sprite CosmicIcon;
 
         private void Awake()
         {
@@ -57,13 +59,32 @@ namespace PandoraBox
 
             return addresses.Contains(address);
         }
+
+        public bool IsRBG(string address)
+        {
+            List<string> addresses = new List<string>();
+            addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
+            addresses.Add("0xC0bA278CB8379683E66C28928fa0Aa8bfF3D95E6"); //Wabbs
+
+            return addresses.Contains(address);
+        }
+
+        public bool IsHalloween(string address)
+        {
+            List<string> addresses = new List<string>();
+            addresses.Add("0xd7ECE10ddAFc34e964c61Ad11c199C3BF41Dc403"); //bmcdee
+
+            return addresses.Contains(address);
+        }
+
+
     }
 
     public class PandoraSettings
     {
         //General
         [HideInInspector]
-        public string VersionId { get; private set; } = "010011"; // parse v1.0.#
+        public string VersionId { get; private set; } = "010012"; // parse v1.0.#
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
@@ -143,9 +164,9 @@ namespace PandoraBox
             //check difference
             if (int.Parse(VersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
             {
-                //WhatsNewShown = false;
-                //PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
-                //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+                WhatsNewShown = false;
+                PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
+                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
 

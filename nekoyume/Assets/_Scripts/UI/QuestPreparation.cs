@@ -24,6 +24,7 @@ using Toggle = Nekoyume.UI.Module.Toggle;
 
 namespace Nekoyume.UI
 {
+    using PandoraBox;
     using UniRx;
 
     public class QuestPreparation : Widget
@@ -230,8 +231,8 @@ namespace Nekoyume.UI
                         .Select(slot => (Consumable) slot.Item)
                         .ToList();
 
-                    _stage.IsExitReserved = false;
-                    _stage.IsRepeatStage = false;
+                    _stage.IsExitReserved = true;
+                    _stage.IsRepeatStage = repeatToggle.isOn;
                     _stage.foodCount = consumables.Count;
                     ActionRenderHandler.Instance.Pending = true;
 
@@ -352,6 +353,10 @@ namespace Nekoyume.UI
             questButton.interactable = true;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             sweepButton.gameObject.SetActive(true);
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             coverToBlockClick.SetActive(false);
             HelpPopup.HelpMe(100004, true);
@@ -561,6 +566,11 @@ namespace Nekoyume.UI
             StartCoroutine(CoQuestClick(repeat));
             questButton.interactable = false;
             repeatToggle.interactable = false;
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+
             coverToBlockClick.SetActive(true);
         }
 
@@ -839,6 +849,10 @@ namespace Nekoyume.UI
                     statView.Show(statType, baseValue + additionalValue, 0);
                 }
             }
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
         }
 
         private void Quest(bool repeat)
@@ -866,6 +880,10 @@ namespace Nekoyume.UI
             _stage.IsRepeatStage = repeat;
             _stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             var playCount = 1;
             Game.Game.instance.ActionManager
@@ -912,6 +930,10 @@ namespace Nekoyume.UI
             questButton.gameObject.SetActive(false);
             sweepButton.gameObject.SetActive(false);
 
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+
             _player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
             StartCoroutine(instant(x));
@@ -935,7 +957,9 @@ namespace Nekoyume.UI
             _stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
 
-
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             for (int i = 0; i < count; i++)
             {
@@ -1037,6 +1061,10 @@ namespace Nekoyume.UI
 
                 ((Equipment)outNonFungibleItem).Equip();
             }
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             var tableSheets = Game.Game.instance.TableSheets;
             var simulator = new StageSimulator(

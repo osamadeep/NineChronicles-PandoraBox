@@ -151,9 +151,9 @@ namespace Nekoyume.UI
             comboText.Close();
 
             exitToggle.isOn = isExitReserved;
-            //repeatToggle.isOn = isExitReserved ? false : isRepeat;
+            repeatToggle.isOn = isExitReserved ? false : isRepeat;
             helpButton.gameObject.SetActive(true);
-            //repeatToggle.gameObject.SetActive(true);
+            repeatToggle.gameObject.SetActive(true);
             boostEffectObject.SetActive(boostCost > Game.Game.instance
                 .TableSheets.StageSheet.Values.FirstOrDefault(i =>
                     i.Id == Find<WorldMap>().SelectedStageId).CostAP);

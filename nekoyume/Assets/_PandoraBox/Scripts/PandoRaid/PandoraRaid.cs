@@ -101,8 +101,9 @@ namespace PandoraBox
                     OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!");
                     return;
                 }
-#if !UNITY_EDITOR
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
+
+#if !UNITY_EDITOR
                 if (tries <= 0)
                 {
                     OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
@@ -110,7 +111,13 @@ namespace PandoraBox
                 }
                 StartCoroutine(Raid(tries));
 #else
-                StartCoroutine(Raid(24));
+                //StartCoroutine(Raid(24));
+                if (tries <= 0)
+                {
+                    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
+                    return;
+                }
+                StartCoroutine(Raid(tries));
 #endif
 
             }
@@ -143,36 +150,72 @@ namespace PandoraBox
 
             int _requiredCost = stage.CostAP;
 
+            int maxPerWave = 12;
 
-
-            for (int i = 0; i < count; i++)
+            if (count <= maxPerWave)
             {
-                if (!isBusy)
-                    yield break;
-
-                Game.instance.ActionManager
-                .HackAndSlash(_player, worldID, stage.Id, 1).Subscribe(
+                 Game.instance.ActionManager
+                .HackAndSlash(_player, worldID, stage.Id, count).Subscribe(
                 _ =>
                 {
                     LocalLayerModifier.ModifyAvatarActionPoint(
                     States.Instance.CurrentAvatarState.address, _requiredCost);
                 }, e => ActionRenderHandler.BackToMain(false, e));
+            }
+            else
+            {
+                int secondndWave = count - maxPerWave;
 
-                //Game.instance.ActionManager
-                //    .HackAndSlash(_player, worldID, stage.Id)
-                //    .Subscribe(
-                //        _ =>
-                //        {
-                //            //LocalLayerModifier.ModifyAvatarActionPoint(
-                //            //    States.Instance.CurrentAvatarState.address, _requiredCost);
-                //        }, e => ActionRenderHandler.BackToMain(false, e))
-                //    ;
+                Game.instance.ActionManager
+                .HackAndSlash(_player, worldID, stage.Id, maxPerWave).Subscribe(
+                _ =>
+                {
+                   LocalLayerModifier.ModifyAvatarActionPoint(
+                   States.Instance.CurrentAvatarState.address, _requiredCost);
+                }, e => ActionRenderHandler.BackToMain(false, e));
 
-                OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
-                    +"</color> <color=green>" + (i + 1) + "</color>/" + count + "...");
                 yield return new WaitForSeconds(2);
 
+                Game.instance.ActionManager
+                .HackAndSlash(_player, worldID, stage.Id, secondndWave).Subscribe(
+                _ =>
+                {
+                    LocalLayerModifier.ModifyAvatarActionPoint(
+                                    States.Instance.CurrentAvatarState.address, _requiredCost);
+                }, e => ActionRenderHandler.BackToMain(false, e));
             }
+
+            OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
+            + "</color> (<color=green>" + count + "</color>) times Completed!");
+
+            //for (int i = 0; i < count; i++)
+            //{
+            //    if (!isBusy)
+            //        yield break;
+
+            //    Game.instance.ActionManager
+            //    .HackAndSlash(_player, worldID, stage.Id, 1).Subscribe(
+            //    _ =>
+            //    {
+            //        LocalLayerModifier.ModifyAvatarActionPoint(
+            //        States.Instance.CurrentAvatarState.address, _requiredCost);
+            //    }, e => ActionRenderHandler.BackToMain(false, e));
+
+            //    //Game.instance.ActionManager
+            //    //    .HackAndSlash(_player, worldID, stage.Id)
+            //    //    .Subscribe(
+            //    //        _ =>
+            //    //        {
+            //    //            //LocalLayerModifier.ModifyAvatarActionPoint(
+            //    //            //    States.Instance.CurrentAvatarState.address, _requiredCost);
+            //    //        }, e => ActionRenderHandler.BackToMain(false, e))
+            //    //    ;
+
+            //    OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
+            //        +"</color> <color=green>" + (i + 1) + "</color>/" + count + "...");
+            //    yield return new WaitForSeconds(2);
+
+            //}
             StartCoroutine(Cooldown());
             //OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...");
         }

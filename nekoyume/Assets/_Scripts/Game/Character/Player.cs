@@ -115,8 +115,10 @@ namespace Nekoyume.Game.Character
 
         #endregion
 
+        AvatarState dummyRBG = null;
         public void Set(AvatarState avatarState)
         {
+            dummyRBG = avatarState;
             var tableSheets = Game.instance.TableSheets;
             Set(new Model.Player(avatarState, tableSheets.CharacterSheet,
                 tableSheets.CharacterLevelSheet, tableSheets.EquipmentItemSetEffectSheet));
@@ -357,7 +359,17 @@ namespace Nekoyume.Game.Character
             var level = weapon?.level ?? 0;
             var levelVFXPrefab = ResourcesHelper.GetAuraWeaponPrefab(id, level);
             var sprite = weapon.GetPlayerSpineTexture();
-            SpineController.UpdateWeapon(id, sprite, levelVFXPrefab);
+
+            //if (dummyRBG != null)
+            //    Debug.LogError("EQQQ" + dummyRBG.agentAddress.ToString());
+
+            //if (dummyRBG != null && PandoraBox.PandoraBoxMaster.Instance.IsRBG(dummyRBG.agentAddress.ToString()))
+            //    SpineController.UpdateWeapon(id, sprite, PandoraBox.PandoraBoxMaster.Instance.RGBSword);
+            //else
+
+                SpineController.UpdateWeapon(id, sprite, levelVFXPrefab);
+
+            //dummyRBG = null;
         }
 
         public void Equip(int armorId, int weaponId)

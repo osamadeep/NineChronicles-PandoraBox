@@ -139,6 +139,7 @@ namespace Nekoyume.UI
                     var taxedPrice = order.Price - order.GetTax();
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     string x = "";
+
                     if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
                     {
                         x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> for your {sellerItemName}";
@@ -194,6 +195,7 @@ namespace Nekoyume.UI
                         $"Given mail[{mail}] doesn't support {nameof(ToInfo)}() method.");
             }
         }
+
 
         private static ItemBase GetItemBase(AttachmentActionResult attachment)
         {

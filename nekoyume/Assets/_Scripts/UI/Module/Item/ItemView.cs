@@ -252,6 +252,7 @@ namespace Nekoyume.UI.Module
 
         protected void SetOptionTag(bool hasOptions, OptionTagData data)
         {
+            //hasOptions = true;
             if (!hasOptions)
             {
                 optionTagBg.gameObject.SetActive(false);
@@ -275,6 +276,7 @@ namespace Nekoyume.UI.Module
             var optionInfo = new ItemOptionInfo(Model.ItemBase.Value as Equipment);
 
             var optionCount = optionInfo.StatOptions.Sum(x => x.count);
+            //Debug.LogError(optionCount);
             var index = 0;
             for (var i = 0; i < optionCount; ++i)
             {

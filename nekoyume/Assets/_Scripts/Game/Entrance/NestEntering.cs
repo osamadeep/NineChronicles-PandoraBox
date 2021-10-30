@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using Nekoyume.BlockChain;
@@ -8,6 +8,7 @@ using Nekoyume.Game.Tween;
 using Nekoyume.State;
 using Nekoyume.UI;
 using UnityEngine;
+using PandoraBox;
 
 namespace Nekoyume.Game.Entrance
 {
@@ -45,6 +46,10 @@ namespace Nekoyume.Game.Entrance
                     player = PlayerFactory.Create(avatarState).GetComponent<Player>();
                     player.SpineController.Appear();
                     active = true;
+
+                    var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+                    if (PandoraBoxMaster.Instance.IsRBG(avatarState.agentAddress.ToString()))
+                        player.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
                 }
                 else
                 {
@@ -69,6 +74,8 @@ namespace Nekoyume.Game.Entrance
                 seq.Append(playerTransform.DOMove(seqPos, Random.Range(4.0f, 5.0f)));
                 seq.Append(playerTransform.DOMove(endPos, Random.Range(4.0f, 5.0f)));
                 seq.Play().SetDelay(2.0f).SetLoops(-1);
+
+
                 players.Add(player);
 
                 yield return new WaitForSeconds(0.2f);

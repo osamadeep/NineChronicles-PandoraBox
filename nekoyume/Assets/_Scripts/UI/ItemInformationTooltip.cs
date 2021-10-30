@@ -120,10 +120,10 @@ namespace Nekoyume.UI
         void ResetDiscordBackground()
         {
             panel.GetComponent<Image>().enabled = true;
-            panel.Find("Content/Spacer1").gameObject.SetActive(true);
-            panel.Find("Content/ScrollArea").gameObject.SetActive(true);
-            panel.Find("Content/Spacer2").gameObject.SetActive(true);
-            panel.Find("Content/TradableText").gameObject.SetActive(true);
+            panel.Find("Content/Spacer1").gameObject.SetActive(false);
+            panel.Find("Content/ScrollArea").gameObject.SetActive(false);
+            panel.Find("Content/Spacer2").gameObject.SetActive(false);
+            panel.Find("Content/TradableText").gameObject.SetActive(false);
             MarketPriceText.text = "";
             panel.Find("Footer").gameObject.SetActive(true);
             DiscordHolder.gameObject.SetActive(false);
@@ -255,14 +255,16 @@ namespace Nekoyume.UI
                 Close();
             });
 
-            scrollbar.value = 1f;
-            StartCoroutine(CoUpdate(sell));
-            sellTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
+
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
                 PrepareDiscordBackground();
             else
                 ResetDiscordBackground();
+
+            scrollbar.value = 1f;
+            StartCoroutine(CoUpdate(sell));
+            sellTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
         }
 
         public void ShowForBuy(RectTransform target,
@@ -288,7 +290,9 @@ namespace Nekoyume.UI
                     OwnerName.gameObject.SetActive(true);
                     OwnerName.text = avatarState.NameWithHash;
                 }
-                //Debug.LogError(avatarState.agentAddress);
+#if UNITY_EDITOR
+                Debug.LogError(avatarState.agentAddress);
+#endif
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

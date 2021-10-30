@@ -68,12 +68,13 @@ namespace Nekoyume.UI.Module
             SetBg(0f);
             SetLevel(0, 0);
             priceGroup.SetActive(false);
-            shiny.enabled = false;
             if (expired != null)
             {
                 expired.SetActive(false);
             }
             _disposables.DisposeAllAndClear();
+            remainsTime.gameObject.SetActive(false);
+            shiny.enabled = false;
         }
 
         private void SetBg(float alpha)
@@ -109,6 +110,10 @@ namespace Nekoyume.UI.Module
                     enhancementImage.GetComponent<Image>().material = RedMaterial;
                     enhancementImage.SetActive(true);
                     shiny.enabled = true;
+                }
+                else
+                {
+                    shiny.enabled = false;
                 }
             }
         }

@@ -95,7 +95,7 @@ namespace Nekoyume.UI.Module
             return new Color(color.r, color.g, color.b, alpha);
         }
 
-        private void SetIcon(Sprite image)
+        public void SetIcon(Sprite image)
         {
             iconImage.overrideSprite = image;
             iconImage.enabled = true;
