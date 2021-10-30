@@ -72,7 +72,7 @@ namespace Nekoyume.UI
         {
             if (shopItems.SharedModel.WishItemCount > 0)
             {
-                Widget.Find<TwoButtonPopup>().Show(L10nManager.Localize("UI_CLOSE_BUY_WISH_LIST"),
+                Widget.Find<TwoButtonSystem>().Show(L10nManager.Localize("UI_CLOSE_BUY_WISH_LIST"),
                                                    L10nManager.Localize("UI_YES"),
                                                    L10nManager.Localize("UI_NO"), ShowDefaultView);
             }
@@ -92,14 +92,14 @@ namespace Nekoyume.UI
             var currentGold = double.Parse(States.Instance.GoldBalanceState.Gold.GetQuantityString());
             if (currentGold < _price)
             {
-                OneLinePopup.Push(MailType.System, L10nManager.Localize("UI_NOT_ENOUGH_NCG"));
+                OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_NOT_ENOUGH_NCG"));
                 return;
             }
 
             var content = string.Format(L10nManager.Localize("UI_BUY_MULTIPLE_FORMAT"),
                 shopItems.SharedModel.WishItemCount, _price);
 
-            Widget.Find<TwoButtonPopup>().Show(content,
+            Widget.Find<TwoButtonSystem>().Show(content,
                                                L10nManager.Localize("UI_BUY"),
                                                L10nManager.Localize("UI_CANCEL"),
                                                BuyMultiple);
@@ -109,8 +109,8 @@ namespace Nekoyume.UI
         {
             var wishItems = shopItems.SharedModel.GetWishItems;
             var purchaseInfos = new List<PurchaseInfo>();
-            purchaseInfos.AddRange(wishItems.Select(x => ShopBuy.GetPurchseInfo(x.OrderId.Value)));
-            Game.Game.instance.ActionManager.Buy(purchaseInfos, wishItems);
+            purchaseInfos.AddRange(wishItems.Select(x => ShopBuy.GetPurchaseInfo(x.OrderId.Value)));
+            Game.Game.instance.ActionManager.Buy(purchaseInfos);
 
             if (shopItems.SharedModel.WishItemCount > 0)
             {
@@ -129,11 +129,9 @@ namespace Nekoyume.UI
                 };
                 Mixpanel.Track("Unity/Buy", props);
                 shopItem.Selected.Value = false;
-                var buyerAgentAddress = States.Instance.AgentState.address;
-                LocalLayerModifier.ModifyAgentGold(buyerAgentAddress, -shopItem.Price.Value);
                 ReactiveShopState.RemoveBuyDigest(shopItem.OrderId.Value);
                 var format = L10nManager.Localize("NOTIFICATION_BUY_START");
-                OneLinePopup.Push(MailType.Auction,
+                OneLineSystem.Push(MailType.Auction,
                     string.Format(format, shopItem.ItemBase.Value.GetLocalizedName()));
             }
             AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);

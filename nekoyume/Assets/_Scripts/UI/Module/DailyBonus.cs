@@ -17,9 +17,6 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
-    using Nekoyume.Helper;
-    using Nekoyume.Model.Mail;
-    using PandoraBox;
     using UniRx;
 
     public class DailyBonus : AlphaAnimateModule
@@ -134,31 +131,7 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
-            {
-                case 0:
-                    {
-                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
-                        var timeR = Util.GetBlockToTime(remainBlock);
-                        text.text = timeR;
-                        break;
-                    }
-                case 1:
-                    {
-                        text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
-                        break;
-                    }
-                case 2:
-                    {
-                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
-                        string timeR = Util.GetBlockToTime(remainBlock) + $"({remainBlock})";
-                        text.text = timeR;
-                        break;
-                    }
-            }
-
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
 
             _isFull = sliderAnimator.IsFull;
             foreach (var additiveImage in additiveImages)
@@ -167,27 +140,9 @@ namespace Nekoyume.UI.Module
             }
 
             hasNotificationImage.enabled = _isFull && States.Instance.CurrentAvatarState?.actionPoint == 0;
-            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0) //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                if (!isTrying) 
-                    StartCoroutine(TryToAutoCollect());
+
             animator.SetBool(IsFull, _isFull);
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public static bool isTrying = false;
-        IEnumerator TryToAutoCollect()
-        {
-            isTrying = true;
-            yield return new WaitForSeconds(10);
-            if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
-            {
-                GetDailyReward();
-                OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!");
-            }
-            yield return new WaitForSeconds(15);
-            isTrying = false;
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void ShowTooltip()
         {
@@ -209,11 +164,11 @@ namespace Nekoyume.UI.Module
 
             if (actionPoint != null && actionPoint.NowCharging)
             {
-                OneLinePopup.Push(MailType.System, L10nManager.Localize("UI_CHARGING_AP"));
+                OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_CHARGING_AP"));
             }
             else if (States.Instance.CurrentAvatarState.actionPoint > 0)
             {
-                var confirm = Widget.Find<Confirm>();
+                var confirm = Widget.Find<ConfirmPopup>();
                 confirm.Show("UI_CONFIRM", "UI_AP_REFILL_CONFIRM_CONTENT");
                 confirm.CloseCallback = result =>
                 {
@@ -233,9 +188,7 @@ namespace Nekoyume.UI.Module
 
         private void GetDailyReward()
         {
-            //UI.Notification.Push(
-            //    Nekoyume.Model.Mail.MailType.System,
-            //    L10nManager.Localize("UI_RECEIVING_DAILY_REWARD"));
+            NotificationSystem.Push(MailType.System, L10nManager.Localize("UI_RECEIVING_DAILY_REWARD"));
 
             Game.Game.instance.ActionManager.DailyReward();
 
@@ -251,11 +204,6 @@ namespace Nekoyume.UI.Module
 
         private IEnumerator CoGetDailyRewardAnimation()
         {
-            var blockCount = Game.Game.instance.Agent.BlockIndex -
-                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
-            LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
-                States.Instance.CurrentAvatarState.address,
-                blockCount);
             animator.SetTrigger(GetReward);
             VFXController.instance.Create<ItemMoveVFX>(boxImageTransform.position);
 

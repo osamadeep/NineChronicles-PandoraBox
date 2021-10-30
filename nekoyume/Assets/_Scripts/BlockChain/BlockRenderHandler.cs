@@ -9,7 +9,6 @@ using Nekoyume.L10n;
 using Nekoyume.Model.State;
 using Nekoyume.State;
 using Nekoyume.State.Subjects;
-using UnityEngine;
 using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.BlockChain
@@ -57,7 +56,7 @@ namespace Nekoyume.BlockChain
                 .Subscribe(_ =>
                 {
                     var msg = L10nManager.Localize("ERROR_REORG_OCCURRED");
-                    UI.Notification.Push(Model.Mail.MailType.System, msg);
+                    UI.NotificationSystem.Push(Model.Mail.MailType.System, msg);
                 })
                 .AddTo(_disposables);
         }
