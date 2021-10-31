@@ -1,3 +1,4 @@
+using Nekoyume.Game.Controller;
 using PandoraBox;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ namespace Nekoyume.UI
             indicator.Show("Verifying transaction..");
             _keyStorePath = keyStorePath;
             _privateKey = privateKey;
+            AudioController.instance.PlayMusic(AudioController.MusicCode.PandoraIntro); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             StartLoading();
         }
 
@@ -35,12 +37,13 @@ namespace Nekoyume.UI
 
         private void StartLoading()
         {
-#if !UNITY_EDITOR
-            StartCoroutine(CheckVersion()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
-#else
-            var w = Find<LoginSystem>();
-            w.Show(_keyStorePath, _privateKey);
-#endif
+//#if !UNITY_EDITOR
+//            StartCoroutine(CheckVersion()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+//#else
+//            var w = Find<LoginSystem>();
+//            w.Show(_keyStorePath, _privateKey);
+//#endif
+StartCoroutine(CheckVersion()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             //var w = Find<LoginSystem>();
             //w.Show(_keyStorePath, _privateKey);
         }
