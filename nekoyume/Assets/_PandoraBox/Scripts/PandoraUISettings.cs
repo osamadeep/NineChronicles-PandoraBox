@@ -45,6 +45,13 @@ namespace PandoraBox
         [SerializeField]
         Slider arenaLoSlider;
 
+        //Raid Method
+        [SerializeField]
+        Image boostImage;
+
+        [SerializeField]
+        Image sweepImage;
+
 
         void OnEnable()
         {
@@ -62,6 +69,7 @@ namespace PandoraBox
             LoadArenaUp();
             arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
+            LoadRaidMethod();
         }
 
         public void ResetDefault()
@@ -80,11 +88,7 @@ namespace PandoraBox
             LoadArenaUp();
             arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
-        }
-
-        private void Start()
-        {
-
+            LoadRaidMethod();
         }
 
         public void SaveSettings()
@@ -110,6 +114,18 @@ namespace PandoraBox
             timeImage.color = blockShowType == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             blockImage.color = blockShowType == 1 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             bothImage.color = blockShowType == 2 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeRaidMethod(bool value)
+        {
+            PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep = value;
+            LoadRaidMethod();
+        }
+
+        void LoadRaidMethod()
+        {
+            sweepImage.color = PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            boostImage.color = !PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMenuSpeed()

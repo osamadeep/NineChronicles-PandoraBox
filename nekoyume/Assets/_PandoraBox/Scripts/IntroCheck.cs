@@ -13,7 +13,7 @@ namespace PandoraBox
         // Start is called before the first frame update
         void Start()
         {
-            string temp = PandoraBoxMaster.Instance.Settings.VersionId;
+            string temp = PandoraBoxMaster.Instance.Settings.TempVersionId;
             string textVer = string.Format("v{0}.{1}.{2}",
                             int.Parse(temp.Substring(0, 2)),
                             int.Parse(temp.Substring(2, 2)),

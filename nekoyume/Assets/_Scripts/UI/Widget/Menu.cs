@@ -110,7 +110,7 @@ namespace Nekoyume.UI
             StartCoroutine(arenaRemainsTime());
             StartCoroutine(arenaRemainsCount());
             StartCoroutine(ShowWhatsNew());
-            DailyBonus.isTrying = false;
+            DailyBonus.IsTrying = false;
         }
 
         public void ShowLoginScreen()
@@ -238,9 +238,15 @@ namespace Nekoyume.UI
             PandoraBoxMaster.Instance.UISettings.SetActive(true);
         }
 
+        public void ShowRahaf()
+        {
+            AudioController.PlayClick();
+            PandoraBoxMaster.Instance.UIRahaf.SetActive(true);
+        }
+
         public void ShowHuntEgg()
         {
-            OneLinePopup.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Halloween Egg Hunt</color> event start in 30/10/2021!");
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Halloween Egg Hunt</color> event start in 30/10/2021!");
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

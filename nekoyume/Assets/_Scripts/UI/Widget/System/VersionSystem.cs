@@ -42,9 +42,9 @@ namespace Nekoyume.UI
         private void UpdateText()
         {
             string textVer = string.Format("v{0}.{1}.{2}",
-                            int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(0, 2)),
-                            int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(2, 2)),
-                            int.Parse(PandoraBoxMaster.Instance.Settings.VersionId.Substring(4, 2)));
+                            int.Parse(PandoraBoxMaster.Instance.Settings.TempVersionId.Substring(0, 2)),
+                            int.Parse(PandoraBoxMaster.Instance.Settings.TempVersionId.Substring(2, 2)),
+                            int.Parse(PandoraBoxMaster.Instance.Settings.TempVersionId.Substring(4, 2)));
             const string format = "PandoraBox {0} / #{1}";
             var hash = _hash.ToString();
             var text = string.Format(

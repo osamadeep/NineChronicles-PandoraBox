@@ -14,6 +14,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using PandoraBox;
     using UniRx;
 
     public class LoginSystem : SystemWidget
@@ -44,7 +45,7 @@ namespace Nekoyume.UI
         public GameObject accountGroup;
         public GameObject header;
         public GameObject bg;
-        public GameObject loginWarning;
+        //public GameObject loginWarning;
         public GameObject findPrivateKeyWarning;
         public GameObject createSuccessGroup;
         public TextMeshProUGUI strongText;
@@ -55,7 +56,7 @@ namespace Nekoyume.UI
         public TextMeshProUGUI backToLoginText;
         public TextMeshProUGUI passPhraseText;
         public TextMeshProUGUI retypeText;
-        public TextMeshProUGUI loginText;
+        //public TextMeshProUGUI loginText;
         public TextMeshProUGUI enterPrivateKeyText;
         public TextMeshProUGUI accountAddressText;
         public TextMeshProUGUI accountAddressHolder;
@@ -73,6 +74,10 @@ namespace Nekoyume.UI
         private States _prevState;
         public Blur blur;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public Transform ProfilesHolder;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         protected override void Awake()
         {
             State.Value = States.Show;
@@ -88,7 +93,7 @@ namespace Nekoyume.UI
             backToLoginText.text = L10nManager.Localize("UI_LOGIN_BACK_TO_LOGIN");
             passPhraseText.text = L10nManager.Localize("UI_LOGIN_PASSWORD_INFO");
             retypeText.text = L10nManager.Localize("UI_LOGIN_RETYPE_INFO");
-            loginText.text = L10nManager.Localize("UI_LOGIN_INFO");
+            //loginText.text = L10nManager.Localize("UI_LOGIN_INFO");
             enterPrivateKeyText.text = L10nManager.Localize("UI_LOGIN_PRIVATE_KEY_INFO");
             successText.text = L10nManager.Localize("UI_ID_CREATE_SUCCESS");
             passPhraseField.placeholder.GetComponent<Text>().text =
@@ -122,7 +127,7 @@ namespace Nekoyume.UI
             accountAddressHolder.gameObject.SetActive(false);
             accountWarningText.gameObject.SetActive(false);
             retypeText.gameObject.SetActive(false);
-            loginWarning.SetActive(false);
+            //loginWarning.SetActive(false);
             findPrivateKeyWarning.SetActive(false);
             createSuccessGroup.SetActive(false);
 
@@ -173,7 +178,7 @@ namespace Nekoyume.UI
                     submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_START"));
                     loginGroup.SetActive(true);
                     accountGroup.SetActive(true);
-                    findPassphraseButton.gameObject.SetActive(true);
+                    //findPassphraseButton.gameObject.SetActive(true);
                     loginField.Select();
                     accountAddressText.gameObject.SetActive(true);
                     bg.SetActive(true);
@@ -235,7 +240,9 @@ namespace Nekoyume.UI
             }
             catch (Exception)
             {
-                loginWarning.SetActive(true);
+                //loginWarning.SetActive(true);
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!");
                 return;
             }
             Login = !(_privateKey is null);
@@ -245,7 +252,9 @@ namespace Nekoyume.UI
             }
             else
             {
-                loginWarning.SetActive(true);
+                //loginWarning.SetActive(true);
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!");
                 loginField.text = string.Empty;
             }
 
@@ -334,7 +343,23 @@ namespace Nekoyume.UI
                 {
                     // 키 고르는 게 따로 없으니 갖고 있는 키 중에서 아무거나 보여줘야 함...
                     // FIXME: 역시 키 고르는 단계가 있어야 할 것 같음
-                    SetImage(KeyStore.List().First().Item2.Address);
+                    //SetImage(KeyStore.List().First().Item2.Address);
+
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    foreach (Transform item in ProfilesHolder)
+                        item.gameObject.SetActive(false);
+
+                    for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
+                    {
+                        ProfilesHolder.GetChild(i).gameObject.SetActive(true);
+                        string tmp = "_PandoraBox_Account_LoginProfile0" + i + "_Name";
+                        ProfilesHolder.GetChild(i).Find("AccountNameText").GetComponent<TextMeshProUGUI>().text
+                            = PlayerPrefs.GetString(tmp, "Profile " + (i + 1).ToString());
+                    }
+
+
+                    SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
 
                 switch (State.Value)
@@ -370,8 +395,18 @@ namespace Nekoyume.UI
                 {
                     blur.Show();
                 }
+                StartCoroutine(ForceSelect()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             }
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        System.Collections.IEnumerator ForceSelect()
+        {
+            yield return new WaitForSeconds(0.5f);
+            loginField.ActivateInputField();
+            loginField.Select();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void CreatePrivateKey()
         {
@@ -409,25 +444,42 @@ namespace Nekoyume.UI
             // 그런 케이스에서 이용자에게는 버그처럼 여겨지는 동작일지도.
             // FIXME: 따라서 UI에서 키 여러 개 중 뭘 쓸지 선택하는 걸 두는 게 좋을 듯.
             PrivateKey privateKey = null;
-            foreach (var pair in keyStore.List())
-            {
-                pair.Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
-                try
-                {
-                    privateKey = ppk.Unprotect(passphrase: passphrase);
-                }
-                catch (IncorrectPassphraseException)
-                {
-                    Debug.LogWarningFormat(
-                        "The key {0} is protected with a passphrase; failed to load: {1}",
-                        ppk.Address,
-                        keyId
-                    );
-                }
+            //foreach (var pair in keyStore.List())
+            //{
+            //    pair.Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
+            //    try
+            //    {
+            //        privateKey = ppk.Unprotect(passphrase: passphrase);
+            //    }
+            //    catch (IncorrectPassphraseException)
+            //    {
+            //        Debug.LogWarningFormat(
+            //            "The key {0} is protected with a passphrase; failed to load: {1}",
+            //            ppk.Address,
+            //            keyId
+            //        );
+            //    }
 
-                Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
-                break;
+            //    Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
+            //    break;
+            //}
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            keyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
+            try
+            {
+                privateKey = ppk.Unprotect(passphrase: passphrase);
             }
+            catch (IncorrectPassphraseException)
+            {
+                Debug.LogWarningFormat(
+                    "The key {0} is protected with a passphrase; failed to load: {1}",
+                    ppk.Address,
+                    keyId
+                );
+            }
+
+            Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return privateKey;
         }

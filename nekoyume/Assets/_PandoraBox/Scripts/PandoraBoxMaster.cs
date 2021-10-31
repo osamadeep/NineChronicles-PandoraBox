@@ -10,7 +10,8 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100081";
+        public static string OriginalVersionId = "v100083";
+        public static string VersionId = "010013";
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public static int ActionCooldown = 2;
         public static bool MarketPriceHelper = false;
@@ -23,6 +24,7 @@ namespace PandoraBox
         public PandoraSettings Settings;
         public GameObject UISettings;
         public GameObject UIWhatsNew;
+        public GameObject UIRahaf;
         public AudioMixer Audiomixer;
         public GameObject CosmicSword;
         public Sprite CosmicIcon;
@@ -84,7 +86,7 @@ namespace PandoraBox
     {
         //General
         [HideInInspector]
-        public string VersionId { get; private set; } = "010012"; // parse v1.0.#
+        public string TempVersionId { get; private set; } //value come from Online settings
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
@@ -115,6 +117,8 @@ namespace PandoraBox
         public int FightSpeed { get; set; } = 1;
         [HideInInspector]
         public int RaidCooldown { get; set; } = 150;
+        [HideInInspector]
+        public bool RaidMethodIsSweep { get; set; }
 
         //PVP
 
@@ -130,7 +134,7 @@ namespace PandoraBox
         public void Save()
         {
             //General
-            PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
+            //PlayerPrefs.SetString("_PandoraBox_Ver", TempVersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
@@ -143,6 +147,7 @@ namespace PandoraBox
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             PlayerPrefs.SetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_RaidMethodIsSweep", System.Convert.ToInt32(RaidMethodIsSweep));
 
             //PVP
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
@@ -155,23 +160,26 @@ namespace PandoraBox
 
         public void Load()
         {
-            if (!PlayerPrefs.HasKey("_PandoraBox_Ver"))
+            if (!PlayerPrefs.HasKey("_PandoraBox_General_WhatsNewShown"))
             {
                 Save();
                 return;
             }
 
-            //check difference
-            if (int.Parse(VersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
-            {
-                WhatsNewShown = false;
-                PlayerPrefs.SetString("_PandoraBox_Ver", VersionId);
-                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+            //DELETE
+            TempVersionId = PandoraBoxMaster.VersionId;
 
-            }
+            //check difference
+            //if (int.Parse(TempVersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
+            //{
+            //    WhatsNewShown = false;
+            //    PlayerPrefs.SetString("_PandoraBox_Ver", TempVersionId);
+            //    PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+
+            //}
 
             //General
-            VersionId = PlayerPrefs.GetString("_PandoraBox_Ver", VersionId);
+            //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
             WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown)));
             //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
             //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
@@ -184,6 +192,7 @@ namespace PandoraBox
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             RaidCooldown = PlayerPrefs.GetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
+            RaidMethodIsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep", System.Convert.ToInt32(RaidMethodIsSweep)));
 
             //PVP
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);

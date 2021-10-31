@@ -17,6 +17,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Nekoyume.Helper;
+    using PandoraBox;
     using UniRx;
 
     public class DailyBonus : AlphaAnimateModule
@@ -131,7 +133,33 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
+            //text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
+            {
+                case 0:
+                    {
+                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
+                        var timeR = Util.GetBlockToTime(remainBlock);
+                        text.text = timeR;
+                        break;
+                    }
+                case 1:
+                    {
+                        text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
+                        break;
+                    }
+                case 2:
+                    {
+                        int remainBlock = (int)sliderAnimator.MaxValue - (int)sliderAnimator.Value;
+                        string timeR = Util.GetBlockToTime(remainBlock) + $"({remainBlock})";
+                        text.text = timeR;
+                        break;
+                    }
+            }
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _isFull = sliderAnimator.IsFull;
             foreach (var additiveImage in additiveImages)
@@ -140,9 +168,29 @@ namespace Nekoyume.UI.Module
             }
 
             hasNotificationImage.enabled = _isFull && States.Instance.CurrentAvatarState?.actionPoint == 0;
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0) 
+                if (!IsTrying)
+                    StartCoroutine(TryToAutoCollect());
 
             animator.SetBool(IsFull, _isFull);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public static bool IsTrying = false;
+        IEnumerator TryToAutoCollect()
+        {
+            IsTrying = true;
+            yield return new WaitForSeconds(10);
+            if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
+            {
+                GetDailyReward();
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!");
+            }
+            yield return new WaitForSeconds(15);
+            IsTrying = false;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void ShowTooltip()
         {

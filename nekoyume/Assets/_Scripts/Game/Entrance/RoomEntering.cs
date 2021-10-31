@@ -34,7 +34,7 @@ namespace Nekoyume.Game.Entrance
             {
                 ActionRenderHandler.Instance.UpdateCurrentAvatarState(stage.AvatarState);
             }
-            var startPosition = new Vector2(5000.2f, 4999.1f);
+            var startPosition = new Vector2(5000.1f, 4999.1f);
             var player = stage.GetPlayer(startPosition - new Vector2(3.0f, 0.0f));
             player.transform.localScale = Vector3.one;
             player.SetSortingLayer(SortingLayer.NameToID("Character"), 100);
