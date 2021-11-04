@@ -85,6 +85,9 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private TextMeshProUGUI arenaCount;
+
+        [SerializeField]
+        private TextMeshProUGUI rahafCount;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -110,28 +113,35 @@ namespace Nekoyume.UI
             StartCoroutine(arenaRemainsTime());
             StartCoroutine(arenaRemainsCount());
             StartCoroutine(ShowWhatsNew());
+            StartCoroutine(RahafRemainsCount());
             DailyBonus.IsTrying = false;
         }
 
         public void ShowLoginScreen()
         {
-            ////Game.Event.OnLoginDetail.Invoke();
-
-            //var deletableWidgets = FindWidgets().Where(widget =>
-            //    !(widget is SystemInfoWidget) && !(widget is QuitPopup) &&
-            //    !(widget is MessageCatManager) && widget.IsActive());
-            //foreach (var widget in deletableWidgets)
-            //{
-            //    widget.Close(true);
-            //}
-
-            //Game.Game.instance.States = new States();
-            //Game.Game.instance.LocalLayer = new LocalLayer();
-            //MainCanvas.instance.InitializeIntro();
-            //var intro = Find<Intro>();
-            //intro.Show(Libplanet.KeyStore.Web3KeyStore.DefaultKeyStore.Path , "");
-            //Close(true);
             SceneManager.LoadScene(0);
+        }
+
+        public void ShowSelectCharacter()
+        {
+            if (Game.Game.instance.Stage.IsInStage)
+            {
+                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                    L10nManager.Localize("UI_BLOCK_EXIT"));
+                return;
+            }
+
+            Game.Event.OnNestEnter.Invoke();
+
+            var deletableWidgets = FindWidgets().Where(widget =>
+                !(widget is SystemWidget) && !(widget is QuitSystem) &&
+                !(widget is MessageCatTooltip) && widget.IsActive());
+            foreach (var widget in deletableWidgets)
+            {
+                widget.Close(true);
+            }
+            Find<Login>().Show();
+            Close();
         }
 
         IEnumerator ShowWhatsNew()
@@ -205,13 +215,13 @@ namespace Nekoyume.UI
 
         var arenaInfo = tuple.arenaInfo;
 #pragma warning disable 618
-                    arenaInfo.Level = avatarState.level;
+        arenaInfo.Level = avatarState.level;
         arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
             ? fullCostume.Id
             : avatarState.GetArmorId();
         arenaInfo.CombatPoint = avatarState.GetCP();
 #pragma warning restore 618
-                    return tuple;
+        return tuple;
     })
     .Where(tuple => tuple.rank > 0)
     .ToList();
@@ -232,6 +242,8 @@ namespace Nekoyume.UI
             }
         }
 
+
+
         public void ShowPandoraSettings()
         {
             AudioController.PlayClick();
@@ -244,13 +256,18 @@ namespace Nekoyume.UI
             PandoraBoxMaster.Instance.UIRahaf.SetActive(true);
         }
 
-        public void ShowHuntEgg()
+        IEnumerator RahafRemainsCount()
         {
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Halloween Egg Hunt</color> event start in 30/10/2021!");
+            while (true)
+            {
+                float value;
+                value = 2689950 - Game.Game.instance.Agent.BlockIndex;
+                var time = Util.GetBlockToTime((int)value);
+                rahafCount.text = time;
+                yield return new WaitForSeconds(1);
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
         private void HackAndSlash(int stageId)
@@ -287,7 +304,7 @@ namespace Nekoyume.UI
             ActionRenderHandler.Instance.Pending = true;
             Game.Game.instance.ActionManager.HackAndSlash(player, worldId, stageId, 1);
             LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,
-                - requiredCost);
+                -requiredCost);
             var props = new Value
             {
                 ["StageID"] = stageId,

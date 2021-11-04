@@ -5,6 +5,7 @@ using System.Linq;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.Video;
+using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -50,11 +51,21 @@ namespace Nekoyume.UI
             {
                 PlayerFactory.Create();
 
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.AgentState.address.ToString());
+                if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+                {
+                    PandoraBoxMaster.Instance.ShowError(101, "Cannot connect to Pandora Server, please visit us for more information!");
+                    return;
+                }
+
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 if (PlayerPrefs.HasKey(LoginDetail.RecentlyLoggedInAvatarKey))
                 {
                     var recentlyLoggedAddress = PlayerPrefs.GetString(LoginDetail.RecentlyLoggedInAvatarKey);
                     var matchingAddress = State.States.Instance.AgentState.avatarAddresses
                         .FirstOrDefault(pair => pair.Value.ToString().Equals(recentlyLoggedAddress));
+
                     var index = matchingAddress.Equals(default(KeyValuePair<int, Address>)) ? -1 : matchingAddress.Key;
 
                     if (index == -1)
@@ -66,6 +77,7 @@ namespace Nekoyume.UI
                         try
                         {
                             var avatarState = States.Instance.AvatarStates[index];
+
                             if (avatarState?.inventory == null ||
                                 avatarState.questList == null ||
                                 avatarState.worldInformation == null)

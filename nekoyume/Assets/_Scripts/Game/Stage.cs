@@ -1038,7 +1038,7 @@ namespace Nekoyume.Game
                 selectedPlayer.gameObject.activeSelf)
             {
                 var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-                if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+                if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                     selectedPlayer.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
                 return selectedPlayer;
             }
@@ -1052,7 +1052,7 @@ namespace Nekoyume.Game
             selectedPlayer = go.GetComponent<Player>();
 
             var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                 selectedPlayer.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
 
             if (selectedPlayer is null)

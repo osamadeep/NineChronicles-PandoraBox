@@ -267,7 +267,8 @@ namespace Nekoyume.UI
             avatarStats.SetData(stats);
 
             var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(tempAvatarState.agentAddress.ToString()))
+            PanPlayer player = PandoraBoxMaster.GetPanPlayer(tempAvatarState.agentAddress.ToString());
+            if (player.SwordSkin ==1)
                 _player.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
         }
 

@@ -48,7 +48,7 @@ namespace Nekoyume.Game.Entrance
                     active = true;
 
                     var sprite = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-                    if (PandoraBoxMaster.Instance.IsRBG(avatarState.agentAddress.ToString()))
+                    if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                         player.SpineController.UpdateWeapon(10151001, sprite, PandoraBoxMaster.Instance.CosmicSword);
                 }
                 else

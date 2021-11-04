@@ -741,11 +741,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
+    m_Left: 15
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
+  m_ChildAlignment: 3
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 100, y: 100}
@@ -7357,7 +7357,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 8982525101724790040}
+      objectReference: {fileID: 8982525101724790035}
     - target: {fileID: 1334709349913495145, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -7366,12 +7366,12 @@ PrefabInstance:
     - target: {fileID: 1334709349913495145, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: 
+      value: SetProfileIndex
       objectReference: {fileID: 0}
     - target: {fileID: 1334709349913495145, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Nekoyume.UI.LoginPopup, Nekoyume
+      value: Nekoyume.UI.LoginSystem, Nekoyume
       objectReference: {fileID: 0}
     - target: {fileID: 1334709349913495145, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
@@ -7662,7 +7662,7 @@ PrefabInstance:
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
@@ -7672,17 +7672,17 @@ PrefabInstance:
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
@@ -7722,12 +7722,12 @@ PrefabInstance:
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 300.08002
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -47.858
       objectReference: {fileID: 0}
     - target: {fileID: 6576652709929161059, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
         type: 3}
@@ -7748,6 +7748,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: ProfileSlot (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7334744473121436322, guid: 094bb0bf1607e5c4591c28d328d1a9b8,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 094bb0bf1607e5c4591c28d328d1a9b8, type: 3}

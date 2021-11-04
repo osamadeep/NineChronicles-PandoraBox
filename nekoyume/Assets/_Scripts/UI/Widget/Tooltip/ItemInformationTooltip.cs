@@ -12,6 +12,7 @@ using UnityEngine;
 namespace Nekoyume.UI
 {
     using Nekoyume.Helper;
+    using PandoraBox;
     using System.Collections;
     using UniRx;
     using UnityEngine.EventSystems;
@@ -208,6 +209,11 @@ namespace Nekoyume.UI
             //    Debug.LogError(avatarState.agentAddress);
             //    OwnerName.gameObject.SetActive(true);
             //}
+
+#if UNITY_EDITOR
+            ShopItem x = item as ShopItem;
+            Debug.LogError(x.OrderId);
+#endif
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
@@ -281,13 +287,22 @@ namespace Nekoyume.UI
 
             if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
             {
-                if (!PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
+                if (player == null)
                 {
                     OwnerName.gameObject.SetActive(true);
                     OwnerName.text = avatarState.NameWithHash;
                 }
+                else
+                {
+                    if (!player.IsPremium)
+                    {
+                        OwnerName.gameObject.SetActive(true);
+                        OwnerName.text = avatarState.NameWithHash;
+                    }
+                }
 #if UNITY_EDITOR
-                Debug.LogError(avatarState.agentAddress);
+                Debug.LogError(avatarState.agentAddress + "  |  " + x.OrderId);
 #endif
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

@@ -69,13 +69,13 @@ namespace Nekoyume.UI.Scroller
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
+        private Sprite[] Banners = null;
+
+        [SerializeField]
         private SubmitButton maxChallengeButton = null;
 
         [SerializeField]
-        private GameObject paidMember = null;
-
-        [SerializeField]
-        private GameObject paidMember2 = null;
+        private GameObject playerBanner = null;
 
         [SerializeField]
         private TextMeshProUGUI gainPointText = null;
@@ -222,15 +222,13 @@ namespace Nekoyume.UI.Scroller
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
 
 
-            if (PandoraBoxMaster.Instance.IsHalloween(ArenaInfo.AgentAddress.ToString())) 
-                paidMember.SetActive(true);
-            else
-                paidMember.SetActive(false);
-
-            if (PandoraBoxMaster.Instance.IsRBG(ArenaInfo.AgentAddress.ToString()))
-                paidMember2.SetActive(true);
-            else
-                paidMember2.SetActive(false);
+            PanPlayer panPlayer = PandoraBoxMaster.GetPanPlayer(ArenaInfo.AgentAddress.ToString());
+            playerBanner.SetActive(panPlayer.ArenaBanner != 0);
+            if (panPlayer.ArenaBanner != 0)
+            {
+                playerBanner.transform.Find("Bg").GetComponent<Image>().sprite = Banners[panPlayer.ArenaBanner];
+                playerBanner.transform.Find("Bg/Bg_add").GetComponent<Image>().sprite = Banners[panPlayer.ArenaBanner];
+            }
 
             int he, me;
             me = CPHelper.GetCPV2(
@@ -352,7 +350,7 @@ namespace Nekoyume.UI.Scroller
                 }
             }
             //Debug.LogError(ArenaInfo.AgentAddress);
-            if (PandoraBoxMaster.Instance.IsRBG(ArenaInfo.AgentAddress.ToString()))
+            if (panPlayer.ArenaIcon == 1)
                 characterView.SetIcon(PandoraBoxMaster.Instance.CosmicIcon);
             characterView.Show();
         }

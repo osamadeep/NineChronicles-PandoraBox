@@ -14,6 +14,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Game.Controller;
     using PandoraBox;
     using UniRx;
 
@@ -405,6 +406,20 @@ namespace Nekoyume.UI
             yield return new WaitForSeconds(0.5f);
             loginField.ActivateInputField();
             loginField.Select();
+        }
+        public void SetProfileIndex(int value)
+        {
+            PandoraBoxMaster.LoginIndex = value;
+            AudioController.instance.PlaySfx(AudioController.SfxCode.Click);
+            SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
+
+            //VFX
+            for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
+            {
+                Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);
+                ProfilesHolder.GetChild(i).Find("icon").GetComponent<Image>().color = tmp;
+                ProfilesHolder.GetChild(i).Find("Image").gameObject.SetActive(i == value);
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

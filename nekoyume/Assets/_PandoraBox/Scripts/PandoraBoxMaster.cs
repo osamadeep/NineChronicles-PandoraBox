@@ -2,6 +2,9 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.Audio;
 using System.Collections.Generic;
+using System.Collections;
+using UnityEngine.Networking;
+using TMPro;
 
 namespace PandoraBox
 {
@@ -11,7 +14,9 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100083";
-        public static string VersionId = "010013";
+        public static string VersionId = "010014";
+        public static PanDatabase PanDatabase;
+        public static PanPlayer CurrentPanPlayer;
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public static int ActionCooldown = 2;
         public static bool MarketPriceHelper = false;
@@ -22,6 +27,7 @@ namespace PandoraBox
 
         //Objects
         public PandoraSettings Settings;
+        public GameObject UIErrorWindow;
         public GameObject UISettings;
         public GameObject UIWhatsNew;
         public GameObject UIRahaf;
@@ -33,9 +39,11 @@ namespace PandoraBox
         {
             if (Instance == null)
             {
+                CurrentPanPlayer = new PanPlayer();
                 Instance = this;
                 Settings = new PandoraSettings();
                 Settings.Load();
+                StartCoroutine(GetDatabase());
             }
         }
 
@@ -53,40 +61,122 @@ namespace PandoraBox
             }
         }
 
-        public bool IsPremium(string address)
-        {
-            List<string> addresses = new List<string>();
-            addresses.Add("0x46528E7DEdaC16951bDccb55B20303AB0c729679"); //s
-            addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
+        //public bool IsPremium(string address)
+        //{
+        //    List<string> addresses = new List<string>();
+        //    addresses.Add("0x46528E7DEdaC16951bDccb55B20303AB0c729679"); //s
+        //    addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
 
-            return addresses.Contains(address);
+        //    return addresses.Contains(address);
+        //}
+
+        //public bool IsRBG(string address)
+        //{
+        //    List<string> addresses = new List<string>();
+        //    addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
+        //    addresses.Add("0xC0bA278CB8379683E66C28928fa0Aa8bfF3D95E6"); //Wabbs
+
+        //    return addresses.Contains(address);
+        //}
+
+        public static PanPlayer GetPanPlayer(string address)
+        {
+            foreach (PanPlayer player in PanDatabase.Players)
+            {
+                if (player.Address == address)
+                    return player;
+            }
+            return new PanPlayer();
         }
 
-        public bool IsRBG(string address)
-        {
-            List<string> addresses = new List<string>();
-            addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
-            addresses.Add("0xC0bA278CB8379683E66C28928fa0Aa8bfF3D95E6"); //Wabbs
+        //public bool IsHalloween(string address)
+        //{
+        //    List<string> addresses = new List<string>();
+        //    addresses.Add("0xd7ECE10ddAFc34e964c61Ad11c199C3BF41Dc403"); //bmcdee
 
-            return addresses.Contains(address);
+        //    return addresses.Contains(address);
+        //}
+
+        public void ShowError(int errorNumber, string text)
+        {
+            //404 cannot get the link
+            //16 cannot cast the link content
+            //5 old version
+            //101 player banned
+            UIErrorWindow.transform.Find("TitleTxt").GetComponent<TextMeshProUGUI>().text = $"Error <color=red>{errorNumber}</color>!";
+            UIErrorWindow.transform.Find("MessageTxt").GetComponent<TextMeshProUGUI>().text = text;
+            UIErrorWindow.SetActive(true);
         }
 
-        public bool IsHalloween(string address)
+        IEnumerator GetDatabase()
         {
-            List<string> addresses = new List<string>();
-            addresses.Add("0xd7ECE10ddAFc34e964c61Ad11c199C3BF41Dc403"); //bmcdee
+            string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
+            UnityWebRequest www = UnityWebRequest.Get(url);
+            yield return www.SendWebRequest();
 
-            return addresses.Contains(address);
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                ShowError(404,"Cannot connect to Pandora Server, please visit us for more information!");
+            }
+            else
+            {
+                try
+                {
+                    PanDatabase = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text);
+                }// Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
+                catch { ShowError(16, "Something wrong, please visit us for more information!"); }
+            }
         }
 
+        //IEnumerator CheckVersion()
+        //{
+        //    string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
+        //    UnityWebRequest www = UnityWebRequest.Get(url);
+        //    yield return www.SendWebRequest();
+
+        //    if (www.result != UnityWebRequest.Result.Success)
+        //    {
+        //        UIErrorWindow.transform.Find("Message").GetComponent<TextMeshProUGUI>().text = "Something is wrong. please visit us for more information!";
+        //        ErrorWindow.gameObject.SetActive(true);
+        //    }
+        //    else
+        //    {
+        //        PanDatabase myObject = new PanDatabase();
+        //        try
+        //        { myObject = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text); }
+        //        catch { }
+
+        //        if (myObject.VersionID == PandoraBoxMaster.VersionId)
+        //        {
+        //            var w = Find<LoginSystem>();
+        //            w.Show(_keyStorePath, _privateKey);
+        //            yield break;
+        //        }
+
+        //        string temp = "Something is wrong. please visit us for more information!";
+
+        //        ErrorWindow.Find("Message").GetComponent<TextMeshProUGUI>().text = temp;
+        //        ErrorWindow.gameObject.SetActive(true);
+        //    }
+        //}
+        public string URLAntiCacheRandomizer(string url)
+        {
+            string r = "";
+            r += UnityEngine.Random.Range(
+                          1000000, 8000000).ToString();
+            r += UnityEngine.Random.Range(
+                          1000000, 8000000).ToString();
+            string result = url + "?p=" + r;
+            return result;
+        }
 
     }
 
     public class PandoraSettings
     {
         //General
-        [HideInInspector]
-        public string TempVersionId { get; private set; } //value come from Online settings
+        //[HideInInspector]
+        //public string TempVersionId { get; private set; } //value come from Online settings
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
@@ -166,17 +256,14 @@ namespace PandoraBox
                 return;
             }
 
-            //DELETE
-            TempVersionId = PandoraBoxMaster.VersionId;
-
             //check difference
-            //if (int.Parse(TempVersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
-            //{
-            //    WhatsNewShown = false;
-            //    PlayerPrefs.SetString("_PandoraBox_Ver", TempVersionId);
-            //    PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+            if (int.Parse(PandoraBoxMaster.VersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
+            {
+                WhatsNewShown = false;
+                PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
+                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
-            //}
+            }
 
             //General
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
@@ -205,5 +292,24 @@ namespace PandoraBox
         }
 
 
+    }
+
+[System.Serializable]
+public class PanDatabase
+{
+    public string VersionID;
+    public List<PanPlayer> Players;
+}
+
+    [System.Serializable]
+    public class PanPlayer
+    {
+        public string Address;
+        public bool IsBanned;
+        public bool IsPremium;
+        public int ArenaBanner;
+        public int ArenaIcon;
+        public int SwordSkin;
+        public int FriendViewSkin;
     }
 }

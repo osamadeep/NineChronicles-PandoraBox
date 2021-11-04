@@ -11,6 +11,7 @@ namespace Nekoyume.UI.Module
     using Coffee.UIEffects;
     using Lib9c.Model.Order;
     using Nekoyume.Helper;
+    using PandoraBox;
     using UniRx;
 
     public class ShopItemView : CountableItemView<ShopItem>
@@ -105,7 +106,8 @@ namespace Nekoyume.UI.Module
             if (Model != null)
             {
                 var order = Util.GetOrder(Model.OrderId.Value);
-                if (PandoraBox.PandoraBoxMaster.Instance.IsPremium(order.SellerAgentAddress.ToString()))
+                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
+                if (player.IsPremium)
                 {
                     enhancementImage.GetComponent<Image>().material = RedMaterial;
                     enhancementImage.SetActive(true);

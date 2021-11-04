@@ -180,7 +180,7 @@ namespace PandoraBox
                 {
                     if (!isBusy)
                         yield break;
-
+                    RaidButtonText.text = $"(<color=green>{count- (i+1)}</color>)Cancel!";
                     Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1);
 
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id

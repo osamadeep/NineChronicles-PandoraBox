@@ -346,7 +346,7 @@ namespace Nekoyume.UI
             sweepButton.gameObject.SetActive(true);
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -901,7 +901,7 @@ namespace Nekoyume.UI
             sweepButton.gameObject.SetActive(false);
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             _player.StartRun();
@@ -928,7 +928,7 @@ namespace Nekoyume.UI
             ActionRenderHandler.Instance.Pending = true;
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             for (int i = 0; i < count; i++)
@@ -995,8 +995,12 @@ namespace Nekoyume.UI
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
+
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.Instance.IsRBG(States.Instance.CurrentAvatarState.agentAddress.ToString()))
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

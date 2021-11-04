@@ -51,6 +51,8 @@ namespace Nekoyume.UI
         public ComboText ComboText => comboText;
         public const int RequiredStageForExitButton = 3;
 
+        [SerializeField] private UnityEngine.UI.Button forceExit = null; //|||||||||||||| PANDORA CODE |||||||||||||||||||
+
         protected override void Awake()
         {
             base.Awake();
@@ -88,7 +90,17 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
+
+            forceExit.onClick.AddListener(() => { ForceExitToMenu(); }); //|||||||||||||| PANDORA CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ForceExitToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
