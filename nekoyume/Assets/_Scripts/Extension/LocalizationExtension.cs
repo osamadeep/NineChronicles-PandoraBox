@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Libplanet.Action;
 using Libplanet.Blocks;
+using System.Threading.Tasks;
 using Nekoyume.Action;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
@@ -24,7 +25,7 @@ namespace Nekoyume
 {
     public static class LocalizationExtension
     {
-        public static string ToInfo(this MailModel mail)
+        public static async Task<string> ToInfo(this MailModel mail)
         {
             switch (mail)
             {
@@ -119,14 +120,15 @@ namespace Nekoyume
                     }
 
                 case OrderBuyerMail orderBuyerMail:
-                    var buyerItemName = Util.GetItemNameByOrdierId(orderBuyerMail.OrderId, true);
+                    var buyerItemName = await Util.GetItemNameByOrderId(orderBuyerMail.OrderId, true);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     string x1 = "";
-                    var order1 = Util.GetOrder(orderBuyerMail.OrderId);
-                    if (States.TryGetAvatarState(order1.SellerAvatarAddress, out var avatarState1))
+                    var order1 = await Util.GetOrder(orderBuyerMail.OrderId);
+                    var sellerState = await States.TryGetAvatarState(order1.SellerAvatarAddress);
+                    if (sellerState.exist)
                     {
                         x1 = $"[<color=green><size=70%>{orderBuyerMail.blockIndex}</size></color>] Spent <color=red>-{order1.Price}</color> for {buyerItemName}" +
-                            $" from {avatarState1.NameWithHash}";
+                            $" from {sellerState.avatarState.NameWithHash}";
                         return x1;
                     }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     else
@@ -134,27 +136,28 @@ namespace Nekoyume
                         buyerItemName);
 
                 case OrderSellerMail orderSellerMail:
-                    var order = Util.GetOrder(orderSellerMail.OrderId);
-                    var sellerItemName = Util.GetItemNameByOrdierId(orderSellerMail.OrderId, true);
+                    var order = await Util.GetOrder(orderSellerMail.OrderId);
+                    var sellerItemName = await Util.GetItemNameByOrderId(orderSellerMail.OrderId, true);
                     var taxedPrice = order.Price - order.GetTax();
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     string x = "";
-
-                    if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+                    var sellerState2 = await States.TryGetAvatarState(order.SellerAvatarAddress);
+                    if (sellerState2.exist)
                     {
                         x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> for your {sellerItemName}";
                         return x;
-                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    }
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     else
                         return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
 
                 case OrderExpirationMail orderExpirationMail:
-                    var expiredItemName = Util.GetItemNameByOrdierId(orderExpirationMail.OrderId, true);
+                    var expiredItemName = await Util.GetItemNameByOrderId(orderExpirationMail.OrderId, true);
                     return string.Format(L10nManager.Localize("UI_SELL_EXPIRATION_MAIL_FORMAT"),
                         expiredItemName);
 
                 case CancelOrderMail cancelOrderMail:
-                    var cancelItemName = Util.GetItemNameByOrdierId(cancelOrderMail.OrderId, true);
+                    var cancelItemName = await Util.GetItemNameByOrderId(cancelOrderMail.OrderId, true);
                     return string.Format(L10nManager.Localize("UI_SELL_CANCEL_MAIL_FORMAT"),
                         cancelItemName);
 

@@ -238,7 +238,7 @@ namespace Nekoyume.UI
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             // LocalLayer
-            UniTask.Run(() =>
+            UniTask.Run(async () =>
             {
                 LocalLayerModifier.AddItem(
                     avatarAddress,
@@ -247,16 +247,17 @@ namespace Nekoyume.UI
                     1,
                     false);
                 LocalLayerModifier.RemoveNewAttachmentMail(avatarAddress, mail.id, false);
-                if (!States.TryGetAvatarState(avatarAddress, out var avatarState))
+                var (exist, avatarState) = await States.TryGetAvatarState(avatarAddress);
+                if (!exist)
                 {
                     return null;
                 }
 
                 return avatarState;
-            }).ToObservable().SubscribeOnMainThread().Subscribe(avatarState =>
+            }).ToObservable().SubscribeOnMainThread().Subscribe(async avatarState =>
             {
                 Debug.Log("CombinationMail LocalLayer task completed");
-                States.Instance.AddOrReplaceAvatarState(avatarState, States.Instance.CurrentAvatarKey);
+                await States.Instance.AddOrReplaceAvatarState(avatarState, States.Instance.CurrentAvatarKey);
             });
             // ~LocalLayer
 
@@ -276,11 +277,11 @@ namespace Nekoyume.UI
             }
         }
 
-        public void Read(OrderBuyerMail orderBuyerMail)
+        public async void Read(OrderBuyerMail orderBuyerMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var order = Util.GetOrder(orderBuyerMail.OrderId);
-            var itemBase = Util.GetItemBaseByTradableId(order.TradableId, order.ExpiredBlockIndex);
+            var order = await Util.GetOrder(orderBuyerMail.OrderId);
+            var itemBase = await Util.GetItemBaseByTradableId(order.TradableId, order.ExpiredBlockIndex);
             var count = order is FungibleOrder fungibleOrder ? fungibleOrder.ItemCount : 1;
             var popup = Find<BuyItemInformationPopup>();
             var model = new UI.Model.BuyItemInformationPopup(new CountableItem(itemBase, count))
@@ -296,20 +297,20 @@ namespace Nekoyume.UI
             popup.Pop(model);
         }
 
-        public void Read(OrderSellerMail orderSellerMail)
+        public async void Read(OrderSellerMail orderSellerMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var agentAddress = States.Instance.AgentState.address;
-            var order = Util.GetOrder(orderSellerMail.OrderId);
+            var order = await Util.GetOrder(orderSellerMail.OrderId);
             var taxedPrice = order.Price - order.GetTax();
             LocalLayerModifier.ModifyAgentGold(agentAddress, taxedPrice);
             LocalLayerModifier.RemoveNewMail(avatarAddress, orderSellerMail.id);
         }
 
-        public void Read(OrderExpirationMail orderExpirationMail)
+        public async void Read(OrderExpirationMail orderExpirationMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var order = Util.GetOrder(orderExpirationMail.OrderId);
+            var order = await Util.GetOrder(orderExpirationMail.OrderId);
 
             Find<OneButtonSystem>().Show(L10nManager.Localize("UI_SELL_CANCEL_INFO"),
                 L10nManager.Localize("UI_YES"),
@@ -320,10 +321,10 @@ namespace Nekoyume.UI
                 });
         }
 
-        public void Read(CancelOrderMail cancelOrderMail)
+        public async void Read(CancelOrderMail cancelOrderMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var order = Util.GetOrder(cancelOrderMail.OrderId);
+            var order = await Util.GetOrder(cancelOrderMail.OrderId);
 
             Find<OneButtonSystem>().Show(L10nManager.Localize("UI_SELL_CANCEL_INFO"),
                 L10nManager.Localize("UI_YES"),
@@ -351,7 +352,7 @@ namespace Nekoyume.UI
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             // LocalLayer
-            UniTask.Run(() =>
+            UniTask.Run(async () =>
             {
                 LocalLayerModifier.AddItem(
                     avatarAddress,
@@ -360,16 +361,17 @@ namespace Nekoyume.UI
                     1,
                     false);
                 LocalLayerModifier.RemoveNewAttachmentMail(avatarAddress, itemEnhanceMail.id, false);
-                if (!States.TryGetAvatarState(avatarAddress, out var avatarState))
+                var (exist, avatarState) = await States.TryGetAvatarState(avatarAddress);
+                if (!exist)
                 {
                     return null;
                 }
 
                 return avatarState;
-            }).ToObservable().SubscribeOnMainThread().Subscribe(avatarState =>
+            }).ToObservable().SubscribeOnMainThread().Subscribe(async avatarState =>
             {
                 Debug.Log("ItemEnhanceMail LocalLayer task completed");
-                States.Instance.AddOrReplaceAvatarState(avatarState, States.Instance.CurrentAvatarKey);
+                await States.Instance.AddOrReplaceAvatarState(avatarState, States.Instance.CurrentAvatarKey);
             });
             // ~LocalLayer
 
