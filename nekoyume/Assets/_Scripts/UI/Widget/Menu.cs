@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
@@ -108,6 +109,18 @@ namespace Nekoyume.UI
             guidedQuest.OnClickCombinationEquipmentQuestCell
                 .Subscribe(tuple => GoToCombinationEquipmentRecipe(tuple.quest.RecipeId))
                 .AddTo(gameObject);
+            AnimationState.Subscribe(stateType =>
+            {
+                var buttonList = new List<Button>
+                {
+                    btnCombination.GetComponent<Button>(),
+                    btnMimisbrunnr.GetComponent<Button>(),
+                    btnQuest.GetComponent<Button>(),
+                    btnRanking.GetComponent<Button>(),
+                    btnShop.GetComponent<Button>()
+                };
+                buttonList.ForEach(button => button.interactable = stateType == AnimationStateType.Shown);
+            }).AddTo(gameObject);
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
