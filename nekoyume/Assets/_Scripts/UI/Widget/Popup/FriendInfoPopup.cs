@@ -197,10 +197,13 @@ namespace Nekoyume.UI
         void CopyPlayerInfo()
         {
             string playerInfo =
-                "Avatar Name   : " + tempAvatarState.NameWithHash + "\n" +
-                "Player Address: " + tempAvatarState.address + "\n" +
-                "Date & Time   : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
-                "Block         : #" + Game.Game.instance.Agent.BlockIndex.ToString();
+                "```prolog\n" +
+                "Avatar Name      : " + tempAvatarState.NameWithHash + "\n" +
+                "Account Address  : " + tempAvatarState.agentAddress + "\n" +
+                "Character Address: " + tempAvatarState.address + "\n" +
+                "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
+                "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString()+ "\n" +
+                "```";
             ClipboardHelper.CopyToClipboard(playerInfo);
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
         }

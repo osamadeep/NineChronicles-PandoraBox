@@ -533,6 +533,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 2067047620058310858}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &908500104528111221
 GameObject:
   m_ObjectHideFlags: 0
@@ -1013,13 +1025,14 @@ GameObject:
   - component: {fileID: 4721172220260777543}
   - component: {fileID: 4133518198891555135}
   - component: {fileID: 3107894519407923580}
+  - component: {fileID: 2316715530897461666}
   m_Layer: 5
   m_Name: Pandora_UI_Rahaf
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4721172220260777543
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1061,6 +1074,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f42c3748c8baab340accaf517fc7087d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2316715530897461666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2067047620058310858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e909a65bae2c6748b335325972ca193, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EggHolder: {fileID: 5851877727332978901}
+  StartButton: {fileID: 8982046178907064557}
+  startText: {fileID: 6142275868591301417}
 --- !u!1 &2384708494296668492
 GameObject:
   m_ObjectHideFlags: 0
@@ -1120,14 +1148,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -6960675729753780811, guid: b10868bdfb8018248ab5d9bbf03acb29,
+  m_Sprite: {fileID: -8793198891932565608, guid: b10868bdfb8018248ab5d9bbf03acb29,
     type: 3}
   m_Type: 0
   m_PreserveAspect: 1
@@ -1345,14 +1373,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2119377646978684498, guid: b10868bdfb8018248ab5d9bbf03acb29,
+  m_Sprite: {fileID: 5368412293097198702, guid: b10868bdfb8018248ab5d9bbf03acb29,
     type: 3}
   m_Type: 0
   m_PreserveAspect: 1
@@ -1436,7 +1464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1871,14 +1899,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 5564017211560442853, guid: b10868bdfb8018248ab5d9bbf03acb29,
+  m_Sprite: {fileID: -6960675729753780811, guid: b10868bdfb8018248ab5d9bbf03acb29,
     type: 3}
   m_Type: 0
   m_PreserveAspect: 1
@@ -2119,7 +2147,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -128.28, y: 133.3}
+  m_AnchoredPosition: {x: -128.28, y: 157.7}
   m_SizeDelta: {x: 303.31, y: 133.3}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1085969903159103756
@@ -2160,7 +2188,11 @@ MonoBehaviour:
     3 - you have <color=red>180</color> second per try
 
     4 - After
-    found The <color=green>8</color> Eggs get redeem code and post it in Discord'
+    found The <color=green>8</color> Eggs get redeem code and post it in Discord
+
+    5
+    - Only first 20 players will gain public Rewards, after that you will get local
+    (may erased later)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a682b7747d4a664089b7b1065aa0035, type: 2}
   m_sharedMaterial: {fileID: -2364689171920820918, guid: 8a682b7747d4a664089b7b1065aa0035,
@@ -2364,7 +2396,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2430,7 +2462,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -142.45999, y: -40.21001}
+  m_AnchoredPosition: {x: -142.45999, y: -74.2}
   m_SizeDelta: {x: 274.95, y: 88.5}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &571200868601618242
@@ -2860,14 +2892,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1446951442916633689, guid: b10868bdfb8018248ab5d9bbf03acb29,
+  m_Sprite: {fileID: 5564017211560442853, guid: b10868bdfb8018248ab5d9bbf03acb29,
     type: 3}
   m_Type: 0
   m_PreserveAspect: 1
@@ -2951,14 +2983,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 5368412293097198702, guid: b10868bdfb8018248ab5d9bbf03acb29,
+  m_Sprite: {fileID: -2119377646978684498, guid: b10868bdfb8018248ab5d9bbf03acb29,
     type: 3}
   m_Type: 0
   m_PreserveAspect: 1
@@ -3930,7 +3962,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8152066484110150514
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9557,7 +9589,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

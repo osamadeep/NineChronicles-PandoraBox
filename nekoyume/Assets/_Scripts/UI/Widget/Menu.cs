@@ -13,6 +13,7 @@ using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 namespace Nekoyume.UI
 {
@@ -88,6 +89,8 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private TextMeshProUGUI rahafCount;
+
+        public Transform[] Eggs;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -110,10 +113,13 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private void OnEnable()
         {
+            base.OnEnable();
             StartCoroutine(arenaRemainsTime());
             StartCoroutine(arenaRemainsCount());
             StartCoroutine(ShowWhatsNew());
             StartCoroutine(RahafRemainsCount());
+
+
             DailyBonus.IsTrying = false;
         }
 
@@ -182,7 +188,7 @@ namespace Nekoyume.UI
 
         IEnumerator arenaRemainsCount()
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(2);
             var gameConfigState = States.Instance.GameConfigState;
             while (true)
             {
@@ -191,6 +197,7 @@ namespace Nekoyume.UI
                     yield return new WaitForSeconds(5);
                 }
 
+                /*
                 var state = States.Instance.WeeklyArenaState;
                 var infos = state.GetArenaInfos(1, 3);
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
@@ -205,32 +212,55 @@ namespace Nekoyume.UI
 
                 List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo =
             new List<(int rank, ArenaInfo arenaInfo)>();
+
                 _weeklyCachedInfo = infos
-    .Select(tuple =>
+    .Select(async tuple =>
     {
-        if (!States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress, out var avatarState))
+        var (exist, avatarState) = await States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress);
+        if (!exist)
         {
             return (0, null);
         }
 
         var arenaInfo = tuple.arenaInfo;
 #pragma warning disable 618
-        arenaInfo.Level = avatarState.level;
-        arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
-            ? fullCostume.Id
-            : avatarState.GetArmorId();
+                    arenaInfo.Level = avatarState.level;
+        arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
         arenaInfo.CombatPoint = avatarState.GetCP();
 #pragma warning restore 618
-        return tuple;
+                    return tuple;
     })
+    .Select(t => t.AsTask().Result)
     .Where(tuple => tuple.rank > 0)
     .ToList();
+
+                //                _weeklyCachedInfo = infos
+                //    .Select(tuple =>
+                //    {
+                //        if (!States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress, out var avatarState))
+                //        {
+                //            return (0, null);
+                //        }
+
+                //        var arenaInfo = tuple.arenaInfo;
+                //#pragma warning disable 618
+                //        arenaInfo.Level = avatarState.level;
+                //        arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
+                //            ? fullCostume.Id
+                //            : avatarState.GetArmorId();
+                //        arenaInfo.CombatPoint = avatarState.GetCP();
+                //#pragma warning restore 618
+                //        return tuple;
+                //    })
+                //    .Where(tuple => tuple.rank > 0)
+                //    .ToList();
+
                 var (currentAvatarRank, currentAvatarArenaInfo) = _weeklyCachedInfo
                     .FirstOrDefault(info =>
                         info.arenaInfo.AvatarAddress.Equals(currentAvatarAddress));
 
-
-
+                */
+                int currentAvatarRank = -1;
 
                 var currentAddress = States.Instance.CurrentAvatarState?.address;
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
@@ -258,13 +288,18 @@ namespace Nekoyume.UI
 
         IEnumerator RahafRemainsCount()
         {
+            if (!PlayerPrefs.HasKey("_PandoraBox_Halloween_NextCooldown"))
+            {
+                int NextCooldown = (int)Game.Game.instance.Agent.BlockIndex + 25; //25 = 5m
+                PlayerPrefs.SetInt("_PandoraBox_Halloween_NextCooldown", NextCooldown);
+            }
             while (true)
             {
-                float value;
-                value = 2689950 - Game.Game.instance.Agent.BlockIndex;
+                int HalloweenCooldown = PlayerPrefs.GetInt("_PandoraBox_Halloween_NextCooldown");
+                float value = HalloweenCooldown - Game.Game.instance.Agent.BlockIndex;
                 var time = Util.GetBlockToTime((int)value);
                 rahafCount.text = time;
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(5);
             }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

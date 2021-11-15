@@ -105,18 +105,19 @@ namespace Nekoyume.UI.Module
 
             if (Model != null)
             {
-                var order = Util.GetOrder(Model.OrderId.Value);
-                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
-                if (player.IsPremium)
-                {
-                    enhancementImage.GetComponent<Image>().material = RedMaterial;
-                    enhancementImage.SetActive(true);
-                    shiny.enabled = true;
-                }
-                else
-                {
-                    shiny.enabled = false;
-                }
+                //var order = Util.GetOrder(Model.OrderId.Value);
+                
+                //PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.Result.SellerAvatarAddress.ToString());
+                //if (player.IsPremium)
+                //{
+                //    enhancementImage.GetComponent<Image>().material = RedMaterial;
+                //    enhancementImage.SetActive(true);
+                //    shiny.enabled = true;
+                //}
+                //else
+                //{
+                //    shiny.enabled = false;
+                //}
             }
         }
 

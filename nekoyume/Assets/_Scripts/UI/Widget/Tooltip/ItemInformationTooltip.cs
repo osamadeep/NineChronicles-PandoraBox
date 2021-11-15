@@ -280,32 +280,33 @@ namespace Nekoyume.UI
             {
                 return;
             }
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            ShopItem x = item as ShopItem;
-            var order = Util.GetOrder(x.OrderId.Value);
-            OwnerName.text = "";
+//            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+//            ShopItem x = item as ShopItem;
 
-            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
-            {
-                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
-                if (player == null)
-                {
-                    OwnerName.gameObject.SetActive(true);
-                    OwnerName.text = avatarState.NameWithHash;
-                }
-                else
-                {
-                    if (!player.IsPremium)
-                    {
-                        OwnerName.gameObject.SetActive(true);
-                        OwnerName.text = avatarState.NameWithHash;
-                    }
-                }
-#if UNITY_EDITOR
-                Debug.LogError(avatarState.agentAddress + "  |  " + x.OrderId);
-#endif
-            }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+//            var order = Util.GetOrder(x.OrderId.Value);
+//            OwnerName.text = "";
+
+//            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
+//            {
+//                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
+//                if (player == null)
+//                {
+//                    OwnerName.gameObject.SetActive(true);
+//                    OwnerName.text = avatarState.NameWithHash;
+//                }
+//                else
+//                {
+//                    if (!player.IsPremium)
+//                    {
+//                        OwnerName.gameObject.SetActive(true);
+//                        OwnerName.text = avatarState.NameWithHash;
+//                    }
+//                }
+//#if UNITY_EDITOR
+//                Debug.LogError(avatarState.agentAddress + "  |  " + x.OrderId);
+//#endif
+//            }
+//            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             submit.SetActive(false);
             sell.SetActive(false);
