@@ -144,7 +144,7 @@ namespace Nekoyume.UI
 
             CloseWidget = () => Close(true);
             //simulateButton.gameObject.SetActive(GameConfig.IsEditor);
-            //levelField.gameObject.SetActive(GameConfig.IsEditor);
+            levelField.gameObject.SetActive(GameConfig.IsEditor);
         }
 
         public override void Initialize()
