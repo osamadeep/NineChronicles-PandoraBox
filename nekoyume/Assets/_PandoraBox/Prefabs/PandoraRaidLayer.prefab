@@ -318,7 +318,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8737556965051219527}
   - component: {fileID: 5657798464723240807}
-  - component: {fileID: 4598600944912754458}
+  - component: {fileID: 4093813616967067407}
   m_Layer: 5
   m_Name: PandoraRaid
   m_TagString: Untagged
@@ -363,7 +363,7 @@ MonoBehaviour:
   RaidButton: {fileID: 5724068575029763049}
   RaidButtonText: {fileID: 1499119143377126971}
   CurrentTriesText: {fileID: 8997061031901382908}
---- !u!114 &4598600944912754458
+--- !u!114 &4093813616967067407
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -372,16 +372,38 @@ MonoBehaviour:
   m_GameObject: {fileID: 1117462291917098803}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bacfffa52c78040a2ae4c658801044b7, type: 3}
+  m_Script: {fileID: 11500000, guid: 2cca3fcde07a4a65b290c49ca74a2b8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playAtStart: 1
   startDelay: 0
-  end: -305
-  duration: 0.5
+  duration: 1
+  tweenType: 0
+  ease: 1
+  completeMethod: 
+  componentIndex: 0
+  target: {fileID: 0}
+  completeDelay: 0
+  useCustomEaseCurve: 0
+  customEaseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  endValue: 10
   snapping: 0
-  showEase: 27
-  closeEase: 26
-  isFrom: 1
+  isFrom: 0
+  axisType: 0
 --- !u!1 &1362708254234922415
 GameObject:
   m_ObjectHideFlags: 0
