@@ -38,7 +38,7 @@ namespace PandoraBox
 
         private void Start()
         {
-            GetComponent<AnchoredPositionXTweener>().PlayReverse();
+            //GetComponent<AnchoredPositionXTweener>().PlayReverse();
             StartCoroutine(ShowCurrentTries());
         }
 
@@ -69,13 +69,13 @@ namespace PandoraBox
                     if (Widget.Find<Menu>().IsActive() && !isMenu)
                     {
                         //rt.anchoredPosition = new Vector3(10, -250);
-                        GetComponent<AnchoredPositionXTweener>().PlayTween();
+                        //GetComponent<AnchoredPositionXTweener>().PlayTween();
                         isMenu = true;
                     }
                     else if (!Widget.Find<Menu>().IsActive() && isMenu)
                     {
                         //rt.anchoredPosition = new Vector3(-400, -250);
-                        GetComponent<AnchoredPositionXTweener>().PlayReverse();
+                        //GetComponent<AnchoredPositionXTweener>().PlayReverse();
                         isMenu = false;
                     }
                 }
@@ -198,12 +198,11 @@ namespace PandoraBox
         {
             if (!isReversed)
             {
-                //transform.localPosition = new Vector3(-305, -250);
-                GetComponent<AnchoredPositionXTweener>().PlayReverse();
+                //GetComponent<AnchoredPositionXTweener>().PlayReverse();
             }
             else
             {
-                GetComponent<AnchoredPositionXTweener>().PlayTween();
+                //GetComponent<AnchoredPositionXTweener>().PlayTween();
             }
         }
 
