@@ -130,7 +130,7 @@ namespace PandoraBox
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
             RaidButtonText.text = "Cancel!";
-            float AllowedCooldown = 2f; //save it to settings
+            float AllowedCooldown = 5f; //save it to settings
 
             yield return new WaitForSeconds(AllowedCooldown);
             _player = Game.instance.Stage.GetPlayer();
@@ -161,15 +161,17 @@ namespace PandoraBox
             {
                 int maxPerWave = 12;
                 if (count <= maxPerWave)
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count);
+                {
+                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
+                }
                 else
                 {
                     int secondndWave = count - maxPerWave;
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, maxPerWave);
+                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, maxPerWave).Subscribe();
                     yield return new WaitForSeconds(AllowedCooldown);
                     if (!isBusy)
                         yield break;
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, secondndWave);
+                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, secondndWave).Subscribe();
                 }
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                 + "</color> (<color=green>" + count + "</color>) times Completed!");
@@ -181,7 +183,7 @@ namespace PandoraBox
                     if (!isBusy)
                         yield break;
                     RaidButtonText.text = $"(<color=green>{count- (i+1)}</color>)Cancel!";
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1);
+                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                         + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...");

@@ -124,16 +124,15 @@ namespace Nekoyume
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     string x1 = "";
                     var order1 = await Util.GetOrder(orderBuyerMail.OrderId);
-                    var sellerState = await States.TryGetAvatarState(order1.SellerAvatarAddress);
-                    if (sellerState.exist)
-                    {
-                        x1 = $"[<color=green><size=70%>{orderBuyerMail.blockIndex}</size></color>] Spent <color=red>-{order1.Price}</color> for {buyerItemName}" +
-                            $" from {sellerState.avatarState.NameWithHash}";
-                        return x1;
-                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                    else
-                        return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),
-                        buyerItemName);
+                    //var sellerState = await States.TryGetAvatarState(order1.SellerAvatarAddress);
+                    //if (sellerState.exist)
+                    //{
+                    //    x1 = $"[<color=green><size=70%>{orderBuyerMail.blockIndex}</size></color>] Spent <color=red>-{order1.Price}</color> for {buyerItemName}" +
+                    //        $" from {sellerState.avatarState.NameWithHash}";
+                    //    return x1;
+                    //}//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    //else
+                        return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),buyerItemName);
 
                 case OrderSellerMail orderSellerMail:
                     var order = await Util.GetOrder(orderSellerMail.OrderId);
@@ -141,14 +140,14 @@ namespace Nekoyume
                     var taxedPrice = order.Price - order.GetTax();
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     string x = "";
-                    var sellerState2 = await States.TryGetAvatarState(order.SellerAvatarAddress);
-                    if (sellerState2.exist)
-                    {
-                        x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> for your {sellerItemName}";
-                        return x;
-                    }
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                    else
+                    //var sellerState2 = await States.TryGetAvatarState(order.SellerAvatarAddress);
+                    //if (sellerState2.exist)
+                    //{
+                    //    x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> for your {sellerItemName}";
+                    //    return x;
+                    //}
+                    ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    //else
                         return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
 
                 case OrderExpirationMail orderExpirationMail:

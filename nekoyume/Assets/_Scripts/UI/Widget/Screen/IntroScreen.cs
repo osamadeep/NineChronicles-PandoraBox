@@ -24,7 +24,7 @@ namespace Nekoyume.UI
             indicator.Show("Verifying transaction..");
             _keyStorePath = keyStorePath;
             _privateKey = privateKey;
-            AudioController.instance.PlayMusic(AudioController.MusicCode.PandoraIntro); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            //AudioController.instance.PlayMusic(AudioController.MusicCode.PandoraIntro); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             StartLoading();
         }
 
