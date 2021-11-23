@@ -224,7 +224,7 @@ namespace PandoraBox
         public void Save()
         {
             //General
-            //PlayerPrefs.SetString("_PandoraBox_Ver", TempVersionId);
+            PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
@@ -250,7 +250,7 @@ namespace PandoraBox
 
         public void Load()
         {
-            if (!PlayerPrefs.HasKey("_PandoraBox_General_WhatsNewShown"))
+            if (!PlayerPrefs.HasKey("_PandoraBox_Ver"))
             {
                 Save();
                 return;
