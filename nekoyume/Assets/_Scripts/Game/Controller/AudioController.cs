@@ -33,7 +33,6 @@ namespace Nekoyume.Game.Controller
             public const string Prologue = "bgm_prologue";
             public const string SelectCharacter = "bgm_selectcharacter";
             public const string Main = "bgm_main";
-            public const string PandoraIntro = "Pandora_intro";
             public const string Shop = "bgm_shop";
             public const string Ranking = "bgm_ranking";
             public const string Combination = "bgm_combination";
@@ -159,8 +158,8 @@ namespace Nekoyume.Game.Controller
             base.Awake();
 
             CurrentState = State.None;
-            Event.OnRoomEnter.AddListener(b => PlayMusic(MusicCode.Main));
-            
+            Event.OnRoomEnter.AddListener(_ => PlayMusic(MusicCode.Main));
+
             // FixMe. 돈 버는 소리는 언제쯤 켜둘 수 있을까요. 마이너모드에서 소리가 방해된다는 피드백으로 다시 꺼둡니다.
 //#if !UNITY_EDITOR
 //            ReactiveAgentState.Gold.ObserveOnMainThread().Subscribe(_ => PlaySfx(SfxCode.Cash)).AddTo(this);
@@ -218,8 +217,7 @@ namespace Nekoyume.Game.Controller
 
         public void Initialize()
         {
-            //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            //AudioListener.volume = Settings.Instance.volumeMaster;
+            AudioListener.volume = Settings.Instance.volumeMaster;
 
             if (CurrentState != State.None)
             {

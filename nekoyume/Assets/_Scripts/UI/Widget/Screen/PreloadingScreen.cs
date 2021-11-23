@@ -2,10 +2,10 @@ using Libplanet;
 using Nekoyume.Game.Factory;
 using System.Collections.Generic;
 using System.Linq;
+using Nekoyume.Helper;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.Video;
-using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -40,7 +40,7 @@ namespace Nekoyume.UI
             videoPlayer.loopPointReached += OnShowVideoEnded;
         }
 
-        public override void Close(bool ignoreCloseAnimation = false)
+        public override async void Close(bool ignoreCloseAnimation = false)
         {
             videoPlayer.Stop();
             if (!GameConfig.IsEditor)
@@ -51,50 +51,20 @@ namespace Nekoyume.UI
             {
                 PlayerFactory.Create();
 
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.AgentState.address.ToString());
-                if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+                if (Util.TryGetStoredAvatarSlotIndex(out var slotIndex) &&
+                    States.Instance.AvatarStates.ContainsKey(slotIndex))
                 {
-                    PandoraBoxMaster.Instance.ShowError(101, "Cannot connect to Pandora Server, please visit us for more information!");
-                    return;
-                }
-
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                if (PlayerPrefs.HasKey(LoginDetail.RecentlyLoggedInAvatarKey))
-                {
-                    var recentlyLoggedAddress = PlayerPrefs.GetString(LoginDetail.RecentlyLoggedInAvatarKey);
-                    var matchingAddress = State.States.Instance.AgentState.avatarAddresses
-                        .FirstOrDefault(pair => pair.Value.ToString().Equals(recentlyLoggedAddress));
-
-                    var index = matchingAddress.Equals(default(KeyValuePair<int, Address>)) ? -1 : matchingAddress.Key;
-
-                    if (index == -1)
+                    var avatarState = States.Instance.AvatarStates[slotIndex];
+                    if (avatarState?.inventory == null ||
+                        avatarState.questList == null ||
+                        avatarState.worldInformation == null)
                     {
                         EnterLogin();
                     }
                     else
                     {
-                        try
-                        {
-                            var avatarState = States.Instance.AvatarStates[index];
-
-                            if (avatarState?.inventory == null ||
-                                avatarState.questList == null ||
-                                avatarState.worldInformation == null)
-                            {
-                                EnterLogin();
-                            }
-                            else
-                            {
-                                States.Instance.SelectAvatar(index);
-                                Game.Event.OnRoomEnter.Invoke(false);    
-                            }
-                        }
-                        catch (KeyNotFoundException e)
-                        {
-                            Debug.LogWarning(e.Message);
-                            EnterLogin();
-                        }
+                        await States.Instance.SelectAvatarAsync(slotIndex);
+                        Game.Event.OnRoomEnter.Invoke(false);
                     }
                 }
                 else

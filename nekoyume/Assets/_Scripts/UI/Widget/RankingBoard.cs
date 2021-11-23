@@ -419,7 +419,7 @@ namespace Nekoyume.UI
                     .Where(i => i.equipped)
                     .Select(i => i.ItemId).ToList(),
                 new List<Guid>()
-            );
+            ).Subscribe();
             Find<ArenaBattleLoadingScreen>().Show(arenaRankCell.ArenaInfo);
         }
 
@@ -511,7 +511,7 @@ namespace Nekoyume.UI
             _weeklyCachedInfo = infos
                 .Select(async tuple =>
                 {
-                    var (exist, avatarState) = await States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress);
+                    var (exist, avatarState) = await States.TryGetAvatarStateAsync(tuple.arenaInfo.AvatarAddress);
                     if (!exist)
                     {
                         return (0, null);

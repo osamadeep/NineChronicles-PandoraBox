@@ -336,7 +336,7 @@ namespace Nekoyume.UI
             var totalPrice = data.TotalPrice.Value;
             var count = data.Count.Value;
             var itemSubType = data.Item.Value.ItemBase.Value.ItemSubType;
-            Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType);
+            Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType).Subscribe();
             Mixpanel.Track("Unity/Sell");
             ResponseSell();
         }
@@ -376,7 +376,7 @@ namespace Nekoyume.UI
                 tradableItem,
                 count,
                 totalPrice,
-                itemSubType);
+                itemSubType).Subscribe();
             Mixpanel.Track("Unity/UpdateSell");
             ResponseSell();
         }
@@ -482,7 +482,7 @@ namespace Nekoyume.UI
                     avatarAddress,
                     digest.OrderId,
                     digest.TradableId,
-                    subType);
+                    subType).Subscribe();
                 ResponseSellCancellation(digest.OrderId, digest.TradableId);
             }
         }
