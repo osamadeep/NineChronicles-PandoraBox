@@ -33,7 +33,7 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField] private TextMeshProUGUI OwnerName;
-        [HideInInspector] public TextMeshProUGUI MarketPriceText;
+        public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -100,13 +100,13 @@ namespace Nekoyume.UI
 
         void PrepareDiscordBackground()
         {
-            panel.Find("Content/Spacer1").gameObject.SetActive(false);
-            panel.Find("Content/ScrollArea").gameObject.SetActive(false);
-            panel.Find("Content/Spacer2").gameObject.SetActive(false);
-            panel.Find("Content/TradableText").gameObject.SetActive(false);
-            panel.Find("Footer").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
+            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Footer/TradableText").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Footer").gameObject.SetActive(false);
             MarketPriceText.gameObject.SetActive(true);
-            MarketPriceText.text = PandoraBox.PandoraBoxMaster.MarketPriceValue; 
+            MarketPriceText.text = PandoraBoxMaster.MarketPriceValue; 
             panel.GetComponent<Image>().enabled = false;
             LayoutRebuild();
             DiscordHolder.sizeDelta = panel.sizeDelta;
@@ -117,12 +117,12 @@ namespace Nekoyume.UI
         void ResetDiscordBackground()
         {
             panel.GetComponent<Image>().enabled = true;
-            panel.Find("Content/Spacer1").gameObject.SetActive(false);
-            panel.Find("Content/ScrollArea").gameObject.SetActive(false);
-            panel.Find("Content/Spacer2").gameObject.SetActive(false);
-            panel.Find("Content/TradableText").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
+            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
+            panel.Find("ViewGroup/Footer/TradableText").gameObject.SetActive(false);
             MarketPriceText.text = "";
-            panel.Find("Footer").gameObject.SetActive(true);
+            panel.Find("ViewGroup/Footer").gameObject.SetActive(true);
             DiscordHolder.gameObject.SetActive(false);
             LayoutRebuild();
 
