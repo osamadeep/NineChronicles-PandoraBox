@@ -330,7 +330,7 @@ namespace Nekoyume.UI
             var requiredCost = stageRow.CostAP;
             if (States.Instance.CurrentAvatarState.actionPoint < requiredCost)
             {
-                // NOTE: AP가 부족합니다.
+                OneLineSystem.Push(MailType.System, L10nManager.Localize("ERROR_ACTION_POINT"));
                 return;
             }
 
