@@ -145,7 +145,6 @@ namespace Nekoyume.UI.Scroller
             //for (int i = 0; i < ArenaInfo.DailyChallengeCount; i++)
             {
                 maxChallengeButton.OnSubmitClick
-               .ThrottleFirst(new TimeSpan(0, 0, 2))
                .Subscribe(_ =>
                {
                    AudioController.PlayClick();
@@ -247,8 +246,8 @@ namespace Nekoyume.UI.Scroller
                 cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
 
 
-            maxChallengeButton.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
-            gainPointText.gameObject.SetActive(ArenaInfo.AvatarAddress != currentAvatarArenaInfo.AvatarAddress);
+            maxChallengeButton.gameObject.SetActive(!_isCurrentUser);
+            gainPointText.gameObject.SetActive(!_isCurrentUser);
 
             string tempTxt = $"(<color=green>{ArenaInfo.ArenaRecord.Win}</color>/<color=red>{ArenaInfo.ArenaRecord.Lose}</color>)";
             if (ArenaInfo.DailyChallengeCount > 0)
@@ -257,7 +256,7 @@ namespace Nekoyume.UI.Scroller
                 tempTxt += $" - (<color=red>{ArenaInfo.DailyChallengeCount}</color>)";
             extraInfoText.text = tempTxt;
 
-            me = currentAvatarArenaInfo.Score;
+            me = currentAvatarArenaInfo is null? 0:currentAvatarArenaInfo.Score;
             he = ArenaInfo.Score;
 
             if (he > me + 500)

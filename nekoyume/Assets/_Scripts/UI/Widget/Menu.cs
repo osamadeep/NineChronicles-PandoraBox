@@ -277,10 +277,20 @@ namespace Nekoyume.UI
 
                 var currentAddress = States.Instance.CurrentAvatarState?.address;
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+
+                rankingExclamationMark.gameObject.SetActive(
+                    btnRanking.IsUnlocked &&
+                    (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
+
                 //if (arenaInfo.DailyChallengeCount > 0)
                 //    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
                 //else
                 //    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+
+                if (arenaInfo.DailyChallengeCount > 0)
+                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                else
+                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
                 yield return new WaitForSeconds(60);
             }
         }
