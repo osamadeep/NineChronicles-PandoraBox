@@ -125,7 +125,7 @@ namespace Nekoyume.UI
                 {
                     ["Count"] = shopItems.SharedModel.WishItemCount,
                 };
-                Mixpanel.Track("Unity/Number of Purchased Items", props);
+                Analyzer.Instance.Track("Unity/Number of Purchased Items", props);
             }
 
             foreach (var shopItem in shopItems.SharedModel.GetWishItems)
@@ -134,7 +134,7 @@ namespace Nekoyume.UI
                 {
                     ["Price"] = shopItem.Price.Value.GetQuantityString(),
                 };
-                Mixpanel.Track("Unity/Buy", props);
+                Analyzer.Instance.Track("Unity/Buy", props);
                 shopItem.Selected.Value = false;
                 ReactiveShopState.RemoveBuyDigest(shopItem.OrderId.Value);
                 var format = L10nManager.Localize("NOTIFICATION_BUY_START");

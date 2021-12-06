@@ -643,7 +643,7 @@ namespace Nekoyume.Game.Character
 
             if (Level != level)
             {
-                Mixpanel.Track("Unity/User Level Up", new Value
+                Analyzer.Instance.Track("Unity/User Level Up", new Value
                 {
                     ["code"] = level,
                 });

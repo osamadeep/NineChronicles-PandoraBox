@@ -337,7 +337,7 @@ namespace Nekoyume.UI
             var count = data.Count.Value;
             var itemSubType = data.Item.Value.ItemBase.Value.ItemSubType;
             Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType).Subscribe();
-            Mixpanel.Track("Unity/Sell");
+            Analyzer.Instance.Track("Unity/Sell");
             ResponseSell();
         }
 
@@ -377,7 +377,7 @@ namespace Nekoyume.UI
                 count,
                 totalPrice,
                 itemSubType).Subscribe();
-            Mixpanel.Track("Unity/UpdateSell");
+            Analyzer.Instance.Track("Unity/UpdateSell");
             ResponseSell();
         }
 
@@ -477,7 +477,7 @@ namespace Nekoyume.UI
             var digest = ReactiveShopState.GetSellDigest(tradableId, requiredBlockIndex, price, count);
             if (digest != null)
             {
-                Mixpanel.Track("Unity/Sell Cancellation");
+                Analyzer.Instance.Track("Unity/Sell Cancellation");
                 Game.Game.instance.ActionManager.SellCancellation(
                     avatarAddress,
                     digest.OrderId,
