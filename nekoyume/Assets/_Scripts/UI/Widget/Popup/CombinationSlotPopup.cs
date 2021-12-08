@@ -212,8 +212,35 @@ namespace Nekoyume.UI
 
                 var statMin = optionRow.StatType.ValueToString(optionRow.StatMin);
                 var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
-                //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                var text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
+                var text = $"{optionRow.StatType} ({statMin} - {statMax})";
+                //|||||||||||||| PANDORA CODE ||||||||||||||||||| itemOptionInfo.StatOptions[i].value
+                //Debug.LogError((itemOptionInfo.MainStat) + " - " + itemOptionInfo.StatOptions.Count);
+                try
+                {
+                    text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
+                }
+                catch
+                {
+
+                }
+                //if (information.StatOptions.Count > itemOptionInfo.StatOptions.Count)
+                //{
+                //    switch (i)
+                //    {
+                //        case 0:
+                //            text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[0].value}</b></color>";
+                //            break;
+                //        case 1:
+                //            text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>-</b></color>";
+                //            break;
+                //        case 2:
+                //            text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[1].value}</b></color>";
+                //            break;
+                //    }
+                //}
+                //else
+                //    text = $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
+
                 optionView.UpdateView(text, string.Empty, 1);
                 optionView.Show();
             }

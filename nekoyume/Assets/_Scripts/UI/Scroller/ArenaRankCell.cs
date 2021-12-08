@@ -141,15 +141,16 @@ namespace Nekoyume.UI.Scroller
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            for (int i = 0; i < 5; i++)
+            //for (int i = 0; i < 5; i++)
             //for (int i = 0; i < ArenaInfo.DailyChallengeCount; i++)
             {
                 maxChallengeButton.OnSubmitClick
                .Subscribe(_ =>
                {
                    AudioController.PlayClick();
-                   Context.OnClickChallenge.OnNext(this);
-                   _onClickChallenge.OnNext(this);
+                   //Context.OnClickChallenge.OnNext(this);
+                   //_onClickChallenge.OnNext(this);
+                   ChallangeRemainingTickets();
                })
                .AddTo(gameObject);
             }
@@ -166,6 +167,19 @@ namespace Nekoyume.UI.Scroller
                         Game.Game.instance.TableSheets.CostumeStatSheet).ToString();
                 })
                 .AddTo(gameObject);
+        }
+
+        public void ChallangeRemainingTickets()
+        {
+            var currentAddress = States.Instance.CurrentAvatarState?.address;
+            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+
+            //Debug.LogError("Remaining Tickets: " + arenaInfo.DailyChallengeCount);
+            for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
+            {
+                Context.OnClickChallenge.OnNext(this);
+                _onClickChallenge.OnNext(this);
+            }
         }
 
         public void Show((
