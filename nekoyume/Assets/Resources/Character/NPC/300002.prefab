@@ -31,7 +31,7 @@ Transform:
   m_GameObject: {fileID: 7450033686277532010}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.64, y: 0.64, z: 1}
+  m_LocalScale: {x: 0.44, y: 0.44, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -101,6 +101,7 @@ MonoBehaviour:
   initialSkinName: 
   initialFlipX: 0
   initialFlipY: 0
+  updateWhenInvisible: 3
   separatorSlotNames: []
   zSpacing: 0
   useClipping: 1
@@ -109,6 +110,7 @@ MonoBehaviour:
   clearStateOnDisable: 0
   tintBlack: 0
   singleSubmesh: 0
+  fixDrawOrder: 0
   addNormals: 0
   calculateTangents: 0
   maskInteraction: 0

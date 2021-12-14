@@ -21,7 +21,7 @@ namespace Nekoyume.UI
     public class ItemInformationTooltip : VerticalTooltipWidget<Model.ItemInformationTooltip>
     {
         [SerializeField] private TextMeshProUGUI titleText;
-        [SerializeField] private SubmitButton submitButton;
+        [SerializeField] private ConditionalButton submitButton;
         [SerializeField] private Button retrieveButton;
         [SerializeField] private Button reregisterButton;
         [SerializeField] private SubmitWithCostButton buyButton;
@@ -59,9 +59,8 @@ namespace Nekoyume.UI
 
             Model = new Model.ItemInformationTooltip();
 
-            submitButton.OnSubmitClick.Subscribe(_ =>
+            submitButton.OnSubmitSubject.Subscribe(_ =>
             {
-                AudioController.PlayClick();
                 Model.OnSubmitClick.OnNext(this);
                 Close();
             }).AddTo(gameObject);
@@ -164,10 +163,7 @@ namespace Nekoyume.UI
             Model.TitleText.SubscribeTo(titleText).AddTo(_disposablesForModel);
             Model.Price.SubscribeToPrice(priceText).AddTo(_disposablesForModel);
             Model.SubmitButtonText.SubscribeTo(submitButton).AddTo(_disposablesForModel);
-            Model.SubmitButtonEnabled.Subscribe(submitButton.SetSubmittable).AddTo(_disposablesForModel);
-
-            Model.SubmitButtonText.SubscribeTo(submitButton).AddTo(_disposablesForModel);
-            Model.SubmitButtonEnabled.Subscribe(submitButton.SetSubmittable).AddTo(_disposablesForModel);
+            Model.SubmitButtonEnabled.Subscribe(value => submitButton.Interactable = value).AddTo(_disposablesForModel);
             Model.OnSubmitClick.Subscribe(onSubmit).AddTo(_disposablesForModel);
             if (onClose != null)
             {

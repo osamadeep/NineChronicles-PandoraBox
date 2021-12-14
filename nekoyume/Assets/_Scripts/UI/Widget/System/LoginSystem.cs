@@ -63,10 +63,9 @@ namespace Nekoyume.UI
         public TextMeshProUGUI accountAddressHolder;
         public TextMeshProUGUI accountWarningText;
         public TextMeshProUGUI successText;
-        public SubmitButton submitButton;
+        public ConditionalButton submitButton;
         public Button findPassphraseButton;
         public Button backToLoginButton;
-        public TextMeshProUGUI submitText;
         public Image accountImage;
         public readonly ReactiveProperty<States> State = new ReactiveProperty<States>();
         public bool Login { get; private set; }
@@ -105,10 +104,12 @@ namespace Nekoyume.UI
                 L10nManager.Localize("UI_LOGIN_LOGIN");
             findPassphraseField.placeholder.GetComponent<Text>().text =
                 L10nManager.Localize("UI_LOGIN_ENTER_PRIVATE_KEY");
-            submitText.text = L10nManager.Localize("UI_GAME_START");
-            submitButton.OnSubmitClick.Subscribe(_ => Submit());
-            base.Awake();
+            submitButton.Text = L10nManager.Localize("UI_GAME_START");
+            submitButton.OnSubmitSubject
+                .Subscribe(_ => Submit())
+                .AddTo(gameObject);
 
+            base.Awake();
             SubmitWidget = Submit;
         }
         private void SubscribeState(States states)
@@ -121,7 +122,7 @@ namespace Nekoyume.UI
             findPassphraseTitle.gameObject.SetActive(false);
             findPassphraseGroup.SetActive(false);
             accountGroup.SetActive(false);
-            submitButton.SetSubmittable(false);
+            submitButton.Interactable = false;
             findPassphraseButton.gameObject.SetActive(false);
             backToLoginButton.gameObject.SetActive(false);
             accountAddressText.gameObject.SetActive(false);
@@ -147,13 +148,13 @@ namespace Nekoyume.UI
                     retypeField.text = "";
                     loginField.text = "";
                     findPassphraseField.text = "";
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_SIGN_UP"));
+                    submitButton.Text = L10nManager.Localize("UI_GAME_SIGN_UP");
                     bg.SetActive(false);
                     break;
                 case States.CreatePassword:
                     titleText.gameObject.SetActive(false);
                     accountAddressText.gameObject.SetActive(true);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_START"));
+                    submitButton.Text = L10nManager.Localize("UI_GAME_START");
                     passPhraseGroup.SetActive(true);
                     retypeGroup.SetActive(true);
                     accountGroup.SetActive(true);
@@ -161,13 +162,13 @@ namespace Nekoyume.UI
                     break;
                 case States.CreateAccount:
                     titleText.gameObject.SetActive(false);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_CREATE_PASSWORD"));
+                    submitButton.Text = L10nManager.Localize("UI_GAME_CREATE_PASSWORD");
                     createSuccessGroup.SetActive(true);
                     passPhraseField.Select();
                     break;
                 case States.ResetPassphrase:
                     titleText.gameObject.SetActive(false);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_START"));
+                    submitButton.Text = L10nManager.Localize("UI_GAME_START");
                     passPhraseGroup.SetActive(true);
                     retypeGroup.SetActive(true);
                     accountGroup.SetActive(true);
@@ -176,7 +177,7 @@ namespace Nekoyume.UI
                 case States.Login:
                     header.SetActive(false);
                     titleText.gameObject.SetActive(false);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_GAME_START"));
+                    submitButton.Text = L10nManager.Localize("UI_GAME_START");
                     loginGroup.SetActive(true);
                     accountGroup.SetActive(true);
                     //findPassphraseButton.gameObject.SetActive(true);
@@ -189,7 +190,7 @@ namespace Nekoyume.UI
                     findPassphraseTitle.gameObject.SetActive(true);
                     findPassphraseGroup.SetActive(true);
                     backToLoginButton.gameObject.SetActive(true);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_OK"));
+                    submitButton.Text = L10nManager.Localize("UI_OK");
                     findPassphraseField.Select();
                     break;
                 case States.Failed:
@@ -199,7 +200,7 @@ namespace Nekoyume.UI
                     contentText.gameObject.SetActive(true);
                     var contentFormat = L10nManager.Localize($"UI_LOGIN_{upper}_CONTENT");
                     contentText.text = string.Format(contentFormat);
-                    submitButton.SetSubmitText(L10nManager.Localize("UI_OK"));
+                    submitButton.Text = L10nManager.Localize("UI_OK");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(states), states, null);
@@ -225,12 +226,20 @@ namespace Nekoyume.UI
 
         public void CheckRetypePassphrase()
         {
-            var text = passPhraseField.text;
-            var same = text == retypeField.text && CheckPassWord(text);
-            submitButton.SetSubmittable(same);
-            correctText.gameObject.SetActive(same);
-            incorrectText.gameObject.SetActive(!same);
-            retypeText.gameObject.SetActive(!same);
+            submitButton.UpdateObjects();
+            var vaild = submitButton.IsSubmittable;
+            correctText.gameObject.SetActive(vaild);
+            incorrectText.gameObject.SetActive(!vaild);
+            retypeText.gameObject.SetActive(!vaild);
+        }
+
+        private bool CheckPasswordVaildInCreate()
+        {
+            var passPhrase = passPhraseField.text;
+            var retyped = retypeField.text;
+            return !(string.IsNullOrEmpty(passPhrase) || string.IsNullOrEmpty(retyped)) &&
+                passPhrase == retyped &&
+                CheckPassWord(passPhrase);
         }
 
         private void CheckLogin()
@@ -263,12 +272,12 @@ namespace Nekoyume.UI
 
         public void Submit()
         {
-            if (!submitButton.Interactable)
+            if (!submitButton.IsSubmittable)
             {
                 return;
             }
 
-            submitButton.SetSubmittable(false);
+            submitButton.Interactable = false;
             switch (State.Value)
             {
                 case States.Show:
@@ -506,24 +515,23 @@ namespace Nekoyume.UI
 
         private void UpdateSubmitButton()
         {
+            submitButton.Interactable = true;
+
             switch (State.Value)
             {
                 case States.ResetPassphrase:
                 case States.CreatePassword:
-                    submitButton.SetSubmittable(!(string.IsNullOrEmpty(passPhraseField.text) ||
-                                                  string.IsNullOrEmpty(retypeField.text)));
+                    submitButton.Interactable = CheckPasswordVaildInCreate();
                     break;
-
                 case States.Login:
-                    submitButton.SetSubmittable(!string.IsNullOrEmpty(loginField.text));
+                    submitButton.Interactable = !string.IsNullOrEmpty(loginField.text);
                     break;
-
                 case States.FindPassphrase:
-                    submitButton.SetSubmittable(!string.IsNullOrEmpty(findPassphraseField.text));
+                    submitButton.Interactable = !string.IsNullOrEmpty(findPassphraseField.text);
                     break;
                 case States.CreateAccount:
                 case States.Show:
-                    submitButton.SetSubmittable(true);
+                    submitButton.Interactable = true;
                     break;
                 case States.Failed:
                     break;

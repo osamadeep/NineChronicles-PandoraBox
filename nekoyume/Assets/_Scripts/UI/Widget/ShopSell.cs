@@ -22,6 +22,7 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.UI.Scroller;
     using UniRx;
 
     public class ShopSell : Widget
@@ -43,7 +44,7 @@ namespace Nekoyume.UI
         public TextMeshProUGUI PriceText;//|||||||||||||| PANDORA CODE |||||||||||||||||||
 
         private NPC _npc;
-        private static readonly Vector2 NPCPosition = new Vector3(1000.1f, 998.2f, 1.7f);
+        private static readonly Vector3 NPCPosition = new Vector3(1000.2f, 998, 1.7f);
         private const int NPCId = 300000;
         private const int LimitPrice  = 100000000;
 
@@ -324,7 +325,10 @@ namespace Nekoyume.UI
 
             if (data.TotalPrice.Value.MinorUnit > 0)
             {
-                OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_TOTAL_PRICE_WARNING"));
+                OneLineSystem.Push(
+                    MailType.System,
+                    L10nManager.Localize("UI_TOTAL_PRICE_WARNING"),
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -350,7 +354,10 @@ namespace Nekoyume.UI
 
             if (data.TotalPrice.Value.MinorUnit > 0)
             {
-                OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_TOTAL_PRICE_WARNING"));
+                OneLineSystem.Push(
+                    MailType.System,
+                    L10nManager.Localize("UI_TOTAL_PRICE_WARNING"),
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -433,7 +440,10 @@ namespace Nekoyume.UI
                         break;
                 }
 
-                OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_SELL_LIMIT_EXCEEDED"));
+                OneLineSystem.Push(
+                    MailType.System,
+                    L10nManager.Localize("UI_SELL_LIMIT_EXCEEDED"),
+                    NotificationCell.NotificationType.Alert);
             }
 
             var currency = model.TotalPrice.Value.Currency;
@@ -537,7 +547,7 @@ namespace Nekoyume.UI
                     item.ItemBase.Value.GetLocalizedName());
                 message += ", For " + itemPrice + "!";
             }
-            OneLineSystem.Push(MailType.Auction, message);
+            OneLineSystem.Push(MailType.Auction, message, NotificationCell.NotificationType.Information);
             inventory.SharedModel.ActiveFunc.SetValueAndForceNotify(inventoryItem => (inventoryItem.ItemBase.Value is ITradableItem));
             Refresh();
         }
@@ -549,7 +559,10 @@ namespace Nekoyume.UI
             ReactiveShopState.RemoveSellDigest(orderId);
             AudioController.instance.PlaySfx(AudioController.SfxCode.InputItem);
             var format = L10nManager.Localize("NOTIFICATION_SELL_CANCEL_START");
-            OneLineSystem.Push(MailType.Auction, string.Format(format, itemName));
+            OneLineSystem.Push(
+                MailType.Auction,
+                string.Format(format, itemName),
+                NotificationCell.NotificationType.Information);
             inventory.SharedModel.ActiveFunc.SetValueAndForceNotify(inventoryItem => (inventoryItem.ItemBase.Value is ITradableItem));
             Refresh();
         }
