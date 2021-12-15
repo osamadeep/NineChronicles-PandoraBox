@@ -13,6 +13,7 @@ using UniRx;
 using TimeSpan = System.TimeSpan;
 using UnityEngine.Audio;
 using PandoraBox;
+using Nekoyume.UI.Scroller;
 
 namespace Nekoyume.UI
 {
@@ -81,7 +82,7 @@ namespace Nekoyume.UI
 
             addressCopyButton.OnClickAsObservable().ThrottleFirst(TimeSpan.FromSeconds(2f))
                 .Subscribe(_ =>
-                    OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_COPIED")))
+                    OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_COPIED"), NotificationCell.NotificationType.Information))
                 .AddTo(addressCopyButton);
 
             privateKeyCopyButton.OnClickAsObservable().Subscribe(_ => CopyPrivateKeyToClipboard())
@@ -89,7 +90,7 @@ namespace Nekoyume.UI
 
             privateKeyCopyButton.OnClickAsObservable().ThrottleFirst(TimeSpan.FromSeconds(2f))
                 .Subscribe(_ =>
-                    OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_COPIED")))
+                    OneLineSystem.Push(MailType.System, L10nManager.Localize("UI_COPIED"), NotificationCell.NotificationType.Information))
                 .AddTo(privateKeyCopyButton);
 
             redeemCode.OnRequested.AddListener(() =>

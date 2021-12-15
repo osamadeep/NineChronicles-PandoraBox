@@ -12,6 +12,7 @@ using Nekoyume.UI;
 using Nekoyume.UI.Tween;
 using static Nekoyume.Game.Event;
 using UnityEngine.UI;
+using Nekoyume.UI.Scroller;
 
 namespace PandoraBox
 {
@@ -98,7 +99,8 @@ namespace PandoraBox
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
                 if (int.Parse(StageIDText.text) > clearedStage +1)
                 {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!"
+                        , NotificationCell.NotificationType.Information);
                     return;
                 }
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
@@ -114,7 +116,8 @@ namespace PandoraBox
                 //StartCoroutine(Raid(24));
                 if (tries <= 0)
                 {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!"
+                        , NotificationCell.NotificationType.Information);
                     return;
                 }
                 StartCoroutine(Raid(tries));
@@ -174,7 +177,7 @@ namespace PandoraBox
                     Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, secondndWave).Subscribe();
                 }
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
-                + "</color> (<color=green>" + count + "</color>) times Completed!");
+                + "</color> (<color=green>" + count + "</color>) times Completed!", NotificationCell.NotificationType.Information);
             }
             else
             {
@@ -186,7 +189,7 @@ namespace PandoraBox
                     Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
-                        + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...");
+                        + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...", NotificationCell.NotificationType.Information);
                     yield return new WaitForSeconds(AllowedCooldown);
 
                 }

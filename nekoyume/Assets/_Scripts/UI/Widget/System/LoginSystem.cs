@@ -15,6 +15,7 @@ using UnityEngine.UI;
 namespace Nekoyume.UI
 {
     using Nekoyume.Game.Controller;
+    using Nekoyume.UI.Scroller;
     using PandoraBox;
     using UniRx;
 
@@ -252,7 +253,8 @@ namespace Nekoyume.UI
             {
                 //loginWarning.SetActive(true);
                 //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!");
+                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
+                    , NotificationCell.NotificationType.Information);
                 return;
             }
             Login = !(_privateKey is null);
@@ -264,7 +266,8 @@ namespace Nekoyume.UI
             {
                 //loginWarning.SetActive(true);
                 //|||||||||||||| PANDORA CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!");
+                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
+                    , NotificationCell.NotificationType.Information);
                 loginField.text = string.Empty;
             }
 

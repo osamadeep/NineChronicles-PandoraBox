@@ -11,6 +11,7 @@ using Nekoyume.Model.State;
 using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
+using Nekoyume.UI.Scroller;
 using PandoraBox;
 using TMPro;
 using UniRx;
@@ -189,7 +190,8 @@ namespace Nekoyume.UI
                 string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 PlayerPrefs.DeleteKey(key);
             }
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!");
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!"
+                , NotificationCell.NotificationType.Information);
         }
 
 
@@ -205,7 +207,8 @@ namespace Nekoyume.UI
                 "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString()+ "\n" +
                 "```";
             ClipboardHelper.CopyToClipboard(playerInfo);
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" + tempAvatarState.NameWithHash + "</color>) Info copy to Clipboard Successfully!");
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" + tempAvatarState.NameWithHash
+                + "</color>) Info copy to Clipboard Successfully!", NotificationCell.NotificationType.Information);
         }
 
         
@@ -227,16 +230,19 @@ namespace Nekoyume.UI
                     PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " removed from your nemesis list!");
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash
+                    + " removed from your nemesis list!", NotificationCell.NotificationType.Information);
             }
             else
             {
                 if (PandoraBoxMaster.ArenaFavTargets.Count > 2)
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!"
+                        , NotificationCell.NotificationType.Information);
                 else
                 {
                     PandoraBoxMaster.ArenaFavTargets.Add(tempAvatarState.address.ToString());
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " added to your nemesis list!");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " added to your nemesis list!"
+                        , NotificationCell.NotificationType.Information);
                     for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
                     {
                         string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;

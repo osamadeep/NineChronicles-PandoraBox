@@ -19,6 +19,7 @@ using Cysharp.Threading.Tasks;
 namespace Nekoyume.UI
 {
     using Nekoyume.Helper;
+    using Nekoyume.UI.Scroller;
     using PandoraBox;
     using System.Collections.Generic;
     using System.Collections.Immutable;
@@ -146,7 +147,7 @@ namespace Nekoyume.UI
             if (Game.Game.instance.Stage.IsInStage)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
-                    L10nManager.Localize("UI_BLOCK_EXIT"));
+                    L10nManager.Localize("UI_BLOCK_EXIT"), NotificationCell.NotificationType.Information);
                 return;
             }
 
@@ -346,7 +347,7 @@ namespace Nekoyume.UI
             var requiredCost = stageRow.CostAP;
             if (States.Instance.CurrentAvatarState.actionPoint < requiredCost)
             {
-                OneLineSystem.Push(MailType.System, L10nManager.Localize("ERROR_ACTION_POINT"));
+                OneLineSystem.Push(MailType.System, L10nManager.Localize("ERROR_ACTION_POINT"), NotificationCell.NotificationType.Information);
                 return;
             }
 
@@ -545,7 +546,7 @@ namespace Nekoyume.UI
                     row => row.Id == worldId);
             if (worldRow is null)
             {
-                NotificationSystem.Push(MailType.System, L10nManager.Localize("ERROR_WORLD_DOES_NOT_EXIST"));
+                NotificationSystem.Push(MailType.System, L10nManager.Localize("ERROR_WORLD_DOES_NOT_EXIST"), NotificationCell.NotificationType.Information);
                 return;
             }
 

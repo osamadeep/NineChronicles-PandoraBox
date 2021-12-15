@@ -65,14 +65,14 @@ namespace Nekoyume.UI.Scroller
         private Button avatarInfoButton = null;
 
         [SerializeField]
-        private SubmitButton challengeButton = null;
+        private ConditionalButton challengeButton = null;
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
         private Sprite[] Banners = null;
 
         [SerializeField]
-        private SubmitButton maxChallengeButton = null;
+        private ConditionalButton maxChallengeButton = null;
 
         [SerializeField]
         private GameObject playerBanner = null;
@@ -130,30 +130,25 @@ namespace Nekoyume.UI.Scroller
                 })
                 .AddTo(gameObject);
 
-            challengeButton.OnSubmitClick
-                .ThrottleFirst(new TimeSpan(0, 0, 1))
-                .Subscribe(_ =>
-                {
-                    AudioController.PlayClick();
-                    Context.OnClickChallenge.OnNext(this);
-                    _onClickChallenge.OnNext(this);
-                })
-                .AddTo(gameObject);
+            challengeButton.OnSubmitSubject
+            .ThrottleFirst(new TimeSpan(0, 0, 1))
+            .Subscribe(_ =>
+            {
+                AudioController.PlayClick();
+                Context.OnClickChallenge.OnNext(this);
+                _onClickChallenge.OnNext(this);
+            })
+            .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //for (int i = 0; i < 5; i++)
-            //for (int i = 0; i < ArenaInfo.DailyChallengeCount; i++)
+            maxChallengeButton.OnSubmitSubject
+            .ThrottleFirst(new TimeSpan(0, 0, 1))
+            .Subscribe(_ =>
             {
-                maxChallengeButton.OnSubmitClick
-               .Subscribe(_ =>
-               {
-                   AudioController.PlayClick();
-                   //Context.OnClickChallenge.OnNext(this);
-                   //_onClickChallenge.OnNext(this);
-                   ChallangeRemainingTickets();
-               })
-               .AddTo(gameObject);
-            }
+                AudioController.PlayClick();
+                ChallangeRemainingTickets();
+            })
+            .AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Game.Event.OnUpdatePlayerEquip
@@ -350,16 +345,16 @@ namespace Nekoyume.UI.Scroller
 
                 if (itemData.currentAvatarArenaInfo is null)
                 {
-                    challengeButton.SetSubmittable(true);
+                    challengeButton.SetConditionalState(true);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    maxChallengeButton.SetSubmittable(true);
+                    maxChallengeButton.SetConditionalState(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
                 else
                 {
-                    challengeButton.SetSubmittable(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
+                    challengeButton.SetConditionalState(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    maxChallengeButton.SetSubmittable(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
+                    maxChallengeButton.SetConditionalState(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
             }

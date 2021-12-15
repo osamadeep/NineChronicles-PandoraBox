@@ -1,5 +1,6 @@
 using Nekoyume.Model.Mail;
 using Nekoyume.UI;
+using Nekoyume.UI.Scroller;
 using UnityEngine;
 
 public class HalloweenEgg : MonoBehaviour
@@ -31,7 +32,8 @@ public class HalloweenEgg : MonoBehaviour
 
     public void SendEgg(int x)
     {
-                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: You found egg # <color=green>{x}</color>/8, Keep going");
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: You found egg # <color=green>{x}</color>/8, Keep going"
+                        , NotificationCell.NotificationType.Information);
                     PanHalloween.Instance.FoundOne(x);
                     //gameObject.SetActive(false);
     }

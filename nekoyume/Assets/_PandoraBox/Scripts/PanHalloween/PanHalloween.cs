@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine.Audio;
 using Nekoyume.UI;
 using Nekoyume.Model.Mail;
+using Nekoyume.UI.Scroller;
 
 public class PanHalloween : MonoBehaviour
 {
@@ -64,7 +65,8 @@ public class PanHalloween : MonoBehaviour
         NextCooldown = (int)Game.instance.Agent.BlockIndex + ResetBlock;
         PlayerPrefs.SetInt("_PandoraBox_Halloween_NextCooldown", NextCooldown);
         Audiomixer.SetFloat("MusicVolume", musicVolume);
-        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You <color=red>Failed</color>, try again!");
+        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You <color=red>Failed</color>, try again!"
+            , NotificationCell.NotificationType.Information);
         gameObject.SetActive(false);
 
     }
