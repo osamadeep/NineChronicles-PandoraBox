@@ -11,7 +11,9 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Scroller
 {
+    using Nekoyume.Model.Mail;
     using PandoraBox;
+    using System.Collections;
     using UniRx;
 
     public class ArenaRankCell : RectCell<
@@ -71,8 +73,8 @@ namespace Nekoyume.UI.Scroller
         [SerializeField]
         private Sprite[] Banners = null;
 
-        [SerializeField]
-        private ConditionalButton maxChallengeButton = null;
+        //[SerializeField]
+        //private ConditionalButton maxChallengeButton = null;
 
         [SerializeField]
         private GameObject playerBanner = null;
@@ -135,20 +137,21 @@ namespace Nekoyume.UI.Scroller
             .Subscribe(_ =>
             {
                 AudioController.PlayClick();
-                Context.OnClickChallenge.OnNext(this);
-                _onClickChallenge.OnNext(this);
+                //Context.OnClickChallenge.OnNext(this);
+                //_onClickChallenge.OnNext(this);
+                ChallangeRemainingTickets();
             })
             .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            maxChallengeButton.OnSubmitSubject
-            .ThrottleFirst(new TimeSpan(0, 0, 1))
-            .Subscribe(_ =>
-            {
-                AudioController.PlayClick();
-                ChallangeRemainingTickets();
-            })
-            .AddTo(gameObject);
+            //maxChallengeButton.OnSubmitSubject
+            //.ThrottleFirst(new TimeSpan(0, 0, 1))
+            //.Subscribe(_ =>
+            //{
+            //    AudioController.PlayClick();
+            //    ChallangeRemainingTickets();
+            //})
+            //.AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Game.Event.OnUpdatePlayerEquip
@@ -164,18 +167,54 @@ namespace Nekoyume.UI.Scroller
                 .AddTo(gameObject);
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChallangeRemainingTickets()
+        {
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            {
+                StartCoroutine(StartFightCount());
+            }
+            else
+            {
+                if (PandoraBoxMaster.ArenaTicketsToUse > 1)
+                {
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This is Premium Feature! Please select 1 Fight", NotificationCell.NotificationType.Alert);
+                }
+                else
+                {
+                    if (PandoraBoxMaster.ArenaTicketsToUse ==1)
+                    {
+                        Context.OnClickChallenge.OnNext(this);
+                        _onClickChallenge.OnNext(this);
+                    }
+                }
+            }
+
+            
+        }
+
+        IEnumerator StartFightCount()
         {
             var currentAddress = States.Instance.CurrentAvatarState?.address;
             var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
 
-            //Debug.LogError("Remaining Tickets: " + arenaInfo.DailyChallengeCount);
-            for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
+            //Debug.LogError("Fights Count: " + PandoraBoxMaster.ArenaTicketsToUse);
+            //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
+
+
+            for (int i = 0; i < Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse,0, arenaInfo.DailyChallengeCount); i++)
             {
                 Context.OnClickChallenge.OnNext(this);
                 _onClickChallenge.OnNext(this);
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Fight Arena <color=green>" + (i+1)
+                    + "</color>/" + Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0, arenaInfo.DailyChallengeCount) + "!", NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(3);
             }
         }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         public void Show((
             int rank,
@@ -255,7 +294,7 @@ namespace Nekoyume.UI.Scroller
                 cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
 
 
-            maxChallengeButton.gameObject.SetActive(!_isCurrentUser);
+            //maxChallengeButton.gameObject.SetActive(!_isCurrentUser);
             gainPointText.gameObject.SetActive(!_isCurrentUser);
 
             string tempTxt = $"(<color=green>{ArenaInfo.ArenaRecord.Win}</color>/<color=red>{ArenaInfo.ArenaRecord.Lose}</color>)";
@@ -268,54 +307,56 @@ namespace Nekoyume.UI.Scroller
             me = currentAvatarArenaInfo is null? 0:currentAvatarArenaInfo.Score;
             he = ArenaInfo.Score;
 
-            if (he > me + 500)
-            {
-                gainPointText.text = "<color=green>+60</color>";
-            }
-            else if (he > me + 400 && he <= me + 500)
-            {
-                gainPointText.text = "<color=green>+50</color>";
-            }
-            else if (he > me + 300 && he <= me + 400)
-            {
-                gainPointText.text = "<color=#FFA200>+40</color>";
-            }
-            else if (he > me + 200 && he <= me + 300)
-            {
-                gainPointText.text = "<color=#FFA200>+30</color>";
-            }
-            else if (he > me + 100 && he <= me + 200)
-            {
-                gainPointText.text = "<color=#FFA200>+25</color>";
-            }
-            else if (he > me && he <= me + 100)
-            {
-                gainPointText.text = "<color=#FFA200>+20</color>";
-            }
-            else if (he <= me && he > me - 100)
-            {
-                gainPointText.text = "<color=red>+15</color>";
-            }
-            else if (he <= me - 100 && he > me - 200)
-            {
-                gainPointText.text = "<color=red>+15</color>";
-            }
-            else if (he <= me - 200 && he > me - 300)
-            {
-                gainPointText.text = "<color=red>+8</color>";
-            }
-            else if (he <= me - 300 && he > me - 400)
-            {
-                gainPointText.text = "<color=red>+4</color>";
-            }
-            else if (he <= me - 400 && he > me - 500)
-            {
-                gainPointText.text = "<color=red>+2</color>";
-            }
-            else if (he <= me - 500)
-            {
-                gainPointText.text = "<color=#FFA200>+1</color>";
-            }
+            StartCoroutine(UpdateGainText(me, he));
+
+            //if (he > me + 500)
+            //{
+            //    gainPointText.text = "<color=green>+60</color>";
+            //}
+            //else if (he > me + 400 && he <= me + 500)
+            //{
+            //    gainPointText.text = "<color=green>+45</color>";
+            //}
+            //else if (he > me + 300 && he <= me + 400)
+            //{
+            //    gainPointText.text = "<color=#FFA200>+35</color>";
+            //}
+            //else if (he > me + 200 && he <= me + 300)
+            //{
+            //    gainPointText.text = "<color=#FFA200>+25</color>";
+            //}
+            //else if (he > me + 100 && he <= me + 200)
+            //{
+            //    gainPointText.text = "<color=#FFA200>+22</color>";
+            //}
+            //else if (he > me && he <= me + 100)
+            //{
+            //    gainPointText.text = "<color=#FFA200>+20</color>";
+            //}
+            //else if (he <= me && he > me - 100)
+            //{
+            //    gainPointText.text = "<color=red>+15</color>";
+            //}
+            //else if (he <= me - 100 && he > me - 200)
+            //{
+            //    gainPointText.text = "<color=red>+10</color>";
+            //}
+            //else if (he <= me - 200 && he > me - 300)
+            //{
+            //    gainPointText.text = "<color=red>+8</color>";
+            //}
+            //else if (he <= me - 300 && he > me - 400)
+            //{
+            //    gainPointText.text = "<color=red>+4</color>";
+            //}
+            //else if (he <= me - 400 && he > me - 500)
+            //{
+            //    gainPointText.text = "<color=red>+2</color>";
+            //}
+            //else if (he <= me - 500)
+            //{
+            //    gainPointText.text = "<color=#FFA200>+1</color>";
+            //}
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -347,14 +388,14 @@ namespace Nekoyume.UI.Scroller
                 {
                     challengeButton.SetConditionalState(true);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    maxChallengeButton.SetConditionalState(true);
+                    //maxChallengeButton.SetConditionalState(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
                 else
                 {
                     challengeButton.SetConditionalState(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    maxChallengeButton.SetConditionalState(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
+                    //maxChallengeButton.SetConditionalState(itemData.currentAvatarArenaInfo.DailyChallengeCount > 0);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
             }
@@ -363,6 +404,86 @@ namespace Nekoyume.UI.Scroller
                 characterView.SetIcon(PandoraBoxMaster.Instance.CosmicIcon);
             characterView.Show();
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        IEnumerator UpdateGainText(int myScore,int hisScore)
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(0.2f);
+                int sum = 0;
+                for (int i = 0; i < PandoraBoxMaster.ArenaTicketsToUse; i++)
+                {
+                    int prevoiusPoints = 0; //prevoius accumilated points
+                    for (int j = 0; j < i; j++)
+                    {
+                        prevoiusPoints += AccumulatedPoints(myScore + (prevoiusPoints), hisScore);
+                    }
+
+                    sum += AccumulatedPoints(myScore + (prevoiusPoints), hisScore);
+                }
+                if (sum / (PandoraBoxMaster.ArenaTicketsToUse * 20) >= 1)
+                    gainPointText.text = "<color=green>+" + sum + "</color>";
+                else
+                    gainPointText.text = "<color=red>+" + sum + "</color>";
+            }
+        }
+
+        int AccumulatedPoints(int me,int he)
+        {
+            if (he > me + 500)
+            {
+                return 60;
+            }
+            else if (he > me + 400 && he <= me + 500)
+            {
+                return 45;
+            }
+            else if (he > me + 300 && he <= me + 400)
+            {
+                return 35;
+            }
+            else if (he > me + 200 && he <= me + 300)
+            {
+                return 25;
+            }
+            else if (he > me + 100 && he <= me + 200)
+            {
+                return 22;
+            }
+            else if (he > me && he <= me + 100)
+            {
+                return 20;
+            }
+            else if (he <= me && he > me - 100)
+            {
+                return 15;
+            }
+            else if (he <= me - 100 && he > me - 200)
+            {
+                return 10;
+            }
+            else if (he <= me - 200 && he > me - 300)
+            {
+                return 8;
+            }
+            else if (he <= me - 300 && he > me - 400)
+            {
+                return 4;
+            }
+            else if (he <= me - 400 && he > me - 500)
+            {
+                return 2;
+            }
+            else if (he <= me - 500)
+            {
+                return 1;
+            }
+            else
+                return 0;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateRank(int rank)
         {

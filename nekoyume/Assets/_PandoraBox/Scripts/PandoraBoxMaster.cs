@@ -13,16 +13,17 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100089";
-        public static string VersionId = "010018";
+        public static string OriginalVersionId = "v100093";
+        public static string VersionId = "010019";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
-        public static int ActionCooldown = 2;
+        public static int ActionCooldown = 3;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
         public static int NumberOfProfiles=4;
         public static int LoginIndex;
+        public static int ArenaTicketsToUse=1;
         public static List<string> ArenaFavTargets = new List<string>();
 
         //Objects
@@ -83,7 +84,7 @@ namespace PandoraBox
         {
             foreach (PanPlayer player in PanDatabase.Players)
             {
-                if (player.Address == address)
+                if (player.Address.ToLower() == address.ToLower())
                     return player;
             }
             return new PanPlayer();
@@ -110,7 +111,11 @@ namespace PandoraBox
 
         IEnumerator GetDatabase()
         {
+#if !UNITY_EDITOR
             string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
+#else
+            string url = URLAntiCacheRandomizer("https://6wrni.com/9cdev.pandora");
+#endif
             UnityWebRequest www = UnityWebRequest.Get(url);
             yield return www.SendWebRequest();
 
@@ -261,7 +266,7 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
-                //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
 
@@ -307,6 +312,7 @@ public class PanDatabase
         public string Address;
         public bool IsBanned;
         public bool IsPremium;
+        public int PremiumEndBlock;
         public int ArenaBanner;
         public int ArenaIcon;
         public int SwordSkin;

@@ -108,7 +108,8 @@ namespace PandoraBox
 #if !UNITY_EDITOR
                 if (tries <= 0)
                 {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!"
+                    , NotificationCell.NotificationType.Information);
                     return;
                 }
                 StartCoroutine(Raid(tries));
@@ -133,7 +134,7 @@ namespace PandoraBox
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
             RaidButtonText.text = "Cancel!";
-            float AllowedCooldown = 5f; //save it to settings
+            float AllowedCooldown = 4f; //save it to settings
 
             yield return new WaitForSeconds(AllowedCooldown);
             _player = Game.instance.Stage.GetPlayer();

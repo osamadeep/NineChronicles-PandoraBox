@@ -30,8 +30,8 @@ namespace Nekoyume.UI
             public Guid itemId;
         }
 
-        private const float InternalTimeToAddOrRemoveCell = 1f;
-        private const float LifeTimeOfEachNotification = 1.5f;
+        private const float InternalTimeToAddOrRemoveCell = 2f;
+        private const float LifeTimeOfEachNotification = 3f;
 
         private static State _state = State.None;
 

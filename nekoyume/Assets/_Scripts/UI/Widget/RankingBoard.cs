@@ -76,6 +76,14 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI loseText = null;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private TextMeshProUGUI FightCountTxt = null;
+
+        [SerializeField]
+        private Slider FightCountSldr = null;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private Nekoyume.Model.State.RankingInfo[] _avatarRankingStates;
         private NPC _npc;
 
@@ -212,6 +220,12 @@ namespace Nekoyume.UI
             ShowSpeech("SPEECH_RANKING_BOARD_GREETING_", CharacterAnimation.Type.Greeting);
 
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Battle);
+        }
+
+        public void ChangeSliderArenaCount()
+        {
+            FightCountTxt.text = FightCountSldr.value.ToString();
+            PandoraBoxMaster.ArenaTicketsToUse = int.Parse(FightCountTxt.text);
         }
 
         public override void Close(bool ignoreCloseAnimation = false)

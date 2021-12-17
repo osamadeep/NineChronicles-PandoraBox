@@ -141,7 +141,7 @@ namespace Nekoyume.UI
             closeButton.onClick.AddListener(() => { Close(true); });
 
             CloseWidget = () => Close(true);
-            simulateButton.gameObject.SetActive(GameConfig.IsEditor);
+            //simulateButton.gameObject.SetActive(GameConfig.IsEditor);
             levelField.gameObject.SetActive(GameConfig.IsEditor);
         }
 
@@ -952,6 +952,11 @@ namespace Nekoyume.UI
             questButton.gameObject.SetActive(false);
             _player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var stageId = _stageId.Value;
             if (!Game.Game.instance.TableSheets.WorldSheet.TryGetByStageId(stageId,
