@@ -22,6 +22,7 @@ using UnityEngine.UI;
 namespace Nekoyume.UI
 {
     using Nekoyume.Model.BattleStatus;
+    using Nekoyume.Model.Mail;
     using PandoraBox;
     using UniRx;
 
@@ -503,13 +504,15 @@ namespace Nekoyume.UI
         private void UpdateWeeklyCache(WeeklyArenaState state)
         {
             var infos = state.GetArenaInfos(1, 3);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                 var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
@@ -522,6 +525,11 @@ namespace Nekoyume.UI
                 infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            DateTime timeDifference = DateTime.UtcNow;
+            int currentPlayerCount = 0;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _weeklyCachedInfo = infos
                 .Select(async tuple =>
                 {
@@ -533,6 +541,22 @@ namespace Nekoyume.UI
 
                     var arenaInfo = tuple.arenaInfo;
 #pragma warning disable 618
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    currentPlayerCount++;
+                    int playersPerMessge = 100;
+
+                    if (currentPlayerCount % playersPerMessge == 0)
+                    {
+                        TimeSpan intervalInSec = DateTime.UtcNow - timeDifference;
+                        int totalIntervals = (int)(infos.Count / playersPerMessge);
+                        int totalSec = (int)(intervalInSec.TotalSeconds * (totalIntervals - (int)(currentPlayerCount/ playersPerMessge)));
+                        //Debug.LogError($"Message:{currentPlayerCount/ playersPerMessge}/{totalIntervals}, {currentPlayerCount}/{infos.Count}, Remaining:{totalSec}" );
+                        OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Updating List <color=green>{currentPlayerCount}</color>/{infos.Count - 4}, Remaining ~ {totalSec} Sec!",
+                            NotificationCell.NotificationType.Information);
+
+                        timeDifference = DateTime.UtcNow;
+                    }
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     arenaInfo.Level = avatarState.level;
                     arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
                     arenaInfo.CombatPoint = avatarState.GetCP();

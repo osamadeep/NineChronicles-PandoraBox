@@ -14,7 +14,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100093";
-        public static string VersionId = "010019";
+        public static string VersionId = "010020";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
@@ -114,7 +114,7 @@ namespace PandoraBox
 #if !UNITY_EDITOR
             string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
 #else
-            string url = URLAntiCacheRandomizer("https://6wrni.com/9cdev.pandora");
+            string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");//9cdev.pandora
 #endif
             UnityWebRequest www = UnityWebRequest.Get(url);
             yield return www.SendWebRequest();
@@ -312,6 +312,9 @@ public class PanDatabase
         public string Address;
         public bool IsBanned;
         public bool IsPremium;
+        public bool IsProtected;
+        public bool IsIgnoringMessage;
+        public string DiscordID;
         public int PremiumEndBlock;
         public int ArenaBanner;
         public int ArenaIcon;

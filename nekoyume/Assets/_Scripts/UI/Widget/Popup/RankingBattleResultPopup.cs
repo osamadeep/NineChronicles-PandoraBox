@@ -26,6 +26,9 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextButton submitButton = null;
 
+        [SerializeField] //|||||||||||||| PANDORA CODE |||||||||||||||||||
+        private TextButton forceExitButton = null; 
+
         [SerializeField]
         private TextMeshProUGUI scoreText = null;
 
@@ -42,6 +45,7 @@ namespace Nekoyume.UI
             CloseWidget = null;
             SubmitWidget = BackToRanking;
             submitButton.OnClick = BackToRanking;
+            forceExitButton.OnClick = BackToMenu;//|||||||||||||| PANDORA CODE |||||||||||||||||||
         }
 
         public void Show(BattleLog log, IReadOnlyList<CountableItem> reward)
@@ -80,5 +84,14 @@ namespace Nekoyume.UI
             Find<RankingBoard>().Show();
             Close();
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void BackToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+            Close();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

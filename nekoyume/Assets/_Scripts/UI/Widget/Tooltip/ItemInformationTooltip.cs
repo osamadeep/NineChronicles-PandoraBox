@@ -11,7 +11,10 @@ using UnityEngine;
 
 namespace Nekoyume.UI
 {
+    using Libplanet;
     using Nekoyume.Helper;
+    using Nekoyume.Model.Mail;
+    using Nekoyume.UI.Scroller;
     using PandoraBox;
     using System.Collections;
     using UniRx;
@@ -35,6 +38,10 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI OwnerName;
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
+        ShopItem currentShopItem;
+        Nekoyume.Model.State.AvatarState currentSellerAvatar;
+        PanPlayer currentSeller;
+        bool isBuy;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField] private TextMeshProUGUI priceText;
@@ -97,6 +104,77 @@ namespace Nekoyume.UI
         }
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
+        protected override void Update()
+        {
+            base.Update();
+
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                if (isBuy)
+                {
+                    PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+
+                    if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    {
+                        if (currentSeller.IsIgnoringMessage)
+                            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Owner Prefer not to contacted!", NotificationCell.NotificationType.Alert);
+                        else
+                            Application.OpenURL($"https://discordapp.com/users/{currentSeller.DiscordID}");
+                    }
+                    else
+                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player Not Premium!", NotificationCell.NotificationType.Alert);
+                }
+                else
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This item Belong to you!", NotificationCell.NotificationType.Alert);
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (isBuy)
+                {
+                    string itemString = "===== Pandora Item Informatio =====\n";
+
+                    if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    {
+                        if (currentSeller.IsProtected)
+                        {
+                            itemString += "\nOwner Name    : PRIVATE";
+                            itemString += "\nOwner Address : PRIVATE";
+                            itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+
+
+                        }
+                        else
+                        {
+                            itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
+                            itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
+                            itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+                        }
+                    }
+                    else
+                    {
+                        itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
+                        itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
+                        itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+                    }
+
+                    ClipboardHelper.CopyToClipboard(itemString);
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Item Info copy to Clipboard Successfully!", NotificationCell.NotificationType.Information);
+                }
+                else
+                {
+                    string itemString = "===== Pandora Item Informatio =====";
+                    PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+                    itemString += "\nOwner Name    : " + States.Instance.CurrentAvatarState.NameWithHash;
+                    itemString += "\nOwner Address : " + buyer.Address;
+                    itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+
+                    ClipboardHelper.CopyToClipboard(itemString);
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Item Info copy to Clipboard Successfully!", NotificationCell.NotificationType.Information);
+                }
+            }
+        }
+
         void PrepareDiscordBackground()
         {
             panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
@@ -142,6 +220,7 @@ namespace Nekoyume.UI
                          Action<ItemInformationTooltip> onClose = null)
         {
             OwnerName.gameObject.SetActive(false);//|||||||||||||| PANDORA CODE |||||||||||||||||||
+            isBuy = false;
 
             if (item?.ItemBase.Value is null)
             {
@@ -175,11 +254,13 @@ namespace Nekoyume.UI
             scrollbar.value = 1f;
             StartCoroutine(CoUpdate(submitButton.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraBoxMaster.MarketPriceHelper)
                 PrepareDiscordBackground();
             else
                 ResetDiscordBackground();
         }
+
+
 
         public void ShowForSell(RectTransform target,
                                 CountableItem item,
@@ -194,21 +275,14 @@ namespace Nekoyume.UI
                 return;
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //ShopItem x = item as ShopItem;
-            //var order = Util.GetOrder(x.OrderId.Value);
-            //OwnerName.text = "";
-            //if (!States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
-                OwnerName.gameObject.SetActive(false);
-            //else
-            //{
-            //    OwnerName.text = avatarState.NameWithHash;
-            //    Debug.LogError(avatarState.agentAddress);
-            //    OwnerName.gameObject.SetActive(true);
-            //}
+            isBuy = false;
+            ShopItem x = item as ShopItem;
+            var order = Util.GetOrder(x.OrderId.Value);
+            OwnerName.text = "";
 
 #if UNITY_EDITOR
-            ShopItem x = item as ShopItem;
-            Debug.LogError(x.OrderId);
+            ShopItem x1 = item as ShopItem;
+            Debug.LogError(x1.OrderId);
 #endif
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -255,7 +329,7 @@ namespace Nekoyume.UI
 
 
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraBoxMaster.MarketPriceHelper)
                 PrepareDiscordBackground();
             else
                 ResetDiscordBackground();
@@ -264,6 +338,51 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(sell));
             sellTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public async void SetSellerName(Guid guid)
+        {
+            var order = await Util.GetOrder(guid);
+
+
+            var (exist, avatarState) = await States.TryGetAvatarStateAsync(order.SellerAvatarAddress);
+            if (!exist)
+            {
+                Debug.LogError("NOT EXIST!");
+                OwnerName.gameObject.SetActive(false);
+            }
+            else
+            {
+                currentSellerAvatar = avatarState;
+                currentSeller = PandoraBoxMaster.GetPanPlayer(avatarState.agentAddress.ToString());
+                PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+
+
+                if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                {
+                    if (currentSeller.IsProtected)
+                        OwnerName.text = "Owner: <color=green>PRIVATE!</color>";
+                    else
+                        OwnerName.text = "Owner: <color=green>[P] </color>" + avatarState.NameWithHash;
+                }
+                else
+                {
+                    if (buyer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    {
+                        OwnerName.text = "Owner: " + avatarState.NameWithHash;
+                    }
+                    else
+                    {
+                        OwnerName.text = "Owner: <color=green>PREMIUM FEATURE!</color>";
+                    }
+                }
+#if UNITY_EDITOR
+                Debug.LogError(avatarState.agentAddress + "  |  " + order.OrderId);
+#endif
+                OwnerName.gameObject.SetActive(true);
+            }
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void ShowForBuy(RectTransform target,
                               CountableItem item,
@@ -276,33 +395,12 @@ namespace Nekoyume.UI
             {
                 return;
             }
-//            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-//            ShopItem x = item as ShopItem;
-
-//            var order = Util.GetOrder(x.OrderId.Value);
-//            OwnerName.text = "";
-
-//            if (States.TryGetAvatarState(order.SellerAvatarAddress, out var avatarState))
-//            {
-//                PanPlayer player = PandoraBoxMaster.GetPanPlayer(order.SellerAgentAddress.ToString());
-//                if (player == null)
-//                {
-//                    OwnerName.gameObject.SetActive(true);
-//                    OwnerName.text = avatarState.NameWithHash;
-//                }
-//                else
-//                {
-//                    if (!player.IsPremium)
-//                    {
-//                        OwnerName.gameObject.SetActive(true);
-//                        OwnerName.text = avatarState.NameWithHash;
-//                    }
-//                }
-//#if UNITY_EDITOR
-//                Debug.LogError(avatarState.agentAddress + "  |  " + x.OrderId);
-//#endif
-//            }
-//            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            isBuy = true;
+            currentShopItem = item as ShopItem;
+            OwnerName.text = "";
+            SetSellerName(currentShopItem.OrderId.Value);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             submit.SetActive(false);
             sell.SetActive(false);
@@ -339,7 +437,7 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(buy));
             buyTimer.UpdateTimer(Model.ExpiredBlockIndex.Value);
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraBoxMaster.MarketPriceHelper)
                 PrepareDiscordBackground();
             else
                 ResetDiscordBackground();

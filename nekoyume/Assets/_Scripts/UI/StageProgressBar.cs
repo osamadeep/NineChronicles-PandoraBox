@@ -72,7 +72,14 @@ namespace Nekoyume.UI
                 if (star > 0)
                     AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem);
 
+                try
+                {
                 PlayVFX(star);
+                }
+                catch
+                {
+
+                }
             }).AddTo(gameObject);
         }
 
@@ -96,7 +103,11 @@ namespace Nekoyume.UI
                 UpdateSliderValue(sliderValue);
                 for (int i = 0; i < star; ++i)
                 {
-                    activatedStarImages[i].enabled = true;
+                    try
+                    {
+                        activatedStarImages[i].enabled = true;
+                    }
+                    catch { }
                 }
             }
         }
