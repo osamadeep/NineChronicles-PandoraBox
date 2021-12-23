@@ -332,7 +332,7 @@ namespace Nekoyume.UI
             _stageId.Value = worldMap.SelectedStageId;
 
             ReactiveAvatarState.ActionPoint
-                .Subscribe(_ => ReadyToQuest(EnoughToPlay))
+                .Subscribe(_ => ReadyToQuest())
                 .AddTo(_disposables);
             _tempStats = _player.Model.Stats.Clone() as CharacterStats;
             inventory.SharedModel.UpdateEquipmentNotification();
@@ -513,11 +513,12 @@ namespace Nekoyume.UI
             gameObject.SetActive(false);
         }
 
-        private void ReadyToQuest(bool ready)
+        private void ReadyToQuest()
         {
+            questButton.UpdateObjects();
             foreach (var particle in particles)
             {
-                if (ready)
+                if (questButton.IsSubmittable)
                 {
                     particle.Play();
                 }
