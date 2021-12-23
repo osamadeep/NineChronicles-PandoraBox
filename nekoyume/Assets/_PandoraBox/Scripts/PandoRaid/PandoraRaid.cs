@@ -22,6 +22,9 @@ namespace PandoraBox
         TMP_InputField StageIDText;
 
         [SerializeField]
+        TMP_InputField CurrentTriesManual;
+
+        [SerializeField]
         GameObject RotateShape;
 
         [SerializeField]
@@ -40,6 +43,7 @@ namespace PandoraBox
         private void Start()
         {
             GetComponent<AnchoredPositionSingleTweener>().PlayReverse();
+            CurrentTriesManual.gameObject.SetActive(Application.isEditor);
             StartCoroutine(ShowCurrentTries());
         }
 
@@ -114,14 +118,14 @@ namespace PandoraBox
                 }
                 StartCoroutine(Raid(tries));
 #else
-                //StartCoroutine(Raid(24));
-                if (tries <= 0)
-                {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!"
-                        , NotificationCell.NotificationType.Information);
-                    return;
-                }
-                StartCoroutine(Raid(tries));
+                StartCoroutine(Raid(int.Parse( CurrentTriesManual.text)));
+                //if (tries <= 0)
+                //{
+                //    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!"
+                //        , NotificationCell.NotificationType.Information);
+                //    return;
+                //}
+                //StartCoroutine(Raid(tries));
 #endif
 
             }
@@ -134,7 +138,7 @@ namespace PandoraBox
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
             RaidButtonText.text = "Cancel!";
-            float AllowedCooldown = 4f; //save it to settings
+            float AllowedCooldown = 3f; //save it to settings
 
             yield return new WaitForSeconds(AllowedCooldown);
             _player = Game.instance.Stage.GetPlayer();

@@ -22,6 +22,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Model.Mail;
     using Nekoyume.UI.Scroller;
     using UniRx;
 
@@ -698,19 +699,24 @@ namespace Nekoyume.UI
 
         public static bool DimmedFuncForChargeActionPoint(CountableItem item)
         {
-            if (Find<HeaderMenuStatic>().ChargingAP)
-            {
-                return false;
-            }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            return true;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-            if (item is null || item.Count.Value < 1)
-            {
-                return false;
-            }
+            //if (Find<HeaderMenuStatic>().ChargingAP)
+            //{
+            //    return false;
+            //}
 
-            return States.Instance.CurrentAvatarState.actionPoint !=
-                   States.Instance.GameConfigState.ActionPointMax
-                   && !Game.Game.instance.Stage.IsInStage;
+            //if (item is null || item.Count.Value < 1)
+            //{
+            //    return false;
+            //}
+
+
+            //return States.Instance.CurrentAvatarState.actionPoint !=
+            //       States.Instance.GameConfigState.ActionPointMax
+            //       && !Game.Game.instance.Stage.IsInStage;
         }
 
         private bool DimmedFuncForChest(CountableItem item)
