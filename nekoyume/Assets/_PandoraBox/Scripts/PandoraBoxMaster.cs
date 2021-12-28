@@ -14,7 +14,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100095";
-        public static string VersionId = "010021";
+        public static string VersionId = "010022";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
