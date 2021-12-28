@@ -17,7 +17,10 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Helper;
     using Nekoyume.UI.Scroller;
+    using PandoraBox;
+    using TMPro;
     using UniRx;
     public class Menu : Widget
     {
@@ -29,6 +32,13 @@ namespace Nekoyume.UI
         private const string FirstOpenRankingKeyFormat = "Nekoyume.UI.Menu.FirstOpenRankingKey_{0}";
         private const string FirstOpenQuestKeyFormat = "Nekoyume.UI.Menu.FirstOpenQuestKey_{0}";
         private const string FirstOpenMimisbrunnrKeyFormat = "Nekoyume.UI.Menu.FirstOpenMimisbrunnrKeyKey_{0}";
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI arenaRemains;
+        [SerializeField] private TextMeshProUGUI arenaCount;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private MainMenu btnQuest = null;
@@ -386,6 +396,11 @@ namespace Nekoyume.UI
 
             StartCoroutine(CoStartSpeeches());
             UpdateButtons();
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
+            PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         protected override void OnCompleteOfShowAnimationInternal()
@@ -504,6 +519,179 @@ namespace Nekoyume.UI
             player.DisableHudContainer();
             HackAndSlash(GuidedQuest.WorldQuest?.Goal ?? 4);
         }
+
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void OnEnable()
+        {
+            base.OnEnable();
+            StartCoroutine(arenaRemainsTime());
+            StartCoroutine(arenaRemainsCount());
+            StartCoroutine(ShowWhatsNew());
+
+            DailyBonus.IsTrying = false;
+        }
+
+        public void ShowSelectCharacter()
+        {
+            if (Game.Game.instance.Stage.IsInStage)
+            {
+                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                    L10nManager.Localize("UI_BLOCK_EXIT"), NotificationCell.NotificationType.Information);
+                return;
+            }
+
+            Game.Event.OnNestEnter.Invoke();
+
+            var deletableWidgets = FindWidgets().Where(widget =>
+                !(widget is SystemWidget) && !(widget is QuitSystem) &&
+                !(widget is MessageCatTooltip) && widget.IsActive());
+            foreach (var widget in deletableWidgets)
+            {
+                widget.Close(true);
+            }
+            Find<Login>().Show();
+            Close();
+        }
+
+        IEnumerator ShowWhatsNew()
+        {
+            yield return new WaitForSeconds(2);
+            if (!PandoraBoxMaster.Instance.Settings.WhatsNewShown)
+            {
+                AudioController.instance.PlaySfx("sfx_bgm_great_success");
+                PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
+            }
+        }
+
+        IEnumerator arenaRemainsTime()
+        {
+            yield return new WaitForSeconds(1);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
+                var weeklyArenaState = States.Instance.WeeklyArenaState;
+                long _resetIndex = weeklyArenaState.ResetIndex;
+                float value;
+
+                value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
+                var remainBlock = gameConfigState.DailyArenaInterval - value;
+                var time = Util.GetBlockToTime((int)remainBlock);
+
+
+                if (PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+                    arenaRemains.text = time;
+                else if (PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+                    arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
+                else
+                    arenaRemains.text = $"{time} ({remainBlock})";
+                yield return new WaitForSeconds(3);
+            }
+        }
+
+        IEnumerator arenaRemainsCount()
+        {
+            yield return new WaitForSeconds(2);
+            var gameConfigState = States.Instance.GameConfigState;
+            while (true)
+            {
+                while (States.Instance == null)
+                {
+                    yield return new WaitForSeconds(5);
+                }
+
+                /*
+                var state = States.Instance.WeeklyArenaState;
+                var infos = state.GetArenaInfos(1, 3);
+                var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
+                var infos2 = state.GetArenaInfos(currentAvatarAddress, 1, 1);
+                if (!infos2.Any() && state.OrderedArenaInfos.Any())
+                {
+                    var address = state.OrderedArenaInfos.Last().AvatarAddress;
+                    infos2 = state.GetArenaInfos(address, 1, 1);
+                }
+                infos.AddRange(infos2);
+                infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
+                List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo =
+            new List<(int rank, ArenaInfo arenaInfo)>();
+                _weeklyCachedInfo = infos
+    .Select(async tuple =>
+    {
+        var (exist, avatarState) = await States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress);
+        if (!exist)
+        {
+            return (0, null);
+        }
+        var arenaInfo = tuple.arenaInfo;
+#pragma warning disable 618
+                    arenaInfo.Level = avatarState.level;
+        arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
+        arenaInfo.CombatPoint = avatarState.GetCP();
+#pragma warning restore 618
+                    return tuple;
+    })
+    .Select(t => t.AsTask().Result)
+    .Where(tuple => tuple.rank > 0)
+    .ToList();
+                //                _weeklyCachedInfo = infos
+                //    .Select(tuple =>
+                //    {
+                //        if (!States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress, out var avatarState))
+                //        {
+                //            return (0, null);
+                //        }
+                //        var arenaInfo = tuple.arenaInfo;
+                //#pragma warning disable 618
+                //        arenaInfo.Level = avatarState.level;
+                //        arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
+                //            ? fullCostume.Id
+                //            : avatarState.GetArmorId();
+                //        arenaInfo.CombatPoint = avatarState.GetCP();
+                //#pragma warning restore 618
+                //        return tuple;
+                //    })
+                //    .Where(tuple => tuple.rank > 0)
+                //    .ToList();
+                var (currentAvatarRank, currentAvatarArenaInfo) = _weeklyCachedInfo
+                    .FirstOrDefault(info =>
+                        info.arenaInfo.AvatarAddress.Equals(currentAvatarAddress));
+                */
+                int currentAvatarRank = -1;
+
+                var currentAddress = States.Instance.CurrentAvatarState?.address;
+                var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+
+                rankingExclamationMark.gameObject.SetActive(
+                    btnRanking.IsUnlocked &&
+                    (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
+
+                //if (arenaInfo.DailyChallengeCount > 0)
+                //    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                //else
+                //    arenaCount.text = $"#<color=white>{currentAvatarRank}</color>\n(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+
+                if (arenaInfo.DailyChallengeCount > 0)
+                    arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                else
+                    arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+                yield return new WaitForSeconds(60);
+            }
+        }
+
+        public void ShowPandoraSettings()
+        {
+            AudioController.PlayClick();
+            PandoraBoxMaster.Instance.UISettings.SetActive(true);
+        }
+
+        public void ShowNFT()
+        {
+            Application.OpenURL("https://discord.gg/yfcP5GzqQ7");
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
 #if UNITY_EDITOR
         protected override void Update()

@@ -14,6 +14,7 @@ using Nekoyume.State.Modifiers;
 using Nekoyume.TableData;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
+using PandoraBox;
 using UniRx;
 using ShopItem = Nekoyume.UI.Model.ShopItem;
 
@@ -279,7 +280,11 @@ namespace Nekoyume.State
             GetGroupedOrderDigestsBySortFilter(IReadOnlyCollection<OrderDigest> digests,
                 int shopItemsPerPage)
         {
-            return new Dictionary<ShopSortFilter, Dictionary<int, List<OrderDigest>>>
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            {
+                return new Dictionary<ShopSortFilter, Dictionary<int, List<OrderDigest>>>
             {
                 {
                     ShopSortFilter.Class,
@@ -297,7 +302,52 @@ namespace Nekoyume.State
                         digests.OrderByDescending(digest => digest.Price).ToList(),
                         shopItemsPerPage)
                 },
+                {
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+                    ShopSortFilter.Time,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.ExpiredBlockIndex).ToList(),
+                        shopItemsPerPage)
+                },
+                {
+                    ShopSortFilter.Level,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.Level).ToList(),
+                        shopItemsPerPage)
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                },
             };
+            }
+            else
+            {
+                return new Dictionary<ShopSortFilter, Dictionary<int, List<OrderDigest>>>
+            {
+                {
+                    ShopSortFilter.Class,
+                    GetGroupedShopItemsByPage(GetSortedOrderDigests(digests, SortType.Grade),
+                        shopItemsPerPage)
+                },
+                {
+                    ShopSortFilter.CP,
+                    GetGroupedShopItemsByPage(GetSortedOrderDigests(digests, SortType.Cp),
+                        shopItemsPerPage)
+                },
+                {
+                    ShopSortFilter.Price,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.Price).ToList(),
+                        shopItemsPerPage)
+                },
+                {
+                    ShopSortFilter.Level,
+                    GetGroupedShopItemsByPage(
+                        digests.OrderByDescending(digest => digest.Level).ToList(),
+                        shopItemsPerPage)
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                },
+            };
+            }
         }
 
         private static List<OrderDigest> GetSortedOrderDigests(IEnumerable<OrderDigest> digests,

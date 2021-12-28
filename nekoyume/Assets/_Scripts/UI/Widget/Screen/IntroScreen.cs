@@ -1,4 +1,7 @@
 using Nekoyume.Game.Controller;
+using PandoraBox;
+using System.Collections;
+using UnityEngine;
 
 namespace Nekoyume.UI
 {
@@ -30,8 +33,29 @@ namespace Nekoyume.UI
 
         private void StartLoading()
         {
-            var w = Find<LoginSystem>();
-            w.Show(_keyStorePath, _privateKey);
+            StartCoroutine(CheckVersion()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            //var w = Find<LoginSystem>();
+            //w.Show(_keyStorePath, _privateKey);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        IEnumerator CheckVersion()
+        {
+            while (PandoraBoxMaster.PanDatabase == null)
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            if (PandoraBoxMaster.PanDatabase.VersionID == PandoraBoxMaster.VersionId)
+            {
+                var w = Find<LoginSystem>();
+                w.Show(_keyStorePath, _privateKey);
+                yield break;
+            }
+
+            PandoraBoxMaster.Instance.ShowError(5, "This version is obsolete, please visit us for more information!");
+
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

@@ -13,6 +13,11 @@ namespace Nekoyume.UI
 {
     public class Battle : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private UnityEngine.UI.Button exitMenu = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
         private TextMeshProUGUI stageText = null;
 
@@ -92,7 +97,19 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            exitMenu.onClick.AddListener(() => { ExitToMenu(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ExitToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Close(bool ignoreCloseAnimation = false)
         {

@@ -25,10 +25,19 @@ using Toggle = Nekoyume.UI.Module.Toggle;
 namespace Nekoyume.UI
 {
     using Nekoyume.UI.Scroller;
+    using PandoraBox;
     using UniRx;
 
     public class QuestPreparation : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button sweepButton = null;
+        [SerializeField] private TextMeshProUGUI countText;
+        [SerializeField] private Button fillButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private Module.Inventory inventory = null;
 
@@ -129,7 +138,7 @@ namespace Nekoyume.UI
             closeButton.onClick.AddListener(() => { Close(true); });
 
             CloseWidget = () => Close(true);
-            simulateButton.gameObject.SetActive(GameConfig.IsEditor);
+            //simulateButton.gameObject.SetActive(GameConfig.IsEditor);
             levelField.gameObject.SetActive(GameConfig.IsEditor);
         }
 
@@ -189,6 +198,11 @@ namespace Nekoyume.UI
                 .ThrottleFirst(TimeSpan.FromSeconds(2f))
                 .Subscribe(_ => QuestClick(repeatToggle.isOn))
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            sweepButton.OnClickAsObservable().Subscribe(_ => Sweep()).AddTo(gameObject);
+            fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             boostPopupButton.OnClickAsObservable()
                 .Where(_ => EnoughToPlay)
@@ -323,6 +337,14 @@ namespace Nekoyume.UI
             questButton.Interactable = true;
             coverToBlockClick.SetActive(false);
             HelpTooltip.HelpMe(100004, true);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            sweepButton.gameObject.SetActive(true);
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -845,6 +867,65 @@ namespace Nekoyume.UI
             ).Subscribe();
         }
 
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void AvailableAP()
+        {
+            sweepButton.GetComponentInParent<Slider>().value = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
+        }
+        private void Sweep()
+        {
+            int x = int.Parse(countText.text);
+            if (x == 0)
+                return;
+
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
+            Find<LoadingScreen>().Show();
+
+            questButton.gameObject.SetActive(false);
+            sweepButton.gameObject.SetActive(false);
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+
+            _player.StartRun();
+            ActionCamera.instance.ChaseX(_player.transform);
+            StartCoroutine(IESweep(x));
+        }
+
+        IEnumerator IESweep(int count)
+        {
+            var costumes = _player.Costumes;
+            var equipments = equipmentSlots
+                .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                .Select(slot => (Equipment)slot.Item)
+                .ToList();
+
+            var consumables = consumableSlots
+                .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                .Select(slot => (Consumable)slot.Item)
+                .ToList();
+
+            _stage.IsExitReserved = true;
+            _stage.IsRepeatStage = false;
+            _stage.foodCount = consumables.Count;
+            ActionRenderHandler.Instance.Pending = true;
+
+            var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
+            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+                _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+
+            for (int i = 0; i < count; i++)
+            {
+                Game.Game.instance.ActionManager.HackAndSlash(costumes, equipments, consumables, _worldId, _stageId.Value, 1);
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Battle Fight <color=green>" + (i + 1) + "</color>/" + count, NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
+            }
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...", NotificationCell.NotificationType.Information);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         public void GoToStage(BattleLog battleLog)
         {
             Game.Event.OnStageStart.Invoke(battleLog);
@@ -868,6 +949,11 @@ namespace Nekoyume.UI
             questButton.gameObject.SetActive(false);
             _player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var stageId = _stageId.Value;
             if (!Game.Game.instance.TableSheets.WorldSheet.TryGetByStageId(stageId,

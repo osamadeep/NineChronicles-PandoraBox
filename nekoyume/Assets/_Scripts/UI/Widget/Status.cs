@@ -6,11 +6,19 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UniRx;
+using PandoraBox;
+using Nekoyume.Helper;
 
 namespace Nekoyume.UI
 {
     public class Status : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI PandoraStatus = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private FramedCharacterView characterView = null;
 
@@ -127,6 +135,20 @@ namespace Nekoyume.UI
             {
                 return;
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            {
+                var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
+                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color>\n{timeR}";
+            }
+            else
+            {
+                PandoraStatus.text = $"Pandora:<color=red>Basic</color>";
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var level = _player.Level;
 

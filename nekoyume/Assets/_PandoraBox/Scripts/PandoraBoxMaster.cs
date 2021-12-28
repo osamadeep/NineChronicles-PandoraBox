@@ -31,7 +31,6 @@ namespace PandoraBox
         public GameObject UIErrorWindow;
         public GameObject UISettings;
         public GameObject UIWhatsNew;
-        public GameObject UIRahaf;
         public AudioMixer Audiomixer;
         public GameObject CosmicSword;
         public Sprite CosmicIcon;
@@ -266,7 +265,7 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
-                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+                //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
 

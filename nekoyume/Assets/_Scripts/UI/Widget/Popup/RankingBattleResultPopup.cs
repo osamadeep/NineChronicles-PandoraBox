@@ -14,6 +14,12 @@ namespace Nekoyume.UI
 {
     public class RankingBattleResultPopup : PopupWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextButton forceExitButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private CanvasGroup canvasGroup = null;
 
@@ -80,5 +86,14 @@ namespace Nekoyume.UI
             Find<RankingBoard>().Show();
             Close();
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void BackToMenu()
+        {
+            Game.Event.OnRoomEnter.Invoke(false);
+            MainCanvas.instance.InitWidgetInMain();
+            Close();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

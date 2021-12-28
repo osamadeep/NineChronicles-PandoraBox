@@ -1,5 +1,6 @@
 using Libplanet;
 using Libplanet.Blocks;
+using PandoraBox;
 using TMPro;
 using UniRx;
 
@@ -39,11 +40,15 @@ namespace Nekoyume.UI
 
         private void UpdateText()
         {
-            const string format = "APV: {0} / #{1} / Hash: {2}";
+            string textVer = string.Format("v{0}.{1}.{2}",
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
+            const string format = "PandoraBox {0} / #{1}";
             var hash = _hash.ToString();
             var text = string.Format(
                 format,
-                _version,
+                textVer,
                 _blockIndex,
                 hash.Length >= 4 ? hash.Substring(0, 4) : "...");
             informationText.text = text;
