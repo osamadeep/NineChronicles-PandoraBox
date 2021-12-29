@@ -96,7 +96,11 @@ namespace Nekoyume.UI
                 UpdateSliderValue(sliderValue);
                 for (int i = 0; i < star; ++i)
                 {
-                    activatedStarImages[i].enabled = true;
+                    try
+                    {
+                        activatedStarImages[i].enabled = true;
+                    }
+                    catch { }
                 }
             }
         }
@@ -190,19 +194,23 @@ namespace Nekoyume.UI
         {
             for (int i = 0; i < star; ++i)
             {
-                var starVFX = starVFXList[i];
-                var emissionVFX = starEmissionVFXList[i];
-                var isStarEnabled = activatedStarImages[i].enabled;
-
-                if (!isStarEnabled)
+                try
                 {
-                    if (_vfxEnabled)
+                    var starVFX = starVFXList[i];
+                    var emissionVFX = starEmissionVFXList[i];
+                    var isStarEnabled = activatedStarImages[i].enabled;
+
+                    if (!isStarEnabled)
                     {
-                        starVFX.Play();
-                        emissionVFX.Play();
+                        if (_vfxEnabled)
+                        {
+                            starVFX.Play();
+                            emissionVFX.Play();
+                        }
+                        activatedStarImages[i].enabled = true;
                     }
-                    activatedStarImages[i].enabled = true;
                 }
+                catch { }
             }
         }
 

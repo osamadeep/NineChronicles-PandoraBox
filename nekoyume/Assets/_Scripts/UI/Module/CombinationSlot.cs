@@ -278,7 +278,23 @@ namespace Nekoyume.UI.Module
             progressBar.maxValue = Math.Max(unlockBlockIndex - startBlockIndex, 1);
             var diff = Math.Max(unlockBlockIndex - currentBlockIndex, 1);
             progressBar.value = diff;
-            requiredBlockIndexText.text = $"{diff}.";
+            //requiredBlockIndexText.text = $"{diff}.";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+            {
+                var timeR = Util.GetBlockToTime((int)diff);
+                requiredBlockIndexText.text = timeR;
+            }
+            else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+            {
+                requiredBlockIndexText.text = $"{diff}";
+            }
+            else
+            {
+                var timeR = Util.GetBlockToTime((int)diff);
+                requiredBlockIndexText.text = $"{timeR} ({diff})";
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void UpdateNotification(CombinationSlotState state, long currentBlockIndex, bool isCached)

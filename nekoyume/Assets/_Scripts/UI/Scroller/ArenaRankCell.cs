@@ -291,7 +291,7 @@ namespace Nekoyume.UI.Scroller
 
             nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
-            cpText.text = GetCP(ArenaInfo);
+            //cpText.text = GetCP(ArenaInfo);
 
             challengeCountTextContainer.SetActive(_isCurrentUser);
             challengeButton.gameObject.SetActive(!_isCurrentUser);

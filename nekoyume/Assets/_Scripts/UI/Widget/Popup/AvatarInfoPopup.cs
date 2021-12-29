@@ -691,6 +691,10 @@ namespace Nekoyume.UI
 
         public static bool DimmedFuncForChargeActionPoint(CountableItem item)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            return true;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             if (Find<HeaderMenuStatic>().ChargingAP)
             {
                 return false;
