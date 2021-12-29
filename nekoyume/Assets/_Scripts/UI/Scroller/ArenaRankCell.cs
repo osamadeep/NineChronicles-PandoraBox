@@ -289,8 +289,8 @@ namespace Nekoyume.UI.Scroller
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
-            nameText.text = ArenaInfo.AvatarName;
-            scoreText.text = ArenaInfo.Score.ToString();
+            //nameText.text = ArenaInfo.AvatarName;
+            //scoreText.text = ArenaInfo.Score.ToString();
             //cpText.text = GetCP(ArenaInfo);
 
             challengeCountTextContainer.SetActive(_isCurrentUser);
