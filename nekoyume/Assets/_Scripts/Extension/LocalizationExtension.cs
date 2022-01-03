@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
+using Lib9c.Model.Order;
+using Libplanet;
 using Nekoyume.Action;
+using Nekoyume.BlockChain;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
@@ -13,6 +17,7 @@ using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Quest;
 using Nekoyume.Model.Stat;
+using Nekoyume.State;
 using Nekoyume.TableData;
 using UnityEngine;
 using MailModel = Nekoyume.Model.Mail.Mail;
@@ -22,6 +27,8 @@ namespace Nekoyume
 {
     public static class LocalizationExtension
     {
+
+
         public static async Task<string> ToInfo(this MailModel mail)
         {
             switch (mail)
@@ -117,15 +124,38 @@ namespace Nekoyume
                 }
 
                 case OrderBuyerMail orderBuyerMail:
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    string x1 = "";
+                    var order1 = await Util.GetOrder(orderBuyerMail.OrderId);
+                    var (exist, avatarState) = await States.TryGetAvatarStateAsync(order1.SellerAvatarAddress);
+
                     var buyerItemName = await Util.GetItemNameByOrderId(orderBuyerMail.OrderId, true);
-                    return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),
+                    if (exist)
+                    {
+                        x1 = $"[<color=green><size=70%>{orderBuyerMail.blockIndex}</size></color>] Spent <color=red>-{order1.Price}</color> for {buyerItemName}" +
+                            $" from {avatarState.NameWithHash}";
+                        return x1;
+                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    else
+                        return string.Format(L10nManager.Localize("UI_BUYER_MAIL_FORMAT"),
                         buyerItemName);
 
                 case OrderSellerMail orderSellerMail:
                     var order = await Util.GetOrder(orderSellerMail.OrderId);
                     var sellerItemName = await Util.GetItemNameByOrderId(orderSellerMail.OrderId, true);
                     var taxedPrice = order.Price - order.GetTax();
-                    return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    string x = "";
+                    Address orderReceiptAddress = OrderReceipt.DeriveAddress(orderSellerMail.OrderId);
+                    IValue orderReceiptValue = await Game.Game.instance.Agent.GetStateAsync(orderReceiptAddress);
+                    var (exist1, avatarState1) = await States.TryGetAvatarStateAsync(orderReceiptAddress);
+                    if (exist1)
+                    {
+                        x = $"[<color=green><size=70%>{orderSellerMail.blockIndex}</size></color>] Got <color=green>+{taxedPrice}</color> from {avatarState1.NameWithHash} for your {sellerItemName}";
+                        return x;
+                    }//|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    else
+                        return string.Format(L10nManager.Localize("UI_SELLER_MAIL_FORMAT"), taxedPrice, sellerItemName);
 
                 case OrderExpirationMail orderExpirationMail:
                     var expiredItemName = await Util.GetItemNameByOrderId(orderExpirationMail.OrderId, true);

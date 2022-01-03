@@ -5,10 +5,14 @@ using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
+using Nekoyume.UI.Scroller;
+using PandoraBox;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -22,6 +26,18 @@ namespace Nekoyume.UI
 
         private static readonly Vector3 NPCPosition = new Vector3(2000f, 1999.2f, 2.15f);
         private static readonly Vector3 NPCPositionInLobbyCamera = new Vector3(5000f, 4999.13f, 0f);
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private GameObject paidMember = null;
+        [SerializeField] private Button copyButton = null;
+        [SerializeField] private TextMeshProUGUI blockText = null;
+        [SerializeField] private TextMeshProUGUI dateText = null;
+        [SerializeField] private TextMeshProUGUI versionText = null;
+        [SerializeField] private Button NemesisButton = null;
+        [SerializeField] private Button ResetNemesisButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private Button blurButton = null;
@@ -69,7 +85,88 @@ namespace Nekoyume.UI
             blurButton.OnClickAsObservable()
                 .Subscribe(_ => Close())
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            copyButton.OnClickAsObservable().Subscribe(_ => CopyPlayerInfo()).AddTo(gameObject);
+            NemesisButton.OnClickAsObservable().Subscribe(_ => SetNemesis()).AddTo(gameObject);
+            ResetNemesisButton.OnClickAsObservable().Subscribe(_ => ResetAllNemesis()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ResetAllNemesis()
+        {
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 3; i++)
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                PlayerPrefs.DeleteKey(key);
+            }
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!"
+                , NotificationCell.NotificationType.Information);
+        }
+
+
+        AvatarState tempAvatarState;
+        void CopyPlayerInfo()
+        {
+            string playerInfo =
+                "```prolog\n" +
+                "Avatar Name      : " + tempAvatarState.NameWithHash + "\n" +
+                "Account Address  : " + tempAvatarState.agentAddress + "\n" +
+                "Character Address: " + tempAvatarState.address + "\n" +
+                "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
+                "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString() + "\n" +
+                "```";
+            ClipboardHelper.CopyToClipboard(playerInfo);
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" + tempAvatarState.NameWithHash
+                + "</color>) Info copy to Clipboard Successfully!", NotificationCell.NotificationType.Information);
+        }
+
+
+        public void SetNemesis()
+        {
+            TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()))
+            {
+                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                {
+                    string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                    PlayerPrefs.DeleteKey(key);
+                    //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                }
+                PandoraBoxMaster.ArenaFavTargets.Remove(tempAvatarState.address.ToString());
+                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                {
+                    string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                    PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                }
+
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash
+                    + " removed from your nemesis list!", NotificationCell.NotificationType.Information);
+            }
+            else
+            {
+                if (PandoraBoxMaster.ArenaFavTargets.Count > 2)
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!"
+                        , NotificationCell.NotificationType.Information);
+                else
+                {
+                    PandoraBoxMaster.ArenaFavTargets.Add(tempAvatarState.address.ToString());
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash + " added to your nemesis list!"
+                        , NotificationCell.NotificationType.Information);
+                    for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                    {
+                        string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                        PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                    }
+                }
+            }
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Show(bool ignoreShowAnimation = false)
         {
@@ -124,6 +221,8 @@ namespace Nekoyume.UI
 
         private void UpdateSlotView(AvatarState avatarState)
         {
+            tempAvatarState = avatarState;
+
             var game = Game.Game.instance;
             var playerModel = _player.Model;
 
@@ -149,6 +248,20 @@ namespace Nekoyume.UI
 
             costumeSlots.SetPlayerCostumes(playerModel, ShowTooltip, null);
             equipmentSlots.SetPlayerEquipments(playerModel, ShowTooltip, null);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
+
+            blockText.text = "Block #" + Game.Game.instance.Agent.BlockIndex.ToString();
+            dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
+            versionText.text = "APV: " + PandoraBoxMaster.OriginalVersionId;
+            if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee") || nicknameText.text.Contains("Wabbs"))
+                paidMember.SetActive(true);
+            else
+                paidMember.SetActive(false);
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void UpdateStatViews()

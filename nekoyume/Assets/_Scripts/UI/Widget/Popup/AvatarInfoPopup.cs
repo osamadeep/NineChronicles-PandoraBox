@@ -30,6 +30,12 @@ namespace Nekoyume.UI
         public bool HasNotification =>
             inventory.SharedModel.Equipments.Any(item => item.HasNotification.Value);
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public TextMeshProUGUI PriceText;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
         private static readonly Vector3 PlayerPosition = new Vector3(3000f, 2999.2f, 2.15f);
 
@@ -76,6 +82,14 @@ namespace Nekoyume.UI
         private GameObject _cachedCharacterTitle;
 
         public readonly ReactiveProperty<bool> IsTweenEnd = new ReactiveProperty<bool>(true);
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnableMarketHelper(TextMeshProUGUI text)
+        {
+            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         #region Override
 
@@ -584,6 +598,10 @@ namespace Nekoyume.UI
 
         private void ShowTooltip(InventoryItemView view)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var tooltip = Find<ItemInformationTooltip>();
             if (view is null ||
                 view.Model is null ||
@@ -606,6 +624,10 @@ namespace Nekoyume.UI
 
         private void ShowTooltip(EquipmentSlot slot)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var tooltip = Find<ItemInformationTooltip>();
             if (slot is null ||
                 slot.RectTransform == tooltip.Target)

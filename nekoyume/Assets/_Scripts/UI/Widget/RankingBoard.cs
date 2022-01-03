@@ -37,6 +37,7 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
         [SerializeField] private Slider FightCountSldr = null;
+        [HideInInspector]public Dictionary<Address, AvatarState> avatarStatesPandora;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -525,6 +526,7 @@ namespace Nekoyume.UI
 
             var addressList = infos.Select(i => i.arenaInfo.AvatarAddress).ToList();
             var avatarStates = await Game.Game.instance.Agent.GetAvatarStates(addressList);
+            avatarStatesPandora = avatarStates;
             _weeklyCachedInfo = infos
                 .Select(tuple =>
                 {

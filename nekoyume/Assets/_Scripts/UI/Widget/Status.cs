@@ -72,12 +72,14 @@ namespace Nekoyume.UI
             base.Show(ignoreStartAnimation);
             battleTimerView.Close();
             hpBar.transform.parent.gameObject.SetActive(false);
+            PandoraStatus.gameObject.SetActive(true);
             buffLayout.SetBuff(null);
         }
 
         public void ShowBattleStatus()
         {
             hpBar.transform.parent.gameObject.SetActive(true);
+            PandoraStatus.gameObject.SetActive(false);
         }
 
         public void ShowBattleTimer(int timeLimit)
@@ -142,7 +144,7 @@ namespace Nekoyume.UI
             if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
             {
                 var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
-                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color>\n{timeR}";
+                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
             }
             else
             {

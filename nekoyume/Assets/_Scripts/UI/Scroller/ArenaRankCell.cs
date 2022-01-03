@@ -14,6 +14,9 @@ namespace Nekoyume.UI.Scroller
     using Nekoyume.Model.Mail;
     using PandoraBox;
     using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
     using UniRx;
 
     public class ArenaRankCell : RectCell<
@@ -31,6 +34,7 @@ namespace Nekoyume.UI.Scroller
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private Sprite[] Banners = null;
+        //[SerializeField] private GameObject challengeButton = null;
         [SerializeField] private GameObject playerBanner = null;
         [SerializeField] private TextMeshProUGUI gainPointText = null;
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
@@ -150,6 +154,7 @@ namespace Nekoyume.UI.Scroller
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChallangeRemainingTickets()
         {
+            AudioController.PlayClick();
             PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
             //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
             if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
@@ -183,16 +188,71 @@ namespace Nekoyume.UI.Scroller
             //Debug.LogError("Fights Count: " + PandoraBoxMaster.ArenaTicketsToUse);
             //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
 
+            var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
+
+
+
+            Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
+
 
             for (int i = 0; i < Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0, arenaInfo.DailyChallengeCount); i++)
             {
-                Context.OnClickChallenge.OnNext(this);
-                _onClickChallenge.OnNext(this);
+                //Context.OnClickChallenge.OnNext(this);
+                //_onClickChallenge.OnNext(this);
+
+                Game.Game.instance.ActionManager.RankingBattle(
+                ArenaInfo.AvatarAddress,
+                currentAvatarInventory.Costumes
+                    .Where(i => i.equipped)
+                    .Select(i => i.ItemId).ToList(),
+                currentAvatarInventory.Equipments
+                    .Where(i => i.equipped)
+                    .Select(i => i.ItemId).ToList()
+                ).Subscribe();
+
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Fight Arena <color=green>" + (i + 1)
                     + "</color>/" + Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0, arenaInfo.DailyChallengeCount) + "!", NotificationCell.NotificationType.Information);
-                yield return new WaitForSeconds(3);
+                yield return new WaitForSeconds(4);
             }
         }
+
+        private class LocalRandom : System.Random, Libplanet.Action.IRandom
+        {
+            public LocalRandom(int Seed)
+                : base(Seed)
+            {
+            }
+
+            public int Seed => throw new NotImplementedException();
+        }
+
+        public void SimulateBattle()
+        {
+            //var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
+
+            //Game.Game.instance.ActionManager.RankingBattle(
+            //    ArenaInfo.AvatarAddress,
+            //    currentAvatarInventory.Costumes
+            //        .Where(i => i.equipped)
+            //        .Select(i => i.ItemId).ToList(),
+            //    currentAvatarInventory.Equipments
+            //        .Where(i => i.equipped)
+            //        .Select(i => i.ItemId).ToList()
+            //).Subscribe();
+
+            //Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
+
+            Debug.LogError("Simulate");
+
+            
+        }
+
+        void GetEnemyState(ConditionalButton button)
+        {
+            //Something Cool ;p
+        }
+
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Show((
@@ -245,6 +305,7 @@ namespace Nekoyume.UI.Scroller
             UpdateRank(itemData.rank);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            
             nameText.text = ArenaInfo.AvatarName;
             scoreText.text = ArenaInfo.Score.ToString();
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
@@ -327,6 +388,12 @@ namespace Nekoyume.UI.Scroller
                 }
             }
 
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            {
+                GetEnemyState(challengeButton);
+            }          
             characterView.Show();
         }
 

@@ -44,7 +44,9 @@ namespace Nekoyume.UI
         protected override void OnCompleteOfShowAnimationInternal()
         {
             base.OnCompleteOfShowAnimationInternal();
-            player.gameObject.SetActive(true);
+            try
+            { player.gameObject.SetActive(true); }
+            catch { }
         }
     }
 }

@@ -33,6 +33,12 @@ namespace Nekoyume.UI
             Count,
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public TextMeshProUGUI PriceText;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private Module.Inventory inventory = null;
         [SerializeField] private Module.ShopSellItems shopItems = null;
         [SerializeField] private TextMeshProUGUI noticeText = null;
@@ -47,6 +53,14 @@ namespace Nekoyume.UI
         private const int LimitPrice  = 100000000;
 
         private Shop SharedModel { get; set; }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnableMarketHelper(TextMeshProUGUI text)
+        {
+            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
         {
@@ -169,6 +183,9 @@ namespace Nekoyume.UI
         private void ShowTooltip(InventoryItemView view)
         {
             var tooltip = Find<ItemInformationTooltip>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             shopItems.SharedModel.DeselectItemView();
 
@@ -192,6 +209,10 @@ namespace Nekoyume.UI
         private void ShowTooltip(ShopItemView view)
         {
             var tooltip = Find<ItemInformationTooltip>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             inventory.SharedModel.DeselectItemView();
 
             if (view is null || view.RectTransform == tooltip.Target)
