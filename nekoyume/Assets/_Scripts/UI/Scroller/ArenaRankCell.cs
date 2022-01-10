@@ -249,7 +249,65 @@ namespace Nekoyume.UI.Scroller
 
         void GetEnemyState(ConditionalButton button)
         {
-            //Something Cool ;p
+            //Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
+            //GameObject effect = button.transform.GetChild(0).gameObject;
+            //TextMeshProUGUI buttonText = button.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+
+
+            //effect.SetActive(false);
+            var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora.FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
+            //var (exist, enemyState) = await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
+
+
+            //current local player
+            var currentAddress = States.Instance.CurrentAvatarState?.address;
+            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+            //
+
+
+            int totalSimulations = 100;
+            int win = 0;
+
+            for (int i = 0; i < totalSimulations; i++)
+            {
+                System.Random rnd = new System.Random();
+                var simulator = new RankingSimulator(
+                    new LocalRandom(rnd.Next(0, 100)),
+                    States.Instance.CurrentAvatarState,
+                    enemyState.Value,
+                    new List<Guid>(),
+                    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                    Action.RankingBattle.StageId,
+                    arenaInfo,
+                    ArenaInfo,
+                    Game.Game.instance.TableSheets.CostumeStatSheet
+                );
+                simulator.SimulatePandora();
+                var log = simulator.Log;
+
+                if (log.result.ToString().ToUpper() == "WIN")
+                    win++;
+
+            }
+            //Debug.LogError($"Stage id is {Action.RankingBattle.StageId}");
+
+            float finalRatio = (float)win / (float)totalSimulations;
+            float FinalValue = (int)(finalRatio * 100f);
+
+            //if (finalRatio == 1)
+            //    effect.SetActive(true);
+
+            if (finalRatio <= 0.5f)
+                button.Text = $"Fight(<color=red>{FinalValue}</color>%)";
+            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                button.Text = $"Fight(<color=#FF4900>{FinalValue}</color>%)";
+            else
+                button.Text = $"Fight(<color=green>{FinalValue}</color>%)";
+
+            //if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
+            //{
+            //    Widget.Find<RankingBoard>().GoToStage(log);
+            //}
         }
 
 
