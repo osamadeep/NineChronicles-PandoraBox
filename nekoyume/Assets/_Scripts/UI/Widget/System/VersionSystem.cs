@@ -1,8 +1,11 @@
 using Libplanet;
 using Libplanet.Blocks;
 using PandoraBox;
+using System.Collections;
 using TMPro;
 using UniRx;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Nekoyume.UI
 {
@@ -13,11 +16,23 @@ namespace Nekoyume.UI
         private long _blockIndex;
         private BlockHash _hash;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        string pandoraTextVer = "";
+        string current9cScanBlock = "";
+        int secToUpdate = 2;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         protected override void Awake()
         {
             base.Awake();
             Game.Game.instance.Agent.BlockIndexSubject.Subscribe(SubscribeBlockIndex).AddTo(gameObject);
             Game.Game.instance.Agent.BlockTipHashSubject.Subscribe(SubscribeBlockHash).AddTo(gameObject);
+            pandoraTextVer = string.Format("PandoraBox v{0}.{1}.{2}",
+                int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
+                int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
+                int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
+
+            StartCoroutine(Get9cBlock());
         }
 
         public void SetVersion(int version)
@@ -40,18 +55,53 @@ namespace Nekoyume.UI
 
         private void UpdateText()
         {
-            string textVer = string.Format("v{0}.{1}.{2}",
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
-            const string format = "PandoraBox {0} / #{1}";
-            var hash = _hash.ToString();
-            var text = string.Format(
-                format,
-                textVer,
-                _blockIndex,
-                hash.Length >= 4 ? hash.Substring(0, 4) : "...");
-            informationText.text = text;
+            // informationText.text = $"{pandoraTextVer} / #{_blockIndex}({current9cScanBlock})";
         }
+
+        IEnumerator Get9cBlock()
+        {
+            while (true)
+            {
+                string url = "https://api.9cscan.com/blocks?limit=1";
+                UnityWebRequest www = UnityWebRequest.Get(url);
+                yield return www.SendWebRequest();
+
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    current9cScanBlock = "?";
+                }
+                else
+                {
+                    if (_blockIndex != 0)
+                        try
+                        {
+                            Scan9c scanLatestBlock = JsonUtility.FromJson<Scan9c>(www.downloadHandler.text);
+                            int block = scanLatestBlock.before;
+                            int differenceBlocks = block - (int)_blockIndex;
+                            if (differenceBlocks > -5)
+                                if (differenceBlocks > 0)
+                                    if (differenceBlocks < 20)
+                                        current9cScanBlock = $"<color=green>+{differenceBlocks}</color>";
+                                    else
+                                        current9cScanBlock = $"<color=red>!</color>";
+                                else
+                                    current9cScanBlock = $"<color=green>{differenceBlocks}</color>";
+                            else
+                                current9cScanBlock = $"<color=red>{differenceBlocks}</color>";
+                            Debug.LogError(block + "  " +  _blockIndex);
+                        }// Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
+                        catch { current9cScanBlock = "?"; }
+                }
+
+                informationText.text = $"{pandoraTextVer} / #{_blockIndex}({current9cScanBlock})";
+                yield return new WaitForSeconds(secToUpdate);
+            }
+        }
+    }
+
+    [System.Serializable]
+    public class Scan9c
+    {
+        public int before;
     }
 }
