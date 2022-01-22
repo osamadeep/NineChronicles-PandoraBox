@@ -18,7 +18,7 @@ Pandora Box (Done by a player for the players)
     ```
     git clone https://github.com/osamadeep/NineChronicles-PandoraBox.git
     ```
- 1. Nagivate to the cloned directory and run the command:
+ 1. Navigate to the cloned directory and run the command:
     ```
     git config core.hooksPath hooks
     git submodule update --init --recursive
