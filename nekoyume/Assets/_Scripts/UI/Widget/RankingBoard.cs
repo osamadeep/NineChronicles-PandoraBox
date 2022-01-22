@@ -20,12 +20,21 @@ using UnityEngine.UI;
 namespace Nekoyume.UI
 {
     using Nekoyume.Model.BattleStatus;
+    using PandoraBox;
     using UniRx;
 
     public class RankingBoard : Widget
     {
         private static readonly Vector3 NPCPosition = new Vector3(999.8f, 998.15f);
         private const int NPCId = 300002;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI FightCountTxt = null;
+        [SerializeField] private Slider FightCountSldr = null;
+        [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private Button closeButton;
@@ -55,6 +64,14 @@ namespace Nekoyume.UI
             new List<(int rank, ArenaInfo arenaInfo)>();
 
         private readonly List<IDisposable> _disposablesFromShow = new List<IDisposable>();
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ChangeSliderArenaCount()
+        {
+            FightCountTxt.text = FightCountSldr.value.ToString();
+            PandoraBoxMaster.ArenaTicketsToUse = int.Parse(FightCountTxt.text);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
         {
@@ -94,6 +111,16 @@ namespace Nekoyume.UI
 
         private async void ShowAsync()
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 3; i++)
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (PlayerPrefs.HasKey(key))
+                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             Find<DataLoadingScreen>().Show();
 
             var stage = Game.Game.instance.Stage;
@@ -314,10 +341,15 @@ namespace Nekoyume.UI
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
             var infos = state.GetArenaInfos(1, 3);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = state.GetArenaInfos(currentAvatarAddress, 90, 10);
+                var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && state.OrderedArenaInfos.Any())
                 {
@@ -331,6 +363,9 @@ namespace Nekoyume.UI
 
             var addressList = infos.Select(i => i.arenaInfo.AvatarAddress).ToList();
             var avatarStates = await Game.Game.instance.Agent.GetAvatarStates(addressList);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            avatarStatesPandora = avatarStates;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _weeklyCachedInfo = infos
                 .Select(tuple =>
                 {

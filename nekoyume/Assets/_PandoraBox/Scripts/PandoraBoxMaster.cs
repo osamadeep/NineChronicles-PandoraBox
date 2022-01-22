@@ -13,7 +13,7 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100097";
+        public static string OriginalVersionId = "v100098";
         public static string VersionId = "010024";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
@@ -25,6 +25,7 @@ namespace PandoraBox
         public static int LoginIndex;
         public static int ArenaTicketsToUse=1;
         public static List<string> ArenaFavTargets = new List<string>();
+        public static bool IsSimulate;
 
         //Objects
         public PandoraSettings Settings;

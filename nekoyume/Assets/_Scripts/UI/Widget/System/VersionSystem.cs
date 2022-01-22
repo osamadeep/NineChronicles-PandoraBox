@@ -19,7 +19,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         string pandoraTextVer = "";
         string current9cScanBlock = "";
-        int secToUpdate = 2;
+        int secToUpdate = 7;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -88,8 +88,8 @@ namespace Nekoyume.UI
                                     current9cScanBlock = $"<color=green>{differenceBlocks}</color>";
                             else
                                 current9cScanBlock = $"<color=red>{differenceBlocks}</color>";
-                            Debug.LogError(block + "  " +  _blockIndex);
-                        }// Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
+                            //Debug.LogError(block + "  " +  _blockIndex);
+                        }
                         catch { current9cScanBlock = "?"; }
                 }
 

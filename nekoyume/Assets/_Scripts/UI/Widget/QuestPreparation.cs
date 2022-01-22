@@ -951,6 +951,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             Find<WorldMap>().Close(true);
             Find<StageInformation>().Close(true);
+            PandoraBoxMaster.IsSimulate = true;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var stageId = _stageId.Value;

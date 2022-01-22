@@ -142,7 +142,7 @@ namespace Nekoyume.UI
             {
                 if (isBuy)
                 {
-                    string itemString = "===== Pandora Item Informatio =====\n";
+                    string itemString = "===== Pandora Item Information =====";
 
                     if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                     {
@@ -150,22 +150,33 @@ namespace Nekoyume.UI
                         {
                             itemString += "\nOwner Name    : PRIVATE";
                             itemString += "\nOwner Address : PRIVATE";
-                            itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
-
+                            itemString += "\nItem Name     : " + titleText.text;
+                            try { itemString += "\nItem Stats    : " + GetItemMainStats(); } catch { }
+                            try { itemString += "\nItem Skills   : " + GetItemSkills(); } catch { }
+                            itemString += "\nItem Shop ID  : " + currentShopItem.OrderId;
+                            itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
 
                         }
                         else
                         {
                             itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
                             itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
-                            itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+                            itemString += "\nItem Name     : " + titleText.text;
+                            try { itemString += "\nItem Stats    : " + GetItemMainStats(); } catch { }
+                            try { itemString += "\nItem Skills   : " + GetItemSkills(); } catch { }
+                            itemString += "\nItem Shop ID  : " + currentShopItem.OrderId;
+                            itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
                         }
                     }
                     else
                     {
                         itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
                         itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
-                        itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+                        itemString += "\nItem Name     : " + titleText.text;
+                        try { itemString += "\nItem Stats    : " + GetItemMainStats(); } catch { }
+                        try { itemString += "\nItem Skills   : " + GetItemSkills(); } catch { }
+                        itemString += "\nItem Shop ID  : " + currentShopItem.OrderId;
+                        itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
                     }
 
                     ClipboardHelper.CopyToClipboard(itemString);
@@ -173,11 +184,14 @@ namespace Nekoyume.UI
                 }
                 else
                 {
-                    string itemString = "===== Pandora Item Informatio =====";
+                    string itemString = "===== Pandora Item Information =====";
                     PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
                     itemString += "\nOwner Name    : " + States.Instance.CurrentAvatarState.NameWithHash;
                     itemString += "\nOwner Address : " + buyer.Address;
-                    itemString += "\nItem ID       : " + Model.ItemInformation.item.Value.ItemBase.Value.Id;
+                    itemString += "\nItem Name     : " + titleText.text;
+                    try { itemString += "\nItem Stats    : " + GetItemMainStats(); } catch { }
+                    try { itemString += "\nItem Skills   : " + GetItemSkills(); } catch { }
+                    itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
 
                     ClipboardHelper.CopyToClipboard(itemString);
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Item Info copy to Clipboard Successfully!", NotificationCell.NotificationType.Information);
@@ -214,6 +228,77 @@ namespace Nekoyume.UI
             LayoutRebuild();
 
         }
+
+        string GetItemMainStats()
+        {
+            //ToDO: Not Optimize way to get the stats
+            Transform content = panel.Find("ViewGroup/Content/ScrollArea/Scroll View/Viewport/Content/OptionArea").transform;
+            string tmp = "";
+            StatView statView;
+
+            if (content.Find("StatView_01").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_01").GetComponent<StatView>();
+                tmp += statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+            if (content.Find("StatView_02").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_02").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+            if (content.Find("StatView_03").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_03").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+            if (content.Find("StatView_04").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_04").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+
+            return tmp;
+        }
+
+        string GetItemSkills()
+        {
+            //ToDO: Not Optimize way to get the stats
+            Transform content = panel.Find("ViewGroup/Content/ScrollArea/Scroll View/Viewport/Content/OptionArea").transform;
+            string tmp = "";
+            Module.SkillView skillView;
+            bool isSkill = false;
+
+            if (content.Find("SkillView").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView").GetComponent<Module.SkillView>();
+                tmp += skillView.nameText.text + ":( " + skillView.powerText.text + ", " + skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+            if (content.Find("SkillView (1)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (1)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " + skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+            if (content.Find("SkillView (2)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (2)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " + skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+            if (content.Find("SkillView (3)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (3)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " + skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+
+            if (isSkill)
+                return tmp;
+            else
+                return "No Skill!";
+        }
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Show(RectTransform target, CountableItem item, Action<ItemInformationTooltip> onClose = null)
