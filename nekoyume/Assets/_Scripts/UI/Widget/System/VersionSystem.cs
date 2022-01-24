@@ -81,19 +81,19 @@ namespace Nekoyume.UI
                             if (differenceBlocks > -5)
                                 if (differenceBlocks > 0)
                                     if (differenceBlocks < 20)
-                                        current9cScanBlock = $"<color=green>+{differenceBlocks}</color>";
+                                        current9cScanBlock = $"(<color=green>+{differenceBlocks}</color>)";
                                     else
-                                        current9cScanBlock = $"<color=red>!</color>";
+                                        current9cScanBlock = $"(<color=red>!</color>)";
                                 else
-                                    current9cScanBlock = $"<color=green>{differenceBlocks}</color>";
+                                    current9cScanBlock = $"(<color=green>{differenceBlocks}</color>)";
                             else
-                                current9cScanBlock = $"<color=red>{differenceBlocks}</color>";
+                                current9cScanBlock = $"(<color=red>{differenceBlocks}</color>)";
                             //Debug.LogError(block + "  " +  _blockIndex);
                         }
-                        catch { current9cScanBlock = "?"; }
+                        catch { current9cScanBlock = "(?)"; }
                 }
 
-                informationText.text = $"{pandoraTextVer} / #{_blockIndex}({current9cScanBlock})";
+                informationText.text = $"{pandoraTextVer} / #{_blockIndex}{current9cScanBlock}";
                 yield return new WaitForSeconds(secToUpdate);
             }
         }

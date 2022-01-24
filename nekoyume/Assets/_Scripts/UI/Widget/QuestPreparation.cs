@@ -211,12 +211,12 @@ namespace Nekoyume.UI
                     var costumes = _player.Costumes;
                     var equipments = equipmentSlots
                         .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                        .Select(slot => (Equipment) slot.Item)
+                        .Select(slot => (Equipment)slot.Item)
                         .ToList();
 
                     var consumables = consumableSlots
                         .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                        .Select(slot => (Consumable) slot.Item)
+                        .Select(slot => (Consumable)slot.Item)
                         .ToList();
 
                     _stage.IsExitReserved = false;
@@ -689,7 +689,7 @@ namespace Nekoyume.UI
                     Destroy(_cachedCharacterTitle);
                 }
 
-                var costume = (Costume) slot.Item;
+                var costume = (Costume)slot.Item;
                 if (costume != null)
                 {
                     var clone = ResourcesHelper.GetCharacterTitle(costume.Grade,
@@ -700,7 +700,7 @@ namespace Nekoyume.UI
             }
             else if (equipCostume)
             {
-                _player.EquipCostume((Costume) slot.Item);
+                _player.EquipCostume((Costume)slot.Item);
             }
 
             Game.Event.OnUpdatePlayerEquip.OnNext(_player);
@@ -751,9 +751,9 @@ namespace Nekoyume.UI
                            ?? consumableSlots[0];
                     return true;
                 case ItemType.Equipment:
-                    return equipmentSlots.TryGetToEquip((Equipment) item, out slot);
+                    return equipmentSlots.TryGetToEquip((Equipment)item, out slot);
                 case ItemType.Costume:
-                    return costumeSlots.TryGetToEquip((Costume) item, out slot);
+                    return costumeSlots.TryGetToEquip((Costume)item, out slot);
                 default:
                     slot = null;
                     return false;
@@ -933,75 +933,79 @@ namespace Nekoyume.UI
 
         public void SimulateBattle()
         {
-            var level = States.Instance.CurrentAvatarState.level;
-            if (!string.IsNullOrEmpty(levelField.text))
-                level = int.Parse(levelField.text);
-            // 레벨 범위가 넘어간 값이면 만렙으로 설정
-            if (!Game.Game.instance.TableSheets.CharacterLevelSheet.ContainsKey(level))
-            {
-                level = Game.Game.instance.TableSheets.CharacterLevelSheet.Keys.Last();
-            }
+            StartCoroutine(SimulatorIE());
+        }
 
+        IEnumerator SimulatorIE()
+        {
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
             Find<LoadingScreen>().Show();
+
+            yield return new WaitForSeconds(2);
 
             questButton.gameObject.SetActive(false);
             _player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            Find<WorldMap>().Close(true);
-            Find<StageInformation>().Close(true);
-            PandoraBoxMaster.IsSimulate = true;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            var stageId = _stageId.Value;
-            if (!Game.Game.instance.TableSheets.WorldSheet.TryGetByStageId(stageId,
-                out var worldRow))
-                throw new KeyNotFoundException(
-                    $"WorldSheet.TryGetByStageId() {nameof(stageId)}({stageId})");
-
-            var avatarState = new AvatarState(States.Instance.CurrentAvatarState) { level = level };
-            List<Guid> consumables = consumableSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => ((Consumable)slot.Item).ItemId)
-                .ToList();
+            var costumes = _player.Costumes;
             var equipments = equipmentSlots
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
                 .Select(slot => (Equipment)slot.Item)
                 .ToList();
-            var inventoryEquipments = avatarState.inventory.Items
-                .Select(i => i.item)
-                .OfType<Equipment>()
-                .Where(i => i.equipped).ToList();
 
-            foreach (var equipment in inventoryEquipments)
-            {
-                equipment.Unequip();
-            }
+            var consumables = consumableSlots
+                .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                .Select(slot => (Consumable)slot.Item)
+                .ToList();
 
-            foreach (var equipment in equipments)
-            {
-                if (!avatarState.inventory.TryGetNonFungibleItem(equipment,
-                    out ItemUsable outNonFungibleItem))
-                {
-                    continue;
-                }
+            _stage.IsExitReserved = false;
+            _stage.IsRepeatStage = false;
+            _stage.foodCount = consumables.Count;
+            ActionRenderHandler.Instance.Pending = true;
 
-                ((Equipment)outNonFungibleItem).Equip();
-            }
 
-            var tableSheets = Game.Game.instance.TableSheets;
+            List<Guid> costumesN;
+            List<Guid> equipmentsN;
+            List<Guid> foodsN;
+
+            costumesN = costumes.Select(c => c.ItemId).ToList();
+            equipmentsN = equipments.Select(e => e.ItemId).ToList();
+            foodsN = consumables.Select(f => f.ItemId).ToList();
+
+
             var simulator = new StageSimulator(
-                new Cheat.DebugRandom(),
-                avatarState,
-                consumables,
-                worldRow.Id,
-                stageId,
-                tableSheets.GetStageSimulatorSheets(),
-                tableSheets.CostumeStatSheet
-            );
+                    new Cheat.DebugRandom(),
+                    States.Instance.CurrentAvatarState,
+                    foodsN,
+                    _worldId,
+                    _stageId.Value,
+                    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+                    Game.Game.instance.TableSheets.CostumeStatSheet,
+                    StageSimulator.ConstructorVersionV100080,
+                    1
+                );
+
             simulator.Simulate(1);
-            GoToStage(simulator.Log);
+            var log = simulator.Log;
+            Game.Game.instance.Stage.PlayCount = 1;
+
+            if (Find<LoadingScreen>().IsActive())
+            {
+                if (IsActive())
+                {
+                    GoToStage(log);
+                }
+                else if (Find<Menu>().IsActive())
+                {
+                    Find<Menu>().GoToStage(log);
+                }
+            }
+            else if (Find<StageLoadingEffect>().IsActive() &&
+                     Find<BattleResultPopup>().IsActive())
+            {
+                Find<BattleResultPopup>().NextStage(log);
+            }
         }
     }
 }

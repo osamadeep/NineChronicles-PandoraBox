@@ -113,7 +113,8 @@ namespace Nekoyume.UI.Scroller
                             return;
                         }
                     }
-                    Widget.Find<FriendInfoPopup>().Show(avatarState);
+                    Widget.Find<FriendInfoPopupPandora>().Close(true);
+                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState);
                 })
                 .AddTo(gameObject);
 

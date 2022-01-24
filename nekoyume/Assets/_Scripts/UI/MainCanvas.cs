@@ -316,6 +316,8 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<FriendInfoPopup>());
             yield return null;
+            secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());
+            yield return null;
             secondWidgets.Add(Widget.Create<LevelUpCelebratePopup>());
             yield return null;
 

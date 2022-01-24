@@ -13,11 +13,10 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100098";
-        public static string VersionId = "010024";
+        public static string OriginalVersionId = "v100100";
+        public static string VersionId = "010025";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
-        public static string SupportAddress = "0x46528E7DEdaC16951bDccb55B20303AB0c729679";
         public static int ActionCooldown = 3;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
@@ -133,37 +132,6 @@ namespace PandoraBox
             }
         }
 
-        //IEnumerator CheckVersion()
-        //{
-        //    string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
-        //    UnityWebRequest www = UnityWebRequest.Get(url);
-        //    yield return www.SendWebRequest();
-
-        //    if (www.result != UnityWebRequest.Result.Success)
-        //    {
-        //        UIErrorWindow.transform.Find("Message").GetComponent<TextMeshProUGUI>().text = "Something is wrong. please visit us for more information!";
-        //        ErrorWindow.gameObject.SetActive(true);
-        //    }
-        //    else
-        //    {
-        //        PanDatabase myObject = new PanDatabase();
-        //        try
-        //        { myObject = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text); }
-        //        catch { }
-
-        //        if (myObject.VersionID == PandoraBoxMaster.VersionId)
-        //        {
-        //            var w = Find<LoginSystem>();
-        //            w.Show(_keyStorePath, _privateKey);
-        //            yield break;
-        //        }
-
-        //        string temp = "Something is wrong. please visit us for more information!";
-
-        //        ErrorWindow.Find("Message").GetComponent<TextMeshProUGUI>().text = temp;
-        //        ErrorWindow.gameObject.SetActive(true);
-        //    }
-        //}
         public string URLAntiCacheRandomizer(string url)
         {
             string r = "";
@@ -178,8 +146,6 @@ namespace PandoraBox
     public class PandoraSettings
     {
         //General
-        //[HideInInspector]
-        //public string TempVersionId { get; private set; } //value come from Online settings
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
 
