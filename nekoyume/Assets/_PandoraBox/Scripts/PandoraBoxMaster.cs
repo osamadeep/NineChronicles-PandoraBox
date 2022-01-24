@@ -230,7 +230,7 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
-                PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
+                //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
 

@@ -114,7 +114,8 @@ namespace Nekoyume.UI.Scroller
                         }
                     }
                     Widget.Find<FriendInfoPopupPandora>().Close(true);
-                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState);
+                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState,true);
+                    Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
                 .AddTo(gameObject);
 
@@ -418,7 +419,7 @@ namespace Nekoyume.UI.Scroller
 
             if (_isCurrentUser)
             {
-                var player = Game.Game.instance.Stage.selectedPlayer;
+                var player = Game.Game.instance.Stage.SelectedPlayer;
                 if (player is null)
                 {
                     player = Game.Game.instance.Stage.GetPlayer();

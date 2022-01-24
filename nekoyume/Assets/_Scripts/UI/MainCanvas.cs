@@ -166,7 +166,7 @@ namespace Nekoyume.UI
             {
                 // 스크린 영역. 로딩창류.
                 Widget.Create<GrayLoadingScreen>(),
-                Widget.Create<BlockSyncLoadingScreen>(),
+                Widget.Create<DimmedLoadingScreen>(),
                 Widget.Create<LoadingScreen>(),
                 Widget.Create<DataLoadingScreen>(),
                 Widget.Create<PreloadingScreen>(),
@@ -314,9 +314,9 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<CelebratesPopup>());
             yield return null;
-            secondWidgets.Add(Widget.Create<FriendInfoPopup>());
-            yield return null;
             secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<FriendInfoPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<LevelUpCelebratePopup>());
             yield return null;

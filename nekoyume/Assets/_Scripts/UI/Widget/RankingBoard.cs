@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Libplanet;
-using Nekoyume.EnumType;
-using Nekoyume.Game.Character;
 using Nekoyume.Game.Controller;
 using Nekoyume.L10n;
 using Nekoyume.Model.State;
@@ -25,9 +23,6 @@ namespace Nekoyume.UI
 
     public class RankingBoard : Widget
     {
-        private static readonly Vector3 NPCPosition = new Vector3(999.8f, 998.15f);
-        private const int NPCId = 300002;
-
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
@@ -58,7 +53,6 @@ namespace Nekoyume.UI
         private TextMeshProUGUI loseText = null;
 
         private Nekoyume.Model.State.RankingInfo[] _avatarRankingStates;
-        private NPC _npc;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo =
             new List<(int rank, ArenaInfo arenaInfo)>();
@@ -127,15 +121,6 @@ namespace Nekoyume.UI
             stage.LoadBackground("ranking");
             stage.GetPlayer().gameObject.SetActive(false);
 
-            var go = Game.Game.instance.Stage.npcFactory.Create(
-                NPCId,
-                NPCPosition,
-                LayerType.InGameBackground,
-                3);
-            _npc = go.GetComponent<NPC>();
-            _npc.gameObject.SetActive(true);
-            _npc.SpineController.Appear();
-
             await UniTask.Run(async () =>
             {
                 var agent = Game.Game.instance.Agent;
@@ -143,7 +128,7 @@ namespace Nekoyume.UI
                 var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
                 var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
                 var weeklyArenaState =
-                    new WeeklyArenaState((Bencodex.Types.Dictionary) await agent.GetStateAsync(weeklyArenaAddress));
+                    new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
                 States.Instance.SetWeeklyArenaState(weeklyArenaState);
                 await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
             });
@@ -153,7 +138,8 @@ namespace Nekoyume.UI
             Find<DataLoadingScreen>().Close();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Ranking);
             HelpTooltip.HelpMe(100015, true);
-            ShowSpeech("SPEECH_RANKING_BOARD_GREETING_", CharacterAnimation.Type.Greeting);
+            speechBubble.SetKey("SPEECH_RANKING_BOARD_GREETING_");
+            StartCoroutine(speechBubble.CoShowText());
 
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Battle);
             UpdateArena();
@@ -161,9 +147,9 @@ namespace Nekoyume.UI
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
+            Widget.Find<FriendInfoPopupPandora>().Close(true);
             _disposablesFromShow.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
-            _npc?.gameObject.SetActive(false);
             speechBubble.Hide();
         }
 
@@ -297,7 +283,7 @@ namespace Nekoyume.UI
             {
                 avatarInfo.Close();
             }
-            else if(friendInfoPopup.gameObject.activeSelf)
+            else if (friendInfoPopup.gameObject.activeSelf)
             {
                 friendInfoPopup.Close();
             }
@@ -310,25 +296,6 @@ namespace Nekoyume.UI
 
                 Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
-            }
-        }
-
-        private void ShowSpeech(string key,
-            CharacterAnimation.Type type = CharacterAnimation.Type.Emotion)
-        {
-            if (_npc)
-            {
-                if (type == CharacterAnimation.Type.Greeting)
-                {
-                    _npc.PlayAnimation(NPCAnimation.Type.Greeting);
-                }
-                else
-                {
-                    _npc.PlayAnimation(NPCAnimation.Type.Emotion);
-                }
-
-                speechBubble.SetKey(key);
-                StartCoroutine(speechBubble.CoShowText());
             }
         }
 

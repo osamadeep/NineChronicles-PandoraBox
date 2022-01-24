@@ -449,7 +449,7 @@ namespace Nekoyume.UI
             StopSpeeches();
             Find<Status>().Close(true);
             Find<EventBanner>().Close(true);
-            Game.Game.instance.Stage.selectedPlayer.gameObject.SetActive(false);
+            Game.Game.instance.Stage.SelectedPlayer.gameObject.SetActive(false);
             yield return new WaitForSeconds(duration);
             base.Close(ignoreCloseAnimation);
         }
@@ -530,6 +530,12 @@ namespace Nekoyume.UI
             StartCoroutine(ShowWhatsNew());
 
             DailyBonus.IsTrying = false;
+        }
+
+        public void MiniGameShow()
+        {
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This Feature coming soon!", NotificationCell.NotificationType.Information);
+            return;
         }
 
         public void ShowSelectCharacter()
