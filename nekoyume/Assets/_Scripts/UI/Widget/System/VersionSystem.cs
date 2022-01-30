@@ -19,7 +19,6 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         string pandoraTextVer = "";
         string current9cScanBlock = "";
-        int secToUpdate = 7;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -60,6 +59,7 @@ namespace Nekoyume.UI
 
         IEnumerator Get9cBlock()
         {
+            int secToUpdate = 6;
             while (true)
             {
                 string url = "https://api.9cscan.com/blocks?limit=1";
@@ -77,17 +77,14 @@ namespace Nekoyume.UI
                         {
                             Scan9c scanLatestBlock = JsonUtility.FromJson<Scan9c>(www.downloadHandler.text);
                             int block = scanLatestBlock.before;
-                            int differenceBlocks = block - (int)_blockIndex;
-                            if (differenceBlocks > -5)
+                            int differenceBlocks = (int)_blockIndex - block;
+                            if (differenceBlocks > -15)
                                 if (differenceBlocks > 0)
-                                    if (differenceBlocks < 20)
-                                        current9cScanBlock = $"(<color=green>+{differenceBlocks}</color>)";
-                                    else
-                                        current9cScanBlock = $"(<color=red>!</color>)";
+                                    current9cScanBlock = $"(<color=green>+{Mathf.Abs(differenceBlocks)}</color>)";
                                 else
                                     current9cScanBlock = $"(<color=green>{differenceBlocks}</color>)";
                             else
-                                current9cScanBlock = $"(<color=red>{differenceBlocks}</color>)";
+                                current9cScanBlock = $"(<color=red>!</color>)";
                             //Debug.LogError(block + "  " +  _blockIndex);
                         }
                         catch { current9cScanBlock = "(?)"; }
