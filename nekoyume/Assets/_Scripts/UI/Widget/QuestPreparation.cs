@@ -224,7 +224,7 @@ namespace Nekoyume.UI
                     _stage.foodCount = consumables.Count;
                     ActionRenderHandler.Instance.Pending = true;
 
-                    Find<BoosterPopup>().Show(_stage, costumes, equipments, consumables, 12, _worldId, _stageId.Value);
+                    Find<BoosterPopup>().Show(_stage, costumes, equipments, consumables, 24, _worldId, _stageId.Value);
                 });
 
             boostPopupButton.OnClickAsObservable().Where(_ => !EnoughToPlay && !_stage.IsInStage)

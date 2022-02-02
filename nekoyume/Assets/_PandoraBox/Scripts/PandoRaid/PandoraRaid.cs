@@ -167,20 +167,7 @@ namespace PandoraBox
 
             if (!RaidMethodIsSweep)
             {
-                int maxPerWave = 12;
-                if (count <= maxPerWave)
-                {
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
-                }
-                else
-                {
-                    int secondndWave = count - maxPerWave;
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, maxPerWave).Subscribe();
-                    yield return new WaitForSeconds(AllowedCooldown);
-                    if (!isBusy)
-                        yield break;
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, secondndWave).Subscribe();
-                }
+                Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                 + "</color> (<color=green>" + count + "</color>) times Completed!", NotificationCell.NotificationType.Information);
             }
