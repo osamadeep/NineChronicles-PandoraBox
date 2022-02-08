@@ -43,7 +43,7 @@ namespace PandoraBox
         private void Start()
         {
             GetComponent<AnchoredPositionSingleTweener>().PlayReverse();
-            CurrentTriesManual.gameObject.SetActive(Application.isEditor);
+            CurrentTriesManual.gameObject.SetActive(true);
             StartCoroutine(ShowCurrentTries());
         }
 
@@ -116,8 +116,10 @@ namespace PandoraBox
                     , NotificationCell.NotificationType.Information);
                     return;
                 }
-                StartCoroutine(Raid(tries));
+                //StartCoroutine(Raid(tries));
+                StartCoroutine(Raid(int.Parse( CurrentTriesManual.text)));
 #else
+
                 StartCoroutine(Raid(int.Parse( CurrentTriesManual.text)));
                 //if (tries <= 0)
                 //{
