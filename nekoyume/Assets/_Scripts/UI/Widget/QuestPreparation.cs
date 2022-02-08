@@ -975,7 +975,7 @@ namespace Nekoyume.UI
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
 
-
+            PandoraBoxMaster.IsSimulate = true;
             var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
@@ -987,6 +987,7 @@ namespace Nekoyume.UI
                     StageSimulator.ConstructorVersionV100080,
                     1
                 );
+            PandoraBoxMaster.IsSimulate = false;
 
             simulator.Simulate(1);
             var log = simulator.Log;
