@@ -595,70 +595,14 @@ namespace Nekoyume.UI
             {
                 while (States.Instance == null)
                 {
-                    yield return new WaitForSeconds(5);
+                    yield return new WaitForSeconds(2);
                 }
 
-                /*
-                var state = States.Instance.WeeklyArenaState;
-                var infos = state.GetArenaInfos(1, 3);
-                var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = state.GetArenaInfos(currentAvatarAddress, 1, 1);
-                if (!infos2.Any() && state.OrderedArenaInfos.Any())
-                {
-                    var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                    infos2 = state.GetArenaInfos(address, 1, 1);
-                }
-                infos.AddRange(infos2);
-                infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
-                List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo =
-            new List<(int rank, ArenaInfo arenaInfo)>();
-                _weeklyCachedInfo = infos
-    .Select(async tuple =>
-    {
-        var (exist, avatarState) = await States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress);
-        if (!exist)
-        {
-            return (0, null);
-        }
-        var arenaInfo = tuple.arenaInfo;
-#pragma warning disable 618
-                    arenaInfo.Level = avatarState.level;
-        arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
-        arenaInfo.CombatPoint = avatarState.GetCP();
-#pragma warning restore 618
-                    return tuple;
-    })
-    .Select(t => t.AsTask().Result)
-    .Where(tuple => tuple.rank > 0)
-    .ToList();
-                //                _weeklyCachedInfo = infos
-                //    .Select(tuple =>
-                //    {
-                //        if (!States.TryGetAvatarState(tuple.arenaInfo.AvatarAddress, out var avatarState))
-                //        {
-                //            return (0, null);
-                //        }
-                //        var arenaInfo = tuple.arenaInfo;
-                //#pragma warning disable 618
-                //        arenaInfo.Level = avatarState.level;
-                //        arenaInfo.ArmorId = avatarState.TryGetEquippedFullCostume(out var fullCostume)
-                //            ? fullCostume.Id
-                //            : avatarState.GetArmorId();
-                //        arenaInfo.CombatPoint = avatarState.GetCP();
-                //#pragma warning restore 618
-                //        return tuple;
-                //    })
-                //    .Where(tuple => tuple.rank > 0)
-                //    .ToList();
-                var (currentAvatarRank, currentAvatarArenaInfo) = _weeklyCachedInfo
-                    .FirstOrDefault(info =>
-                        info.arenaInfo.AvatarAddress.Equals(currentAvatarAddress));
-                */
-                int currentAvatarRank = -1;
-
+                //current local player
                 var currentAddress = States.Instance.CurrentAvatarState?.address;
                 var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-                //Debug.LogError(currentAddress);
+
+                //Debug.LogError(States.Instance.WeeklyArenaState == null);
 
                 rankingExclamationMark.gameObject.SetActive(
                     btnRanking.IsUnlocked &&

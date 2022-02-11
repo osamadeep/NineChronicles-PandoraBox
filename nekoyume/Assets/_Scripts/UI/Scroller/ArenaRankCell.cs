@@ -186,7 +186,7 @@ namespace Nekoyume.UI.Scroller
         {
             var currentAddress = States.Instance.CurrentAvatarState?.address;
             var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-
+            
             //Debug.LogError("Fights Count: " + PandoraBoxMaster.ArenaTicketsToUse);
             //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
 
