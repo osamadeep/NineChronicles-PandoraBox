@@ -27,6 +27,12 @@ namespace Nekoyume.UI
             Count,
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public TextMeshProUGUI PriceText;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private Module.Inventory inventory = null;
 
@@ -45,6 +51,14 @@ namespace Nekoyume.UI
         private const int LimitPrice = 100000000;
 
         private Shop SharedModel { get; set; }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnableMarketHelper(TextMeshProUGUI text)
+        {
+            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
         {
@@ -150,6 +164,10 @@ namespace Nekoyume.UI
 
         private void ShowTooltip(InventoryItemView view)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var tooltip = Find<ItemInformationTooltip>();
 
             shopItems.SharedModel.DeselectItemView();
@@ -175,6 +193,10 @@ namespace Nekoyume.UI
 
         private void ShowTooltip(ShopItemView view)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var tooltip = Find<ItemInformationTooltip>();
             inventory.SharedModel.DeselectItemView();
 

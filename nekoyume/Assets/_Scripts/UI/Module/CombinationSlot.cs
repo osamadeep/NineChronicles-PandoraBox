@@ -383,9 +383,12 @@ namespace Nekoyume.UI.Module
                     break;
 
                 case SlotType.Appraise:
-                    UI.NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
-                        L10nManager.Localize("UI_COMBINATION_NOTIFY_IDENTIFYING"),
-                        NotificationCell.NotificationType.Information);
+                    //UI.NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                    //    L10nManager.Localize("UI_COMBINATION_NOTIFY_IDENTIFYING"),
+                    //    NotificationCell.NotificationType.Information);
+                    try
+                    { Widget.Find<CombinationSlotPopup>().Show(state, slotIndex, currentBlockIndex); }
+                    catch { }
                     break;
             }
         }
