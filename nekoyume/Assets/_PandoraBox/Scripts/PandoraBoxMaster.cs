@@ -17,7 +17,7 @@ namespace PandoraBox
         public static string VersionId = "010027";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
-        public static int ActionCooldown = 3;
+        public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
         public static int NumberOfProfiles=4;
@@ -175,7 +175,7 @@ namespace PandoraBox
         [HideInInspector]
         public int FightSpeed { get; set; } = 1;
         [HideInInspector]
-        public int RaidCooldown { get; set; } = 150;
+        public int RaidCooldown { get; set; } = 30;
         [HideInInspector]
         public bool RaidMethodIsSweep { get; set; }
 
@@ -230,6 +230,10 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
+
+                RaidCooldown = 30;
+                PlayerPrefs.SetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
+
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }

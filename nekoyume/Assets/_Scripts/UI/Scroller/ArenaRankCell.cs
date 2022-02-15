@@ -202,6 +202,8 @@ namespace Nekoyume.UI.Scroller
                 //Context.OnClickChallenge.OnNext(this);
                 //_onClickChallenge.OnNext(this);
 
+                yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
+
                 Game.Game.instance.ActionManager.RankingBattle(
                 ArenaInfo.AvatarAddress,
                 currentAvatarInventory.Costumes
@@ -214,7 +216,6 @@ namespace Nekoyume.UI.Scroller
 
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Fight Arena <color=green>" + (i + 1)
                     + "</color>/" + Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0, arenaInfo.DailyChallengeCount) + "!", NotificationCell.NotificationType.Information);
-                yield return new WaitForSeconds(4);
             }
         }
 
