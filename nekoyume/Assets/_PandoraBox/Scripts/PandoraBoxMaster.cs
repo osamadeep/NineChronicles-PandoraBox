@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Networking;
 using TMPro;
+using System.IO;
+using System.Security.Cryptography;
 
 namespace PandoraBox
 {
@@ -14,7 +16,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100103";
-        public static string VersionId = "010028";
+        public static string VersionId = "010029";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
@@ -140,7 +142,6 @@ namespace PandoraBox
             string result = url + "?p=" + r;
             return result;
         }
-
     }
 
     public class PandoraSettings
@@ -230,10 +231,6 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
-
-                RaidCooldown = 30;
-                PlayerPrefs.SetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
@@ -271,6 +268,7 @@ namespace PandoraBox
 public class PanDatabase
 {
     public string VersionID;
+    public int DiceRoll;
     public List<PanPlayer> Players;
 }
 
