@@ -63,24 +63,6 @@ namespace PandoraBox
             }
         }
 
-        //public bool IsPremium(string address)
-        //{
-        //    List<string> addresses = new List<string>();
-        //    addresses.Add("0x46528E7DEdaC16951bDccb55B20303AB0c729679"); //s
-        //    addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
-
-        //    return addresses.Contains(address);
-        //}
-
-        //public bool IsRBG(string address)
-        //{
-        //    List<string> addresses = new List<string>();
-        //    addresses.Add("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"); //lambo
-        //    addresses.Add("0xC0bA278CB8379683E66C28928fa0Aa8bfF3D95E6"); //Wabbs
-
-        //    return addresses.Contains(address);
-        //}
-
         public static PanPlayer GetPanPlayer(string address)
         {
             foreach (PanPlayer player in PanDatabase.Players)
@@ -90,14 +72,6 @@ namespace PandoraBox
             }
             return new PanPlayer();
         }
-
-        //public bool IsHalloween(string address)
-        //{
-        //    List<string> addresses = new List<string>();
-        //    addresses.Add("0xd7ECE10ddAFc34e964c61Ad11c199C3BF41Dc403"); //bmcdee
-
-        //    return addresses.Contains(address);
-        //}
 
         public void ShowError(int errorNumber, string text)
         {
@@ -264,13 +238,13 @@ namespace PandoraBox
 
     }
 
-[System.Serializable]
-public class PanDatabase
-{
-    public string VersionID;
-    public int DiceRoll;
-    public List<PanPlayer> Players;
-}
+    [System.Serializable]
+    public class PanDatabase
+    {
+        public string VersionID;
+        public int DiceRoll;
+        public List<PanPlayer> Players;
+    }
 
     [System.Serializable]
     public class PanPlayer

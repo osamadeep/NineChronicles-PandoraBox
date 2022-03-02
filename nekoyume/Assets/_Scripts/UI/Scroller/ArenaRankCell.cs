@@ -38,6 +38,7 @@ namespace Nekoyume.UI.Scroller
         [SerializeField] private GameObject playerBanner = null;
         [SerializeField] private TextMeshProUGUI gainPointText = null;
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [SerializeField] private TextMeshProUGUI winRateText = null;
         [SerializeField] private GameObject FavTarget = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -115,7 +116,7 @@ namespace Nekoyume.UI.Scroller
                     }
                     Widget.Find<FriendInfoPopupPandora>().Close(true);
                     Widget.Find<FriendInfoPopupPandora>().Show(avatarState,true);
-                    Widget.Find<FriendInfoPopup>().Show(avatarState);
+                    //Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
                 .AddTo(gameObject);
 
@@ -124,6 +125,7 @@ namespace Nekoyume.UI.Scroller
                 .Subscribe(_ =>
                 {
                     AudioController.PlayClick();
+                    Debug.LogError("avatarInfoButton.OnClickAsObservable");
                     Context.OnClickAvatarInfo.OnNext(this);
                     _onClickAvatarInfo.OnNext(this);
                 })
@@ -250,7 +252,7 @@ namespace Nekoyume.UI.Scroller
             
         }
 
-        void GetEnemyState(ConditionalButton button)
+        void GetEnemyState()
         {
             //Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
             //GameObject effect = button.transform.GetChild(0).gameObject;
@@ -301,11 +303,11 @@ namespace Nekoyume.UI.Scroller
             //    effect.SetActive(true);
 
             if (finalRatio <= 0.5f)
-                button.Text = $"Fight(<color=red>{FinalValue}</color>%)";
+                winRateText.text = $"<color=red>{FinalValue}</color>%";
             else if (finalRatio > 0.5f && finalRatio <= 0.75f)
-                button.Text = $"Fight(<color=#FF4900>{FinalValue}</color>%)";
+                winRateText.text = $"<color=#FF4900>{FinalValue}</color>%";
             else
-                button.Text = $"Fight(<color=green>{FinalValue}</color>%)";
+                winRateText.text = $"<color=green>{FinalValue}</color>%";
 
             //if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
             //{
@@ -453,8 +455,9 @@ namespace Nekoyume.UI.Scroller
             //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
             if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
             {
-                GetEnemyState(challengeButton);
-            }          
+                GetEnemyState();
+            }
+            winRateText.gameObject.SetActive(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex);
             characterView.Show();
         }
 
