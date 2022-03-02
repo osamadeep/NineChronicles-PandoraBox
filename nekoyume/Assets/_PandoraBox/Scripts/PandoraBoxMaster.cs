@@ -15,8 +15,8 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100103";
-        public static string VersionId = "010029";
+        public static string OriginalVersionId = "v100120";
+        public static string VersionId = "010030";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
