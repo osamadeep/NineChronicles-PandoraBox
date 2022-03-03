@@ -128,6 +128,11 @@ namespace PandoraBox
         public int BlockShowType { get; set; } = 0;
         [HideInInspector]
         public int MenuSpeed { get; set; } = 3;
+        [HideInInspector]
+        public bool IsStory { get; set; } = false;
+
+        [HideInInspector]
+        public bool IsFastLogin { get; set; } = false;
 
         //[HideInInspector]
         //public float MusicVolume { get; set; } = 0.7f;
@@ -170,6 +175,8 @@ namespace PandoraBox
             //General
             PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
+            PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
+            PlayerPrefs.SetInt("_PandoraBox_General_IsFastLogin", System.Convert.ToInt32(IsFastLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
             //PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
@@ -212,6 +219,8 @@ namespace PandoraBox
             //General
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
             WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown)));
+            IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory)));
+            IsFastLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsFastLogin", System.Convert.ToInt32(IsFastLogin)));
             //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
             //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
             //MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);

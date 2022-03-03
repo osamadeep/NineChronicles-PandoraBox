@@ -6,6 +6,7 @@ using Nekoyume.Helper;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.Video;
+using PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -43,7 +44,7 @@ namespace Nekoyume.UI
         public override async void Close(bool ignoreCloseAnimation = false)
         {
             videoPlayer.Stop();
-            if (!GameConfig.IsEditor)
+            if (!GameConfig.IsEditor && PandoraBoxMaster.Instance.Settings.IsStory)
             {
                 Find<Synopsis>().Show();
             }
@@ -63,8 +64,21 @@ namespace Nekoyume.UI
                     }
                     else
                     {
+                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                         await States.Instance.SelectAvatarAsync(slotIndex);
-                        Game.Event.OnRoomEnter.Invoke(false);
+                        PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+                        if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+                        {
+                            videoPlayer.Play();
+                            PandoraBoxMaster.Instance.ShowError(101, "There is something wrong, please visit us for more information!");
+                            return;
+                        }
+                        else
+                        {
+                            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                            //await States.Instance.SelectAvatarAsync(slotIndex);
+                            Game.Event.OnRoomEnter.Invoke(false);
+                        }
                     }
                 }
                 else
@@ -79,8 +93,16 @@ namespace Nekoyume.UI
 
         private static void EnterLogin()
         {
-            Find<Login>().Show();
-            Game.Event.OnNestEnter.Invoke();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+                PandoraBoxMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+            else
+            {
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                Find<Login>().Show();
+                Game.Event.OnNestEnter.Invoke();
+            }
         }
 
         private void OnShowVideoEnded(VideoPlayer player)

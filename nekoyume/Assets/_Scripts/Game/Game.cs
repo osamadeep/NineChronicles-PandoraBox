@@ -30,6 +30,7 @@ using Menu = Nekoyume.UI.Menu;
 namespace Nekoyume.Game
 {
     using Nekoyume.GraphQL;
+    using PandoraBox;
     using UniRx;
 
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]
@@ -687,7 +688,7 @@ namespace Nekoyume.Game
 
             var loginPopup = Widget.Find<LoginSystem>();
 
-            if (Application.isBatchMode)
+            if (Application.isBatchMode && PandoraBoxMaster.Instance.Settings.IsFastLogin)
             {
                 loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
             }
