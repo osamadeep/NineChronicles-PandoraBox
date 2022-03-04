@@ -44,7 +44,7 @@ namespace Nekoyume.UI
         public override async void Close(bool ignoreCloseAnimation = false)
         {
             videoPlayer.Stop();
-            if (!GameConfig.IsEditor)
+            if (PandoraBoxMaster.Instance.Settings.IsStory)
             {
                 Find<Synopsis>().Show();
             }

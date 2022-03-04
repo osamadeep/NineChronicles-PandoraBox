@@ -15,8 +15,8 @@ namespace PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100120";
-        public static string VersionId = "010030";
+        public static string OriginalVersionId = "v100121";
+        public static string VersionId = "010031";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
@@ -123,6 +123,10 @@ namespace PandoraBox
         //General
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
+        [HideInInspector]
+        public bool IsStory { get; set; } = false;
+        [HideInInspector]
+        public bool IsMultipleLogin { get; set; } = true;
 
         [HideInInspector]
         public int BlockShowType { get; set; } = 0;
@@ -170,6 +174,8 @@ namespace PandoraBox
             //General
             PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
+            PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
+            PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
             //PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
@@ -212,6 +218,8 @@ namespace PandoraBox
             //General
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
             WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown)));
+            IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory)));
+            IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin)));
             //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
             //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
             //MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);

@@ -330,7 +330,8 @@ namespace Nekoyume.UI
             KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
             _privateKeyString = privateKeyString;
             //Auto login for miner, seed, launcher
-            if (!string.IsNullOrEmpty(_privateKeyString) || Application.isBatchMode)
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if ((!string.IsNullOrEmpty(_privateKeyString) || (Application.isBatchMode)) && !PandoraBoxMaster.Instance.Settings.IsMultipleLogin) 
             {
                 CreatePrivateKey();
                 Login = true;

@@ -52,6 +52,13 @@ namespace PandoraBox
         [SerializeField]
         Image sweepImage;
 
+        //fast login
+        [SerializeField]
+        Image multiLogOnImage;
+
+        [SerializeField]
+        Image multiLogOffImage;
+
 
         void OnEnable()
         {
@@ -70,6 +77,7 @@ namespace PandoraBox
             arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadRaidMethod();
+            LoadMultipleLogin();
         }
 
         public void ResetDefault()
@@ -89,6 +97,7 @@ namespace PandoraBox
             arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadRaidMethod();
+            LoadMultipleLogin();
         }
 
         public void SaveSettings()
@@ -126,6 +135,18 @@ namespace PandoraBox
         {
             sweepImage.color = PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             boostImage.color = !PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeMultipleLogin(bool value)
+        {
+            PandoraBoxMaster.Instance.Settings.IsMultipleLogin = value;
+            LoadMultipleLogin();
+        }
+
+        void LoadMultipleLogin()
+        {
+            multiLogOnImage.color = PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            multiLogOffImage.color = !PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMenuSpeed()

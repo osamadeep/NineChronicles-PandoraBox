@@ -687,7 +687,7 @@ namespace Nekoyume.Game
 
             var loginPopup = Widget.Find<LoginSystem>();
 
-            if (Application.isBatchMode)
+            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.IsMultipleLogin && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
             {
                 loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
             }
