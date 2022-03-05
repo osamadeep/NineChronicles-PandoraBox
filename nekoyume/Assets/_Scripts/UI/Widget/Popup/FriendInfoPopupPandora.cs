@@ -97,12 +97,13 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ResetAllNemesis()
         {
-            PandoraBoxMaster.ArenaFavTargets.Clear();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
             {
                 string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 PlayerPrefs.DeleteKey(key);
             }
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!"
                 , NotificationCell.NotificationType.Information);
         }
