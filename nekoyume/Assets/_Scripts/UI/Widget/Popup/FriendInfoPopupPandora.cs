@@ -149,7 +149,11 @@ namespace Nekoyume.UI
             }
             else
             {
-                if (PandoraBoxMaster.ArenaFavTargets.Count > 2)
+                int maxCount = 2;
+                if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    maxCount = 9;
+
+                if (PandoraBoxMaster.ArenaFavTargets.Count > maxCount)
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!"
                         , NotificationCell.NotificationType.Information);
                 else

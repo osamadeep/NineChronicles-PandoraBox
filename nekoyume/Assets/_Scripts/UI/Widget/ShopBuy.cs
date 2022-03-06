@@ -12,6 +12,8 @@ using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
+using PandoraBox;
+using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +23,12 @@ namespace Nekoyume.UI
 {
     public class ShopBuy : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public Button RefreshButton;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private Module.ShopBuyItems shopItems = null;
         [SerializeField] private ShopBuyBoard shopBuyBoard = null;
         [SerializeField] private Button sellButton = null;
@@ -87,6 +95,53 @@ namespace Nekoyume.UI
             shopBuyBoard.OnChangeBuyType.Subscribe(SetMultiplePurchase).AddTo(gameObject);
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public async void RefreshShop()
+        {
+            RefreshButton.interactable = false;
+            RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "...";
+
+            Debug.LogError("Refresh started!");
+            var task = Task.Run(async () =>
+            {
+                await ReactiveShopState.InitAndUpdateBuyDigests();
+                return true;
+            });
+            Debug.LogError("Refresh Ended!");
+
+            var result = await task;
+            Debug.LogError("Task Ended!");
+            if (result)
+            {
+                base.Show(false);
+                shopBuyBoard.ShowDefaultView();
+                shopItems.Show();
+
+                Find<ShopSell>().gameObject.SetActive(false);
+            }
+            Debug.LogError("Start Cooldown");
+            StartCoroutine(RefreshCooldown());
+        }
+
+        System.Collections.IEnumerator RefreshCooldown()
+        {
+            RefreshButton.interactable = false;
+            int cooldown = 60;
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                cooldown = 20;
+            TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
+
+            for (int i = 0; i < cooldown; i++)
+            {
+                buttonText.text = (cooldown - i).ToString();
+                yield return new WaitForSeconds(1);
+            }
+            buttonText.text = "";
+            RefreshButton.interactable = true;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         public override void Show(bool ignoreShowAnimation = false)
         {
             ShowAsync();
@@ -115,6 +170,8 @@ namespace Nekoyume.UI
                 Find<DataLoadingScreen>().Close();
                 HelpTooltip.HelpMe(100018, true);
             }
+
+            StartCoroutine(RefreshCooldown());
         }
 
         public void Open()

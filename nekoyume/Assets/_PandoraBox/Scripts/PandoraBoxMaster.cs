@@ -16,7 +16,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100121";
-        public static string VersionId = "010031";
+        public static string VersionId = "010032";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
@@ -211,6 +211,8 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
+                PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", 0);
+                IsMultipleLogin = false;
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }

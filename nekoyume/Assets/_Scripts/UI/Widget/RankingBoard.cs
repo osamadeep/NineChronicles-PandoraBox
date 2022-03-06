@@ -27,6 +27,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
+        [SerializeField] private Button RefreshButton = null;
         [SerializeField] private Slider FightCountSldr = null;
         [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
         [Space(50)]
@@ -58,6 +59,60 @@ namespace Nekoyume.UI
         {
             FightCountTxt.text = FightCountSldr.value.ToString();
             PandoraBoxMaster.ArenaTicketsToUse = int.Parse(FightCountTxt.text);
+        }
+
+        public async void RefreshBoard()
+        {
+            RefreshButton.interactable = false;
+            RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "Update...";
+
+            //clear fav list, not optimal
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 10; i++) //fav max count
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (PlayerPrefs.HasKey(key))
+                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+            }
+
+            WeeklyArenaState weeklyArenaState = null;
+            var agent = Game.Game.instance.Agent;
+            if (!_cachedBlockHash.Equals(agent.BlockTipHash))
+            {
+                _cachedBlockHash = agent.BlockTipHash;
+                await UniTask.Run(async () =>
+                {
+                    var gameConfigState = States.Instance.GameConfigState;
+                    var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
+                    var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
+                    weeklyArenaState =
+                        new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
+                    States.Instance.SetWeeklyArenaState(weeklyArenaState);
+                    await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
+                });
+            }
+
+            UpdateArena();
+
+            StartCoroutine(RefreshCooldown());
+        }
+
+        System.Collections.IEnumerator RefreshCooldown()
+        {
+            RefreshButton.interactable = false;
+            int cooldown = 40;
+            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                cooldown = 15;
+            TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
+
+            for (int i = 0; i < cooldown; i++)
+            {
+                buttonText.text = (cooldown - i).ToString();
+                yield return new WaitForSeconds(1);
+            }
+            buttonText.text = "Refresh";
+            RefreshButton.interactable = true;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -97,7 +152,7 @@ namespace Nekoyume.UI
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraBoxMaster.ArenaFavTargets.Clear();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 10; i++) //fav max count
             {
                 string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 if (PlayerPrefs.HasKey(key))
@@ -144,6 +199,8 @@ namespace Nekoyume.UI
 
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Battle);
             UpdateArena();
+
+            StartCoroutine(RefreshCooldown());
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -308,7 +365,7 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
-            var infos = state.GetArenaInfos(1, 3);
+            var infos = state.GetArenaInfos(1, 20); //3
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
             int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
