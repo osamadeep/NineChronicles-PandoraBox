@@ -134,7 +134,7 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            //text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
+            //text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
@@ -181,13 +181,13 @@ namespace Nekoyume.UI.Module
         IEnumerator TryToAutoCollect()
         {
             IsTrying = true;
-            yield return new WaitForSeconds(10);
+            yield return new WaitForSeconds(5);
             if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
             {
                 GetDailyReward();
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!", NotificationCell.NotificationType.Information);
             }
-            yield return new WaitForSeconds(15);
+            yield return new WaitForSeconds(7);
             IsTrying = false;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -243,7 +243,7 @@ namespace Nekoyume.UI.Module
                 MailType.System,
                 L10nManager.Localize("UI_RECEIVING_DAILY_REWARD"),
                 NotificationCell.NotificationType.Information);
-            
+
             Game.Game.instance.ActionManager.DailyReward().Subscribe();
 
             var address = States.Instance.CurrentAvatarState.address;

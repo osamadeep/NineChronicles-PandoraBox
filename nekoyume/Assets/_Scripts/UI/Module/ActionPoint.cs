@@ -138,7 +138,7 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            text.text = $"{(int) sliderAnimator.Value} / {(int) sliderAnimator.MaxValue}";
+            text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
         }
 
         public void ShowTooltip()

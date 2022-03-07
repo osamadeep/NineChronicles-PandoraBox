@@ -583,6 +583,7 @@ namespace Nekoyume.UI
                     arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
                 else
                     arenaRemains.text = $"{time} ({remainBlock})";
+
                 yield return new WaitForSeconds(3);
             }
         }
