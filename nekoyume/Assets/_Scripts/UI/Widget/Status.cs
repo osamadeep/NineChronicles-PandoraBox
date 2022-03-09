@@ -148,7 +148,7 @@ namespace Nekoyume.UI
             }
             else
             {
-                PandoraStatus.text = $"Pandora:<color=red>Basic</color>";
+                PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

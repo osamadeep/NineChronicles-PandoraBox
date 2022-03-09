@@ -175,6 +175,7 @@ namespace Nekoyume.UI.Scroller
                 {
                     if (PandoraBoxMaster.ArenaTicketsToUse == 1)
                     {
+                        Widget.Find<FriendInfoPopupPandora>().Close(true);
                         Context.OnClickChallenge.OnNext(this);
                         _onClickChallenge.OnNext(this);
                     }
@@ -186,6 +187,8 @@ namespace Nekoyume.UI.Scroller
 
         IEnumerator StartFightCount()
         {
+            Widget.Find<FriendInfoPopupPandora>().Close(true);
+
             var currentAddress = States.Instance.CurrentAvatarState?.address;
             var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
             
@@ -193,7 +196,6 @@ namespace Nekoyume.UI.Scroller
             //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
 
             var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
-
 
 
             Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);

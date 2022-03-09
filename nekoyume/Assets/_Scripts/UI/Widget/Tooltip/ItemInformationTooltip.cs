@@ -215,6 +215,7 @@ namespace Nekoyume.UI
         void PrepareDiscordBackground()
         {
             panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
+            panel.Find("ItemMoreOption").gameObject.SetActive(false);
             //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
             panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
             panel.Find("ViewGroup/Footer/TradableText").gameObject.SetActive(false);
@@ -222,6 +223,9 @@ namespace Nekoyume.UI
             MarketPriceText.gameObject.SetActive(true);
             MarketPriceText.text = PandoraBoxMaster.MarketPriceValue;
             panel.GetComponent<Image>().enabled = false;
+            panel.sizeDelta = new Vector2(340, 415);
+            if (panel.anchoredPosition.y < -180) //fix when block # cover the helper tool 
+                panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -180);
             LayoutRebuild();
             DiscordHolder.sizeDelta = panel.sizeDelta;
             DiscordHolder.position = panel.position;
@@ -231,12 +235,14 @@ namespace Nekoyume.UI
         void ResetDiscordBackground()
         {
             panel.GetComponent<Image>().enabled = true;
+            panel.Find("ItemMoreOption").gameObject.SetActive(true);
             panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
             //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
             panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
             panel.Find("ViewGroup/Footer/TradableText").gameObject.SetActive(false);
             MarketPriceText.text = "";
             panel.Find("ViewGroup/Footer").gameObject.SetActive(true);
+            panel.sizeDelta = new Vector2(340, 600);
             DiscordHolder.gameObject.SetActive(false);
             LayoutRebuild();
 

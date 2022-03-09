@@ -156,9 +156,7 @@ namespace Nekoyume.UI
             tipText.text = pandoraTips[Random.Range(0, pandoraTips.Length - 1)];
             AudioController.instance.PlaySfx("sfx_useitem");
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            try
-            { player.gameObject.SetActive(true); }
-            catch { }
+            player.gameObject.SetActive(true);
         }
     }
 }

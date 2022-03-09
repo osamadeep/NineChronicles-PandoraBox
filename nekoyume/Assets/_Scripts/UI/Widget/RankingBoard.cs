@@ -205,6 +205,7 @@ namespace Nekoyume.UI
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
+            Widget.Find<FriendInfoPopup>().Close(true);
             Widget.Find<FriendInfoPopupPandora>().Close(true);
             _disposablesFromShow.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
@@ -337,6 +338,7 @@ namespace Nekoyume.UI
         {
             var avatarInfo = Find<AvatarInfoPopup>();
             var friendInfoPopup = Find<FriendInfoPopup>();
+            var friendInfoPopupPandora = Find<FriendInfoPopupPandora>();
             if (avatarInfo.gameObject.activeSelf)
             {
                 avatarInfo.Close();
@@ -344,6 +346,7 @@ namespace Nekoyume.UI
             else if (friendInfoPopup.gameObject.activeSelf)
             {
                 friendInfoPopup.Close();
+                friendInfoPopupPandora.Close();
             }
             else
             {

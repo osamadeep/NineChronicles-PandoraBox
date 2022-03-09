@@ -46,7 +46,14 @@ namespace Nekoyume.UI
                 yield return new WaitForSeconds(0.5f);
             }
 
-            if (PandoraBoxMaster.PanDatabase.VersionID == PandoraBoxMaster.VersionId)
+            bool isAllowedVer = false;
+            foreach (string item in PandoraBoxMaster.PanDatabase.AllowedVersions)
+            {
+                if (item == PandoraBoxMaster.VersionId)
+                    isAllowedVer = true;
+            }
+
+            if (isAllowedVer)
             {
                 var w = Find<LoginSystem>();
                 w.Show(_keyStorePath, _privateKey);

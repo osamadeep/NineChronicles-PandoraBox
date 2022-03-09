@@ -16,7 +16,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100121";
-        public static string VersionId = "010032";
+        public static string VersionId = "010033";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
@@ -207,7 +207,7 @@ namespace PandoraBox
             }
 
             //check difference
-            if (int.Parse(PandoraBoxMaster.VersionId) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver")))
+            if (int.Parse(PandoraBoxMaster.VersionId.Substring(0,5)) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver").Substring(0, 5)))
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
@@ -251,7 +251,8 @@ namespace PandoraBox
     [System.Serializable]
     public class PanDatabase
     {
-        public string VersionID;
+        //public string VersionID;
+        public List<string> AllowedVersions;
         public int DiceRoll;
         public List<PanPlayer> Players;
     }

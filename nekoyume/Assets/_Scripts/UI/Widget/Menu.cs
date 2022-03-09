@@ -633,6 +633,12 @@ namespace Nekoyume.UI
             Application.OpenURL("https://discord.gg/yfcP5GzqQ7");
         }
 
+        public void FastCharacterSwitch()
+        {
+            Game.Game.instance.BackToNest();
+            AudioController.PlayClick();
+        }
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 

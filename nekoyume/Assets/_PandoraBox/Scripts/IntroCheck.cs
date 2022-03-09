@@ -14,11 +14,19 @@ namespace PandoraBox
         void Start()
         {
             string temp = PandoraBoxMaster.VersionId;
+            //string textVer = string.Format("v{0}.{1}.{2}",
+            //                int.Parse(temp.Substring(0, 2)),
+            //                int.Parse(temp.Substring(2, 2)),
+            //                int.Parse(temp.Substring(4, 2)));
+
             string textVer = string.Format("v{0}.{1}.{2}",
-                            int.Parse(temp.Substring(0, 2)),
-                            int.Parse(temp.Substring(2, 2)),
-                            int.Parse(temp.Substring(4, 2)));
+                int.Parse(temp.Substring(0, 2)),
+                int.Parse(temp.Substring(2, 2)),
+                int.Parse(temp.Substring(4, 2)));
+
             verText.text = textVer;
+            if (PandoraBoxMaster.VersionId.Length > 6)
+                verText.text += " Alpha";
         }
     }
 }

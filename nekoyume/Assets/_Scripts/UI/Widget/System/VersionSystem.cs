@@ -26,11 +26,16 @@ namespace Nekoyume.UI
             base.Awake();
             Game.Game.instance.Agent.BlockIndexSubject.Subscribe(SubscribeBlockIndex).AddTo(gameObject);
             Game.Game.instance.Agent.BlockTipHashSubject.Subscribe(SubscribeBlockHash).AddTo(gameObject);
-            pandoraTextVer = string.Format("PandoraBox v{0}.{1}.{2}",
-                int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
-                int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
-                int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
-
+            //pandoraTextVer = string.Format("PandoraBox v{0}.{1}.{2}",
+            //    int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
+            //    int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
+            //    int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
+            pandoraTextVer = string.Format("PandoraBox v{0}.{2}",
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
+                            int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
+            if (PandoraBoxMaster.VersionId.Length > 6)
+                pandoraTextVer += "<color=green>A</color>";
             StartCoroutine(Get9cBlock());
         }
 
