@@ -6,8 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UniRx;
-using PandoraBox;
 using Nekoyume.Helper;
+using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {

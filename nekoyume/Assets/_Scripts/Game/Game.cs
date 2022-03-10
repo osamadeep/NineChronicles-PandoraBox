@@ -73,7 +73,7 @@ namespace Nekoyume.Game
 
         public NineChroniclesAPIClient ApiClient => _apiClient;
 
-        private CommandLineOptions _options;
+        public CommandLineOptions _options;
 
         private AmazonCloudWatchLogsClient _logsClient;
 

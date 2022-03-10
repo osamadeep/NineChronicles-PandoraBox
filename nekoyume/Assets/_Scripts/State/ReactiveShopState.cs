@@ -11,10 +11,10 @@ using Libplanet.Assets;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
+using Nekoyume.PandoraBox;
 using Nekoyume.TableData;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
-using PandoraBox;
 using UniRx;
 using UnityEngine;
 

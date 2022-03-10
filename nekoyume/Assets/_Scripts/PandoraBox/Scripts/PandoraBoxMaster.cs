@@ -5,10 +5,8 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Networking;
 using TMPro;
-using System.IO;
-using System.Security.Cryptography;
 
-namespace PandoraBox
+namespace Nekoyume.PandoraBox
 {
     public class PandoraBoxMaster : MonoBehaviour
     {
@@ -16,7 +14,7 @@ namespace PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100121";
-        public static string VersionId = "010033";
+        public static string VersionId = "010034";
         public static PanDatabase PanDatabase;
         public static PanPlayer CurrentPanPlayer;
         public static int ActionCooldown = 4;
@@ -45,7 +43,7 @@ namespace PandoraBox
                 Instance = this;
                 Settings = new PandoraSettings();
                 Settings.Load();
-                StartCoroutine(GetDatabase());
+                StartCoroutine(PandoraDB.GetDatabase());
             }
         }
 
@@ -84,38 +82,9 @@ namespace PandoraBox
             UIErrorWindow.SetActive(true);
         }
 
-        IEnumerator GetDatabase()
-        {
-#if !UNITY_EDITOR
-            string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");
-#else
-            string url = URLAntiCacheRandomizer("https://6wrni.com/9c.pandora");//9cdev.pandora
-#endif
-            UnityWebRequest www = UnityWebRequest.Get(url);
-            yield return www.SendWebRequest();
 
-            if (www.result != UnityWebRequest.Result.Success)
-            {
-                ShowError(404,"Cannot connect to Pandora Server, please visit us for more information!");
-            }
-            else
-            {
-                try
-                {
-                    PanDatabase = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text);
-                }// Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
-                catch { ShowError(16, "Something wrong, please visit us for more information!"); }
-            }
-        }
 
-        public string URLAntiCacheRandomizer(string url)
-        {
-            string r = "";
-            r += UnityEngine.Random.Range(
-                          1000000, 8000000).ToString();
-            string result = url + "?p=" + r;
-            return result;
-        }
+
     }
 
     public class PandoraSettings
@@ -211,8 +180,6 @@ namespace PandoraBox
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
-                PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", 0);
-                IsMultipleLogin = false;
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
             }
@@ -246,30 +213,5 @@ namespace PandoraBox
         }
 
 
-    }
-
-    [System.Serializable]
-    public class PanDatabase
-    {
-        //public string VersionID;
-        public List<string> AllowedVersions;
-        public int DiceRoll;
-        public List<PanPlayer> Players;
-    }
-
-    [System.Serializable]
-    public class PanPlayer
-    {
-        public string Address;
-        public bool IsBanned;
-        public bool IsPremium;
-        public bool IsProtected;
-        public bool IsIgnoringMessage;
-        public string DiscordID;
-        public int PremiumEndBlock;
-        public int ArenaBanner;
-        public int ArenaIcon;
-        public int SwordSkin;
-        public int FriendViewSkin;
     }
 }

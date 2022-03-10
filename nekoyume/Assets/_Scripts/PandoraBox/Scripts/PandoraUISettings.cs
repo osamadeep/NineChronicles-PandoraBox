@@ -1,14 +1,17 @@
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PandoraBox
+namespace Nekoyume.PandoraBox
 {
 
     public class PandoraUISettings : MonoBehaviour
     {
         int blockShowType;
+
+        //node connected
+        [SerializeField]
+        TextMeshProUGUI nodeText;
 
         //Time Scale Elements
         [SerializeField]
@@ -64,6 +67,9 @@ namespace PandoraBox
         {
             if (PandoraBoxMaster.Instance == null)
                 return;
+
+            try
+            { nodeText.text = "Connected Node: <color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }catch { }
 
             //Load settings
             blockShowType = PandoraBoxMaster.Instance.Settings.BlockShowType;

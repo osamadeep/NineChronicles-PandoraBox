@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-namespace PandoraBox
+namespace Nekoyume.PandoraBox
 {
     public class IntroCheck : MonoBehaviour
     {

@@ -6,7 +6,7 @@ using Nekoyume.Helper;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.Video;
-using PandoraBox;
+using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {

@@ -1,5 +1,5 @@
 using Nekoyume.Game.Controller;
-using PandoraBox;
+using Nekoyume.PandoraBox;
 using System.Collections;
 using UnityEngine;
 

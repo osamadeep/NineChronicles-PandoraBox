@@ -1,20 +1,19 @@
-using System;
 using System.Collections;
 using System.Linq;
 using Nekoyume.BlockChain;
-using Nekoyume.Game;
-using Nekoyume.Game.Character;
 using Nekoyume.State;
 using TMPro;
 using UnityEngine;
-using Nekoyume.Model.Mail;
-using Nekoyume.UI;
-using Nekoyume.UI.Tween;
 using UnityEngine.UI;
-using Nekoyume.UI.Scroller;
+using Nekoyume.Model.Mail;
 
-namespace PandoraBox
+namespace Nekoyume.PandoraBox
 {
+    using Nekoyume.UI;
+    using Nekoyume.UI.Scroller;
+    using Nekoyume.UI.Tween;
+    using UniRx;
+
     public class PandoraRaid : MonoBehaviour
     {
         [SerializeField]
@@ -35,7 +34,7 @@ namespace PandoraBox
         [SerializeField]
         TextMeshProUGUI CurrentTriesText = null;
 
-        private Player _player;
+        private Game.Character.Player _player;
 
         bool isBusy = false;
 
@@ -109,7 +108,7 @@ namespace PandoraBox
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
 
                 PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-                if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.instance.Agent.BlockIndex)
+                if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                 {
                     StartCoroutine(Raid(int.Parse(CurrentTriesManual.text)));
                 }
@@ -128,6 +127,7 @@ namespace PandoraBox
 
         IEnumerator Raid(int count)
         {
+
             isBusy = true;
             RotateShape.SetActive(true);
             StageIDText.interactable = false;
@@ -135,10 +135,10 @@ namespace PandoraBox
             RaidButtonText.text = "Cancel!";
             float AllowedCooldown = 3f; //save it to settings
 
+            //yield return new WaitForSeconds(AllowedCooldown);
             yield return new WaitForSeconds(AllowedCooldown);
-            _player = Game.instance.Stage.GetPlayer();
-            yield return new WaitForSeconds(AllowedCooldown);
-            var stage = Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i => i.Id == int.Parse(StageIDText.text));
+            _player = Game.Game.instance.Stage.GetPlayer();
+            var stage = Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i => i.Id == int.Parse(StageIDText.text));
 
             int worldID = 0;
             if (stage.Id < 51)
@@ -155,14 +155,18 @@ namespace PandoraBox
             int _requiredCost = stage.CostAP;
 
 
-            bool RaidMethodIsSweep = Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep", 0));
+            //bool RaidMethodIsSweep = Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep", 0));
+            bool RaidMethodIsSweep = PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep;
 
             if (!isBusy)
                 yield break;
 
             if (!RaidMethodIsSweep)
             {
-                Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
+                LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -_requiredCost);
+                ActionRenderHandler.Instance.Pending = true;
+                Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
+                //Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                 + "</color> (<color=green>" + count + "</color>) times Completed!", NotificationCell.NotificationType.Information);
             }
@@ -173,7 +177,9 @@ namespace PandoraBox
                     if (!isBusy)
                         yield break;
                     RaidButtonText.text = $"(<color=green>{count- (i+1)}</color>)Cancel!";
-                    Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
+                    LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,-_requiredCost);
+                    ActionRenderHandler.Instance.Pending = true;
+                    Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                         + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...", NotificationCell.NotificationType.Information);

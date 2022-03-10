@@ -859,7 +859,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private void AvailableAP()
         {
-            sweepButton.GetComponentInParent<Slider>().value = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
+            sweepButton.transform.parent.Find("Slider").GetComponent<Slider>().value = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
         }
         private void Sweep()
         {
@@ -973,7 +973,7 @@ namespace Nekoyume.UI
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
                     Game.Game.instance.TableSheets.CostumeStatSheet,
                     StageSimulator.ConstructorVersionV100080,
-                    1
+                    1, PandoraBoxMaster.IsSimulate
                 );
             PandoraBoxMaster.IsSimulate = false;
 

@@ -1,6 +1,6 @@
 using Libplanet;
 using Libplanet.Blocks;
-using PandoraBox;
+using Nekoyume.PandoraBox;
 using System.Collections;
 using TMPro;
 using UniRx;

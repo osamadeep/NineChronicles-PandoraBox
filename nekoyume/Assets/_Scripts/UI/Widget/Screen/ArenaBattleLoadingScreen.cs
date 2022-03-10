@@ -3,9 +3,9 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.State;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.UI.Module;
-using PandoraBox;
 using TMPro;
 using UnityEngine;
 
