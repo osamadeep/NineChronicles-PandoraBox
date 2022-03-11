@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.EnumType;
 using Nekoyume.Model.Mail;
+using Nekoyume.PandoraBox;
 using Nekoyume.Pattern;
 using Nekoyume.UI.Module;
 using UnityEngine;
@@ -260,6 +261,8 @@ namespace Nekoyume.UI
             // Popup included in header menu
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<GuildInfo>());
             yield return null;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<MailPopup>());

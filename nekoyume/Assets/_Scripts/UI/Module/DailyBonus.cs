@@ -181,13 +181,13 @@ namespace Nekoyume.UI.Module
         IEnumerator TryToAutoCollect()
         {
             IsTrying = true;
-            yield return new WaitForSeconds(5);
+            yield return new WaitForSeconds(1);
             if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
             {
                 GetDailyReward();
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!", NotificationCell.NotificationType.Information);
             }
-            yield return new WaitForSeconds(7);
+            yield return new WaitForSeconds(50);
             IsTrying = false;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

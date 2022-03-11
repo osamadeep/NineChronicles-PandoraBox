@@ -639,6 +639,11 @@ namespace Nekoyume.UI
             AudioController.PlayClick();
         }
 
+        public void ShowGuildTest()
+        {
+            Find<GuildInfo>().Show("VHL");
+        }
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
