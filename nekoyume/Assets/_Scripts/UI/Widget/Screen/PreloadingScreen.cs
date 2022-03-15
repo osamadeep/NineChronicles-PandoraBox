@@ -44,7 +44,7 @@ namespace Nekoyume.UI
         public override async void Close(bool ignoreCloseAnimation = false)
         {
             videoPlayer.Stop();
-            if (PandoraBoxMaster.Instance.Settings.IsStory)
+            if (!GameConfig.IsEditor)
             {
                 Find<Synopsis>().Show();
             }
@@ -64,8 +64,8 @@ namespace Nekoyume.UI
                     }
                     else
                     {
-                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                         await States.Instance.SelectAvatarAsync(slotIndex);
+
                         PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
                         if (PandoraBoxMaster.CurrentPandoraPlayer.IsBanned)
                         {
@@ -75,10 +75,11 @@ namespace Nekoyume.UI
                         }
                         else
                         {
-                            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                            //await States.Instance.SelectAvatarAsync(slotIndex);
+                            
                             Game.Event.OnRoomEnter.Invoke(false);
+                            Game.Event.OnUpdateAddresses.Invoke();
                         }
+                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     }
                 }
                 else

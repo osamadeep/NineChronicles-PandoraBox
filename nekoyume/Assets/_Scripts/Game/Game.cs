@@ -11,6 +11,8 @@ using Bencodex.Types;
 using Cysharp.Threading.Tasks;
 using Lib9c.Formatters;
 using Libplanet;
+using Libplanet.Assets;
+using LruCacheNet;
 using MessagePack;
 using MessagePack.Resolvers;
 using Nekoyume.Action;
@@ -73,7 +75,14 @@ namespace Nekoyume.Game
 
         public NineChroniclesAPIClient ApiClient => _apiClient;
 
-        public CommandLineOptions _options;
+        public readonly LruCache<Address, IValue> CachedStates = new LruCache<Address, IValue>();
+
+        public readonly LruCache<Address, FungibleAssetValue> CachedBalance =
+            new LruCache<Address, FungibleAssetValue>(2);
+
+        public readonly Dictionary<Address, bool> CachedAddresses = new Dictionary<Address, bool>();
+
+        private CommandLineOptions _options;
 
         private AmazonCloudWatchLogsClient _logsClient;
 
@@ -687,7 +696,8 @@ namespace Nekoyume.Game
 
             var loginPopup = Widget.Find<LoginSystem>();
 
-            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.IsMultipleLogin && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.IsMultipleLogin
+                && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
             {
                 loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
             }
