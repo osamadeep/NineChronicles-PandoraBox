@@ -82,7 +82,7 @@ namespace Nekoyume.Game
 
         public readonly Dictionary<Address, bool> CachedAddresses = new Dictionary<Address, bool>();
 
-        private CommandLineOptions _options;
+        public CommandLineOptions _options;
 
         private AmazonCloudWatchLogsClient _logsClient;
 

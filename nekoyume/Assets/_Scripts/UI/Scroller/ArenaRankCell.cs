@@ -288,7 +288,7 @@ namespace Nekoyume.UI.Scroller
                 ArenaInfo,
                 Game.Game.instance.TableSheets.CostumeStatSheet
             );
-            simulator.SimulatePandora();
+            simulator.Simulate(); //Pandora();
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
@@ -331,7 +331,7 @@ namespace Nekoyume.UI.Scroller
                     ArenaInfo,
                     Game.Game.instance.TableSheets.CostumeStatSheet
                 );
-                simulator.SimulatePandora();
+                simulator.Simulate();//Pandora();
                 var log = simulator.Log;
 
                 if (log.result.ToString().ToUpper() == "WIN")
