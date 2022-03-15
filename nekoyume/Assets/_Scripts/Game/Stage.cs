@@ -369,6 +369,10 @@ namespace Nekoyume.Game
 #if TEST_LOG
             Debug.Log($"[{nameof(Stage)}] {nameof(CoPlayRankingBattle)}() enter");
 #endif
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Widget.Find<UI.Battle>().simulateText.SetActive(PandoraBox.PandoraBoxMaster.IsSimulate);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             IsInStage = true;
             yield return StartCoroutine(CoRankingBattleEnter(log));
             Widget.Find<ArenaBattleLoadingScreen>().Close();
@@ -495,10 +499,8 @@ namespace Nekoyume.Game
             LoadBackground(zone, 3.0f);
             PlayBGVFX(false);
             RunPlayer(new Vector2(-15f, -1.2f), false);
-
             yield return new WaitForSeconds(2.0f);
-
-            AudioController.instance.PlayMusic(AudioController.MusicCode.PVPBattle);
+            AudioController.instance.PlayMusic(AudioController.MusicCode.Boss1);
         }
 
         private IEnumerator CoStageEnd(BattleLog log)
@@ -668,12 +670,22 @@ namespace Nekoyume.Game
 #if TEST_LOG
             Debug.Log($"[{nameof(Stage)}] {nameof(CoRankingBattleEnd)}() enter");
 #endif
-            IsAvatarStateUpdatedAfterBattle = false;
 
-            // NOTE ActionRenderHandler.Instance.Pending should be false before _onEnterToStageEnd.OnNext() invoked.
-            ActionRenderHandler.Instance.Pending = false;
-            _onEnterToStageEnd.OnNext(this);
-            yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBox.PandoraBoxMaster.IsSimulate)
+            {
+                IsAvatarStateUpdatedAfterBattle = false;
+
+                // NOTE ActionRenderHandler.Instance.Pending should be false before _onEnterToStageEnd.OnNext() invoked.
+                ActionRenderHandler.Instance.Pending = false;
+                _onEnterToStageEnd.OnNext(this);
+                yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
+            }
+            else
+            {
+                PandoraBox.PandoraBoxMaster.IsSimulate = false;
+            }
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
 
             var characters = GetComponentsInChildren<Character.CharacterBase>();
 
@@ -689,13 +701,32 @@ namespace Nekoyume.Game
                 : GetComponentInChildren<Character.EnemyPlayer>();
 
             yield return new WaitForSeconds(0.75f);
-            playerCharacter.Animator.Win();
-            playerCharacter.ShowSpeech("PLAYER_WIN");
+
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            try //in case we Force quit to menu
+            {
+                playerCharacter.Animator.Win();
+                playerCharacter.ShowSpeech("PLAYER_WIN");
+            
             Widget.Find<UI.Battle>().Close();
             Widget.Find<Status>().Close();
 
             Widget.Find<RankingBattleResultPopup>().Show(log, _battleResultModel.Rewards);
+            }
+            catch { }
             yield return null;
+        }
+
+        public void KillAllCharacters()
+        {
+            PandoraBox.PandoraBoxMaster.IsSimulate = false;
+            Character.CharacterBase[] characters = GetComponentsInChildren<Character.CharacterBase>();
+            //Debug.LogError("Count " + characters.Length);
+            foreach (Character.CharacterBase item in characters)
+            {
+                item.actions.Clear();
+                item.gameObject.SetActive(false);
+            }
         }
 
         public IEnumerator CoSpawnPlayer(Model.Player character)

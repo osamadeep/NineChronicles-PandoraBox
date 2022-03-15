@@ -332,7 +332,7 @@ namespace Nekoyume.UI
             sweepButton.gameObject.SetActive(true);
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
@@ -875,7 +875,7 @@ namespace Nekoyume.UI
             sweepButton.gameObject.SetActive(false);
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             _player.StartRun();
@@ -902,7 +902,7 @@ namespace Nekoyume.UI
             ActionRenderHandler.Instance.Pending = true;
 
             var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            if (PandoraBoxMaster.CurrentPanPlayer.SwordSkin == 1)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
                 _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
 
             for (int i = 0; i < count; i++)
@@ -963,7 +963,6 @@ namespace Nekoyume.UI
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            PandoraBoxMaster.IsSimulate = true;
             var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
@@ -973,9 +972,8 @@ namespace Nekoyume.UI
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
                     Game.Game.instance.TableSheets.CostumeStatSheet,
                     StageSimulator.ConstructorVersionV100080,
-                    1, PandoraBoxMaster.IsSimulate
-                );
-            PandoraBoxMaster.IsSimulate = false;
+                    1);
+
 
             simulator.Simulate(1);
             var log = simulator.Log;

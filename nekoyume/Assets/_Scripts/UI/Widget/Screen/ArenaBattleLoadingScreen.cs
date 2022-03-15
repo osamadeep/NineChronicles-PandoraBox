@@ -36,19 +36,9 @@ namespace Nekoyume.UI
         private Player player;
         private static readonly int Close1 = Animator.StringToHash("Close");
 
-        private void OnEnable()
-        {
-            //try
-            //{ RollDice(); }
-            //catch { }
-        }
-
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void RollDice()
         {
-            //if (rollChance < 40) rollChance = Random.Range(1, 100); //Hell Dice!!
-
-            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
 
             //ID Combination
             string blockPart = Game.Game.instance.Agent.BlockIndex.ToString();
@@ -60,10 +50,10 @@ namespace Nekoyume.UI
             string encryptedText = "ID:" + blockPart[0] + addressPart[2] + blockPart[3] + addressPart[0] + blockPart[1] + addressPart[3] + blockPart[3];
 
             int extraRate = 0;
-            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
             {
                 idText.text = encryptedText;
-                int totalBlocks = PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex;
+                int totalBlocks = PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex;
                 extraRate = Mathf.Clamp((int)(totalBlocks / 73000), 0, 3);
             }
             else

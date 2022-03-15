@@ -20,7 +20,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
-    public class FriendInfoPopupPandora : PopupWidget
+    public class FriendInfoPopupPandora : Widget
     {
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
 
@@ -150,7 +150,7 @@ namespace Nekoyume.UI
             else
             {
                 int maxCount = 2;
-                if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                if (PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                     maxCount = 9;
 
                 if (PandoraBoxMaster.ArenaFavTargets.Count > maxCount)
@@ -286,6 +286,9 @@ namespace Nekoyume.UI
             );
 
             avatarStats.SetData(stats);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Find<RankingBoard>().LoadingImage.SetActive(false);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private static void ShowTooltip(EquipmentSlot slot)

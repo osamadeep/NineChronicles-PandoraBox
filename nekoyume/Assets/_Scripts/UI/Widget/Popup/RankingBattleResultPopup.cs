@@ -14,12 +14,6 @@ namespace Nekoyume.UI
 {
     public class RankingBattleResultPopup : PopupWidget
     {
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextButton forceExitButton = null;
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private GameObject victoryImageContainer = null;
 
@@ -86,9 +80,30 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void BackToMenu()
         {
-            Game.Event.OnRoomEnter.Invoke(false);
-            MainCanvas.instance.InitWidgetInMain();
+            //Game.Event.OnRoomEnter.Invoke(false);
+            //MainCanvas.instance.InitWidgetInMain();
+            //Close();
+
+            Game.Game.instance.Stage.KillAllCharacters();
+            Game.Game.instance.Stage.objectPool.ReleaseAll();
+            Game.Game.instance.Stage.IsInStage = false;
+            ActionCamera.instance.SetPosition(0f, 0f);
+            ActionCamera.instance.Idle();
+            Find<Battle>().Close();
             Close();
+            //Find<Menu>().Show(false);
+            Game.Event.OnRoomEnter.Invoke(true);
+        }
+
+        public void BackToArena()
+        {           
+            Game.Game.instance.Stage.objectPool.ReleaseAll();
+            Game.Game.instance.Stage.IsInStage = false;
+            ActionCamera.instance.SetPosition(0f, 0f);
+            ActionCamera.instance.Idle();
+            AudioController.instance.PlayMusic(AudioController.MusicCode.Ranking);
+            Close();
+            Find<RankingBoard>().gameObject.SetActive(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

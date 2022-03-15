@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Networking;
 using TMPro;
+using Nekoyume.State;
 
 namespace Nekoyume.PandoraBox
 {
@@ -14,9 +15,15 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100121";
-        public static string VersionId = "010034";
+        public static string VersionId = "010035A";
+
+        //Pandora Database
         public static PanDatabase PanDatabase;
-        public static PanPlayer CurrentPanPlayer;
+        public static PandoraPlayer CurrentPandoraPlayer; //data for local player since we use it alot
+        public static Guild CurrentGuild; //data for local player since we use it alot
+        public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
+
+        //General
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
@@ -39,7 +46,7 @@ namespace Nekoyume.PandoraBox
         {
             if (Instance == null)
             {
-                CurrentPanPlayer = new PanPlayer();
+                CurrentPandoraPlayer = new PandoraPlayer();
                 Instance = this;
                 Settings = new PandoraSettings();
                 Settings.Load();
@@ -61,14 +68,27 @@ namespace Nekoyume.PandoraBox
             }
         }
 
-        public static PanPlayer GetPanPlayer(string address)
+        public static PandoraPlayer GetPandoraPlayer(string address)
         {
-            foreach (PanPlayer player in PanDatabase.Players)
+            foreach (PandoraPlayer player in PanDatabase.Players)
             {
                 if (player.Address.ToLower() == address.ToLower())
                     return player;
             }
-            return new PanPlayer();
+            return new PandoraPlayer();
+        }
+
+        public static void SetCurrentPandoraPlayer(PandoraPlayer player)
+        {
+            //Initilize Current player for all Pandora information
+            CurrentPandoraPlayer = player;
+            CurrentGuildPlayer = null;
+            CurrentGuild = null;
+
+            CurrentGuildPlayer = PanDatabase.GuildPlayers.Find(x => x.Address == States.Instance.CurrentAvatarState.agentAddress.ToString());
+            if (CurrentGuildPlayer is null)
+                return;
+            CurrentGuild = PanDatabase.Guilds.Find(x => x.Short == CurrentGuildPlayer.Guild);
         }
 
         public void ShowError(int errorNumber, string text)

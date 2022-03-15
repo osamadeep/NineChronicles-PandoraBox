@@ -29,6 +29,7 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
         [SerializeField] private Button RefreshButton = null;
         [SerializeField] private Slider FightCountSldr = null;
+        public GameObject LoadingImage;
         [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -101,8 +102,7 @@ namespace Nekoyume.UI
         {
             RefreshButton.interactable = false;
             int cooldown = 40;
-            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 cooldown = 15;
             TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -151,6 +151,7 @@ namespace Nekoyume.UI
         private async void ShowAsync(WeeklyArenaState weeklyArenaState = null)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            LoadingImage.SetActive(false);
             PandoraBoxMaster.ArenaFavTargets.Clear();
             for (int i = 0; i < 10; i++) //fav max count
             {
@@ -368,7 +369,7 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
-            var infos = state.GetArenaInfos(1, 20); //3
+            var infos = state.GetArenaInfos(1, 100); //3
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
             int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);

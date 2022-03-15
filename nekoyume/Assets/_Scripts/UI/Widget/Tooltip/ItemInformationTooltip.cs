@@ -28,7 +28,7 @@ namespace Nekoyume.UI
         [SerializeField] private RectTransform DiscordHolder;
         ShopItem currentShopItem;
         Nekoyume.Model.State.AvatarState currentSellerAvatar;
-        PanPlayer currentSeller;
+        PandoraPlayer currentSeller;
         bool isBuy;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -135,8 +135,6 @@ namespace Nekoyume.UI
             {
                 if (isBuy)
                 {
-                    PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-
                     if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                     {
                         if (currentSeller.IsIgnoringMessage)
@@ -198,7 +196,7 @@ namespace Nekoyume.UI
                 else
                 {
                     string itemString = "===== Pandora Item Information =====";
-                    PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+                    PandoraPlayer buyer = PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
                     itemString += "\nOwner Name    : " + States.Instance.CurrentAvatarState.NameWithHash;
                     itemString += "\nOwner Address : " + buyer.Address;
                     itemString += "\nItem Name     : " + titleText.text;
@@ -471,9 +469,7 @@ namespace Nekoyume.UI
             else
             {
                 currentSellerAvatar = avatarState;
-                currentSeller = PandoraBoxMaster.GetPanPlayer(avatarState.agentAddress.ToString());
-                PanPlayer buyer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-
+                currentSeller = PandoraBoxMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
 
                 if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                 {
@@ -484,7 +480,7 @@ namespace Nekoyume.UI
                 }
                 else
                 {
-                    if (buyer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                     {
                         OwnerName.text = "Owner: " + avatarState.NameWithHash;
                     }

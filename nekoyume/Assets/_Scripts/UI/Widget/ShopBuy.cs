@@ -128,8 +128,7 @@ namespace Nekoyume.UI
         {
             RefreshButton.interactable = false;
             int cooldown = 60;
-            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 cooldown = 20;
             TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
 

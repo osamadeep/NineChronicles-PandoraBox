@@ -239,6 +239,10 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<EventBanner>());
             yield return null;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());
+            yield return null;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             // loading
             secondWidgets.Add(Widget.Create<StageLoadingEffect>());
@@ -259,12 +263,7 @@ namespace Nekoyume.UI
             yield return null;
 
             // Popup included in header menu
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());
-            yield return null;
-            secondWidgets.Add(Widget.Create<GuildInfo>());
-            yield return null;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             secondWidgets.Add(Widget.Create<MailPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<QuestPopup>());
@@ -301,6 +300,10 @@ namespace Nekoyume.UI
             yield return null;
 
             // popup
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<GuildInfo>());
+            yield return null;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<CombinationSlotPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<BuyItemInformationPopup>());

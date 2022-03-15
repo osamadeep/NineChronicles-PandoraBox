@@ -17,6 +17,7 @@ namespace Nekoyume.UI
         private BlockHash _hash;
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField] private TextMeshProUGUI nodeText;
         string pandoraTextVer = "";
         string current9cScanBlock = "";
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -65,6 +66,11 @@ namespace Nekoyume.UI
         IEnumerator Get9cBlock()
         {
             int secToUpdate = 6;
+
+            try
+            { nodeText.text = "<color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }
+            catch { }
+
             while (true)
             {
                 string url = "https://api.9cscan.com/blocks?limit=1";
@@ -89,7 +95,7 @@ namespace Nekoyume.UI
                                 else
                                     current9cScanBlock = $"(<color=green>{differenceBlocks}</color>)";
                             else
-                                current9cScanBlock = $"(<color=red>!</color>)";
+                                current9cScanBlock = $"(<color=red>{differenceBlocks}</color>)";
                             //Debug.LogError(block + "  " +  _blockIndex);
                         }
                         catch { current9cScanBlock = "(?)"; }

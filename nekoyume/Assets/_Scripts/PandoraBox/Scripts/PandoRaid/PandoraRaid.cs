@@ -107,8 +107,7 @@ namespace Nekoyume.PandoraBox
                 }
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
 
-                PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-                if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 {
                     StartCoroutine(Raid(int.Parse(CurrentTriesManual.text)));
                 }

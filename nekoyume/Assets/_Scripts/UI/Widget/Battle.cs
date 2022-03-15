@@ -16,8 +16,10 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private UnityEngine.UI.Button exitMenu = null;
+        public GameObject simulateText = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private TextMeshProUGUI stageText = null;
 
@@ -97,7 +99,6 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             exitMenu.onClick.AddListener(() => { ExitToMenu(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -106,8 +107,11 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ExitToMenu()
         {
+            Game.Game.instance.Stage.objectPool.ReleaseAll();
+            Game.Game.instance.Stage.IsInStage = false;
             Game.Event.OnRoomEnter.Invoke(false);
             MainCanvas.instance.InitWidgetInMain();
+            Close();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

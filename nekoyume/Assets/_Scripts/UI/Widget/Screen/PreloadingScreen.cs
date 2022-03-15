@@ -66,11 +66,11 @@ namespace Nekoyume.UI
                     {
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                         await States.Instance.SelectAvatarAsync(slotIndex);
-                        PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-                        if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+                        PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+                        if (PandoraBoxMaster.CurrentPandoraPlayer.IsBanned)
                         {
                             videoPlayer.Play();
-                            PandoraBoxMaster.Instance.ShowError(101, "There is something wrong, please visit us for more information!");
+                            PandoraBoxMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
                             return;
                         }
                         else
@@ -94,8 +94,8 @@ namespace Nekoyume.UI
         private static void EnterLogin()
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-            if (PandoraBoxMaster.CurrentPanPlayer.IsBanned)
+            PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsBanned)
                 PandoraBoxMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
             else
             {

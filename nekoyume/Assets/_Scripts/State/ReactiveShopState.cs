@@ -348,9 +348,7 @@ namespace Nekoyume.State
             GetGroupedOrderDigestsBySortFilter(IReadOnlyCollection<OrderDigest> digests,
                 int shopItemsPerPage)
         {
-            PandoraBoxMaster.CurrentPanPlayer = PandoraBoxMaster.GetPanPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
-            //Debug.LogError(PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock + "  -  " + Game.Game.instance.Agent.BlockIndex);
-            if (PandoraBoxMaster.CurrentPanPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
                 return new Dictionary<ShopSortFilter, Dictionary<int, List<OrderDigest>>>
             {
