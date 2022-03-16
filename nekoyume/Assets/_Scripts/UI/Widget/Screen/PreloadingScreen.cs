@@ -6,7 +6,6 @@ using Nekoyume.Helper;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.Video;
-using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -65,21 +64,8 @@ namespace Nekoyume.UI
                     else
                     {
                         await States.Instance.SelectAvatarAsync(slotIndex);
-
-                        PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
-                        if (PandoraBoxMaster.CurrentPandoraPlayer.IsBanned)
-                        {
-                            videoPlayer.Play();
-                            PandoraBoxMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
-                            return;
-                        }
-                        else
-                        {
-                            
-                            Game.Event.OnRoomEnter.Invoke(false);
-                            Game.Event.OnUpdateAddresses.Invoke();
-                        }
-                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                        Game.Event.OnRoomEnter.Invoke(false);
+                        Game.Event.OnUpdateAddresses.Invoke();
                     }
                 }
                 else
@@ -94,16 +80,8 @@ namespace Nekoyume.UI
 
         private static void EnterLogin()
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsBanned)
-                PandoraBoxMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
-            else
-            {
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                Find<Login>().Show();
-                Game.Event.OnNestEnter.Invoke();
-            }
+            Find<Login>().Show();
+            Game.Event.OnNestEnter.Invoke();
         }
 
         private void OnShowVideoEnded(VideoPlayer player)

@@ -40,6 +40,11 @@ namespace Nekoyume.UI.Scroller
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI winRateText = null;
         [SerializeField] private GameObject FavTarget = null;
+        [SerializeField] private GameObject blinkSelected = null;
+
+        //for simulate
+        //ViewModel currentViewModel = null; //we will get this when cell show
+        ArenaInfo currentAvatarArenaInfo = null;
 
         //guild info
         GuildPlayer enemyGuildPlayer;
@@ -123,8 +128,11 @@ namespace Nekoyume.UI.Scroller
                             return;
                         }
                     }
-                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState,true);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||currentViewModel
+                    var currentAddress = States.Instance.CurrentAvatarState?.address;
+                    var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState, ArenaInfo, arenaInfo, true);
+                    blinkSelected.SetActive(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     //Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
@@ -271,24 +279,24 @@ namespace Nekoyume.UI.Scroller
 
 
             //current local player
-            var currentAddress = States.Instance.CurrentAvatarState?.address;
-            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+            //var currentAddress = States.Instance.CurrentAvatarState?.address;
+            //var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
             //
 
 
             System.Random rnd = new System.Random();
             var simulator = new RankingSimulator(
-                new LocalRandom(rnd.Next(0, 100)),
+                new LocalRandom(rnd.Next(-1000000000, 1000000000)),
                 States.Instance.CurrentAvatarState,
                 enemyState.Value,
                 new List<Guid>(),
                 Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
                 Action.RankingBattle.StageId,
-                arenaInfo,
+                currentAvatarArenaInfo,
                 ArenaInfo,
                 Game.Game.instance.TableSheets.CostumeStatSheet
             );
-            simulator.Simulate(); //Pandora();
+            simulator.SimulatePandora();
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
@@ -296,17 +304,19 @@ namespace Nekoyume.UI.Scroller
             Widget.Find<RankingBoard>().GoToStage(log);
         }
 
-        void GetEnemyState()
+        IEnumerator GetEnemyState()
         {
+            winRateText.text = ".?.";
             //Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
             //GameObject effect = button.transform.GetChild(0).gameObject;
             //TextMeshProUGUI buttonText = button.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
 
 
             //effect.SetActive(false);
-            var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora.FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
             //var (exist, enemyState) = await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
 
+
+            var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora.FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
 
             //current local player
             var currentAddress = States.Instance.CurrentAvatarState?.address;
@@ -314,14 +324,14 @@ namespace Nekoyume.UI.Scroller
             //
 
 
-            int totalSimulations = 100;
+            int totalSimulations = 5;
             int win = 0;
-
+            //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
             for (int i = 0; i < totalSimulations; i++)
             {
                 System.Random rnd = new System.Random();
                 var simulator = new RankingSimulator(
-                    new LocalRandom(rnd.Next(0, 100)),
+                    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
                     States.Instance.CurrentAvatarState,
                     enemyState.Value,
                     new List<Guid>(),
@@ -331,14 +341,15 @@ namespace Nekoyume.UI.Scroller
                     ArenaInfo,
                     Game.Game.instance.TableSheets.CostumeStatSheet
                 );
-                simulator.Simulate();//Pandora();
+                simulator.SimulatePandora();
                 var log = simulator.Log;
+                //battleLogDebug += "," + log.result.ToString() ;
 
                 if (log.result.ToString().ToUpper() == "WIN")
                     win++;
-
+                yield return new WaitForSeconds(0.05f);
             }
-            //Debug.LogError($"Stage id is {Action.RankingBattle.StageId}");
+            //Debug.LogError(battleLogDebug);
 
             float finalRatio = (float)win / (float)totalSimulations;
             float FinalValue = (int)(finalRatio * 100f);
@@ -373,12 +384,8 @@ namespace Nekoyume.UI.Scroller
             ArenaInfo arenaInfo,
             ArenaInfo currentAvatarArenaInfo) itemData)
         {
-            Show(new ViewModel
-            {
-                rank = itemData.rank,
-                arenaInfo = itemData.arenaInfo,
-                currentAvatarArenaInfo = itemData.currentAvatarArenaInfo
-            });
+            currentAvatarArenaInfo = itemData.currentAvatarArenaInfo;
+            Show(new ViewModel { rank = itemData.rank, arenaInfo = itemData.arenaInfo, currentAvatarArenaInfo = itemData.currentAvatarArenaInfo });
         }
 
         public void ShowMyDefaultInfo()
@@ -421,6 +428,12 @@ namespace Nekoyume.UI.Scroller
             UpdateRank(itemData.rank);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo is null)
+                blinkSelected.SetActive(false);
+            else
+                blinkSelected.SetActive(itemData.arenaInfo.AvatarAddress == Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo.AvatarAddress);
+            
+
             PandoraPlayer enemyPan = PandoraBoxMaster.GetPandoraPlayer(ArenaInfo.AgentAddress.ToString());
             enemyGuildPlayer = null;
             enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.Address == ArenaInfo.AgentAddress.ToString());
@@ -524,7 +537,7 @@ namespace Nekoyume.UI.Scroller
 
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
-                GetEnemyState();
+                StartCoroutine(GetEnemyState());
             }
             winRateText.gameObject.SetActive(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium());
             characterView.Show();

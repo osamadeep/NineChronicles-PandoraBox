@@ -81,6 +81,13 @@ namespace Nekoyume.UI
             public TextMeshProUGUI expText;
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField]
+        private Button returnQuestButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private const int Timer = 10;
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, 1.2f, 10f);
 
@@ -163,6 +170,11 @@ namespace Nekoyume.UI
                         }
                     }
                 }).AddTo(gameObject);
+
+            returnQuestButton.OnClickAsObservable().Subscribe(_ =>
+            {
+                GoToQuestPreperation();
+            }).AddTo(gameObject);
 
             nextButton.OnClickAsObservable().Subscribe(_ =>
                 {
@@ -252,6 +264,7 @@ namespace Nekoyume.UI
 
             base.Show();
             closeButton.gameObject.SetActive(model.StageID >= 3 || model.LastClearedStageId >= 3);
+            nextButton.gameObject.SetActive(true);
             repeatButton.gameObject.SetActive(false);
             nextButton.gameObject.SetActive(false);
 
@@ -657,6 +670,18 @@ namespace Nekoyume.UI
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
         }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void GoToQuestPreperation()
+        {
+            Find<Battle>().Close(true);
+            Close();
+            Find<Status>().Close();
+            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
+            Find<HeaderMenuStatic>().Show(true);
+            AudioController.instance.PlayMusic(AudioController.MusicCode.Main);
+            Find<QuestPreparation>().Show();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void StopCoUpdateBottomText()
         {

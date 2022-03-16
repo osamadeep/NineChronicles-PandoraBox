@@ -923,6 +923,7 @@ namespace Nekoyume.UI
 
         public void SimulateBattle()
         {
+            PandoraBoxMaster.IsSimulate = true;
             StartCoroutine(SimulatorIE());
         }
 
@@ -952,7 +953,7 @@ namespace Nekoyume.UI
             _stage.IsExitReserved = false;
             _stage.IsRepeatStage = false;
             _stage.foodCount = consumables.Count;
-            ActionRenderHandler.Instance.Pending = true;
+            //ActionRenderHandler.Instance.Pending = true;
 
 
             List<Guid> costumesN;
@@ -972,7 +973,7 @@ namespace Nekoyume.UI
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
                     Game.Game.instance.TableSheets.CostumeStatSheet,
                     StageSimulator.ConstructorVersionV100080,
-                    1);
+                    1,PandoraBoxMaster.IsSimulate);
 
 
             simulator.Simulate(1);

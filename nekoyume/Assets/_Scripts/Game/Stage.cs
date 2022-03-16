@@ -510,9 +510,19 @@ namespace Nekoyume.Game
 #endif
             IsAvatarStateUpdatedAfterBattle = false;
             // NOTE ActionRenderHandler.Instance.Pending should be false before _onEnterToStageEnd.OnNext() invoked.
-            ActionRenderHandler.Instance.Pending = false;
-            _onEnterToStageEnd.OnNext(this);
-            yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBox.PandoraBoxMaster.IsSimulate)
+            {
+                ActionRenderHandler.Instance.Pending = false;
+                _onEnterToStageEnd.OnNext(this);
+                yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
+            }
+            else
+            {
+                PandoraBox.PandoraBoxMaster.IsSimulate = false;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var avatarState = States.Instance.CurrentAvatarState;
 
             _battleResultModel.ClearedWaveNumber = log.clearedWaveNumber;

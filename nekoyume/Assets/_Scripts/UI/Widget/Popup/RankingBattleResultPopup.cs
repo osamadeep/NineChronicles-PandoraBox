@@ -102,8 +102,11 @@ namespace Nekoyume.UI
             ActionCamera.instance.SetPosition(0f, 0f);
             ActionCamera.instance.Idle();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Ranking);
+            Find<RankingBoard>().waitingForLaodBlocker.SetActive(false);
             Close();
             Find<RankingBoard>().gameObject.SetActive(true);
+            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
+            Find<HeaderMenuStatic>().Show(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

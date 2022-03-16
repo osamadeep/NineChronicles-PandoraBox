@@ -29,6 +29,7 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
         [SerializeField] private Button RefreshButton = null;
         [SerializeField] private Slider FightCountSldr = null;
+        public GameObject waitingForLaodBlocker;
         public GameObject LoadingImage;
         [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
         [Space(50)]
@@ -64,6 +65,7 @@ namespace Nekoyume.UI
 
         public async void RefreshBoard()
         {
+            waitingForLaodBlocker.SetActive(true);
             RefreshButton.interactable = false;
             RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "Update...";
 
@@ -94,16 +96,14 @@ namespace Nekoyume.UI
             }
 
             UpdateArena();
-
-            StartCoroutine(RefreshCooldown());
         }
 
         System.Collections.IEnumerator RefreshCooldown()
         {
             RefreshButton.interactable = false;
-            int cooldown = 40;
+            int cooldown = 20;
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                cooldown = 15;
+                cooldown = 5;
             TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
 
             for (int i = 0; i < cooldown; i++)
@@ -152,6 +152,7 @@ namespace Nekoyume.UI
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             LoadingImage.SetActive(false);
+            waitingForLaodBlocker.SetActive(false);
             PandoraBoxMaster.ArenaFavTargets.Clear();
             for (int i = 0; i < 10; i++) //fav max count
             {
@@ -310,6 +311,11 @@ namespace Nekoyume.UI
                     arenaInfo = tuple.arenaInfo,
                     currentAvatarArenaInfo = currentAvatarArenaInfo,
                 }).ToList(), true);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            waitingForLaodBlocker.SetActive(false);
+            StartCoroutine(RefreshCooldown());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private static void OnClickAvatarInfo(RectTransform rectTransform, Address address)
@@ -369,7 +375,11 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
-            var infos = state.GetArenaInfos(1, 100); //3
+            int topPlayer = 20;
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                topPlayer = 100;
+
+            var infos = state.GetArenaInfos(1, topPlayer); //3
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
             int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);

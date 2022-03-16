@@ -8,6 +8,7 @@ using TMPro;
 using UniRx;
 using Nekoyume.Helper;
 using Nekoyume.PandoraBox;
+using System.Collections;
 
 namespace Nekoyume.UI
 {
@@ -147,31 +148,10 @@ namespace Nekoyume.UI
                 return;
             }
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
-                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
-            }
-            else
-            {
-                PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
-            }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            var level = _player.Level;
-
             _avatarName = States.Instance.CurrentAvatarState.NameWithHash;
             //textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBoxMaster.CurrentGuildPlayer is null)
-            {
-                textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
-            }
-            else
-            {
-                textLvName.text = $"<color=#B38271>LV. {level}</color> [<color=green>{PandoraBoxMaster.CurrentGuildPlayer.Guild}</color>] {States.Instance.CurrentAvatarState.name}";
-            }
+            StartCoroutine(UpdataPandoraStatus());
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var displayHp = _player.CurrentHP;
             textHp.text = $"{displayHp} / {_player.HP}";
@@ -190,5 +170,28 @@ namespace Nekoyume.UI
             expValue = Mathf.Min(Mathf.Max(expValue, 0.1f), 1.0f);
             expBar.fillAmount = expValue;
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        IEnumerator UpdataPandoraStatus()
+        {
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
+                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+            }
+            else
+                PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
+
+            var level = _player.Level;
+            textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
+
+            if (!(PandoraBoxMaster.CurrentGuildPlayer is null)
+                && (PandoraBoxMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
+            {
+                textLvName.text = $"<color=#B38271>LV. {level}</color> [<color=green>{PandoraBoxMaster.CurrentGuildPlayer.Guild}</color>] {States.Instance.CurrentAvatarState.name}";
+            }
+            yield return new WaitForSeconds(10);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

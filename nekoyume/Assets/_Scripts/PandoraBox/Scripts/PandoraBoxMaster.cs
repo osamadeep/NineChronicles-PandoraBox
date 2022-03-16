@@ -14,8 +14,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100121";
-        public static string VersionId = "010035A";
+        public static string OriginalVersionId = "v100130";
+        public static string VersionId = "010035";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -46,7 +46,7 @@ namespace Nekoyume.PandoraBox
         {
             if (Instance == null)
             {
-                CurrentPandoraPlayer = new PandoraPlayer();
+                //CurrentPandoraPlayer = new PandoraPlayer();
                 Instance = this;
                 Settings = new PandoraSettings();
                 Settings.Load();
@@ -82,13 +82,21 @@ namespace Nekoyume.PandoraBox
         {
             //Initilize Current player for all Pandora information
             CurrentPandoraPlayer = player;
+
+            //Check for all Errors
+            if (CurrentPandoraPlayer.IsBanned)
+                Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+
+
             CurrentGuildPlayer = null;
             CurrentGuild = null;
 
             CurrentGuildPlayer = PanDatabase.GuildPlayers.Find(x => x.Address == States.Instance.CurrentAvatarState.agentAddress.ToString());
             if (CurrentGuildPlayer is null)
                 return;
-            CurrentGuild = PanDatabase.Guilds.Find(x => x.Short == CurrentGuildPlayer.Guild);
+            CurrentGuild = PanDatabase.Guilds.Find(x => x.Tag == CurrentGuildPlayer.Guild);
+
+
         }
 
         public void ShowError(int errorNumber, string text)

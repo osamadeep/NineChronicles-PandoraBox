@@ -1,4 +1,3 @@
-using System.Linq;
 using Nekoyume.Battle;
 using Nekoyume.EnumType;
 using Nekoyume.Game.Character;
@@ -17,9 +16,15 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using static Nekoyume.UI.Scroller.ArenaRankCell;
 
 namespace Nekoyume.UI
 {
+    using PandoraBox;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class FriendInfoPopupPandora : Widget
     {
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
@@ -34,8 +39,17 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI blockText = null;
         [SerializeField] private TextMeshProUGUI dateText = null;
         [SerializeField] private TextMeshProUGUI versionText = null;
+        [SerializeField] private TextMeshProUGUI rateText = null;
         [SerializeField] private Button NemesisButton = null;
         [SerializeField] private Button ResetNemesisButton = null;
+
+        //for simulate
+        public GameObject PremiumSection;
+        [HideInInspector]
+        public ArenaInfo enemyArenaInfo = null;
+        ArenaInfo currentAvatarArenaInfo = null;
+        AvatarState avatarState;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -170,6 +184,106 @@ namespace Nekoyume.UI
             }
             text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
         }
+
+        public void Show(AvatarState avatarStt, ArenaInfo enemyAI,ArenaInfo currentAvatarAI, bool ignoreShowAnimation = false)
+        {
+            base.Show(ignoreShowAnimation);
+            enemyArenaInfo = enemyAI;
+            currentAvatarArenaInfo = currentAvatarAI;
+            avatarState = avatarStt;
+
+            rateText.text = "Win Rate : .?.";
+            PremiumSection.SetActive(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium());
+
+            InitializePlayer(avatarState);
+            UpdateSlotView(avatarState);
+            UpdateStatViews();
+        }
+
+        private class LocalRandom : System.Random, Libplanet.Action.IRandom
+        {
+            public LocalRandom(int Seed)
+                : base(Seed)
+            {
+            }
+
+            public int Seed => throw new System.NotImplementedException();
+        }
+
+
+        public void SimulateOnce()
+        {
+            System.Random rnd = new System.Random();
+            var simulator = new RankingSimulator(
+                new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                States.Instance.CurrentAvatarState,
+                avatarState,
+                new List<System.Guid>(),
+                Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                Action.RankingBattle.StageId,
+                currentAvatarArenaInfo,
+                enemyArenaInfo,
+                Game.Game.instance.TableSheets.CostumeStatSheet
+            );
+            simulator.SimulatePandora();
+            var log = simulator.Log;
+
+            Widget.Find<FriendInfoPopupPandora>().Close(true);
+            PandoraBoxMaster.IsSimulate = true;
+            Widget.Find<RankingBoard>().GoToStage(log);
+        }
+
+        public void SimulateMultiple()
+        {
+            StartCoroutine(GetEnemyState());
+        }
+
+
+        IEnumerator GetEnemyState()
+        {
+            rateText.text = "Win Rate : .?.";
+
+            int totalSimulations = 100;
+            int win = 0;
+            //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
+            for (int i = 0; i < totalSimulations; i++)
+            {
+                System.Random rnd = new System.Random();
+                var simulator = new RankingSimulator(
+                    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                    States.Instance.CurrentAvatarState,
+                    avatarState,
+                    new List<System.Guid>(),
+                    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                    Action.RankingBattle.StageId,
+                    currentAvatarArenaInfo,
+                    enemyArenaInfo,
+                    Game.Game.instance.TableSheets.CostumeStatSheet
+                );
+                simulator.SimulatePandora();
+                var log = simulator.Log;
+                //battleLogDebug += "," + log.result.ToString() ;
+
+                if (log.result.ToString().ToUpper() == "WIN")
+                    win++;
+                yield return new WaitForSeconds(0.05f);
+            }
+            //Debug.LogError(battleLogDebug);
+
+            float finalRatio = (float)win / (float)totalSimulations;
+            float FinalValue = (int)(finalRatio * 100f);
+
+            //if (finalRatio == 1)
+            //    effect.SetActive(true);
+
+            if (finalRatio <= 0.5f)
+                rateText.text = $"Win Rate : <color=red>{FinalValue}</color>%";
+            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                rateText.text = $"Win Rate : <color=#FF4900>{FinalValue}</color>%";
+            else
+                rateText.text = $"Win Rate : <color=green>{FinalValue}</color>%";
+        }
+
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

@@ -84,14 +84,14 @@ namespace Nekoyume.PandoraBox
             AudioController.PlayPopup();
             //SetGuildInfo(new Guild());
 
-            selectedGuild = PandoraBoxMaster.PanDatabase.Guilds.Find(x => x.Short == clanShort);
+            selectedGuild = PandoraBoxMaster.PanDatabase.Guilds.Find(x => x.Tag == clanShort);
             SetGuildInfo();
         }
 
         void SetGuildInfo()
         {
             //Global info
-            NameTxt.text = $"[<color=green>{selectedGuild.Short}</color>] {selectedGuild.Name}";
+            NameTxt.text = $"[<color=green>{selectedGuild.Tag}</color>] {selectedGuild.Name}";
             TotalCPTxt.text = "...";
             MemberTxt.text = "";
             DescTxt.text = selectedGuild.Desc;
@@ -103,19 +103,22 @@ namespace Nekoyume.PandoraBox
                 {
                     JoinButton.interactable = false;
                     JoinButton.GetComponentInChildren<TextMeshProUGUI>().text = "CLOSED";
+                    JoinButton.GetComponent<Image>().color = Color.red;
                 }
                 else
                 {
                     JoinButton.interactable = true;
                     JoinButton.GetComponentInChildren<TextMeshProUGUI>().text = "CONTACT";
+                    JoinButton.GetComponent<Image>().color = Color.green;
                 }
             }
             else
             {
-                if (selectedGuild.Short == PandoraBoxMaster.CurrentGuildPlayer.Guild)
+                if (selectedGuild.Tag == PandoraBoxMaster.CurrentGuildPlayer.Guild)
                 {
                     JoinButton.interactable = false;
                     JoinButton.GetComponentInChildren<TextMeshProUGUI>().text = "JOINED";
+                    JoinButton.GetComponent<Image>().color = Color.white;
                 }
                 else
                 {
@@ -135,7 +138,7 @@ namespace Nekoyume.PandoraBox
             StartCoroutine(GetGuildImage(selectedGuild)); //guild image
 
             //Members related
-            List<GuildPlayer> selectedGuildPlayers = PandoraBoxMaster.PanDatabase.GuildPlayers.FindAll(x => x.Guild == selectedGuild.Short);
+            List<GuildPlayer> selectedGuildPlayers = PandoraBoxMaster.PanDatabase.GuildPlayers.FindAll(x => x.Guild == selectedGuild.Tag);
             string maxCount = selectedGuildPlayers.Count > 20 ? $"<color=green>{selectedGuildPlayers.Count}</color>" : "20";
             CountTxt.text = $"Members {selectedGuildPlayers.Count}/{maxCount}";
 
@@ -161,7 +164,7 @@ namespace Nekoyume.PandoraBox
             loadingIMG.SetActive(true);
             LogoImage.GetComponent<Image>().enabled = false;
 
-            Uri imageLink = new Uri(PandoraDB.DatabasePath + "Guilds/" + myGuild.Short + ".png");
+            Uri imageLink = new Uri(PandoraDB.DBPath + "Guilds/" + myGuild.Tag + ".png");
             using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageLink))
             {
                 yield return uwr.SendWebRequest();
@@ -186,7 +189,7 @@ namespace Nekoyume.PandoraBox
             LoadingIMGMembers.SetActive(true);
             MemberTxt.text = await GetMemberListState(selectedGuildPlayers);
             MembersScroll.content.GetComponent<RectTransform>().sizeDelta =
-                    new Vector2(MembersScroll.content.GetComponent<RectTransform>().sizeDelta.x, MemberTxt.preferredHeight +40);
+                    new Vector2(MembersScroll.content.GetComponent<RectTransform>().sizeDelta.x, MemberTxt.preferredHeight +50);
             LoadingIMGMembers.SetActive(false);
         }
 
@@ -225,7 +228,7 @@ namespace Nekoyume.PandoraBox
 
             //Officers
             List<playerRecord> Officers = gList.FindAll(x => x.Rank == 50);
-            if (Officers is null)
+            if (Officers is null || Officers.Count == 0)
             {            }
             else
             {

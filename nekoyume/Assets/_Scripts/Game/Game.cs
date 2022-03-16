@@ -32,6 +32,8 @@ using Menu = Nekoyume.UI.Menu;
 namespace Nekoyume.Game
 {
     using Nekoyume.GraphQL;
+    using Nekoyume.Model.Mail;
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]

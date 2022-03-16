@@ -205,8 +205,10 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator Cooldown()
         {
+            int i = 45;
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                i = 15;
 
-            int i = PlayerPrefs.GetInt("_PandoraBox_PVE_RaidCooldown", 150); ;
             RaidButton.GetComponent<Image>().color = Color.white;
             RaidButton.interactable = false;
             RotateShape.SetActive(false);
