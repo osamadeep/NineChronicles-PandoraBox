@@ -350,6 +350,7 @@ namespace Nekoyume.UI
             costumeSlots.Clear();
             base.Close(ignoreCloseAnimation);
             _disposables.DisposeAllAndClear();
+            Find<StageInformation>().closeButton.interactable = true;
         }
 
         #endregion

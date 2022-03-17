@@ -52,8 +52,8 @@ namespace Nekoyume.UI
         [SerializeField]
         private GameObject buttonNotification;
 
-        [SerializeField]
-        private Button closeButton;
+        //[SerializeField]
+        public Button closeButton;
 
         private WorldMap.ViewModel _sharedViewModel;
         private StageType _stageType = StageType.None;

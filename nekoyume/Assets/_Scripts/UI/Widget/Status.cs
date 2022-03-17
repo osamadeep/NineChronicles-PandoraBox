@@ -188,7 +188,7 @@ namespace Nekoyume.UI
             if (!(PandoraBoxMaster.CurrentGuildPlayer is null)
                 && (PandoraBoxMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
             {
-                textLvName.text = $"<color=#B38271>LV. {level}</color> [<color=green>{PandoraBoxMaster.CurrentGuildPlayer.Guild}</color>] {States.Instance.CurrentAvatarState.name}";
+                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraBoxMaster.CurrentGuildPlayer.Guild}</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
             }
             yield return new WaitForSeconds(10);
         }

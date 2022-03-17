@@ -91,7 +91,7 @@ namespace Nekoyume.PandoraBox
             CurrentGuildPlayer = null;
             CurrentGuild = null;
 
-            CurrentGuildPlayer = PanDatabase.GuildPlayers.Find(x => x.Address == States.Instance.CurrentAvatarState.agentAddress.ToString());
+            CurrentGuildPlayer = PanDatabase.GuildPlayers.Find(x => x.IsEqual(States.Instance.CurrentAvatarState.address.ToString()));
             if (CurrentGuildPlayer is null)
                 return;
             CurrentGuild = PanDatabase.Guilds.Find(x => x.Tag == CurrentGuildPlayer.Guild);

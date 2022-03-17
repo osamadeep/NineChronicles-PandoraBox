@@ -146,7 +146,7 @@ namespace Nekoyume.PandoraBox
             List<PandoraPlayer> selectedGuildPlayersPandoraProfile = new List<PandoraPlayer>();
             foreach (GuildPlayer selectedGuildPlayer in selectedGuildPlayers)
             {
-                PandoraPlayer tmp = PandoraBoxMaster.PanDatabase.Players.Find(y => y.Address == selectedGuildPlayer.Address);
+                PandoraPlayer tmp = PandoraBoxMaster.PanDatabase.Players.Find(y => y.Address.ToLower() == selectedGuildPlayer.Address.ToLower());
                 if (tmp is null)
                     continue;
                 else

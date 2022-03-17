@@ -678,6 +678,8 @@ namespace Nekoyume.UI
             Find<Status>().Close();
             Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
             Find<HeaderMenuStatic>().Show(true);
+            Find<WorldMap>().Show();
+            Find<StageInformation>().Show();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Main);
             Find<QuestPreparation>().Show();
         }

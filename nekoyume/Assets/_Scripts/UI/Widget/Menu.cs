@@ -512,6 +512,11 @@ namespace Nekoyume.UI
             HackAndSlash(GuidedQuest.WorldQuest?.Goal ?? 4);
         }
 
+        public void ShowGuild(string tag)
+        {
+            Widget.Find<GuildInfo>().Show(tag);
+        }
+
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private void OnEnable()

@@ -40,7 +40,7 @@ namespace Nekoyume.UI.Scroller
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI winRateText = null;
         [SerializeField] private GameObject FavTarget = null;
-        [SerializeField] private GameObject blinkSelected = null;
+        public GameObject BlinkSelected = null;
 
         //for simulate
         //ViewModel currentViewModel = null; //we will get this when cell show
@@ -132,7 +132,13 @@ namespace Nekoyume.UI.Scroller
                     var currentAddress = States.Instance.CurrentAvatarState?.address;
                     var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
                     Widget.Find<FriendInfoPopupPandora>().Show(avatarState, ArenaInfo, arenaInfo, true);
-                    blinkSelected.SetActive(true);
+
+                    //clear selected cells and select the new one.
+                    Transform clc = Widget.Find<RankingBoard>().CellsListContainer;
+                    foreach (Transform item in clc)
+                        item.GetComponent<ArenaRankCell>().BlinkSelected.SetActive(false);
+                    BlinkSelected.SetActive(true);
+
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     //Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
@@ -429,14 +435,14 @@ namespace Nekoyume.UI.Scroller
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo is null)
-                blinkSelected.SetActive(false);
+                BlinkSelected.SetActive(false);
             else
-                blinkSelected.SetActive(itemData.arenaInfo.AvatarAddress == Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo.AvatarAddress);
+                BlinkSelected.SetActive(itemData.arenaInfo.AvatarAddress == Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo.AvatarAddress);
             
 
             PandoraPlayer enemyPan = PandoraBoxMaster.GetPandoraPlayer(ArenaInfo.AgentAddress.ToString());
             enemyGuildPlayer = null;
-            enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.Address == ArenaInfo.AgentAddress.ToString());
+            enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(ArenaInfo.AvatarAddress.ToString()));
 
             if (enemyGuildPlayer is null)
                 nameText.text = ArenaInfo.AvatarName.Split('<')[0];
@@ -449,9 +455,9 @@ namespace Nekoyume.UI.Scroller
                 else
                 {
                     if (enemyGuildPlayer.Guild == PandoraBoxMaster.CurrentGuildPlayer.Guild)
-                        nameText.text = $"[<color=green>{enemyGuildPlayer.Guild}</color>] {ArenaInfo.AvatarName.Split('<')[0]}";
+                        nameText.text = $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
                     else
-                        nameText.text = $"[{enemyGuildPlayer.Guild}] {ArenaInfo.AvatarName.Split('<')[0]}";
+                        nameText.text = $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
                 }
 
             }

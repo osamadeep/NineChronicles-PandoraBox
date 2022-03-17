@@ -73,8 +73,6 @@ namespace Nekoyume.PandoraBox
                 result = true;
             if (PandoraBoxMaster.PanDatabase.TrialPremium > currentBlock)
                 result = true;
-
-            //Debug.Log("Premium Check:" + result);
             return result;
         }
 
@@ -90,6 +88,7 @@ namespace Nekoyume.PandoraBox
         public string Link;
         public int Type;
         public string Language;
+
     }
 
     [System.Serializable]
@@ -99,5 +98,10 @@ namespace Nekoyume.PandoraBox
         public string Guild;
         public string AvatarAddress;
         public int Rank;
+
+        public bool IsEqual(string otherAddress)
+        {
+            return AvatarAddress.ToLower() == otherAddress.ToLower();
+        }
     }
 }

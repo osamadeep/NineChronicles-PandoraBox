@@ -29,6 +29,7 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI FightCountTxt = null;
         [SerializeField] private Button RefreshButton = null;
         [SerializeField] private Slider FightCountSldr = null;
+        public Transform CellsListContainer = null;
         public GameObject waitingForLaodBlocker;
         public GameObject LoadingImage;
         [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
@@ -135,12 +136,14 @@ namespace Nekoyume.UI
             closeButton.onClick.AddListener(() =>
             {
                 Close(true);
+                Find<FriendInfoPopupPandora>().Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
             });
 
             CloseWidget = () =>
             {
                 Close(true);
+                Find<FriendInfoPopupPandora>().Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
             };
             SubmitWidget = null;
