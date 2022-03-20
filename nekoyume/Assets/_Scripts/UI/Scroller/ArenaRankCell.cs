@@ -450,7 +450,7 @@ namespace Nekoyume.UI.Scroller
             {
                 if (PandoraBoxMaster.CurrentGuildPlayer is null)
                 {
-                    nameText.text = $"[{enemyGuildPlayer.Guild}] {ArenaInfo.AvatarName.Split('<')[0]}";
+                    nameText.text = $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
                 }
                 else
                 {
