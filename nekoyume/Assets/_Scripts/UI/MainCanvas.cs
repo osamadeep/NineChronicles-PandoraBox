@@ -322,6 +322,10 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<BoosterPopup>());
             yield return null;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<RaidPopup>());
+            yield return null;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<CelebratesPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<FriendInfoPopup>());

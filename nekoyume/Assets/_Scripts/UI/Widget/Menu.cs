@@ -158,6 +158,7 @@ namespace Nekoyume.UI
 
         public void GoToStage(BattleLog battleLog)
         {
+            Debug.LogError("HACK: STEP 11");
             Game.Event.OnStageStart.Invoke(battleLog);
             Find<LoadingScreen>().Close();
             Close(true);
@@ -519,7 +520,7 @@ namespace Nekoyume.UI
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        private void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             StartCoroutine(arenaRemainsTime());
@@ -528,6 +529,8 @@ namespace Nekoyume.UI
 
             DailyBonus.IsTrying = false;
         }
+
+
 
         public void MiniGameShow()
         {
@@ -618,9 +621,9 @@ namespace Nekoyume.UI
                 if (arenaInfo != null)
                 {
                     if (arenaInfo.DailyChallengeCount > 0)
-                        arenaCount.text = $"(<color=green>{arenaInfo.DailyChallengeCount}</color>)";
+                        arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
                     else
-                        arenaCount.text = $"(<color=red>{arenaInfo.DailyChallengeCount}</color>)";
+                        arenaCount.text = $"<color=red>{arenaInfo.DailyChallengeCount}</color>/5";
                 }
                 else
                     arenaCount.text = "<color=red>!</color>";
@@ -645,7 +648,22 @@ namespace Nekoyume.UI
             AudioController.PlayClick();
         }
 
+        public void FastArenaEnter()
+        {
+            Close(true);
+            Find<RankingBoard>().gameObject.SetActive(true);
+            AudioController.instance.PlayMusic(AudioController.MusicCode.PVPBattle);
+            AudioController.PlayClick();
+        }
 
+        public void FastShopEnter()
+        {
+            Close(true);
+            Find<ShopBuy>().gameObject.SetActive(true);
+            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Shop);
+            AudioController.instance.PlayMusic(AudioController.MusicCode.Shop);
+            AudioController.PlayClick();
+        }
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

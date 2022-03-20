@@ -91,7 +91,7 @@ namespace Nekoyume.PandoraBox
         void SetGuildInfo()
         {
             //Global info
-            NameTxt.text = $"[<color=green>{selectedGuild.Tag}</color>] {selectedGuild.Name}";
+            NameTxt.text = $"[<color=#2E8A18>{selectedGuild.Tag}</color>] {selectedGuild.Name}";
             TotalCPTxt.text = "...";
             MemberTxt.text = "";
             DescTxt.text = selectedGuild.Desc;

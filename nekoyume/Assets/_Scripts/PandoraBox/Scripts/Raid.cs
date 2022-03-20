@@ -9,13 +9,18 @@ using Nekoyume.Model.Mail;
 
 namespace Nekoyume.PandoraBox
 {
+    using Nekoyume.Model.Item;
     using Nekoyume.UI;
+    using Nekoyume.UI.Module;
     using Nekoyume.UI.Scroller;
     using Nekoyume.UI.Tween;
+    using System.Collections.Generic;
     using UniRx;
 
-    public class PandoraRaid : MonoBehaviour
+    public class Raid : MonoBehaviour
     {
+        public static Raid Instance;
+
         [SerializeField]
         TMP_InputField StageIDText;
 
@@ -37,6 +42,16 @@ namespace Nekoyume.PandoraBox
         private Game.Character.Player _player;
 
         bool isBusy = false;
+        int totalCount;
+
+        void Awake()
+        {
+            RaidButton.OnClickAsObservable().Subscribe(_ => StartRaid()).AddTo(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+        }
 
         private void Start()
         {
@@ -91,6 +106,7 @@ namespace Nekoyume.PandoraBox
 
         public void StartRaid()
         {
+
             if (isBusy)
             {
                 isBusy = false;
@@ -98,6 +114,7 @@ namespace Nekoyume.PandoraBox
             }
             else
             {
+                totalCount = int.Parse(CurrentTriesManual.text);
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
                 if (int.Parse(StageIDText.text) > clearedStage +1)
                 {
@@ -109,7 +126,7 @@ namespace Nekoyume.PandoraBox
 
                 if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 {
-                    StartCoroutine(Raid(int.Parse(CurrentTriesManual.text)));
+                    StartCoroutine(StartRaid(totalCount));
                 }
                 else
                 {
@@ -119,12 +136,12 @@ namespace Nekoyume.PandoraBox
                         , NotificationCell.NotificationType.Information);
                         return;
                     }
-                    StartCoroutine(Raid(int.Parse(CurrentTriesManual.text)));
+                    StartCoroutine(StartRaid(totalCount));
                 }
             }
         }
 
-        IEnumerator Raid(int count)
+        IEnumerator StartRaid(int count)
         {
 
             isBusy = true;
@@ -160,12 +177,22 @@ namespace Nekoyume.PandoraBox
             if (!isBusy)
                 yield break;
 
+            PandoraBoxMaster.IsRaid = true;
+
             if (!RaidMethodIsSweep)
             {
-                LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, -_requiredCost);
+                //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, _requiredCost * count);
                 ActionRenderHandler.Instance.Pending = true;
-                Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
-                //Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
+
+                //Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
+                Game.Game.instance.ActionManager.HackAndSlash(
+                    _player.Costumes,
+                    _player.Equipments,
+                    new List<Consumable>(),
+                    worldID,
+                    stage.Id,
+                    count).Subscribe();
+
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
                 + "</color> (<color=green>" + count + "</color>) times Completed!", NotificationCell.NotificationType.Information);
             }
@@ -176,7 +203,7 @@ namespace Nekoyume.PandoraBox
                     if (!isBusy)
                         yield break;
                     RaidButtonText.text = $"(<color=green>{count- (i+1)}</color>)Cancel!";
-                    LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,-_requiredCost);
+                    //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,_requiredCost);
                     ActionRenderHandler.Instance.Pending = true;
                     Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
@@ -186,7 +213,6 @@ namespace Nekoyume.PandoraBox
 
                 }
             }
-
             StartCoroutine(Cooldown());
             //OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...");
         }
@@ -201,6 +227,15 @@ namespace Nekoyume.PandoraBox
             {
                 GetComponent<AnchoredPositionSingleTweener>().PlayTween();
             }
+        }
+
+        public void UpdateActionPoint()
+        {
+
+            //FIX ME: consider this is cost of all levels!
+            Widget.Find<HeaderMenuStatic>().actionPoint.SetActionPoint(States.Instance.CurrentAvatarState.actionPoint - (totalCount * 5));
+            Widget.Find<HeaderMenuStatic>().actionPoint.SetEventTriggerEnabled(true);
+            PandoraBoxMaster.IsRaid = false;
         }
 
         IEnumerator Cooldown()

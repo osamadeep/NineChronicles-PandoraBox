@@ -15,7 +15,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100130";
-        public static string VersionId = "010035";
+        public static string VersionId = "010036";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -32,6 +32,7 @@ namespace Nekoyume.PandoraBox
         public static int ArenaTicketsToUse=1;
         public static List<string> ArenaFavTargets = new List<string>();
         public static bool IsSimulate;
+        public static bool IsRaid;
 
         //Objects
         public PandoraSettings Settings;

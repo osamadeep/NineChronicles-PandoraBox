@@ -13,7 +13,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
-    public class BoosterPopup : PopupWidget
+    public class RaidPopup : PopupWidget
     {
         [SerializeField]
         private Button cancelButton;
@@ -25,7 +25,13 @@ namespace Nekoyume.UI
         private Slider apSlider;
 
         [SerializeField]
+        private Slider roundSlider;
+
+        [SerializeField]
         private TMP_Text boostCountText;
+
+        [SerializeField]
+        private TMP_Text roundCountText;
 
         [SerializeField]
         private TMP_Text needAPText;
@@ -38,6 +44,12 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private Button boostMinusButton;
+
+        [SerializeField]
+        private Button roundPlusButton;
+
+        [SerializeField]
+        private Button roundMinusButton;
 
         private Stage _stage;
         private Player _player;
@@ -57,6 +69,8 @@ namespace Nekoyume.UI
             submitButton.OnClickAsObservable().Subscribe(_ => BoostQuest()).AddTo(gameObject);
             boostPlusButton.OnClickAsObservable().Subscribe(_ => apSlider.value++);
             boostMinusButton.OnClickAsObservable().Subscribe(_ => apSlider.value--);
+            roundPlusButton.OnClickAsObservable().Subscribe(_ => roundSlider.value++);
+            roundMinusButton.OnClickAsObservable().Subscribe(_ => roundSlider.value--);
         }
 
         public void Show(
@@ -88,6 +102,13 @@ namespace Nekoyume.UI
                 var costOfStage = GetCostOfStage();
                 boostCountText.text = value.ToString(CultureInfo.InvariantCulture);
                 needAPText.text = (costOfStage * value).ToString(CultureInfo.InvariantCulture);
+            });
+
+            roundSlider.onValueChanged.AddListener(value =>
+            {
+                //var costOfStage = GetCostOfStage();
+                roundCountText.text = value.ToString(CultureInfo.InvariantCulture);
+                //needAPText.text = (costOfStage * value).ToString(CultureInfo.InvariantCulture);
             });
 
             var cost = GetCostOfStage();

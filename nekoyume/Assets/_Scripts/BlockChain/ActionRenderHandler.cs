@@ -29,6 +29,7 @@ using Lib9c.DevExtensions.Action;
 #endif
 namespace Nekoyume.BlockChain
 {
+    using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
     using UniRx;
 
@@ -839,7 +840,6 @@ namespace Nekoyume.BlockChain
                 {
                     return;
                 }
-
                 _disposableForBattleEnd?.Dispose();
                 _disposableForBattleEnd =
                     Game.Game.instance.Stage.onEnterToStageEnd
@@ -861,7 +861,6 @@ namespace Nekoyume.BlockChain
                                 // ReSharper disable once ConvertClosureToMethodGroup
                                 .DoOnError(e => Debug.LogException(e));
                         });
-
                 var simulator = new StageSimulator(
                     new LocalRandom(eval.RandomSeed),
                     States.Instance.CurrentAvatarState,
@@ -876,7 +875,6 @@ namespace Nekoyume.BlockChain
                 simulator.Simulate(eval.Action.playCount);
                 var log = simulator.Log;
                 Game.Game.instance.Stage.PlayCount = eval.Action.playCount;
-
                 if (Widget.Find<LoadingScreen>().IsActive())
                 {
                     if (Widget.Find<QuestPreparation>().IsActive())
@@ -887,11 +885,16 @@ namespace Nekoyume.BlockChain
                     {
                         Widget.Find<Menu>().GoToStage(log);
                     }
+
                 }
                 else if (Widget.Find<StageLoadingEffect>().IsActive() &&
                          Widget.Find<BattleResultPopup>().IsActive())
                 {
                     Widget.Find<BattleResultPopup>().NextStage(log);
+                }
+                else if (PandoraBoxMaster.IsRaid)
+                {
+                    Raid.Instance.UpdateActionPoint();
                 }
             }
             else

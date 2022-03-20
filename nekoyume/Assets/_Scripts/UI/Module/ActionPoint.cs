@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Nekoyume.State;
 using Nekoyume.State.Subjects;
 using Nekoyume.UI.Module.Common;
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -113,7 +113,6 @@ namespace Nekoyume.UI.Module
                     Charger(false);
                 }
             }
-
         }
 
         protected override void OnDisable()

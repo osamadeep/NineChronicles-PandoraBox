@@ -53,7 +53,7 @@ namespace Nekoyume.UI.Module
 
         [SerializeField] private List<ToggleInfo> toggles = new List<ToggleInfo>();
         [SerializeField] private GameObject ncg;
-        [SerializeField] private ActionPoint actionPoint;
+        public ActionPoint actionPoint;
         [SerializeField] private GameObject dailyBonus;
         [SerializeField] private GameObject hourglass;
         [SerializeField] private VFX inventoryVFX;

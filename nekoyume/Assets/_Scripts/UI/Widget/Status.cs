@@ -80,7 +80,7 @@ namespace Nekoyume.UI
             base.Show(ignoreStartAnimation);
             battleTimerView.Close();
             hpBar.transform.parent.gameObject.SetActive(false);
-            PandoraStatus.rectTransform.anchoredPosition = new Vector2(80, -51);
+            PandoraStatus.rectTransform.anchoredPosition = new Vector2(108, -51);
             //PandoraStatus.gameObject.SetActive(true);
             buffLayout.SetBuff(null);
         }
@@ -88,7 +88,7 @@ namespace Nekoyume.UI
         public void ShowBattleStatus()
         {
             hpBar.transform.parent.gameObject.SetActive(true);
-            PandoraStatus.rectTransform.anchoredPosition = new Vector2(80, -76.8f);
+            PandoraStatus.rectTransform.anchoredPosition = new Vector2(108, -76.8f);
             //PandoraStatus.gameObject.SetActive(false);
         }
 
@@ -151,7 +151,8 @@ namespace Nekoyume.UI
             _avatarName = States.Instance.CurrentAvatarState.NameWithHash;
             //textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            StartCoroutine(UpdataPandoraStatus());
+            if (gameObject.activeInHierarchy)
+                StartCoroutine(UpdataPandoraStatus());
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var displayHp = _player.CurrentHP;
             textHp.text = $"{displayHp} / {_player.HP}";
@@ -177,10 +178,15 @@ namespace Nekoyume.UI
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
                 var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
-                PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+                //PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+                PandoraStatus.gameObject.SetActive(true);
+                PandoraStatus.text = $"{timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
             }
             else
-                PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
+            {
+                PandoraStatus.gameObject.SetActive(false);
+                //PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
+            }
 
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";

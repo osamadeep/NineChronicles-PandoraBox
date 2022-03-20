@@ -13,9 +13,9 @@ namespace Nekoyume
 
         private static EventInfo GetEventInfo()
         {
-            return SO.Events[1];
-            //return SO.Events.FirstOrDefault(x => IsInTime(x.BeginDateTime, x.EndDateTime)) ??
-            //       SO.DefaultEvent;
+            //return SO.Events[1];
+            return SO.Events.FirstOrDefault(x => IsInTime(x.BeginDateTime, x.EndDateTime)) ??
+                   SO.DefaultEvent;
         }
 
         private static bool IsInTime(string begin, string end)

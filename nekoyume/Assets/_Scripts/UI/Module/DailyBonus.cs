@@ -18,8 +18,8 @@ using UnityEngine.UI;
 namespace Nekoyume.UI.Module
 {
     using Nekoyume.Helper;
+    using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
-    using PandoraBox;
     using UniRx;
 
     public class DailyBonus : AlphaAnimateModule
@@ -168,12 +168,13 @@ namespace Nekoyume.UI.Module
             }
 
             hasNotificationImage.enabled = _isFull && States.Instance.CurrentAvatarState?.actionPoint == 0;
-
             animator.SetBool(IsFull, _isFull);
+
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
                 if (!IsTrying)
                     StartCoroutine(TryToAutoCollect());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -181,13 +182,25 @@ namespace Nekoyume.UI.Module
         IEnumerator TryToAutoCollect()
         {
             IsTrying = true;
-            yield return new WaitForSeconds(1);
-            if (sliderAnimator.IsFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
+            yield return new WaitForSeconds(1f);
+            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
             {
-                GetDailyReward();
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Your Rewards collected <color=red><b>Automatically</b></color>!", NotificationCell.NotificationType.Information);
+                if (actionPoint != null && actionPoint.NowCharging)
+                {
+                    OneLineSystem.Push(
+                        MailType.System,
+                        L10nManager.Localize("UI_CHARGING_AP"),
+                        NotificationCell.NotificationType.Information);
+                }
+                else
+                {
+                    GetDailyReward();
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Rewards Auto collected!", NotificationCell.NotificationType.Information);
+
+                }
             }
-            yield return new WaitForSeconds(50);
+
+            yield return new WaitForSeconds(70);
             IsTrying = false;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
