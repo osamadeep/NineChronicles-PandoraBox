@@ -55,12 +55,19 @@ namespace Nekoyume.PandoraBox
         [SerializeField]
         Image sweepImage;
 
-        //fast login
+        //multiple login
         [SerializeField]
         Image multiLogOnImage;
 
         [SerializeField]
         Image multiLogOffImage;
+
+        //intro story
+        [SerializeField]
+        Image introStoryOnImage;
+
+        [SerializeField]
+        Image introStoryOffImage;
 
 
         void OnEnable()
@@ -84,6 +91,7 @@ namespace Nekoyume.PandoraBox
             LoadArenaLo();
             LoadRaidMethod();
             LoadMultipleLogin();
+            LoadIntroStory();
         }
 
         public void ResetDefault()
@@ -104,6 +112,7 @@ namespace Nekoyume.PandoraBox
             LoadArenaLo();
             LoadRaidMethod();
             LoadMultipleLogin();
+            LoadIntroStory();
         }
 
         public void SaveSettings()
@@ -153,6 +162,18 @@ namespace Nekoyume.PandoraBox
         {
             multiLogOnImage.color = PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             multiLogOffImage.color = !PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeIntroStory(bool value)
+        {
+            PandoraBoxMaster.Instance.Settings.IsStory = value;
+            LoadIntroStory();
+        }
+
+        void LoadIntroStory()
+        {
+            introStoryOnImage.color = PandoraBoxMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            introStoryOffImage.color = !PandoraBoxMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMenuSpeed()

@@ -80,7 +80,7 @@ namespace Nekoyume.UI
             base.Show(ignoreStartAnimation);
             battleTimerView.Close();
             hpBar.transform.parent.gameObject.SetActive(false);
-            PandoraStatus.rectTransform.anchoredPosition = new Vector2(108, -51);
+            PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -52.5f);
             //PandoraStatus.gameObject.SetActive(true);
             buffLayout.SetBuff(null);
         }
@@ -88,7 +88,7 @@ namespace Nekoyume.UI
         public void ShowBattleStatus()
         {
             hpBar.transform.parent.gameObject.SetActive(true);
-            PandoraStatus.rectTransform.anchoredPosition = new Vector2(108, -76.8f);
+            PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -79f);
             //PandoraStatus.gameObject.SetActive(false);
         }
 

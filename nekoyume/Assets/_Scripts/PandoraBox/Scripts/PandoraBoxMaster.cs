@@ -122,7 +122,7 @@ namespace Nekoyume.PandoraBox
         [HideInInspector]
         public bool WhatsNewShown { get; set; } = false;
         [HideInInspector]
-        public bool IsStory { get; set; } = false;
+        public bool IsStory { get; set; } = true;
         [HideInInspector]
         public bool IsMultipleLogin { get; set; } = true;
 
@@ -211,6 +211,7 @@ namespace Nekoyume.PandoraBox
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
+                PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(true));
             }
 
             //General

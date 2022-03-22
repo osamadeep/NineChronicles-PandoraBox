@@ -894,6 +894,9 @@ namespace Nekoyume.BlockChain
                 }
                 else if (PandoraBoxMaster.IsRaid)
                 {
+                    //Debug.LogError(" committed on the blockchain");
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raid " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                    , NotificationCell.NotificationType.Information);
                     Raid.Instance.UpdateActionPoint();
                 }
             }
@@ -1048,6 +1051,10 @@ namespace Nekoyume.BlockChain
                 {
                     Widget.Find<RankingBoard>().GoToStage(log);
                 }
+                //give option to know that battle is done
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena Random Fight " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                , NotificationCell.NotificationType.Information);
+                Widget.Find<Menu>().ClearRemainingTickets();
             }
             else
             {
