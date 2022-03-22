@@ -676,13 +676,8 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
-            //int topPlayer = 1;
-
-            //var infos = state.GetArenaInfos(1, topPlayer); //3
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             int upper = 10;
             int lower = 10;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
             var infos = state.GetArenaInfos(currentAvatarAddress, upper, lower);
@@ -730,6 +725,12 @@ namespace Nekoyume.UI
         {
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This Feature coming soon!", NotificationCell.NotificationType.Information);
             return;
+        }
+
+        public void ForceShowMenu()
+        {
+            Widget.Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Main);
+            Find<HeaderMenuStatic>().Show();
         }
 
         public void ShowSelectCharacter()
