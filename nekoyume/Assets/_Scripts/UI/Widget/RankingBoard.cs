@@ -68,7 +68,7 @@ namespace Nekoyume.UI
         {
             waitingForLaodBlocker.SetActive(true);
             RefreshButton.interactable = false;
-            RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "Update...";
+            RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "...";
 
             //clear fav list, not optimal
             PandoraBoxMaster.ArenaFavTargets.Clear();
@@ -112,7 +112,7 @@ namespace Nekoyume.UI
                 buttonText.text = (cooldown - i).ToString();
                 yield return new WaitForSeconds(1);
             }
-            buttonText.text = "Refresh";
+            buttonText.text = "";
             RefreshButton.interactable = true;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

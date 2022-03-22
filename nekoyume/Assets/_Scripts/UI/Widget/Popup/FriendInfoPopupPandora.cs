@@ -23,6 +23,7 @@ namespace Nekoyume.UI
     using PandoraBox;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
 
     public class FriendInfoPopupPandora : Widget
@@ -36,15 +37,12 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private GameObject paidMember = null;
         [SerializeField] private Button copyButton = null;
-        [SerializeField] private TextMeshProUGUI blockText = null;
-        [SerializeField] private TextMeshProUGUI dateText = null;
-        [SerializeField] private TextMeshProUGUI versionText = null;
         [SerializeField] private TextMeshProUGUI rateText = null;
         [SerializeField] private Button NemesisButton = null;
         [SerializeField] private Button ResetNemesisButton = null;
+        [SerializeField] private AvatarStats currentAvatarStats = null;
 
         //for simulate
-        public GameObject PremiumSection;
         [HideInInspector]
         public ArenaInfo enemyArenaInfo = null;
         ArenaInfo currentAvatarArenaInfo = null;
@@ -129,8 +127,8 @@ namespace Nekoyume.UI
             string playerInfo =
                 "```prolog\n" +
                 "Avatar Name      : " + tempAvatarState.NameWithHash + "\n" +
+                "Avatar Address   : " + tempAvatarState.address + "\n" +
                 "Account Address  : " + tempAvatarState.agentAddress + "\n" +
-                "Character Address: " + tempAvatarState.address + "\n" +
                 "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
                 "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString() + "\n" +
                 "```";
@@ -193,7 +191,6 @@ namespace Nekoyume.UI
             avatarState = avatarStt;
 
             rateText.text = "Win Rate : .?.";
-            PremiumSection.SetActive(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium());
 
             InitializePlayer(avatarState);
             UpdateSlotView(avatarState);
@@ -213,6 +210,12 @@ namespace Nekoyume.UI
 
         public void SimulateOnce()
         {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
             System.Random rnd = new System.Random();
             var simulator = new RankingSimulator(
                 new LocalRandom(rnd.Next(-1000000000, 1000000000)),
@@ -235,6 +238,12 @@ namespace Nekoyume.UI
 
         public void SimulateMultiple()
         {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
             StartCoroutine(GetEnemyState());
         }
 
@@ -372,9 +381,6 @@ namespace Nekoyume.UI
             TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
             text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()) ? "Remove Nemesis" : "Set Nemesis";
 
-            blockText.text = "Block #" + Game.Game.instance.Agent.BlockIndex.ToString();
-            dateText.text = System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)";
-            versionText.text = "APV: " + PandoraBoxMaster.OriginalVersionId;
             if (nicknameText.text.Contains("Lambo") || nicknameText.text.Contains("AndrewLW") || nicknameText.text.Contains("bmcdee") || nicknameText.text.Contains("Wabbs"))
                 paidMember.SetActive(true);
             else
@@ -402,6 +408,31 @@ namespace Nekoyume.UI
             avatarStats.SetData(stats);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             Find<RankingBoard>().LoadingImage.SetActive(false);
+            Player _currentPlayer;
+            _currentPlayer = PlayerFactory.Create(States.Instance.CurrentAvatarState).GetComponent<Player>();
+            _currentPlayer.gameObject.SetActive(false);
+            _tempStats = _currentPlayer.Model.Stats.Clone() as CharacterStats;
+            stats = _tempStats.SetAll(
+                _tempStats.Level,
+                _currentPlayer.Equipments,
+                null,
+                Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet
+            );
+            currentAvatarStats.SetData(stats);
+
+            //color fields
+            for (int i = 0; i < 6; i++)
+            {
+                if (i == 3)
+                    continue;
+                DetailedStatView enemyST = avatarStats.transform.GetChild(i).GetComponent<DetailedStatView>();
+                DetailedStatView currentST = currentAvatarStats.transform.GetChild(i).GetComponent<DetailedStatView>();
+                if (float.Parse(enemyST.valueText.text, CultureInfo.InvariantCulture) > float.Parse(currentST.valueText.text, CultureInfo.InvariantCulture))
+                    currentST.valueText.text = $"<color=red>{currentST.valueText.text}</color>";
+                else
+                    currentST.valueText.text = $"<color=green>{currentST.valueText.text}</color>";
+            }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

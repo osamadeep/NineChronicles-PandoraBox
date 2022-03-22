@@ -555,6 +555,21 @@ namespace Nekoyume.UI
 
         public async void RandomArenaFight()
         {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            var avatarAddress = States.Instance.CurrentAvatarState?.address;
+            var arenaInfoTickets = States.Instance.WeeklyArenaState.GetArenaInfo(avatarAddress.Value);
+
+            if (arenaInfoTickets.DailyChallengeCount == 0)
+            {
+                randomButton.interactable = false;
+                return;
+            }
+
             randomButton.interactable = false;
             BlockHash? _cachedBlockHash = null;
 
@@ -581,7 +596,6 @@ namespace Nekoyume.UI
                 return;
             }
 
-            var avatarAddress = States.Instance.CurrentAvatarState?.address;
             if (!avatarAddress.HasValue)
             {
                 return;
@@ -636,7 +650,7 @@ namespace Nekoyume.UI
 
             //final attack
             //Widget.Find<ArenaBattleLoadingScreen>().Show(new ArenaInfo(selectedEnemyArenaInfo.arenaInfo)); <-- for visual simulate
-            var arenaInfoTickets = States.Instance.WeeklyArenaState.GetArenaInfo(avatarAddress.Value);
+
             Game.Character.Player _player = Game.Game.instance.Stage.GetPlayer();
             var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
 

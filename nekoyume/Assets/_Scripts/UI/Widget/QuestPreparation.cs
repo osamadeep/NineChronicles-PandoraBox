@@ -972,7 +972,6 @@ namespace Nekoyume.UI
                     _worldId,
                     _stageId.Value,
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
-                    Game.Game.instance.TableSheets.CostumeStatSheet,
                     StageSimulator.ConstructorVersionV100080,
                     1,PandoraBoxMaster.IsSimulate);
 
