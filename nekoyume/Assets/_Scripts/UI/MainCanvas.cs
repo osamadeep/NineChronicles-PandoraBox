@@ -304,6 +304,8 @@ namespace Nekoyume.UI
             secondWidgets.Add(Widget.Create<GuildInfo>());
             yield return null;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<NoticePopup>());
+            yield return null;
             secondWidgets.Add(Widget.Create<CombinationSlotPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<BuyItemInformationPopup>());
