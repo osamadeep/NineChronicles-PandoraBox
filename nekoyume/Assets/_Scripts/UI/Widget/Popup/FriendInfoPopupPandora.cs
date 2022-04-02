@@ -232,7 +232,7 @@ namespace Nekoyume.UI
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
-            PandoraBoxMaster.IsSimulate = true;
+            PandoraBoxMaster.IsRankingSimulate = true;
             Widget.Find<RankingBoard>().GoToStage(log);
         }
 

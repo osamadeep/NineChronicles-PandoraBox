@@ -165,7 +165,6 @@ namespace Nekoyume.UI
 
         public void GoToStage(BattleLog battleLog)
         {
-            Debug.LogError("HACK: STEP 11");
             Game.Event.OnStageStart.Invoke(battleLog);
             Find<LoadingScreen>().Close();
             Close(true);
@@ -570,7 +569,11 @@ namespace Nekoyume.UI
                 return;
             }
 
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...", NotificationCell.NotificationType.Information);
             randomButton.interactable = false;
+            randomButton.transform.GetChild(0).gameObject.SetActive(true);
+            PandoraBoxMaster.IsRanking = true;
+
             BlockHash? _cachedBlockHash = null;
 
             WeeklyArenaState weeklyArenaState = null;
@@ -634,7 +637,7 @@ namespace Nekoyume.UI
                 var tmpInfo = _weeklyCachedInfo[rnd.Next(0, _weeklyCachedInfo.Count)];
                 if (tmpInfo.arenaInfo.AvatarAddress != States.Instance.CurrentAvatarState.address)
                 {
-                    if (tmpInfo.rank < currentArenaInfo.rank && tmpInfo.arenaInfo.CombatPoint < currentArenaInfo.arenaInfo.CombatPoint)
+                    if (tmpInfo.rank < currentArenaInfo.rank && tmpInfo.arenaInfo.CombatPoint < currentArenaInfo.arenaInfo.CombatPoint - 10000)
                     {
                         selectedEnemyArenaInfo = tmpInfo;
                         break;
@@ -668,7 +671,7 @@ namespace Nekoyume.UI
                     .Select(i => i.ItemId).ToList()
                 ).Subscribe();
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Random Fight Arena <color=green>" + (i + 1)
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Random selected ({selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" + (i + 1)
                     + "</color>/" + arenaInfoTickets.DailyChallengeCount + "!", NotificationCell.NotificationType.Information);
             }
 
@@ -719,6 +722,8 @@ namespace Nekoyume.UI
         {
             randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X0";
             arenaCount.text = $"<color=red>{0}</color>/5";
+            PandoraBoxMaster.IsRanking = false;
+            randomButton.transform.GetChild(0).gameObject.SetActive(false);
         }
 
         public void MiniGameShow()
@@ -733,8 +738,22 @@ namespace Nekoyume.UI
             Find<HeaderMenuStatic>().Show();
         }
 
-        public void ShowSelectCharacter()
+        public void FastCharacterSwitch()
         {
+            if (PandoraBoxMaster.IsRanking)
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            if (PandoraBoxMaster.IsHackAndSlash)
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+
+
             if (Game.Game.instance.Stage.IsInStage)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
@@ -837,11 +856,6 @@ namespace Nekoyume.UI
             Application.OpenURL("https://discord.gg/yfcP5GzqQ7");
         }
 
-        public void FastCharacterSwitch()
-        {
-            Game.Game.instance.BackToNest();
-            AudioController.PlayClick();
-        }
 
         public void FastArenaEnter()
         {

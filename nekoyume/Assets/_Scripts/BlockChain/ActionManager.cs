@@ -26,6 +26,7 @@ using Lib9c.DevExtensions.Action;
 
 namespace Nekoyume.BlockChain
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     /// <summary>
@@ -517,6 +518,7 @@ namespace Nekoyume.BlockChain
                 throw new NullReferenceException(nameof(weeklyArenaAddress));
             }
 
+            PandoraBoxMaster.IsRanking = true;
             Analyzer.Instance.Track("Unity/Ranking Battle");
             var action = new RankingBattle
             {

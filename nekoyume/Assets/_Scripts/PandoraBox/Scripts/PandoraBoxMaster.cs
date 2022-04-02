@@ -14,8 +14,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100140";
-        public static string VersionId = "010037";
+        public static string OriginalVersionId = "v100150";
+        public static string VersionId = "010038";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -31,8 +31,10 @@ namespace Nekoyume.PandoraBox
         public static int LoginIndex;
         public static int ArenaTicketsToUse=1;
         public static List<string> ArenaFavTargets = new List<string>();
-        public static bool IsSimulate;
-        public static bool IsRaid;
+        public static bool IsRanking; //raid ranking battle
+        public static bool IsRankingSimulate; //simulate ranking battle
+        public static bool IsHackAndSlash;  //raid h&s
+        public static bool IsHackAndSlashSimulate; //simulate h&s
 
         //Objects
         public PandoraSettings Settings;

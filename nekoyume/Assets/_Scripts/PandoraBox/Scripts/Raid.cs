@@ -118,8 +118,8 @@ namespace Nekoyume.PandoraBox
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
                 if (int.Parse(StageIDText.text) > clearedStage +1)
                 {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You Didnt Open " + "<color=red><b>"+ int.Parse(StageIDText.text) + "</b></color> yet!"
-                        , NotificationCell.NotificationType.Information);
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: You Didnt Open {int.Parse(StageIDText.text)} yet!"
+                        , NotificationCell.NotificationType.Alert);
                     return;
                 }
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
@@ -132,8 +132,8 @@ namespace Nekoyume.PandoraBox
                 {
                     if (tries <= 0)
                     {
-                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have " + "<color=red><b>0</b></color> Action Points!"
-                        , NotificationCell.NotificationType.Information);
+                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have <b>0</b> Action Points!"
+                        , NotificationCell.NotificationType.Alert);
                         return;
                     }
                     StartCoroutine(StartRaid(totalCount));
@@ -145,6 +145,7 @@ namespace Nekoyume.PandoraBox
         {
 
             isBusy = true;
+            PandoraBoxMaster.IsHackAndSlash = true;
             RotateShape.SetActive(true);
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
@@ -175,9 +176,11 @@ namespace Nekoyume.PandoraBox
             bool RaidMethodIsSweep = PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep;
 
             if (!isBusy)
+            {
+                PandoraBoxMaster.IsHackAndSlash = false;
                 yield break;
+            }
 
-            PandoraBoxMaster.IsRaid = true;
 
             if (!RaidMethodIsSweep)
             {
@@ -193,8 +196,8 @@ namespace Nekoyume.PandoraBox
                     stage.Id,
                     count).Subscribe();
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
-                + "</color> (<color=green>" + count + "</color>) times Completed!", NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Raiding for Stage <color=red>" + stage.Id
+                + "</color> (<color=green>" + count + "</color>) times ...", NotificationCell.NotificationType.Information);
             }
             else
             {
@@ -207,7 +210,7 @@ namespace Nekoyume.PandoraBox
                     ActionRenderHandler.Instance.Pending = true;
                     Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raiding Stage <color=red>" + stage.Id
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Raiding Stage <color=red>" + stage.Id
                         + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...", NotificationCell.NotificationType.Information);
                     yield return new WaitForSeconds(AllowedCooldown);
 
@@ -228,16 +231,6 @@ namespace Nekoyume.PandoraBox
                 GetComponent<AnchoredPositionSingleTweener>().PlayTween();
             }
         }
-
-        public void UpdateActionPoint()
-        {
-
-            //FIX ME: consider this is cost of all levels!
-            Widget.Find<HeaderMenuStatic>().actionPoint.SetActionPoint(States.Instance.CurrentAvatarState.actionPoint - (totalCount * 5));
-            Widget.Find<HeaderMenuStatic>().actionPoint.SetEventTriggerEnabled(true);
-            PandoraBoxMaster.IsRaid = false;
-        }
-
         IEnumerator Cooldown()
         {
             int i = 45;

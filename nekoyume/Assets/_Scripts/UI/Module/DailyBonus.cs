@@ -172,7 +172,7 @@ namespace Nekoyume.UI.Module
 
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
-                if (!IsTrying && !PandoraBoxMaster.IsRaid)
+                if (!IsTrying && !PandoraBoxMaster.IsHackAndSlash)
                     StartCoroutine(TryToAutoCollect());
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }

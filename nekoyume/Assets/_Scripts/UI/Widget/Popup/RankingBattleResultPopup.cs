@@ -4,6 +4,7 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
 using Nekoyume.Model.BattleStatus;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
@@ -65,6 +66,11 @@ namespace Nekoyume.UI
                     view.gameObject.SetActive(true);
                 }
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.IsRankingSimulate = false;
+            PandoraBoxMaster.IsRanking = false;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void BackToRanking()
@@ -84,7 +90,7 @@ namespace Nekoyume.UI
             //MainCanvas.instance.InitWidgetInMain();
             //Close();
 
-            Game.Game.instance.Stage.KillAllCharacters();
+            //Game.Game.instance.Stage.KillAllCharacters();
             Game.Game.instance.Stage.objectPool.ReleaseAll();
             Game.Game.instance.Stage.IsInStage = false;
             ActionCamera.instance.SetPosition(0f, 0f);

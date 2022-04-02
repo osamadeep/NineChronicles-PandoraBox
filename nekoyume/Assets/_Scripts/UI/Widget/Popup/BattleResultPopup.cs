@@ -21,6 +21,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class BattleResultPopup : PopupWidget
@@ -31,6 +32,7 @@ namespace Nekoyume.UI
             GoToMain,
             RepeatStage,
             NextStage,
+            Raid,
         }
 
         public class Model
@@ -81,15 +83,17 @@ namespace Nekoyume.UI
             public TextMeshProUGUI expText;
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField]
-        private Button returnQuestButton = null;
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         private const int Timer = 10;
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, 1.2f, 10f);
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button returnQuestButton = null;
+        [SerializeField] private Button hideButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private CanvasGroup canvasGroup = null;
@@ -270,6 +274,11 @@ namespace Nekoyume.UI
 
             UpdateView(isBoosted);
             HelpTooltip.HelpMe(100006, true);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.IsHackAndSlash = false;
+            PandoraBoxMaster.IsHackAndSlashSimulate = false;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -424,6 +433,8 @@ namespace Nekoyume.UI
             var secondsFormat = L10nManager.Localize("UI_AFTER_N_SECONDS");
             string fullFormat = string.Empty;
             closeButton.interactable = true;
+            closeButton.gameObject.SetActive(true);
+            returnQuestButton.gameObject.SetActive(PandoraBoxMaster.IsHackAndSlashSimulate);
 
             if (!SharedModel.ActionPointNotEnough)
             {
@@ -453,6 +464,12 @@ namespace Nekoyume.UI
                 case NextState.NextStage:
                     SubmitWidget = nextButton.onClick.Invoke;
                     fullFormat = L10nManager.Localize("UI_BATTLE_RESULT_NEXT_STAGE_FORMAT");
+                    break;
+                case NextState.Raid:
+                    repeatButton.gameObject.SetActive(false);
+                    nextButton.gameObject.SetActive(false);
+                    closeButton.gameObject.SetActive(false);
+                    hideButton.gameObject.SetActive(true);
                     break;
             }
 
@@ -627,7 +644,7 @@ namespace Nekoyume.UI
 
         private IEnumerator CoGoToNextStageClose(BattleLog log)
         {
-            if (Find<Menu>().IsActive())
+            if (Find<Menu>().IsActive() && !PandoraBoxMaster.IsHackAndSlash)
             {
                 yield break;
             }

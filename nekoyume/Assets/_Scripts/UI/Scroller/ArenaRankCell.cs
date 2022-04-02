@@ -278,17 +278,7 @@ namespace Nekoyume.UI.Scroller
 
         public void SimulateOnce()
         {
-
-            //effect.SetActive(false);
             var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora.FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
-            //var (exist, enemyState) = await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
-
-
-            //current local player
-            //var currentAddress = States.Instance.CurrentAvatarState?.address;
-            //var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-            //
-
 
             System.Random rnd = new System.Random();
             var simulator = new RankingSimulator(
@@ -306,21 +296,13 @@ namespace Nekoyume.UI.Scroller
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
-            PandoraBoxMaster.IsSimulate = true;
+            PandoraBoxMaster.IsRankingSimulate = true;
             Widget.Find<RankingBoard>().GoToStage(log);
         }
 
         IEnumerator GetEnemyState()
         {
             winRateText.text = ".?.";
-            //Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
-            //GameObject effect = button.transform.GetChild(0).gameObject;
-            //TextMeshProUGUI buttonText = button.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-
-
-            //effect.SetActive(false);
-            //var (exist, enemyState) = await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
-
 
             var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora.FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
 

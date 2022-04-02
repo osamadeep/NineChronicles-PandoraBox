@@ -5,6 +5,8 @@ using Nekoyume.L10n;
 using UnityEngine;
 using UniRx;
 using Nekoyume.UI.Scroller;
+using Nekoyume.Model.Mail;
+using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {
@@ -28,9 +30,19 @@ namespace Nekoyume.UI
             characterSelectEventSubject.GetEvent("Click")
                 .Subscribe(_ =>
                 {
-                    Game.Game.instance.BackToNest();
-                    Close();
-                    AudioController.PlayClick();
+                    if (PandoraBoxMaster.IsRanking || PandoraBoxMaster.IsHackAndSlash)
+                    {
+                        if (PandoraBoxMaster.IsRanking)
+                            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                        if (PandoraBoxMaster.IsHackAndSlash)
+                            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                    }
+                    else
+                    {
+                        Game.Game.instance.BackToNest();
+                        Close();
+                        AudioController.PlayClick();
+                    }
                 })
                 .AddTo(gameObject);
             quitEventSubject.GetEvent("Click")

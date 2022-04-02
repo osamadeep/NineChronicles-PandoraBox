@@ -876,6 +876,17 @@ namespace Nekoyume.BlockChain
                 simulator.Simulate(eval.Action.playCount);
                 var log = simulator.Log;
                 Game.Game.instance.Stage.PlayCount = eval.Action.playCount;
+
+                //OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage Fight " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                //, NotificationCell.NotificationType.Information);
+
+                //if (PandoraBoxMaster.IsRaid)
+                //{
+                //    Widget.Find<WorldMap>().Close(true);
+                //    Widget.Find<StageInformation>().Close(true);
+                //    Widget.Find<LoadingScreen>().Show();
+                //}
+
                 if (Widget.Find<LoadingScreen>().IsActive())
                 {
                     if (Widget.Find<QuestPreparation>().IsActive())
@@ -893,12 +904,72 @@ namespace Nekoyume.BlockChain
                 {
                     Widget.Find<BattleResultPopup>().NextStage(log);
                 }
-                else if (PandoraBoxMaster.IsRaid)
+                else if (PandoraBoxMaster.IsHackAndSlash)
                 {
-                    //Debug.LogError(" committed on the blockchain");
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Raid " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
-                    , NotificationCell.NotificationType.Information);
-                    Raid.Instance.UpdateActionPoint();
+                    BattleResultPopup.Model _battleResultModel = new BattleResultPopup.Model();
+                    Widget.Find<BattleResultPopup>().StageProgressBar.Initialize(false);
+
+                    _battleResultModel.ClearedWaveNumber = log.clearedWaveNumber;
+
+                    var avatarState = States.Instance.CurrentAvatarState;
+                    var isClear = log.IsClear;
+
+                    _battleResultModel.ActionPoint = avatarState.actionPoint;
+                    _battleResultModel.State = log.result;
+                    Game.Game.instance.TableSheets.WorldSheet.TryGetValue(log.worldId, out var world);
+                    _battleResultModel.WorldName = world?.GetLocalizedName();
+                    _battleResultModel.WorldID = log.worldId;
+                    _battleResultModel.StageID = log.stageId;
+                    avatarState.worldInformation.TryGetLastClearedStageId(out var lasStageId);
+                    _battleResultModel.LastClearedStageId = lasStageId;
+                    _battleResultModel.IsClear = log.IsClear;
+                    var succeedToGetWorldRow =
+                        Game.Game.instance.TableSheets.WorldSheet.TryGetValue(log.worldId, out var worldRow);
+                    if (succeedToGetWorldRow)
+                    {
+                        _battleResultModel.IsEndStage = log.stageId == worldRow.StageEnd;
+                    }
+
+                    if (log.FirstOrDefault(e => e is GetReward) is GetReward getReward)
+                    {
+                        var rewards = getReward.Rewards;
+                        foreach (var item in rewards)
+                        {
+                            var countableItem = new UI.Model.CountableItem(item, 1);
+                            _battleResultModel.AddReward(countableItem);
+                        }
+                    }
+
+                    _battleResultModel.NextState = BattleResultPopup.NextState.Raid;
+                    //_battleResultModel.ActionPointNotEnough = true;
+
+
+                    Widget.Find<BattleResultPopup>().Show(_battleResultModel, eval.Action.playCount > 1);
+                    PandoraBoxMaster.IsHackAndSlash = false;
+
+
+
+                    //Widget.Find<BattleResultPopup>().NextStage(log);
+
+                    //var task = UniTask.Run(() =>
+                    //{
+                    //    UpdateCurrentAvatarStateAsync(eval);
+                    //    UpdateWeeklyArenaState(eval);
+                    //    var avatarState = States.Instance.CurrentAvatarState;
+                    //    RenderQuest(eval.Action.avatarAddress,
+                    //        avatarState.questList.completedQuestIds);
+                    //    //_disposableForBattleEnd = null;
+                    //    //Game.Game.instance.Stage.IsAvatarStateUpdatedAfterBattle = true;
+                    //    Widget.Find<HeaderMenuStatic>().actionPoint.SetActionPoint(States.Instance.CurrentAvatarState.actionPoint);
+                    //    Widget.Find<HeaderMenuStatic>().actionPoint.SetEventTriggerEnabled(true);
+                    //});
+                    //task.ToObservable()
+                    //    .First()
+                    //    // ReSharper disable once ConvertClosureToMethodGroup
+                    //    .DoOnError(e => Debug.LogException(e));
+
+                    ////Widget.Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Main);
+                    //PandoraBoxMaster.IsRaid = false;
                 }
             }
             else
@@ -1050,13 +1121,15 @@ namespace Nekoyume.BlockChain
                 simulator.Simulate();
                 var log = simulator.Log;
 
+                //give option to know that battle is done
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena Random Fight " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                , NotificationCell.NotificationType.Information);
+
                 if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
                 {
                     Widget.Find<RankingBoard>().GoToStage(log);
                 }
-                //give option to know that battle is done
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena Random Fight " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
-                , NotificationCell.NotificationType.Information);
+
                 Widget.Find<Menu>().ClearRemainingTickets();
             }
             else
