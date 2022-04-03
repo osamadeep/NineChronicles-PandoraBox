@@ -220,6 +220,7 @@ namespace Nekoyume.BlockChain
             int stageId,
             int playCount)
         {
+            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
             Analyzer.Instance.Track("Unity/HackAndSlash", new Value
             {
                 ["WorldId"] = worldId,
@@ -518,7 +519,7 @@ namespace Nekoyume.BlockChain
                 throw new NullReferenceException(nameof(weeklyArenaAddress));
             }
 
-            PandoraBoxMaster.IsRanking = true;
+            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
             Analyzer.Instance.Track("Unity/Ranking Battle");
             var action = new RankingBattle
             {

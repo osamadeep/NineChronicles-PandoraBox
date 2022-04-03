@@ -18,6 +18,7 @@ namespace Nekoyume.UI
 {
     using Nekoyume.Model.BattleStatus;
     using PandoraBox;
+    using TMPro;
     using UniRx;
 
     public class RankingBoard : Widget

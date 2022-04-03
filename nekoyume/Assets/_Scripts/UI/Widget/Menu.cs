@@ -560,6 +560,9 @@ namespace Nekoyume.UI
                 return;
             }
 
+            if (PandoraUtil.IsBusy())
+                return;
+
             var avatarAddress = States.Instance.CurrentAvatarState?.address;
             var arenaInfoTickets = States.Instance.WeeklyArenaState.GetArenaInfo(avatarAddress.Value);
 
@@ -572,7 +575,7 @@ namespace Nekoyume.UI
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...", NotificationCell.NotificationType.Information);
             randomButton.interactable = false;
             randomButton.transform.GetChild(0).gameObject.SetActive(true);
-            PandoraBoxMaster.IsRanking = true;
+            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
 
             BlockHash? _cachedBlockHash = null;
 
@@ -722,7 +725,6 @@ namespace Nekoyume.UI
         {
             randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X0";
             arenaCount.text = $"<color=red>{0}</color>/5";
-            PandoraBoxMaster.IsRanking = false;
             randomButton.transform.GetChild(0).gameObject.SetActive(false);
         }
 
@@ -740,19 +742,8 @@ namespace Nekoyume.UI
 
         public void FastCharacterSwitch()
         {
-            if (PandoraBoxMaster.IsRanking)
-            {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+            if (PandoraUtil.IsBusy())
                 return;
-            }
-
-            if (PandoraBoxMaster.IsHackAndSlash)
-            {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
-                return;
-            }
-
-
 
             if (Game.Game.instance.Stage.IsInStage)
             {

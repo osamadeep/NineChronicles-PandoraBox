@@ -518,10 +518,6 @@ namespace Nekoyume.Game
                 _onEnterToStageEnd.OnNext(this);
                 yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
             }
-            //else
-            //{
-            //    PandoraBoxMaster.IsHackAndSlashSimulate = false;
-            //}
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var avatarState = States.Instance.CurrentAvatarState;
@@ -723,17 +719,6 @@ namespace Nekoyume.Game
             catch { }
             yield return null;
         }
-
-        //public void KillAllCharacters()
-        //{
-        //    Character.CharacterBase[] characters = GetComponentsInChildren<Character.CharacterBase>();
-        //    //Debug.LogError("Count " + characters.Length);
-        //    foreach (Character.CharacterBase item in characters)
-        //    {
-        //        item.actions.Clear();
-        //        item.gameObject.SetActive(false);
-        //    }
-        //}
 
         public IEnumerator CoSpawnPlayer(Model.Player character)
         {

@@ -112,6 +112,10 @@ namespace Nekoyume.PandoraBox
                 isBusy = false;
                 StartCoroutine(Cooldown());
             }
+            else if (PandoraUtil.IsBusy())
+            {
+                //show error msg
+            }
             else
             {
                 totalCount = int.Parse(CurrentTriesManual.text);
@@ -145,7 +149,7 @@ namespace Nekoyume.PandoraBox
         {
 
             isBusy = true;
-            PandoraBoxMaster.IsHackAndSlash = true;
+            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
             RotateShape.SetActive(true);
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
@@ -177,7 +181,7 @@ namespace Nekoyume.PandoraBox
 
             if (!isBusy)
             {
-                PandoraBoxMaster.IsHackAndSlash = false;
+                PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
                 yield break;
             }
 

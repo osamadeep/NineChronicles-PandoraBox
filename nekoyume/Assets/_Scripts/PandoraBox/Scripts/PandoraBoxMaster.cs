@@ -24,6 +24,7 @@ namespace Nekoyume.PandoraBox
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //General
+        public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
@@ -31,9 +32,7 @@ namespace Nekoyume.PandoraBox
         public static int LoginIndex;
         public static int ArenaTicketsToUse=1;
         public static List<string> ArenaFavTargets = new List<string>();
-        public static bool IsRanking; //raid ranking battle
         public static bool IsRankingSimulate; //simulate ranking battle
-        public static bool IsHackAndSlash;  //raid h&s
         public static bool IsHackAndSlashSimulate; //simulate h&s
 
         //Objects

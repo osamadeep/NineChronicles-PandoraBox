@@ -30,12 +30,9 @@ namespace Nekoyume.UI
             characterSelectEventSubject.GetEvent("Click")
                 .Subscribe(_ =>
                 {
-                    if (PandoraBoxMaster.IsRanking || PandoraBoxMaster.IsHackAndSlash)
+                    if (PandoraUtil.IsBusy())
                     {
-                        if (PandoraBoxMaster.IsRanking)
-                            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
-                        if (PandoraBoxMaster.IsHackAndSlash)
-                            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fights in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                        //show error message
                     }
                     else
                     {

@@ -66,11 +66,6 @@ namespace Nekoyume.UI
                     view.gameObject.SetActive(true);
                 }
             }
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.IsRankingSimulate = false;
-            PandoraBoxMaster.IsRanking = false;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void BackToRanking()

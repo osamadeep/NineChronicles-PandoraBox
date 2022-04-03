@@ -81,23 +81,23 @@ namespace Nekoyume.UI
         {
             remainTimeSlider.value = blockIndex - _resetIndex;
 
-            var isActive = EventManager.TryGetArenaSeasonInfo(blockIndex, out var info);
-            seasonEnable.SetActive(isActive);
-            seasonDisable.SetActive(!isActive);
-            rewardObject.SetActive(isActive);
-            if (isActive)
-            {
-                rewardText.text = info.RewardNcg % 1000 == 0
-                    ? $"{info.RewardNcg / 1000}k"
-                    : $"{info.RewardNcg}";
-                var start = info.StartBlockIndex % 1000 == 0
-                    ? $"{info.StartBlockIndex / 1000}k"
-                    : $"{info.StartBlockIndex}";
-                var end = info.EndBlockIndex % 1000 == 0
-                    ? $"{info.EndBlockIndex / 1000}k"
-                    : $"{info.EndBlockIndex}";
-                blockCountText.text = $"{start}-{end}";
-            }
+            //var isActive = EventManager.TryGetArenaSeasonInfo(blockIndex, out var info);
+            //seasonEnable.SetActive(isActive);
+            //seasonDisable.SetActive(!isActive);
+            //rewardObject.SetActive(isActive);
+            //if (isActive)
+            //{
+            //    rewardText.text = info.RewardNcg % 1000 == 0
+            //        ? $"{info.RewardNcg / 1000}k"
+            //        : $"{info.RewardNcg}";
+            //    var start = info.StartBlockIndex % 1000 == 0
+            //        ? $"{info.StartBlockIndex / 1000}k"
+            //        : $"{info.StartBlockIndex}";
+            //    var end = info.EndBlockIndex % 1000 == 0
+            //        ? $"{info.EndBlockIndex / 1000}k"
+            //        : $"{info.EndBlockIndex}";
+            //    blockCountText.text = $"{start}-{end}";
+            //}
         }
 
         private void SetWeeklyArenaState(WeeklyArenaState weeklyArenaState)

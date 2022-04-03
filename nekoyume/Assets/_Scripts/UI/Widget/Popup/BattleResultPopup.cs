@@ -274,11 +274,6 @@ namespace Nekoyume.UI
 
             UpdateView(isBoosted);
             HelpTooltip.HelpMe(100006, true);
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.IsHackAndSlash = false;
-            PandoraBoxMaster.IsHackAndSlashSimulate = false;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -644,10 +639,10 @@ namespace Nekoyume.UI
 
         private IEnumerator CoGoToNextStageClose(BattleLog log)
         {
-            if (Find<Menu>().IsActive() && !PandoraBoxMaster.IsHackAndSlash)
-            {
-                yield break;
-            }
+            //if (Find<Menu>().IsActive() && !PandoraBoxMaster.IsHackAndSlash)
+            //{
+            //    yield break;
+            //}
 
             yield return StartCoroutine(Find<StageLoadingEffect>().CoClose());
             yield return StartCoroutine(CoFadeOut());
