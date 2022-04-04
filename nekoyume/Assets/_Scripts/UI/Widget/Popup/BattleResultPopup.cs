@@ -429,6 +429,7 @@ namespace Nekoyume.UI
             string fullFormat = string.Empty;
             closeButton.interactable = true;
             closeButton.gameObject.SetActive(true);
+            hideButton.gameObject.SetActive(false);
             returnQuestButton.gameObject.SetActive(PandoraBoxMaster.IsHackAndSlashSimulate);
 
             if (!SharedModel.ActionPointNotEnough)

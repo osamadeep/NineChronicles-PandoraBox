@@ -15,8 +15,9 @@ namespace Nekoyume
 
         private static EventInfo GetEventInfo()
         {
-            return SO.Events.FirstOrDefault(x => Util.IsInTime(x.BeginDateTime, x.EndDateTime)) ??
-                   SO.DefaultEvent;
+            return SO.DefaultEvent;
+            //return SO.Events.FirstOrDefault(x => Util.IsInTime(x.BeginDateTime, x.EndDateTime)) ??
+            //       SO.DefaultEvent;
         }
 
         public static bool TryGetArenaSeasonInfo(long blockIndex, out ArenaSeasonInfo info)

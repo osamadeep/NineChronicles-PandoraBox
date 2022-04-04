@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using Cysharp.Threading.Tasks;
 using Libplanet;
 using Libplanet.Blocks;
+using Nekoyume.Action;
 using Nekoyume.Game.Controller;
 using Nekoyume.Model.State;
 using Nekoyume.State;
+using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
 using UnityEngine;
 using UnityEngine.UI;
+using StateExtensions = Nekoyume.Model.State.StateExtensions;
 
 namespace Nekoyume.UI
 {
     using Nekoyume.Model.BattleStatus;
-    using PandoraBox;
+    using Nekoyume.PandoraBox;
     using TMPro;
     using UniRx;
 
@@ -55,6 +59,8 @@ namespace Nekoyume.UI
         private BlockHash? _cachedBlockHash;
 
         private readonly List<IDisposable> _disposablesFromShow = new List<IDisposable>();
+
+        private ArenaInfoList _arenaInfoList;
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChangeSliderArenaCount()
@@ -135,17 +141,16 @@ namespace Nekoyume.UI
             closeButton.onClick.AddListener(() =>
             {
                 Close(true);
-                Find<FriendInfoPopupPandora>().Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
             });
 
             CloseWidget = () =>
             {
                 Close(true);
-                Find<FriendInfoPopupPandora>().Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
             };
             SubmitWidget = null;
+            _arenaInfoList = new ArenaInfoList();
         }
 
         public void Show(WeeklyArenaState weeklyArenaState = null) => ShowAsync(weeklyArenaState);
@@ -182,7 +187,7 @@ namespace Nekoyume.UI
                         var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
                         var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
                         weeklyArenaState =
-                            new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
+                            new WeeklyArenaState((Bencodex.Types.Dictionary) await agent.GetStateAsync(weeklyArenaAddress));
                         States.Instance.SetWeeklyArenaState(weeklyArenaState);
                         await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
                     });
@@ -203,14 +208,10 @@ namespace Nekoyume.UI
 
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Battle);
             UpdateArena();
-
-            StartCoroutine(RefreshCooldown());
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
-            Widget.Find<FriendInfoPopup>().Close(true);
-            Widget.Find<FriendInfoPopupPandora>().Close(true);
             _disposablesFromShow.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
             speechBubble.Hide();
@@ -347,15 +348,13 @@ namespace Nekoyume.UI
         {
             var avatarInfo = Find<AvatarInfoPopup>();
             var friendInfoPopup = Find<FriendInfoPopup>();
-            var friendInfoPopupPandora = Find<FriendInfoPopupPandora>();
             if (avatarInfo.gameObject.activeSelf)
             {
                 avatarInfo.Close();
             }
-            else if (friendInfoPopup.gameObject.activeSelf)
+            else if(friendInfoPopup.gameObject.activeSelf)
             {
                 friendInfoPopup.Close();
-                friendInfoPopupPandora.Close();
             }
             else
             {
@@ -377,6 +376,48 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
+
+
+
+
+            if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
+            {
+                // For backward compatibility, create list based on previous week.
+                if (Game.Game.instance.Agent.BlockIndex <= RankingBattle.UpdateTargetBlockIndex +
+                    States.Instance.GameConfigState.WeeklyArenaInterval && !_arenaInfoList.Locked)
+                {
+                    var prevWeekAddress = ArenaHelper.GetPrevWeekAddress();
+                    var rawWeekly = await Game.Game.instance.Agent.GetStateAsync(prevWeekAddress);
+                    var prevWeekly = new WeeklyArenaState(rawWeekly);
+                    var copiedState = new WeeklyArenaState(state.address);
+                    copiedState.Update(prevWeekly, state.ResetIndex);
+                    _arenaInfoList.Update(copiedState, true);
+                }
+                var rawList =
+                    await Game.Game.instance.Agent.GetStateAsync(
+                        state.address.Derive("address_list"));
+                if (rawList is List list)
+                {
+                    List<Address> avatarAddressList = list.ToList(StateExtensions.ToAddress);
+                    Dictionary<Address, IValue> result = await Game.Game.instance.Agent.GetStateBulk(avatarAddressList);
+                    var infoList = new List<ArenaInfo>();
+                    foreach (var iValue in result.Values)
+                    {
+                        if (iValue is Dictionary dictionary)
+                        {
+                            var info = new ArenaInfo(dictionary);
+                            infoList.Add(info);
+                        }
+                    }
+                    _arenaInfoList.Update(infoList);
+                }
+            }
+            else
+            {
+                // TODO delete this flag after RankingBattle.UpdateTargetBlockIndex.
+                _arenaInfoList.Update(state, false);
+            }
+
             int topPlayer = 20;
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 topPlayer = 100;
@@ -390,12 +431,12 @@ namespace Nekoyume.UI
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = state.GetArenaInfos(currentAvatarAddress, upper, lower);
+                var infos2 = _arenaInfoList.GetArenaInfos(currentAvatarAddress, upper, lower);
                 // Player does not play prev & this week arena.
-                if (!infos2.Any() && state.OrderedArenaInfos.Any())
+                if (!infos2.Any() && _arenaInfoList.OrderedArenaInfos.Any())
                 {
-                    var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                    infos2 = state.GetArenaInfos(address, 90, 0);
+                    var address = _arenaInfoList.OrderedArenaInfos.Last().AvatarAddress;
+                    infos2 = _arenaInfoList.GetArenaInfos(address, 90, 10);
                 }
 
                 infos.AddRange(infos2);
