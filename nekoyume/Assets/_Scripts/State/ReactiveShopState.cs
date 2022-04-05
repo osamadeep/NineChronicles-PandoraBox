@@ -93,8 +93,9 @@ namespace Nekoyume.State
                 x.Price.Equals(price) &&
                 x.ItemCount.Equals(count));
         }
-
-        private const int buyItemsPerPage = 24;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private const int buyItemsPerPage = 40; //24
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         private const int sellItemsPerPage = 20;
 
         public static async Task InitAndUpdateBuyDigests()

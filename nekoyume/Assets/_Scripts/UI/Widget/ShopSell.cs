@@ -17,6 +17,8 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 namespace Nekoyume.UI
 {
     using Nekoyume.UI.Scroller;
+    using System.Collections;
+    using System.Collections.Generic;
     using UniRx;
 
     public class ShopSell : Widget
@@ -30,6 +32,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         public TextMeshProUGUI PriceText;
+        [SerializeField] private Button Relist = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -57,6 +60,53 @@ namespace Nekoyume.UI
         {
             PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
             text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+
+        public void RelistAll()
+        {
+            Relist.interactable = false;
+
+            var cancel = shopItems.SharedModel.Items.Subscribe(Items =>
+            {
+                var result = new List<ShopItem>();
+
+                using (var items = Items.GetEnumerator())
+                    while (items.MoveNext())
+                        foreach (var item in items.Current.Value)
+                            result.Add(item);
+
+                StartCoroutine(StartRelistAll(result));
+            });
+
+            cancel.Dispose();
+        }
+
+        private IEnumerator StartRelistAll(List<ShopItem> items)
+        {
+            int cooldown = PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 2 : 12;
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...", NotificationCell.NotificationType.Information);
+
+            var renewed = new List<Guid>();
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (!(item.ItemBase.Value is ITradableItem tradableItem))
+                    break;
+
+                yield return new WaitForSeconds(cooldown);
+
+                var orderId = item.OrderId.Value;
+                var price = item.Price.Value;
+                var count = item.Count.Value;
+                var itemSubType = item.ItemBase.Value.ItemSubType;
+
+                Game.Game.instance.ActionManager.UpdateSell(orderId, tradableItem, count, price, itemSubType).Subscribe();
+                Analyzer.Instance.Track("Unity/UpdateSell");
+                renewed.Add(orderId);
+                OneLineSystem.Push(MailType.Auction, $"<color=green>{i+1}</color>/<color=red>{items.Count}</color>: {item.ItemBase.Value.GetLocalizedName()} Listed for <color=green>{price}</color>!",
+                    NotificationCell.NotificationType.Information);
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -135,6 +185,7 @@ namespace Nekoyume.UI
             speechBubble.SetKey("SPEECH_SHOP_GREETING_");
             StartCoroutine(speechBubble.CoShowText(true));
             Refresh(true);
+            Relist.interactable = true;
             AudioController.instance.PlayMusic(AudioController.MusicCode.Shop);
         }
 

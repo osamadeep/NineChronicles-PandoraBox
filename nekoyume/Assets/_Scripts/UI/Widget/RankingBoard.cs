@@ -212,6 +212,10 @@ namespace Nekoyume.UI
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Find<FriendInfoPopup>().Close(true);
+            Find<FriendInfoPopupPandora>().Close(true);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _disposablesFromShow.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
             speechBubble.Hide();

@@ -690,7 +690,7 @@ namespace Nekoyume.UI
                     .Select(i => i.ItemId).ToList()
                 ).Subscribe();
 
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Random selected ({selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" + (i + 1)
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Random selected (#<color=red>{selectedEnemyArenaInfo.rank}</color>, {selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" + (i + 1)
                     + "</color>/" + arenaInfoTickets.DailyChallengeCount + "!", NotificationCell.NotificationType.Information);
             }
 

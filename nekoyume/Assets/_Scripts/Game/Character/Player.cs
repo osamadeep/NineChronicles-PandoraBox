@@ -12,6 +12,7 @@ using Nekoyume.TableData;
 
 namespace Nekoyume.Game.Character
 {
+    using Nekoyume.Game.Controller;
     // NOTE: Avoid Ambiguous invocation:
     // System.IDisposable Subscribe<T>(this IObservable<T>, Action<T>)
     // System.ObservableExtensions and UniRx.ObservableExtensions
@@ -362,6 +363,8 @@ namespace Nekoyume.Game.Character
             {
                 id = 10141001;
                 level = 10;
+                AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
+                VFXController.instance.Create<VFX.BattleAttack01VFX>(transform.position);
             }
             var sprite = SpriteHelper.GetPlayerSpineTextureWeapon(id);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

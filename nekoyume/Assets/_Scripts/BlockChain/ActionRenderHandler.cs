@@ -896,7 +896,7 @@ namespace Nekoyume.BlockChain
                 }
 
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
+                else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
                 {
                     BattleResultPopup.Model _battleResultModel = new BattleResultPopup.Model();
                     Widget.Find<BattleResultPopup>().StageProgressBar.Initialize(false);
@@ -1098,19 +1098,22 @@ namespace Nekoyume.BlockChain
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena Random Fight " + "<color=green><b>Successfully</b></color> committed on the blockchain!"
                 , NotificationCell.NotificationType.Information);
 
-                if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.Ranking)
-                {
-                    ActionRenderHandler.Instance.Pending = false;
-                    UpdateAgentStateAsync(eval);
-                    UpdateCurrentAvatarStateAsync(eval);
-                    UpdateWeeklyArenaState(eval);
-                }
+
 
                 if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
                 {
                     Widget.Find<RankingBoard>().GoToStage(log);
                 }
 
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.Ranking)
+                {
+                    ActionRenderHandler.Instance.Pending = false;
+                    UpdateAgentStateAsync(eval);
+                    UpdateCurrentAvatarStateAsync(eval);
+                    UpdateWeeklyArenaState(eval);
+                }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 Widget.Find<Menu>().ClearRemainingTickets();
             }
             else

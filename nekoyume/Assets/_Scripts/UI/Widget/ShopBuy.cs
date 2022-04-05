@@ -44,7 +44,7 @@ namespace Nekoyume.UI
             SharedModel = new Shop();
 
             var ratio = (float) Screen.height / (float) Screen.width;
-            var count = Mathf.RoundToInt(10 * ratio) - 2;
+            var count = Mathf.RoundToInt(10 * ratio);
 
             shopItems.Items.Clear();
             for (int i = 0; i < itemViewItems.Count; i++)

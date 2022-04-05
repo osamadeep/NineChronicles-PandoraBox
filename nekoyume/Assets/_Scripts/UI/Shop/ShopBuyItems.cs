@@ -19,6 +19,15 @@ namespace Nekoyume.UI.Module
     public class ShopBuyItems : MonoBehaviour
     {
         public List<ShopItemView> Items { get; } = new List<ShopItemView>();
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private UnityEngine.UI.Toggle PriceToggle;
+        [SerializeField] private TMP_InputField priceValueTxt = null;
+        [SerializeField] private TMP_Dropdown IsLessDrop = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private List<ToggleDropdown> toggleDropdowns = new List<ToggleDropdown>();
         [SerializeField] private TextMeshProUGUI pageText = null;
         [SerializeField] private Button previousPageButton = null;
@@ -172,11 +181,22 @@ namespace Nekoyume.UI.Module
             resetAnimator.Play(_hashDisabled);
             sortOrderIcon.localScale = new Vector3(1, -1, 1);
             SharedModel.itemSubTypeFilter = ItemSubTypeFilter.Weapon;
-            SharedModel.isReverseOrder = false;
+            //SharedModel.isReverseOrder = false;
             SharedModel.searchIds = new List<int>();
             SharedModel.SetMultiplePurchase(false);
             SharedModel.ResetShopItems();
-            _sortFilter = ShopSortFilter.Class;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                _sortFilter = ShopSortFilter.Time;
+                SharedModel.isReverseOrder = false;
+            }
+            else
+            {
+                _sortFilter = ShopSortFilter.Class;
+                SharedModel.isReverseOrder = false;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             UpdateSort();
         }
 
@@ -362,5 +382,15 @@ namespace Nekoyume.UI.Module
             SharedModel.searchIds = containItemIds;
             OnSortFilterChanged();
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void OnPriceToggle()
+        {
+            SharedModel.isPrice = PriceToggle.isOn;
+            SharedModel.priceValue = priceValueTxt.text == ""?0:int.Parse(priceValueTxt.text);
+            SharedModel.isLess = IsLessDrop.value == 0 ? true : false;
+            OnSortFilterChanged();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

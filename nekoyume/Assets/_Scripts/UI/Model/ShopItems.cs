@@ -24,7 +24,11 @@ namespace Nekoyume.UI.Model
         public List<int> searchIds = new List<int>();
         public bool isReverseOrder = false;
         public bool isMultiplePurchase = false;
-
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public bool isPrice = false;
+        public int priceValue = 0;
+        public bool isLess = false;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         private IReadOnlyDictionary<ItemSubTypeFilter,
                 Dictionary<ShopSortFilter, Dictionary<int, List<ShopItem>>>> _items;
 
@@ -145,15 +149,44 @@ namespace Nekoyume.UI.Model
             {
                 if (searchIds.Count > 0) //search
                 {
-                    var select = product.Value
-                        .Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id));
+                    IEnumerable<ShopItem> select;
+                    if (isPrice)
+                    {
+                        if (isLess)
+                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue);
+                        else
+                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit >= priceValue);
+                    }
+                    else
+                    {
+                        select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id));
+                    }
                     shopItems.AddRange(select);
+
                 }
                 else
                 {
-                    shopItems.AddRange(product.Value);
+                    //shopItems.AddRange(product.Value);
+                    if (isPrice)
+                    {
+                        IEnumerable<ShopItem> select;
+                        if (isLess)
+                            select = product.Value.Where(x => x.Price.Value.MajorUnit <= priceValue);
+                        else
+                            select = product.Value.Where(x => x.Price.Value.MajorUnit >= priceValue);
+
+                        shopItems.AddRange(select);
+                    }
+                    else
+                    {
+                        shopItems.AddRange(product.Value);
+                    }
                 }
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (shopItems.Count == 0)
             {
