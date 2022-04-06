@@ -95,8 +95,8 @@ namespace Nekoyume.State
         }
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private const int buyItemsPerPage = 40; //24
+        private const int sellItemsPerPage = 28; //20
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        private const int sellItemsPerPage = 20;
 
         public static async Task InitAndUpdateBuyDigests()
         {

@@ -25,6 +25,7 @@ namespace Nekoyume.UI.Module
         [SerializeField] private UnityEngine.UI.Toggle PriceToggle;
         [SerializeField] private TMP_InputField priceValueTxt = null;
         [SerializeField] private TMP_Dropdown IsLessDrop = null;
+        [SerializeField] private TMP_Dropdown ItemElementType = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -370,14 +371,21 @@ namespace Nekoyume.UI.Module
             resetButton.interactable = inputField.text.Length > 0;
             resetAnimator.Play(inputField.text.Length > 0 ? _hashNormal : _hashDisabled);
             var containItemIds = new List<int>();
-            foreach (var id in _itemIds)
-            {
-                var itemName = L10nManager.LocalizeItemName(id);
-                if (Regex.IsMatch(itemName, inputField.text, RegexOptions.IgnoreCase))
+            if (inputField.text.Length != 0)
+                foreach (var id in _itemIds)
                 {
-                    containItemIds.Add(id);
+                    var itemName = L10nManager.LocalizeItemName(id);
+                    if (Regex.IsMatch(itemName, inputField.text, RegexOptions.IgnoreCase))
+                    {
+                        containItemIds.Add(id);
+                    }
                 }
-            }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            SharedModel.isPrice = PriceToggle.isOn;
+            SharedModel.priceValue = priceValueTxt.text == "" ? 0 : int.Parse(priceValueTxt.text);
+            SharedModel.isLess = IsLessDrop.value == 0 ? true : false;
+            SharedModel.elementaltype = ItemElementType.value;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             SharedModel.searchIds = containItemIds;
             OnSortFilterChanged();
@@ -386,10 +394,7 @@ namespace Nekoyume.UI.Module
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void OnPriceToggle()
         {
-            SharedModel.isPrice = PriceToggle.isOn;
-            SharedModel.priceValue = priceValueTxt.text == ""?0:int.Parse(priceValueTxt.text);
-            SharedModel.isLess = IsLessDrop.value == 0 ? true : false;
-            OnSortFilterChanged();
+            OnSearch(Unit.Default);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

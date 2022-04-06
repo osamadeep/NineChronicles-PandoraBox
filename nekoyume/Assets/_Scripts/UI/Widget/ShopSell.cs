@@ -94,7 +94,6 @@ namespace Nekoyume.UI
                 if (!(item.ItemBase.Value is ITradableItem tradableItem))
                     break;
 
-                yield return new WaitForSeconds(cooldown);
 
                 var orderId = item.OrderId.Value;
                 var price = item.Price.Value;
@@ -106,6 +105,7 @@ namespace Nekoyume.UI
                 renewed.Add(orderId);
                 OneLineSystem.Push(MailType.Auction, $"<color=green>{i+1}</color>/<color=red>{items.Count}</color>: {item.ItemBase.Value.GetLocalizedName()} Listed for <color=green>{price}</color>!",
                     NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(cooldown);
             }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

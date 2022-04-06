@@ -28,6 +28,7 @@ namespace Nekoyume.UI.Model
         public bool isPrice = false;
         public int priceValue = 0;
         public bool isLess = false;
+        public int elementaltype = 5;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         private IReadOnlyDictionary<ItemSubTypeFilter,
                 Dictionary<ShopSortFilter, Dictionary<int, List<ShopItem>>>> _items;
@@ -145,6 +146,7 @@ namespace Nekoyume.UI.Model
             }
 
             var shopItems = new List<ShopItem>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             foreach (var product in sortProducts)
             {
                 if (searchIds.Count > 0) //search
@@ -153,16 +155,28 @@ namespace Nekoyume.UI.Model
                     if (isPrice)
                     {
                         if (isLess)
-                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue);
+                        {
+                            if (elementaltype != 5)
+                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            else
+                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue);
+                        }
                         else
-                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit >= priceValue);
+                        {
+                            if (elementaltype != 5)
+                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit >= priceValue && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            else
+                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit >= priceValue);
+                        }
                     }
                     else
                     {
-                        select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id));
+                        if (elementaltype != 5)
+                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id ) && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                        else
+                            select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id));
                     }
                     shopItems.AddRange(select);
-
                 }
                 else
                 {
@@ -171,21 +185,34 @@ namespace Nekoyume.UI.Model
                     {
                         IEnumerable<ShopItem> select;
                         if (isLess)
-                            select = product.Value.Where(x => x.Price.Value.MajorUnit <= priceValue);
+                        {
+                            if (elementaltype != 5)
+                                select = product.Value.Where(x => x.Price.Value.MajorUnit <= priceValue && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            else
+                                select = product.Value.Where(x => x.Price.Value.MajorUnit <= priceValue);
+                        }
                         else
-                            select = product.Value.Where(x => x.Price.Value.MajorUnit >= priceValue);
-
+                        {
+                            if (elementaltype != 5)
+                                select = product.Value.Where(x => x.Price.Value.MajorUnit >= priceValue && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            else
+                                select = product.Value.Where(x => x.Price.Value.MajorUnit >= priceValue);
+                        }
                         shopItems.AddRange(select);
                     }
                     else
                     {
-                        shopItems.AddRange(product.Value);
+                        if (elementaltype != 5)
+                        {
+                            IEnumerable<ShopItem> select;
+                            select = product.Value.Where(x => x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            shopItems.AddRange(select);
+                        }
+                        else
+                            shopItems.AddRange(product.Value);
                     }
                 }
             }
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (shopItems.Count == 0)
