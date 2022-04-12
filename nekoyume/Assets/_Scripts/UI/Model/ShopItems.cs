@@ -157,7 +157,19 @@ namespace Nekoyume.UI.Model
                         if (isLess)
                         {
                             if (elementaltype != 5)
-                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype);
+                            {
+                                select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id)
+                                && x.Price.Value.MajorUnit <= priceValue
+                                && x.ItemBase.Value.ElementalType == (Nekoyume.Model.Elemental.ElementalType)elementaltype
+                                );
+                                //foreach (var item in product.Value)
+                                //{
+                                //    item.ItemBase
+                                //    if (item.ItemUsable is Nekoyume.Model.Item.Equipment equipment)
+                                //        new ItemOptionInfo(equipment)
+                                //    //Item x = item.ItemBase.Value as Item;
+                                //}
+                            }
                             else
                                 select = product.Value.Where(x => searchIds.Exists(y => y == x.ItemBase.Value.Id) && x.Price.Value.MajorUnit <= priceValue);
                         }

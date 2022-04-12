@@ -86,8 +86,8 @@ namespace Nekoyume.UI
             int cooldown = PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 2 : 12;
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...", NotificationCell.NotificationType.Information);
 
+            TextMeshProUGUI txt = Relist.GetComponentInChildren<TextMeshProUGUI>();
             var renewed = new List<Guid>();
-
             for (int i = 0; i < items.Count; i++)
             {
                 var item = items[i];
@@ -103,10 +103,12 @@ namespace Nekoyume.UI
                 Game.Game.instance.ActionManager.UpdateSell(orderId, tradableItem, count, price, itemSubType).Subscribe();
                 Analyzer.Instance.Track("Unity/UpdateSell");
                 renewed.Add(orderId);
+                txt.text = $"Relist ({i + 1}/{items.Count})";
                 OneLineSystem.Push(MailType.Auction, $"<color=green>{i+1}</color>/<color=red>{items.Count}</color>: {item.ItemBase.Value.GetLocalizedName()} Listed for <color=green>{price}</color>!",
                     NotificationCell.NotificationType.Information);
                 yield return new WaitForSeconds(cooldown);
             }
+            txt.text = $"Relist Done!";
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -186,6 +188,7 @@ namespace Nekoyume.UI
             StartCoroutine(speechBubble.CoShowText(true));
             Refresh(true);
             Relist.interactable = true;
+            Relist.GetComponentInChildren<TextMeshProUGUI>().text = "Relist All";
             AudioController.instance.PlayMusic(AudioController.MusicCode.Shop);
         }
 
