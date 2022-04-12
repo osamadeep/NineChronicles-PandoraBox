@@ -16,29 +16,19 @@ namespace Nekoyume.UI
 
     public class QuestPopup : XTweenPopupWidget
     {
-        [SerializeField]
-        private CategoryTabButton adventureButton = null;
+        [SerializeField] private CategoryTabButton adventureButton = null;
 
-        [SerializeField]
-        private CategoryTabButton obtainButton = null;
+        [SerializeField] private CategoryTabButton obtainButton = null;
 
-        [SerializeField]
-        private CategoryTabButton craftingButton = null;
+        [SerializeField] private CategoryTabButton craftingButton = null;
 
-        [SerializeField]
-        private CategoryTabButton exchangeButton = null;
+        [SerializeField] private CategoryTabButton exchangeButton = null;
 
-        [SerializeField]
-        private QuestType filterType;
+        [SerializeField] private QuestType filterType;
 
-        [SerializeField]
-        private QuestScroll scroll = null;
+        [SerializeField] private QuestScroll scroll = null;
 
-        [SerializeField]
-        private Blur blur = null;
-
-        [SerializeField]
-        private Button closeButton = null;
+        [SerializeField] private Button closeButton = null;
 
         private ReactiveProperty<QuestList> _questList = new ReactiveProperty<QuestList>();
 
@@ -69,23 +59,7 @@ namespace Nekoyume.UI
             ChangeState(0);
             DoneScrollAnimation();
             base.Show(ignoreShowAnimation);
-
-            if (blur)
-            {
-                blur.Show();
-            }
-
             HelpTooltip.HelpMe(100011, true);
-        }
-
-        public override void Close(bool ignoreCloseAnimation = false)
-        {
-            if (blur && blur.isActiveAndEnabled)
-            {
-                blur.Close();
-            }
-
-            base.Close(ignoreCloseAnimation);
         }
 
         #endregion

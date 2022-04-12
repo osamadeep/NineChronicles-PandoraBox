@@ -8,6 +8,7 @@ using UnityEngine;
 namespace Nekoyume.UI
 {
     using UniRx;
+
     public class Widget : MonoBehaviour
     {
         protected enum AnimationStateType
@@ -84,12 +85,18 @@ namespace Nekoyume.UI
                 var fields = GetType().GetFields(System.Reflection.BindingFlags.NonPublic |
                                                  System.Reflection.BindingFlags.Instance);
                 foreach (var selectable in fields
-                    .Select(field => field.GetValue(this))
-                    .OfType<UnityEngine.UI.Selectable>())
+                             .Select(field => field.GetValue(this))
+                             .OfType<UnityEngine.UI.Selectable>())
                 {
                     selectable.interactable = stateType == AnimationStateType.Shown;
                 }
             }).AddTo(gameObject);
+
+            var blur = transform.GetComponentInChildren<Blur>();
+            if (blur)
+            {
+                blur.OnClick = () => Close();
+            }
         }
 
         protected virtual void Update()
@@ -135,7 +142,7 @@ namespace Nekoyume.UI
                 Debug.LogWarning($"Duplicated create widget: {type}");
                 Pool[type].gameObject.SetActive(activate);
 
-                return (T) Pool[type].widget;
+                return (T)Pool[type].widget;
             }
 
             var widgetType = res.GetComponent<T>().WidgetType;
@@ -176,7 +183,7 @@ namespace Nekoyume.UI
                 throw new WidgetNotFoundException(type.Name);
             }
 
-            return (T) model.widget;
+            return (T)model.widget;
         }
 
         public static bool TryFind<T>(out T widget) where T : Widget
@@ -188,7 +195,7 @@ namespace Nekoyume.UI
                 return false;
             }
 
-            widget = (T) model.widget;
+            widget = (T)model.widget;
             return true;
         }
 

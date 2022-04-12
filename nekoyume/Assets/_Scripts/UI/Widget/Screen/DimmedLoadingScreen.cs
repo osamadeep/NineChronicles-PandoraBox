@@ -11,8 +11,7 @@ namespace Nekoyume.UI
     {
         public override WidgetType WidgetType => WidgetType.System;
 
-        [SerializeField]
-        private TMP_Text messageText;
+        [SerializeField] private TMP_Text messageText;
 
         private static string _defaultBlockSyncingMessage;
 
@@ -22,7 +21,7 @@ namespace Nekoyume.UI
             _defaultBlockSyncingMessage = L10nManager.Localize("UI_SYNCING_BLOCKS");
         }
 
-        public void Show(string message = "", bool ignoreShowAnimation = false)
+        public void Show(string message, bool ignoreShowAnimation = false)
         {
             messageText.text = string.IsNullOrWhiteSpace(message) ? _defaultBlockSyncingMessage : message;
             base.Show(ignoreShowAnimation);

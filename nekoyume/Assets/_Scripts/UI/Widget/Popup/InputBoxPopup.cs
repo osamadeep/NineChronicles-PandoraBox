@@ -24,7 +24,6 @@ namespace Nekoyume.UI
         public TextButton cancelButton;
 
         public InputBoxDelegate CloseCallback { get; set; }
-        public Blur blur;
 
         public string text;
 
@@ -39,10 +38,10 @@ namespace Nekoyume.UI
             SubmitWidget = Yes;
         }
 
-        public void Show(string placeHolderText, string content, string labelYes = "UI_OK", string labelNo = "UI_CANCEL",
+        public void Show(string placeHolderText, string content, string labelYes = "UI_OK",
+            string labelNo = "UI_CANCEL",
             bool localize = true)
         {
-
             text = inputField.text = string.Empty;
             if (localize)
             {
@@ -60,7 +59,6 @@ namespace Nekoyume.UI
             }
 
             base.Show();
-            blur?.Show();
             inputField.Select();
 
             Observable.NextFrame().Subscribe(_ =>
@@ -84,12 +82,6 @@ namespace Nekoyume.UI
             CloseCallback?.Invoke(ConfirmResult.No);
             Close();
             AudioController.PlayClick();
-        }
-
-        public override void Close(bool ignoreCloseAnimation = false)
-        {
-            blur?.Close();
-            base.Close(ignoreCloseAnimation);
         }
     }
 }

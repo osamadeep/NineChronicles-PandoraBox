@@ -38,11 +38,7 @@ namespace Nekoyume.UI
             public Button textGroupButton;
         }
 
-        [SerializeField]
-        private IconAndButton[] uiBySystemType;
-
-        [SerializeField]
-        private Blur blur;
+        [SerializeField] private IconAndButton[] uiBySystemType;
 
         private TextButton _confirmButton = null;
 
@@ -82,10 +78,7 @@ namespace Nekoyume.UI
             {
                 ui.rootGameObject.SetActive(false);
             }
-            if (blur)
-            {
-                blur.Close();
-            }
+
             base.Close(ignoreCloseAnimation);
         }
 
@@ -105,10 +98,6 @@ namespace Nekoyume.UI
 
             Set(title, content, labelYes, "", localize, type);
             Show();
-            if (blur)
-            {
-                blur.Show();
-            }
         }
 
         public void ShowWithTwoButton(
@@ -128,10 +117,6 @@ namespace Nekoyume.UI
 
             Set(title, content, labelYes, labelNo, localize, type);
             Show();
-            if (blur)
-            {
-                blur.Show();
-            }
         }
 
         public void ShowByBlockDownloadFail(long index)
@@ -215,11 +200,11 @@ namespace Nekoyume.UI
 
         private void SetUIByType(SystemType type)
         {
-            _confirmButton = uiBySystemType[(int) type].confirmButton;
-            _cancelButton = uiBySystemType[(int) type].cancelButton;
-            _contentText = uiBySystemType[(int) type].contentText;
-            _titleText = uiBySystemType[(int) type].titleText;
-            uiBySystemType[(int) type].rootGameObject.SetActive(true);
+            _confirmButton = uiBySystemType[(int)type].confirmButton;
+            _cancelButton = uiBySystemType[(int)type].cancelButton;
+            _contentText = uiBySystemType[(int)type].contentText;
+            _titleText = uiBySystemType[(int)type].titleText;
+            uiBySystemType[(int)type].rootGameObject.SetActive(true);
         }
     }
 }

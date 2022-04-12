@@ -84,7 +84,8 @@ namespace Nekoyume.Helper
         public static Sprite GetPlayerSpineTextureWeapon(int equipmentId)
         {
             return Resources.Load<Sprite>(string.Format(PlayerSpineTextureWeaponPathFormat, equipmentId)) ??
-                   Resources.Load<Sprite>(string.Format(PlayerSpineTextureWeaponPathFormat, GameConfig.DefaultAvatarWeaponId));
+                   Resources.Load<Sprite>(string.Format(PlayerSpineTextureWeaponPathFormat,
+                       GameConfig.DefaultAvatarWeaponId));
         }
 
         public static Sprite GetAreaAttackCutsceneSprite(int id)
@@ -118,7 +119,7 @@ namespace Nekoyume.Helper
                         string.Format(MenuIllustratePathFormat, "UI_bg_shop"));
                     break;
 
-                case nameof(MimisbrunnrPreparation):
+                case "Mimisbrunnr":
                     result = Resources.Load<Sprite>(
                         string.Format(MenuIllustratePathFormat, "UI_bg_mimisbrunnr"));
                     break;

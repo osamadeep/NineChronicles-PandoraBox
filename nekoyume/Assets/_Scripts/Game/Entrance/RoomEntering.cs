@@ -29,11 +29,11 @@ namespace Nekoyume.Game.Entrance
             stage.stageId = 0;
 
             yield return new WaitForEndOfFrame();
-            stage.SelectedPlayer = null;
             if (!(stage.AvatarState is null))
             {
                 ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(stage.AvatarState);
             }
+
             var startPosition = new Vector2(5000.2f, 4999.1f);
             var player = stage.GetPlayer(startPosition - new Vector2(3.0f, 0.0f));
             player.transform.localScale = Vector3.one;

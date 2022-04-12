@@ -39,17 +39,13 @@ namespace Nekoyume.Game
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]
     public class Game : MonoSingleton<Game>
     {
-        [SerializeField]
-        private Stage stage = null;
+        [SerializeField] private Stage stage = null;
 
-        [SerializeField]
-        private bool useSystemLanguage = true;
+        [SerializeField] private bool useSystemLanguage = true;
 
-        [SerializeField]
-        private LanguageTypeReactiveProperty languageType = default;
+        [SerializeField] private LanguageTypeReactiveProperty languageType = default;
 
-        [SerializeField]
-        private Prologue prologue = null;
+        [SerializeField] private Prologue prologue = null;
 
         public States States { get; private set; }
 
@@ -145,7 +141,7 @@ namespace Nekoyume.Game
             else
             {
                 yield return L10nManager.Initialize(languageType.Value).ToYieldInstruction();
-                
+
                 languageType.Subscribe(value => L10nManager.SetLanguage(value)).AddTo(gameObject);
             }
 #else
@@ -269,7 +265,7 @@ namespace Nekoyume.Game
 
         private static void OnRPCAgentRetryEnded(RPCAgent rpcAgent)
         {
-            var widget = (Widget) Widget.Find<DimmedLoadingScreen>();
+            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
             if (widget.IsActive())
             {
                 widget.Close();
@@ -289,7 +285,7 @@ namespace Nekoyume.Game
 
             var needToBackToMain = false;
             var showLoadingScreen = false;
-            var widget = (Widget) Widget.Find<DimmedLoadingScreen>();
+            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
             if (widget.IsActive())
             {
                 widget.Close();
@@ -298,7 +294,7 @@ namespace Nekoyume.Game
             if (Widget.Find<LoadingScreen>().IsActive())
             {
                 Widget.Find<LoadingScreen>().Close();
-                widget = Widget.Find<QuestPreparation>();
+                widget = Widget.Find<BattlePreparation>();
                 if (widget.IsActive())
                 {
                     widget.Close(true);
@@ -329,11 +325,6 @@ namespace Nekoyume.Game
                 Widget.Find<ArenaBattleLoadingScreen>().Close();
                 needToBackToMain = true;
             }
-            else if (Widget.Find<MimisbrunnrPreparation>().IsActive())
-            {
-                Widget.Find<MimisbrunnrPreparation>().Close(true);
-                needToBackToMain = true;
-            }
 
             if (!needToBackToMain)
             {
@@ -342,6 +333,7 @@ namespace Nekoyume.Game
 
             BackToMain(showLoadingScreen, new UnableToRenderWhenSyncingBlocksException());
         }
+
         private static void OnRPCAgentPreloadEnded(RPCAgent rpcAgent)
         {
             if (Widget.Find<IntroScreen>().IsActive() ||
@@ -355,7 +347,7 @@ namespace Nekoyume.Game
 
             var needToBackToMain = false;
             var showLoadingScreen = false;
-            var widget = (Widget) Widget.Find<DimmedLoadingScreen>();
+            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
             if (widget.IsActive())
             {
                 widget.Close();
@@ -364,7 +356,7 @@ namespace Nekoyume.Game
             if (Widget.Find<LoadingScreen>().IsActive())
             {
                 Widget.Find<LoadingScreen>().Close();
-                widget = Widget.Find<QuestPreparation>();
+                widget = Widget.Find<BattlePreparation>();
                 if (widget.IsActive())
                 {
                     widget.Close(true);
@@ -393,11 +385,6 @@ namespace Nekoyume.Game
             else if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
             {
                 Widget.Find<ArenaBattleLoadingScreen>().Close();
-                needToBackToMain = true;
-            }
-            else if (Widget.Find<MimisbrunnrPreparation>().IsActive())
-            {
-                Widget.Find<MimisbrunnrPreparation>().Close(true);
                 needToBackToMain = true;
             }
 
@@ -445,7 +432,8 @@ namespace Nekoyume.Game
             if (rpcAgent.Connected)
             {
                 // 무슨 상황이지?
-                Debug.Log($"{nameof(QuitWithAgentConnectionError)}() called. But {nameof(RPCAgent)}.Connected is {rpcAgent.Connected}.");
+                Debug.Log(
+                    $"{nameof(QuitWithAgentConnectionError)}() called. But {nameof(RPCAgent)}.Connected is {rpcAgent.Connected}.");
                 return;
             }
 
@@ -473,6 +461,7 @@ namespace Nekoyume.Game
             {
                 csv[asset.name] = asset.text;
             }
+
             TableSheets = new TableSheets(csv);
         }
 
@@ -494,10 +483,7 @@ namespace Nekoyume.Game
                 List<TextAsset> csvAssets = addressableAssetsContainer.tableCsvAssets;
                 var map = new ConcurrentDictionary<Address, string>();
                 var csv = new ConcurrentDictionary<string, string>();
-                Parallel.ForEach(csvAssets, asset =>
-                {
-                    map[Addresses.TableSheet.Derive(asset.name)] = asset.name;
-                });
+                Parallel.ForEach(csvAssets, asset => { map[Addresses.TableSheet.Derive(asset.name)] = asset.name; });
                 var values = Agent.GetStateBulk(map.Keys).Result;
                 Parallel.ForEach(values, kv =>
                 {
@@ -606,6 +592,7 @@ namespace Nekoyume.Game
             {
                 widget.Close(true);
             }
+
             Widget.Find<Login>().Show();
         }
 
@@ -824,11 +811,12 @@ namespace Nekoyume.Game
                     Message = msg,
                     Timestamp = DateTime.UtcNow
                 };
-                var request = new PutLogEventsRequest(groupName, streamName, new List<InputLogEvent> {ie});
+                var request = new PutLogEventsRequest(groupName, streamName, new List<InputLogEvent> { ie });
                 if (!string.IsNullOrEmpty(token))
                 {
                     request.SequenceToken = token;
                 }
+
                 await _logsClient.PutLogEventsAsync(request);
             }
             catch (Exception)

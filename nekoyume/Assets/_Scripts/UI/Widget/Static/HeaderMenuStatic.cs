@@ -69,24 +69,24 @@ namespace Nekoyume.UI.Module
         private readonly Dictionary<ToggleType, ReactiveProperty<bool>> _toggleNotifications =
             new Dictionary<ToggleType, ReactiveProperty<bool>>()
             {
-                {ToggleType.Quest, new ReactiveProperty<bool>(false)},
-                {ToggleType.AvatarInfo, new ReactiveProperty<bool>(false)},
-                {ToggleType.CombinationSlots, new ReactiveProperty<bool>(false)},
-                {ToggleType.Mail, new ReactiveProperty<bool>(false)},
-                {ToggleType.Rank, new ReactiveProperty<bool>(false)},
+                { ToggleType.Quest, new ReactiveProperty<bool>(false) },
+                { ToggleType.AvatarInfo, new ReactiveProperty<bool>(false) },
+                { ToggleType.CombinationSlots, new ReactiveProperty<bool>(false) },
+                { ToggleType.Mail, new ReactiveProperty<bool>(false) },
+                { ToggleType.Rank, new ReactiveProperty<bool>(false) },
             };
 
         private readonly Dictionary<ToggleType, int> _toggleUnlockStages =
             new Dictionary<ToggleType, int>()
             {
-                {ToggleType.Quest, GameConfig.RequireClearedStageLevel.UIBottomMenuQuest},
-                {ToggleType.AvatarInfo, GameConfig.RequireClearedStageLevel.UIBottomMenuCharacter},
-                {ToggleType.CombinationSlots, GameConfig.RequireClearedStageLevel.CombinationEquipmentAction},
-                {ToggleType.Mail, GameConfig.RequireClearedStageLevel.UIBottomMenuMail},
-                {ToggleType.Rank, 1},
-                {ToggleType.Chat, GameConfig.RequireClearedStageLevel.UIBottomMenuChat},
-                {ToggleType.Settings, 1},
-                {ToggleType.Quit, 1},
+                { ToggleType.Quest, GameConfig.RequireClearedStageLevel.UIBottomMenuQuest },
+                { ToggleType.AvatarInfo, GameConfig.RequireClearedStageLevel.UIBottomMenuCharacter },
+                { ToggleType.CombinationSlots, GameConfig.RequireClearedStageLevel.CombinationEquipmentAction },
+                { ToggleType.Mail, GameConfig.RequireClearedStageLevel.UIBottomMenuMail },
+                { ToggleType.Rank, 1 },
+                { ToggleType.Chat, GameConfig.RequireClearedStageLevel.UIBottomMenuChat },
+                { ToggleType.Settings, 1 },
+                { ToggleType.Quit, 1 },
             };
 
         private long _blockIndex;
@@ -263,8 +263,11 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        private void SetActiveAssets(bool isNcgActive, bool isActionPointActive,
-            bool isDailyBonusActive, bool isHourglassActive)
+        private void SetActiveAssets(
+            bool isNcgActive,
+            bool isActionPointActive,
+            bool isDailyBonusActive,
+            bool isHourglassActive)
         {
             ncg.SetActive(isNcgActive);
             actionPoint.gameObject.SetActive(isActionPointActive);
@@ -285,7 +288,6 @@ namespace Nekoyume.UI.Module
 
             _toggleNotifications[ToggleType.Mail].Value =
                 mailBox.Any(i => i.New && i.requiredBlockIndex <= blockIndex);
-            ;
         }
 
         private void SubscribeAvatarMailBox(MailBox mailBox)
@@ -348,7 +350,8 @@ namespace Nekoyume.UI.Module
             var cost = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
             var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
                 r.ItemSubType == ItemSubType.Hourglass);
-            var isEnough = States.Instance.CurrentAvatarState.inventory.HasFungibleItem(row.ItemId, currentBlockIndex, cost);
+            var isEnough =
+                States.Instance.CurrentAvatarState.inventory.HasFungibleItem(row.ItemId, currentBlockIndex, cost);
             return isEnough;
         }
 

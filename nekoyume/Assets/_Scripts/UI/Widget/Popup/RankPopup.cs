@@ -40,64 +40,49 @@ namespace Nekoyume.UI
             RankLoadingTask = model.Update(RankingBoardDisplayCount);
         }
 
-        [SerializeField]
-        private Button closeButton = null;
+        [SerializeField] private Button closeButton = null;
 
-        [SerializeField]
-        private TextMeshProUGUI firstColumnText = null;
+        [SerializeField] private TextMeshProUGUI firstColumnText = null;
 
-        [SerializeField]
-        private TextMeshProUGUI secondColumnText = null;
+        [SerializeField] private TextMeshProUGUI secondColumnText = null;
 
-        [SerializeField]
-        private RankScroll rankScroll = null;
+        [SerializeField] private RankScroll rankScroll = null;
 
-        [SerializeField]
-        private RankCellPanel myInfoCell = null;
+        [SerializeField] private RankCellPanel myInfoCell = null;
 
-        [SerializeField]
-        private GameObject preloadingObject = null;
+        [SerializeField] private GameObject preloadingObject = null;
 
-        [SerializeField]
-        private GameObject missingObject = null;
+        [SerializeField] private GameObject missingObject = null;
 
-        [SerializeField]
-        private TextMeshProUGUI missingText = null;
+        [SerializeField] private TextMeshProUGUI missingText = null;
 
-        [SerializeField]
-        private GameObject refreshObject = null;
+        [SerializeField] private GameObject refreshObject = null;
 
-        [SerializeField]
-        private Button refreshButton = null;
+        [SerializeField] private Button refreshButton = null;
 
-        [SerializeField]
-        private List<CategoryToggle> categoryToggles = null;
+        [SerializeField] private List<CategoryToggle> categoryToggles = null;
 
-        [SerializeField]
-        private List<ToggleDropdown> categoryDropdowns = null;
+        [SerializeField] private List<ToggleDropdown> categoryDropdowns = null;
 
-        [SerializeField]
-        private List<Button> maintenancingToggles = null;
-
-        [SerializeField]
-        private Blur blur = null;
+        [SerializeField] private List<Button> maintenancingToggles = null;
 
         public const int RankingBoardDisplayCount = 100;
 
         private readonly Dictionary<RankCategory, Toggle> _toggleMap = new Dictionary<RankCategory, Toggle>();
 
-        private readonly Dictionary<RankCategory, (string, string)> _rankColumnMap = new Dictionary<RankCategory, (string, string)>
-        {
-            { RankCategory.Ability, ("UI_CP", "UI_LEVEL") },
-            { RankCategory.Stage, ("UI_STAGE", null)},
-            { RankCategory.Mimisburnnr, ("UI_STAGE", null) },
-            { RankCategory.Crafting, ("UI_COUNTS_CRAFTED", null) },
-            { RankCategory.EquipmentWeapon, ("UI_CP", "UI_NAME") },
-            { RankCategory.EquipmentArmor, ("UI_CP", "UI_NAME") },
-            { RankCategory.EquipmentBelt, ("UI_CP", "UI_NAME") },
-            { RankCategory.EquipmentNecklace, ("UI_CP", "UI_NAME") },
-            { RankCategory.EquipmentRing, ("UI_CP", "UI_NAME") },
-        };
+        private readonly Dictionary<RankCategory, (string, string)> _rankColumnMap =
+            new Dictionary<RankCategory, (string, string)>
+            {
+                { RankCategory.Ability, ("UI_CP", "UI_LEVEL") },
+                { RankCategory.Stage, ("UI_STAGE", null) },
+                { RankCategory.Mimisburnnr, ("UI_STAGE", null) },
+                { RankCategory.Crafting, ("UI_COUNTS_CRAFTED", null) },
+                { RankCategory.EquipmentWeapon, ("UI_CP", "UI_NAME") },
+                { RankCategory.EquipmentArmor, ("UI_CP", "UI_NAME") },
+                { RankCategory.EquipmentBelt, ("UI_CP", "UI_NAME") },
+                { RankCategory.EquipmentNecklace, ("UI_CP", "UI_NAME") },
+                { RankCategory.EquipmentRing, ("UI_CP", "UI_NAME") },
+            };
 
         public override void Initialize()
         {
@@ -171,21 +156,6 @@ namespace Nekoyume.UI
             base.Show(ignoreShowAnimation);
             var firstCategory = categoryToggles.FirstOrDefault(x => x.Category != RankCategory.Maintenance);
             UpdateCategory(firstCategory.Category, true);
-
-            if (blur)
-            {
-                blur.Show();
-            }
-        }
-
-        public override void Close(bool ignoreCloseAnimation = false)
-        {
-            if (blur && blur.isActiveAndEnabled)
-            {
-                blur.Close();
-            }
-
-            base.Close(ignoreCloseAnimation);
         }
 
         private void UpdateCategory(RankCategory category, bool toggleOn = false)
@@ -219,7 +189,8 @@ namespace Nekoyume.UI
             {
                 missingObject.SetActive(false);
                 refreshObject.SetActive(true);
-                Debug.LogError($"Error loading ranking. Exception : \n{RankLoadingTask.Exception}\n{RankLoadingTask.Exception.StackTrace}");
+                Debug.LogError(
+                    $"Error loading ranking. Exception : \n{RankLoadingTask.Exception}\n{RankLoadingTask.Exception.StackTrace}");
                 myInfoCell.SetEmpty(states.CurrentAvatarState);
                 return;
             }
@@ -241,7 +212,8 @@ namespace Nekoyume.UI
             }
             else
             {
-                firstColumnText.text = firstCategory.StartsWith("UI_") ? L10nManager.Localize(firstCategory) : firstCategory;
+                firstColumnText.text =
+                    firstCategory.StartsWith("UI_") ? L10nManager.Localize(firstCategory) : firstCategory;
             }
 
             var secondCategory = _rankColumnMap[category].Item2;
@@ -251,7 +223,9 @@ namespace Nekoyume.UI
             }
             else
             {
-                secondColumnText.text = secondCategory.StartsWith("UI_") ? L10nManager.Localize(secondCategory) : secondCategory;
+                secondColumnText.text = secondCategory.StartsWith("UI_")
+                    ? L10nManager.Localize(secondCategory)
+                    : secondCategory;
             }
 
             preloadingObject.SetActive(false);
@@ -350,6 +324,7 @@ namespace Nekoyume.UI
                 {
                     dropdown.isOn = true;
                 }
+
                 toggle.isOn = true;
             }
             else if (toggle is ToggleDropdown dropdown)

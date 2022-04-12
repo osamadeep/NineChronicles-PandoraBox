@@ -122,6 +122,7 @@ namespace Nekoyume.BlockChain
                 .Subscribe(ResponseSellCancellation)
                 .AddTo(_disposables);
         }
+
         private void UpdateSell()
         {
             _actionRenderer.EveryUnrender<UpdateSell>()
@@ -177,7 +178,7 @@ namespace Nekoyume.BlockChain
             var agentAddress = States.Instance.AgentState.address;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress,
-                out var avatarState, out _))
+                    out var avatarState, out _))
             {
                 return;
             }
@@ -237,11 +238,7 @@ namespace Nekoyume.BlockChain
             var count = eval.Action.count;
             LocalLayerModifier.RemoveItem(avatarAddress, itemId, blockIndex, count);
             UpdateCurrentAvatarStateAsync(eval);
-            var shopSell = Widget.Find<ShopSell>();
-            if (shopSell.isActiveAndEnabled)
-            {
-                shopSell.Refresh();
-            }
+            ReactiveShopState.UpdateSellDigests();
         }
 
         private async void ResponseSellCancellation(ActionBase.ActionEvaluation<SellCancellation> eval)
@@ -256,11 +253,7 @@ namespace Nekoyume.BlockChain
             var count = order is FungibleOrder fungibleOrder ? fungibleOrder.ItemCount : 1;
             LocalLayerModifier.AddItem(avatarAddress, order.TradableId, order.ExpiredBlockIndex, count);
             UpdateCurrentAvatarStateAsync(eval);
-            var shopSell = Widget.Find<ShopSell>();
-            if (shopSell.isActiveAndEnabled)
-            {
-                shopSell.Refresh();
-            }
+            ReactiveShopState.UpdateSellDigests();
         }
 
         private void ResponseUpdateSell(ActionBase.ActionEvaluation<UpdateSell> eval)
@@ -271,11 +264,7 @@ namespace Nekoyume.BlockChain
             }
 
             UpdateCurrentAvatarStateAsync(eval);
-            var shopSell = Widget.Find<ShopSell>();
-            if (shopSell.isActiveAndEnabled)
-            {
-                shopSell.Refresh();
-            }
+            ReactiveShopState.UpdateSellDigests();
         }
 
 
@@ -337,7 +326,8 @@ namespace Nekoyume.BlockChain
             UnrenderQuest(avatarAddress, avatarState.questList.completedQuestIds);
         }
 
-        private void ResponseClaimMonsterCollectionReward(ActionBase.ActionEvaluation<ClaimMonsterCollectionReward> eval)
+        private void ResponseClaimMonsterCollectionReward(
+            ActionBase.ActionEvaluation<ClaimMonsterCollectionReward> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -347,13 +337,13 @@ namespace Nekoyume.BlockChain
             var agentAddress = States.Instance.AgentState.address;
             var avatarAddress = eval.Action.avatarAddress;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress,
-                out var avatarState, out _))
+                    out var avatarState, out _))
             {
                 return;
             }
 
             var mail = avatarState.mailBox.FirstOrDefault(e => e is MonsterCollectionMail);
-            if (!(mail is MonsterCollectionMail {attachment: MonsterCollectionResult monsterCollectionResult}))
+            if (!(mail is MonsterCollectionMail { attachment: MonsterCollectionResult monsterCollectionResult }))
             {
                 return;
             }
@@ -364,15 +354,15 @@ namespace Nekoyume.BlockChain
             {
                 var rewardInfo = rewardInfos[i];
                 if (!rewardInfo.ItemId.TryParseAsTradableId(
-                    Game.Game.instance.TableSheets.ItemSheet,
-                    out var tradableId))
+                        Game.Game.instance.TableSheets.ItemSheet,
+                        out var tradableId))
                 {
                     continue;
                 }
 
                 if (!rewardInfo.ItemId.TryGetFungibleId(
-                    Game.Game.instance.TableSheets.ItemSheet,
-                    out var fungibleId))
+                        Game.Game.instance.TableSheets.ItemSheet,
+                        out var fungibleId))
                 {
                     continue;
                 }
@@ -381,7 +371,8 @@ namespace Nekoyume.BlockChain
                 var item = items.FirstOrDefault(x => x.item is ITradableItem);
                 if (item != null && item is ITradableItem tradableItem)
                 {
-                    LocalLayerModifier.AddItem(avatarAddress, tradableId, tradableItem.RequiredBlockIndex, rewardInfo.Quantity);
+                    LocalLayerModifier.AddItem(avatarAddress, tradableId, tradableItem.RequiredBlockIndex,
+                        rewardInfo.Quantity);
                 }
             }
 

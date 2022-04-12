@@ -49,32 +49,23 @@ namespace Nekoyume.UI
         }
 #endif
 
-        [SerializeField]
-        private GameObject _titleFailSuccessObject;
+        [SerializeField] private GameObject _titleFailSuccessObject;
 
-        [SerializeField]
-        private GameObject _titleSuccessObject;
+        [SerializeField] private GameObject _titleSuccessObject;
 
-        [SerializeField]
-        private GameObject _titleGreatSuccessObject;
+        [SerializeField] private GameObject _titleGreatSuccessObject;
 
-        [SerializeField]
-        private ResultItem _resultItem;
+        [SerializeField] private ResultItem _resultItem;
 
-        [SerializeField]
-        private ItemOptionView _itemMainStatView;
+        [SerializeField] private ItemOptionView _itemMainStatView;
 
-        [SerializeField]
-        private List<ItemOptionWithCountView> _itemStatOptionViews;
+        [SerializeField] private List<ItemOptionWithCountView> _itemStatOptionViews;
 
-        [SerializeField]
-        private List<ItemOptionView> _itemSkillOptionViews;
+        [SerializeField] private List<ItemOptionView> _itemSkillOptionViews;
 
-        [SerializeField]
-        private float _delayTimeOfShowOptions;
+        [SerializeField] private float _delayTimeOfShowOptions;
 
-        [SerializeField]
-        private float _intervalTimeOfShowOptions;
+        [SerializeField] private float _intervalTimeOfShowOptions;
 
 #if UNITY_EDITOR
         [Space(10)]
@@ -247,9 +238,9 @@ namespace Nekoyume.UI
                 }
 
                 var (_, prePower, preChance) = itemOptionInfoPre.SkillOptions[i];
-                var (skillName, power, chance) = skillOptions[i];
+                var (skillRow, power, chance) = skillOptions[i];
                 optionView.UpdateAsTotalAndPlusSkill(
-                    skillName,
+                    skillRow.GetLocalizedName(),
                     power,
                     chance,
                     power - prePower,

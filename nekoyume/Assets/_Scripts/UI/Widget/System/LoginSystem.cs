@@ -14,9 +14,6 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
-    using Nekoyume.Game.Controller;
-    using Nekoyume.UI.Scroller;
-    using PandoraBox;
     using UniRx;
 
     public class LoginSystem : SystemWidget
@@ -31,12 +28,6 @@ namespace Nekoyume.UI
             Failed,
             CreatePassword,
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Transform ProfilesHolder;
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public IKeyStore KeyStore = Web3KeyStore.DefaultKeyStore;
         public InputField passPhraseField;
@@ -74,8 +65,6 @@ namespace Nekoyume.UI
         private string _privateKeyString;
         private PrivateKey _privateKey;
         private States _prevState;
-        public Blur blur;
-
 
         protected override void Awake()
         {
@@ -101,6 +90,7 @@ namespace Nekoyume.UI
             base.Awake();
             SubmitWidget = Submit;
         }
+
         private void SubscribeState(States states)
         {
             titleText.gameObject.SetActive(true);
@@ -194,6 +184,7 @@ namespace Nekoyume.UI
                 default:
                     throw new ArgumentOutOfRangeException(nameof(states), states, null);
             }
+
             UpdateSubmitButton();
         }
 
@@ -227,8 +218,8 @@ namespace Nekoyume.UI
             var passPhrase = passPhraseField.text;
             var retyped = retypeField.text;
             return !(string.IsNullOrEmpty(passPhrase) || string.IsNullOrEmpty(retyped)) &&
-                passPhrase == retyped &&
-                CheckPassWord(passPhrase);
+                   passPhrase == retyped &&
+                   CheckPassWord(passPhrase);
         }
 
         private void CheckLogin()
@@ -239,13 +230,10 @@ namespace Nekoyume.UI
             }
             catch (Exception)
             {
-                //loginWarning.SetActive(true);
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
-                    , NotificationCell.NotificationType.Alert);
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                loginWarning.SetActive(true);
                 return;
             }
+
             Login = !(_privateKey is null);
             if (Login)
             {
@@ -253,14 +241,9 @@ namespace Nekoyume.UI
             }
             else
             {
-                //loginWarning.SetActive(true);
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System, "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
-                    , NotificationCell.NotificationType.Alert);
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                loginWarning.SetActive(true);
                 loginField.text = string.Empty;
             }
-
         }
 
         public void Submit()
@@ -300,6 +283,7 @@ namespace Nekoyume.UI
                         findPrivateKeyWarning.SetActive(true);
                         findPassphraseField.text = null;
                     }
+
                     break;
                 }
                 case States.ResetPassphrase:
@@ -330,8 +314,7 @@ namespace Nekoyume.UI
             KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
             _privateKeyString = privateKeyString;
             //Auto login for miner, seed, launcher
-            //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if ((!string.IsNullOrEmpty(_privateKeyString) || (Application.isBatchMode)) && !PandoraBoxMaster.Instance.Settings.IsMultipleLogin) 
+            if (!string.IsNullOrEmpty(_privateKeyString) || Application.isBatchMode)
             {
                 CreatePrivateKey();
                 Login = true;
@@ -347,23 +330,7 @@ namespace Nekoyume.UI
                 {
                     // 키 고르는 게 따로 없으니 갖고 있는 키 중에서 아무거나 보여줘야 함...
                     // FIXME: 역시 키 고르는 단계가 있어야 할 것 같음
-                    //SetImage(KeyStore.List().First().Item2.Address);
-
-                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    foreach (Transform item in ProfilesHolder)
-                        item.gameObject.SetActive(false);
-
-                    for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
-                    {
-                        ProfilesHolder.GetChild(i).gameObject.SetActive(true);
-                        string tmp = "_PandoraBox_Account_LoginProfile0" + i + "_Name";
-                        ProfilesHolder.GetChild(i).Find("AccountNameText").GetComponent<TextMeshProUGUI>().text
-                            = PlayerPrefs.GetString(tmp, "Profile " + (i + 1).ToString());
-                    }
-
-
-                    SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    SetImage(KeyStore.List().First().Item2.Address);
                 }
 
                 switch (State.Value)
@@ -394,37 +361,10 @@ namespace Nekoyume.UI
                     case States.Failed:
                         break;
                 }
+
                 base.Show();
-                if (blur)
-                {
-                    blur.Show();
-                }
-                StartCoroutine(ForceSelect()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
             }
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        System.Collections.IEnumerator ForceSelect()
-        {
-            yield return new WaitForSeconds(0.5f);
-            loginField.ActivateInputField();
-            loginField.Select();
-        }
-        public void SetProfileIndex(int value)
-        {
-            PandoraBoxMaster.LoginIndex = value;
-            AudioController.instance.PlaySfx(AudioController.SfxCode.Click);
-            SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
-
-            //VFX
-            for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, PandoraBoxMaster.NumberOfProfiles); i++)
-            {
-                Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);
-                ProfilesHolder.GetChild(i).Find("icon").GetComponent<Image>().color = tmp;
-                ProfilesHolder.GetChild(i).Find("Image").gameObject.SetActive(i == value);
-            }
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void CreatePrivateKey()
         {
@@ -462,43 +402,25 @@ namespace Nekoyume.UI
             // 그런 케이스에서 이용자에게는 버그처럼 여겨지는 동작일지도.
             // FIXME: 따라서 UI에서 키 여러 개 중 뭘 쓸지 선택하는 걸 두는 게 좋을 듯.
             PrivateKey privateKey = null;
-            //foreach (var pair in keyStore.List())
-            //{
-            //    pair.Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
-            //    try
-            //    {
-            //        privateKey = ppk.Unprotect(passphrase: passphrase);
-            //    }
-            //    catch (IncorrectPassphraseException)
-            //    {
-            //        Debug.LogWarningFormat(
-            //            "The key {0} is protected with a passphrase; failed to load: {1}",
-            //            ppk.Address,
-            //            keyId
-            //        );
-            //    }
-
-            //    Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
-            //    break;
-            //}
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            keyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
-            try
+            foreach (var pair in keyStore.List())
             {
-                privateKey = ppk.Unprotect(passphrase: passphrase);
-            }
-            catch (IncorrectPassphraseException)
-            {
-                Debug.LogWarningFormat(
-                    "The key {0} is protected with a passphrase; failed to load: {1}",
-                    ppk.Address,
-                    keyId
-                );
-            }
+                pair.Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
+                try
+                {
+                    privateKey = ppk.Unprotect(passphrase: passphrase);
+                }
+                catch (IncorrectPassphraseException)
+                {
+                    Debug.LogWarningFormat(
+                        "The key {0} is protected with a passphrase; failed to load: {1}",
+                        ppk.Address,
+                        keyId
+                    );
+                }
 
-            Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
+                break;
+            }
 
             return privateKey;
         }
@@ -599,8 +521,7 @@ namespace Nekoyume.UI
             // 가져온 비밀키를 키스토어에 넣기 전에, 혹시 같은 주소에 대한 키를 지운다.  (아무튼 기능명이 "reset"이라...)
             // 참고로 본 함수 호출되기 전에 CheckPassphrase()에서 먼저 같은 키의 비밀키가 있는지 확인한다. "찾기"가 아니라 "추가"니까, 없으면 오류가 먼저 나게 되어 있음.
             Address address = pk.ToAddress();
-            Guid[] keyIdsToRemove = KeyStore.List().
-                Where(pair => pair.Item2.Address.Equals(address))
+            Guid[] keyIdsToRemove = KeyStore.List().Where(pair => pair.Item2.Address.Equals(address))
                 .Select(pair => pair.Item1).ToArray();
             foreach (Guid keyIdToRemove in keyIdsToRemove)
             {
@@ -639,8 +560,8 @@ namespace Nekoyume.UI
             var ms = new MemoryStream();
             image.SaveAsPng(ms);
             var buffer = new byte[ms.Length];
-            ms.Read(buffer,0,buffer.Length);
-            var t = new Texture2D(8,8);
+            ms.Read(buffer, 0, buffer.Length);
+            var t = new Texture2D(8, 8);
             if (t.LoadImage(ms.ToArray()))
             {
                 var sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), Vector2.zero);
@@ -649,12 +570,6 @@ namespace Nekoyume.UI
                 accountAddressText.text = address.ToString();
                 accountAddressText.gameObject.SetActive(true);
             }
-        }
-
-        public override void Close(bool ignoreCloseAnimation = false)
-        {
-            blur?.Close();
-            base.Close(ignoreCloseAnimation);
         }
     }
 }

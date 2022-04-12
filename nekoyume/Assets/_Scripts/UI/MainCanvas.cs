@@ -31,8 +31,8 @@ namespace Nekoyume.UI
                 root.sortingOrder = sortingOrder;
 
                 foreach (var childCanvas in root.GetComponentsInChildren<Canvas>(true)
-                    .Where(canvas => !canvas.Equals(root))
-                    .ToList())
+                             .Where(canvas => !canvas.Equals(root))
+                             .ToList())
                 {
                     childCanvas.sortingOrder =
                         sortingOrder + (childCanvas.sortingOrder - rootSortingOrderBackup);
@@ -40,39 +40,27 @@ namespace Nekoyume.UI
             }
         }
 
-        [SerializeField]
-        private CanvasGroup canvasGroup = null;
+        [SerializeField] private CanvasGroup canvasGroup = null;
 
-        [SerializeField]
-        private CanvasLayer hudLayer = default;
+        [SerializeField] private CanvasLayer hudLayer = default;
 
-        [SerializeField]
-        private CanvasLayer widgetLayer = default;
+        [SerializeField] private CanvasLayer widgetLayer = default;
 
-        [SerializeField]
-        private CanvasLayer staticLayer = default;
+        [SerializeField] private CanvasLayer staticLayer = default;
 
-        [SerializeField]
-        private CanvasLayer popupLayer = default;
+        [SerializeField] private CanvasLayer popupLayer = default;
 
-        [SerializeField]
-        private CanvasLayer animationLayer = default;
+        [SerializeField] private CanvasLayer animationLayer = default;
 
-        [SerializeField]
-        private CanvasLayer tooltipLayer = default;
+        [SerializeField] private CanvasLayer tooltipLayer = default;
 
-        [SerializeField]
-        private CanvasLayer tutorialMaskLayer = default;
+        [SerializeField] private CanvasLayer tutorialMaskLayer = default;
 
-        [SerializeField]
-        private CanvasLayer screenLayer = default;
+        [SerializeField] private CanvasLayer screenLayer = default;
 
-        [SerializeField]
-        private CanvasLayer systemLayer = default;
+        [SerializeField] private CanvasLayer systemLayer = default;
 
-        [SerializeField]
-        private CanvasLayer developmentLayer = default;
-
+        [SerializeField] private CanvasLayer developmentLayer = default;
 
 
         private List<CanvasLayer> _layers;
@@ -107,7 +95,7 @@ namespace Nekoyume.UI
                     return tutorialMaskLayer;
                 case WidgetType.Screen:
                     return screenLayer;
-            // SystemUI
+                // SystemUI
                 case WidgetType.System:
                     return systemLayer;
                 case WidgetType.Development:
@@ -194,6 +182,7 @@ namespace Nekoyume.UI
             {
                 value.Initialize();
             }
+
             Widgets.AddRange(firstWidgets);
 
             UpdateLayers();
@@ -212,8 +201,6 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<Menu>());
             yield return null;
-            secondWidgets.Add(Widget.Create<RankingBattleLoadingScreen>());
-            yield return null;
             secondWidgets.Add(Widget.Create<ArenaBattleLoadingScreen>());
             yield return null;
             // 메뉴보단 더 앞에 나와야 합니다.
@@ -229,13 +216,11 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<StageInformation>());
             yield return null;
-            secondWidgets.Add(Widget.Create<QuestPreparation>());
+            secondWidgets.Add(Widget.Create<BattlePreparation>());
             yield return null;
             secondWidgets.Add(Widget.Create<Status>());
             yield return null;
             secondWidgets.Add(Widget.Create<RankingBoard>());
-            yield return null;
-            secondWidgets.Add(Widget.Create<MimisbrunnrPreparation>());
             yield return null;
             secondWidgets.Add(Widget.Create<EventBanner>());
             yield return null;
@@ -255,7 +240,7 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<Craft>());
             yield return null;
-            secondWidgets.Add(Widget.Create<UpgradeEquipment>());
+            secondWidgets.Add(Widget.Create<Enhancement>());
             yield return null;
 
             // header menu
@@ -336,7 +321,13 @@ namespace Nekoyume.UI
             yield return null;
 
             // tooltip
-            secondWidgets.Add(Widget.Create<ItemInformationTooltip>());
+            secondWidgets.Add(Widget.Create<EquipmentTooltip>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<ConsumableTooltip>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<MaterialTooltip>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<CostumeTooltip>());
             yield return null;
             secondWidgets.Add(Widget.Create<AvatarTooltip>());
             yield return null;
@@ -364,6 +355,7 @@ namespace Nekoyume.UI
                 yield return null;
                 last = value;
             }
+
             Widgets.AddRange(secondWidgets);
             UpdateLayers();
 
@@ -374,7 +366,7 @@ namespace Nekoyume.UI
         public void InitWidgetInMain()
         {
             var layer = widgetLayer.root.transform;
-            for(int i = 0; i < layer.childCount; ++i)
+            for (int i = 0; i < layer.childCount; ++i)
             {
                 var child = layer.GetChild(i);
                 var widget = child.GetComponent<Widget>();

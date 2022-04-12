@@ -15,6 +15,7 @@ namespace Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("duration"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("allOffOnAwake"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("onClickToggle"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("allowSwitchOffWhenIsOn"));
             DrawList(serializedObject.FindProperty("items"), "item");
 
             serializedObject.ApplyModifiedProperties();
@@ -31,7 +32,7 @@ namespace Editor
         {
             listProperty.isExpanded =
                 EditorGUILayout.Foldout(listProperty.isExpanded, listProperty.name);
-            if(listProperty.isExpanded)
+            if (listProperty.isExpanded)
             {
                 EditorGUILayout.PropertyField(listProperty.FindPropertyRelative("Array.size"));
                 int count = listProperty.arraySize;

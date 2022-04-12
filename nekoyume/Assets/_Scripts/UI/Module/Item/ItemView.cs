@@ -27,20 +27,17 @@ namespace Nekoyume.UI.Module
         public TextMeshProUGUI enhancementText;
         public GameObject enhancementImage;
 
-        [SerializeField]
-        private GameObject selection;
+        [SerializeField] private GameObject selection;
 
-        [SerializeField]
-        private GameObject disable;
+        [SerializeField] private GameObject disable;
 
-        [SerializeField]
-        protected UIHsvModifier optionTagBg = null;
+        [SerializeField] protected UIHsvModifier optionTagBg = null;
 
-        [SerializeField]
-        protected List<Image> optionTagImages = null;
+        [SerializeField] protected List<Image> optionTagImages = null;
 
-        [SerializeField]
-        protected OptionTagDataScriptableObject optionTagData = null;
+        [SerializeField] protected OptionTagDataScriptableObject optionTagData = null;
+
+        public List<IDisposable> DisposablesAtSetData => _disposablesAtSetData;
 
         private readonly List<IDisposable> _disposablesAtSetData = new List<IDisposable>();
 
@@ -57,8 +54,7 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        [CanBeNull]
-        public TViewModel Model { get; private set; }
+        [CanBeNull] public TViewModel Model { get; private set; }
 
         public bool IsEmpty => Model?.ItemBase.Value is null;
 
@@ -99,7 +95,7 @@ namespace Nekoyume.UI.Module
 
         #endregion
 
-        public virtual void SetData(TViewModel model)
+        public virtual void SetData(TViewModel model, System.Action onClick = null)
         {
             if (model is null)
             {
@@ -128,7 +124,7 @@ namespace Nekoyume.UI.Module
                 }
             }
 
-            base.SetData(row);
+            base.SetData(row, onClick);
 
             var viewData = base.itemViewData.GetItemViewData(row.Grade);
             enhancementImage.GetComponent<Image>().material = viewData.EnhancementMaterial;
@@ -174,7 +170,7 @@ namespace Nekoyume.UI.Module
                     model.ItemBase.Value.Id, null);
             }
 
-            base.SetData(row);
+            base.SetData(row, null);
 
             var viewData = itemViewData.GetItemViewData(row.Grade);
             _disposablesAtSetData.DisposeAllAndClear();
@@ -210,7 +206,7 @@ namespace Nekoyume.UI.Module
                     model.ItemBase.Value.Id, null);
             }
 
-            base.SetData(row);
+            base.SetData(row, null);
 
             var viewData = base.itemViewData.GetItemViewData(row.Grade);
             enhancementImage.GetComponent<Image>().material = viewData.EnhancementMaterial;

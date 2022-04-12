@@ -15,8 +15,7 @@ namespace Nekoyume.UI
 {
     public class Login : Widget
     {
-        [SerializeField]
-        private GameObject[] slots = null;
+        [SerializeField] private GameObject[] slots = null;
 
         public bool ready;
         public List<Player> players;
@@ -31,11 +30,11 @@ namespace Nekoyume.UI
             {
                 throw new Exception("Login widget's slots.Length is not equals GameConfig.SlotCount.");
             }
+
             _objectPool = Game.Game.instance.Stage.objectPool;
 
             Game.Event.OnNestEnter.AddListener(ClearPlayers);
             Game.Event.OnRoomEnter.AddListener(_ => ClearPlayers());
-            Game.Event.OnRoomEnter.AddListener(_ => ReactiveShopState.InitSellDigests());
             CloseWidget = null;
         }
 
@@ -103,6 +102,7 @@ namespace Nekoyume.UI
                 player.DisableHUD();
                 _objectPool.Remove<Player>(player.gameObject);
             }
+
             _objectPool.ReleaseAll();
             players.Clear();
         }

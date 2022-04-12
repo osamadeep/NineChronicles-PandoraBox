@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using Coffee.UIEffects;
 using System.Collections.Generic;
 using Nekoyume.Game.Controller;
+using Nekoyume.State;
 
 namespace Nekoyume.UI.Module
 {
@@ -26,44 +27,33 @@ namespace Nekoyume.UI.Module
         private static readonly Color OriginColor = Color.white;
         private static readonly Color DimmedColor = ColorHelper.HexToColorRGB("848484");
 
-        [SerializeField]
-        protected OptionTagDataScriptableObject optionTagData = null;
+        [SerializeField] protected OptionTagDataScriptableObject optionTagData = null;
 
-        [SerializeField]
-        private Image defaultImage = null;
+        [SerializeField] private Image defaultImage = null;
 
-        [SerializeField]
-        private Image itemImage = null;
+        [SerializeField] private Image itemImage = null;
 
-        [SerializeField]
-        private TextMeshProUGUI enhancementText = null;
+        [SerializeField] private TextMeshProUGUI enhancementText = null;
 
-        [SerializeField]
-        private Image lockImage = null;
+        [SerializeField] private Image lockImage = null;
 
-        [SerializeField]
-        private ItemSubType itemSubType = ItemSubType.Armor;
+        [SerializeField] private ItemSubType itemSubType = ItemSubType.Armor;
 
-        [SerializeField]
-        private int itemSubTypeIndex = 1;
+        [SerializeField] private ItemType itemType = ItemType.Equipment;
 
-        [SerializeField]
-        protected UIHsvModifier optionTagBg = null;
+        [SerializeField] private int itemSubTypeIndex = 1;
 
-        [SerializeField]
-        protected List<Image> optionTagImages = null;
+        [SerializeField] protected UIHsvModifier optionTagBg = null;
 
-        [SerializeField]
-        protected ItemViewDataScriptableObject itemViewData;
+        [SerializeField] protected List<Image> optionTagImages = null;
 
-        [SerializeField]
-        protected Image gradeImage;
+        [SerializeField] protected ItemViewDataScriptableObject itemViewData;
 
-        [SerializeField]
-        protected UIHsvModifier gradeHsv;
+        [SerializeField] protected Image gradeImage;
 
-        [SerializeField]
-        protected Image enhancementImage;
+        [SerializeField] protected UIHsvModifier gradeHsv;
+
+        [SerializeField] protected Image enhancementImage;
 
         private int _requireLevel;
         private string _messageForCat;
@@ -75,6 +65,7 @@ namespace Nekoyume.UI.Module
 
         public RectTransform RectTransform { get; private set; }
         public ItemSubType ItemSubType => itemSubType;
+        public ItemType ItemType => itemType;
         public int ItemSubTypeIndex => itemSubTypeIndex;
         public ItemBase Item { get; private set; }
         public bool ShowUnlockTooltip { get; set; }
@@ -159,6 +150,7 @@ namespace Nekoyume.UI.Module
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -310,6 +302,12 @@ namespace Nekoyume.UI.Module
 
         public void SetDim(bool isDim)
         {
+            if (Item is { ItemType: ItemType.Equipment })
+            {
+                isDim |= Util.GetItemRequirementLevel(Item) >
+                         States.Instance.CurrentAvatarState.level;
+            }
+
             gradeImage.color = isDim ? DimmedColor : OriginColor;
             enhancementText.color = isDim ? DimmedColor : OriginColor;
             itemImage.color = isDim ? DimmedColor : OriginColor;

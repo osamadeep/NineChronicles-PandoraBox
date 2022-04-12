@@ -12,6 +12,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 using mixpanel;
 using Nekoyume.Action;
+using Nekoyume.EnumType;
 using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
@@ -28,6 +29,7 @@ namespace Nekoyume.UI
     using System.Threading.Tasks;
     using TMPro;
     using UniRx;
+
     public class Menu : Widget
     {
         private const string FirstOpenShopKeyFormat = "Nekoyume.UI.Menu.FirstOpenShopKey_{0}";
@@ -40,53 +42,42 @@ namespace Nekoyume.UI
         private const string FirstOpenMimisbrunnrKeyFormat = "Nekoyume.UI.Menu.FirstOpenMimisbrunnrKeyKey_{0}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI arenaRemains;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI arenaRemains;
+
         [SerializeField] private TextMeshProUGUI arenaCount;
         [SerializeField] private Button randomButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private MainMenu btnQuest = null;
 
-        [SerializeField]
-        private MainMenu btnCombination = null;
+        [SerializeField] private MainMenu btnCombination = null;
 
-        [SerializeField]
-        private MainMenu btnShop = null;
+        [SerializeField] private MainMenu btnShop = null;
 
-        [SerializeField]
-        private MainMenu btnRanking = null;
+        [SerializeField] private MainMenu btnRanking = null;
 
-        [SerializeField]
-        private MainMenu btnMimisbrunnr = null;
+        [SerializeField] private MainMenu btnMimisbrunnr = null;
 
-        [SerializeField]
-        private SpeechBubble[] speechBubbles = null;
+        [SerializeField] private SpeechBubble[] speechBubbles = null;
 
-        [SerializeField]
-        private GameObject shopExclamationMark = null;
+        [SerializeField] private GameObject shopExclamationMark = null;
 
-        [SerializeField]
-        private GameObject combinationExclamationMark = null;
+        [SerializeField] private GameObject combinationExclamationMark = null;
 
-        [SerializeField]
-        private GameObject rankingExclamationMark = null;
+        [SerializeField] private GameObject rankingExclamationMark = null;
 
-        [SerializeField]
-        private GameObject questExclamationMark = null;
+        [SerializeField] private GameObject questExclamationMark = null;
 
-        [SerializeField]
-        private GameObject mimisbrunnrExclamationMark = null;
+        [SerializeField] private GameObject mimisbrunnrExclamationMark = null;
 
-        [SerializeField]
-        private GuidedQuest guidedQuest = null;
+        [SerializeField] private GuidedQuest guidedQuest = null;
 
-        [SerializeField]
-        private Button playerButton;
+        [SerializeField] private Button playerButton;
 
         private Coroutine _coLazyClose;
 
@@ -157,7 +148,7 @@ namespace Nekoyume.UI
             ActionRenderHandler.Instance.Pending = true;
             Game.Game.instance.ActionManager.HackAndSlash(player, worldId, stageId, 1).Subscribe();
             LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,
-                - requiredCost);
+                -requiredCost);
             var props = new Value
             {
                 ["StageID"] = stageId,
@@ -219,6 +210,7 @@ namespace Nekoyume.UI
                 {
                     arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
                 }
+
                 rankingExclamationMark.gameObject.SetActive(
                     btnRanking.IsUnlocked &&
                     (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
@@ -227,7 +219,8 @@ namespace Nekoyume.UI
                 if (arenaInfo != null)
                 {
                     randomButton.interactable = arenaInfo.DailyChallengeCount > 0;
-                    randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X" + arenaInfo.DailyChallengeCount;
+                    randomButton.GetComponentInChildren<TextMeshProUGUI>().text =
+                        "Random X" + arenaInfo.DailyChallengeCount;
 
                     if (arenaInfo.DailyChallengeCount > 0)
                         arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
@@ -243,8 +236,10 @@ namespace Nekoyume.UI
             worldMap.UpdateNotificationInfo();
             var hasNotificationInWorldMap = worldMap.HasNotification;
 
-            questExclamationMark.gameObject.SetActive((btnQuest.IsUnlocked && PlayerPrefs.GetInt(firstOpenQuestKey, 0) == 0) || hasNotificationInWorldMap);
-            mimisbrunnrExclamationMark.gameObject.SetActive((btnMimisbrunnr.IsUnlocked && PlayerPrefs.GetInt(firstOpenMimisbrunnrKey, 0) == 0));
+            questExclamationMark.gameObject.SetActive(
+                (btnQuest.IsUnlocked && PlayerPrefs.GetInt(firstOpenQuestKey, 0) == 0) || hasNotificationInWorldMap);
+            mimisbrunnrExclamationMark.gameObject.SetActive((btnMimisbrunnr.IsUnlocked &&
+                                                             PlayerPrefs.GetInt(firstOpenMimisbrunnrKey, 0) == 0));
         }
 
         private void HideButtons()
@@ -410,7 +405,7 @@ namespace Nekoyume.UI
             SharedViewModel.SelectedWorldId.SetValueAndForceNotify(world.Id);
             SharedViewModel.SelectedStageId.SetValueAndForceNotify(world.GetNextStageId());
             var stageInfo = Find<UI.StageInformation>();
-            stageInfo.Show(SharedViewModel, worldRow, StageInformation.StageType.Mimisbrunnr);
+            stageInfo.Show(SharedViewModel, worldRow, StageType.Mimisbrunnr);
             var status = Find<Status>();
             status.Close(true);
             Find<EventBanner>().Close(true);
@@ -438,7 +433,8 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.SetCurrentPandoraPlayer(PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+            PandoraBoxMaster.SetCurrentPandoraPlayer(
+                PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
             string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -540,6 +536,7 @@ namespace Nekoyume.UI
             {
                 skipMap.Remove(firstRecipeRow.Id);
             }
+
             Craft.SharedModel.SaveRecipeVFXSkipList();
             GoToCombinationEquipmentRecipe(firstRecipeRow.Id);
         }
@@ -572,7 +569,9 @@ namespace Nekoyume.UI
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -588,7 +587,9 @@ namespace Nekoyume.UI
                 return;
             }
 
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...", NotificationCell.NotificationType.Information);
+            OneLineSystem.Push(MailType.System,
+                "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...",
+                NotificationCell.NotificationType.Information);
             randomButton.interactable = false;
             randomButton.transform.GetChild(0).gameObject.SetActive(true);
             PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
@@ -650,18 +651,22 @@ namespace Nekoyume.UI
             var selectedEnemyArenaInfo = _weeklyCachedInfo[0];
 
             int tryLowerCP = 0; //try to find lower rank and lower cp, after this pass value we search for anyone!
-            while (tryLowerCP++ < 50) //(selectedEnemyArenaInfo.arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
+            while
+                (tryLowerCP++ <
+                 50) //(selectedEnemyArenaInfo.arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
             {
                 System.Random rnd = new System.Random();
                 var tmpInfo = _weeklyCachedInfo[rnd.Next(0, _weeklyCachedInfo.Count)];
                 if (tmpInfo.arenaInfo.AvatarAddress != States.Instance.CurrentAvatarState.address)
                 {
-                    if (tmpInfo.rank < currentArenaInfo.rank && tmpInfo.arenaInfo.CombatPoint < currentArenaInfo.arenaInfo.CombatPoint - 10000)
+                    if (tmpInfo.rank < currentArenaInfo.rank && tmpInfo.arenaInfo.CombatPoint <
+                        currentArenaInfo.arenaInfo.CombatPoint - 10000)
                     {
                         selectedEnemyArenaInfo = tmpInfo;
                         break;
                     }
                 }
+
                 if (tryLowerCP > 45 && tmpInfo.arenaInfo.AvatarAddress != States.Instance.CurrentAvatarState.address)
                 {
                     selectedEnemyArenaInfo = tmpInfo;
@@ -681,19 +686,21 @@ namespace Nekoyume.UI
                 await Task.Delay(PandoraBoxMaster.ActionCooldown * 1000);
                 //yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
                 Game.Game.instance.ActionManager.RankingBattle(
-                selectedEnemyArenaInfo.arenaInfo.AvatarAddress,
-                currentAvatarInventory.Costumes
-                    .Where(i => i.equipped)
-                    .Select(i => i.ItemId).ToList(),
-                currentAvatarInventory.Equipments
-                    .Where(i => i.equipped)
-                    .Select(i => i.ItemId).ToList()
+                    selectedEnemyArenaInfo.arenaInfo.AvatarAddress,
+                    currentAvatarInventory.Costumes
+                        .Where(i => i.equipped)
+                        .Select(i => i.ItemId).ToList(),
+                    currentAvatarInventory.Equipments
+                        .Where(i => i.equipped)
+                        .Select(i => i.ItemId).ToList()
                 ).Subscribe();
 
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Random selected (#<color=red>{selectedEnemyArenaInfo.rank}</color>, {selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" + (i + 1)
-                    + "</color>/" + arenaInfoTickets.DailyChallengeCount + "!", NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: Random selected (#<color=red>{selectedEnemyArenaInfo.rank}</color>, {selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" +
+                    (i + 1)
+                    + "</color>/" + arenaInfoTickets.DailyChallengeCount + "!",
+                    NotificationCell.NotificationType.Information);
             }
-
         }
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
@@ -709,6 +716,7 @@ namespace Nekoyume.UI
                 var address = state.OrderedArenaInfos.Last().AvatarAddress;
                 infos = state.GetArenaInfos(address, 20, 0);
             }
+
             infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
 
             var addressList = infos.Select(i => i.arenaInfo.AvatarAddress).ToList();
@@ -746,7 +754,8 @@ namespace Nekoyume.UI
 
         public void MiniGameShow()
         {
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This Feature coming soon!", NotificationCell.NotificationType.Information);
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This Feature coming soon!",
+                NotificationCell.NotificationType.Information);
             return;
         }
 
@@ -777,6 +786,7 @@ namespace Nekoyume.UI
             {
                 widget.Close(true);
             }
+
             Find<Login>().Show();
             Close();
         }

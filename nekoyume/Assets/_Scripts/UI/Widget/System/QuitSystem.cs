@@ -12,17 +12,11 @@ namespace Nekoyume.UI
 {
     public class QuitSystem : SystemWidget
     {
-        [SerializeField]
-        private Blur blur = null;
+        [SerializeField] private EventSubject characterSelectEventSubject = null;
 
-        [SerializeField]
-        private EventSubject characterSelectEventSubject = null;
+        [SerializeField] private EventSubject quitEventSubject = null;
 
-        [SerializeField]
-        private EventSubject quitEventSubject = null;
-
-        [SerializeField]
-        private EventSubject closeEventSubject = null;
+        [SerializeField] private EventSubject closeEventSubject = null;
 
         protected override void Awake()
         {
@@ -57,16 +51,12 @@ namespace Nekoyume.UI
                 })
                 .AddTo(gameObject);
 
-            CloseWidget = () =>
-            {
-                Close();
-            };
+            CloseWidget = () => { Close(); };
         }
 
         public void Show(float blurRadius = 2, bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
-            blur.Show(blurRadius);
             AudioController.PlayPopup();
         }
 

@@ -1,4 +1,4 @@
-#define TEST_LOG
+//#define TEST_LOG
 
 using System;
 using System.Collections;
@@ -153,6 +153,7 @@ namespace Nekoyume.Game
                     _battleCoroutine = null;
                     objectPool.ReleaseAll();
                 }
+
                 _battleLog = log;
                 PlayStage(_battleLog);
             }
@@ -176,6 +177,7 @@ namespace Nekoyume.Game
                     _battleCoroutine = null;
                     objectPool.ReleaseAll();
                 }
+
                 _battleLog = log;
                 PlayRankingBattle(_battleLog);
             }
@@ -361,6 +363,7 @@ namespace Nekoyume.Game
             {
                 yield return StartCoroutine(e.CoExecute(this));
             }
+
             yield return StartCoroutine(CoStageEnd(log));
             ClearBattle();
         }
@@ -382,6 +385,7 @@ namespace Nekoyume.Game
             {
                 yield return StartCoroutine(e.CoExecute(this));
             }
+
             StopCoroutine(_positionCheckCoroutine);
             _positionCheckCoroutine = null;
             yield return StartCoroutine(CoRankingBattleEnd(log));
@@ -546,6 +550,7 @@ namespace Nekoyume.Game
                             enemy.Animator.Win();
                         }
                     }
+
                     yield return new WaitForSeconds(1f);
                 }
             }
@@ -580,6 +585,7 @@ namespace Nekoyume.Game
                     _stageRunningPlayer.Animator.TurnOver();
                     yield return new WaitForSeconds(2f);
                 }
+
                 ReleaseWhiteList.Remove(_stageRunningPlayer.gameObject);
                 objectPool.ReleaseExcept(ReleaseWhiteList);
             }
@@ -630,17 +636,17 @@ namespace Nekoyume.Game
                         {
                             if (stageId == worldRow.StageEnd)
                             {
-                                _battleResultModel.NextState = IsRepeatStage ?
-                                    BattleResultPopup.NextState.RepeatStage :
-                                    BattleResultPopup.NextState.GoToMain;
+                                _battleResultModel.NextState = IsRepeatStage
+                                    ? BattleResultPopup.NextState.RepeatStage
+                                    : BattleResultPopup.NextState.GoToMain;
                             }
                         }
                     }
                     else
                     {
-                        _battleResultModel.NextState = IsRepeatStage ?
-                            BattleResultPopup.NextState.RepeatStage :
-                            BattleResultPopup.NextState.GoToMain;
+                        _battleResultModel.NextState = IsRepeatStage
+                            ? BattleResultPopup.NextState.RepeatStage
+                            : BattleResultPopup.NextState.GoToMain;
                     }
                 }
             }
@@ -716,7 +722,10 @@ namespace Nekoyume.Game
 
                 Widget.Find<RankingBattleResultPopup>().Show(log, _battleResultModel.Rewards);
             }
-            catch { }
+            catch
+            {
+            }
+
             yield return null;
         }
 
@@ -796,6 +805,7 @@ namespace Nekoyume.Game
             battle.EnemyPlayerStatus.SetProfile(character.Level, character.NameWithHash, sprite);
             yield return StartCoroutine(spawner.CoSetData(character, new Vector3(8f, -1.2f)));
         }
+
         #region Skill
 
         public IEnumerator CoNormalAttack(
@@ -1099,10 +1109,9 @@ namespace Nekoyume.Game
             character.Dead();
         }
 
-        public Player GetPlayer(bool forceCreate = false)
+        public Player GetPlayer()
         {
-            if (!forceCreate &&
-                SelectedPlayer &&
+            if (SelectedPlayer &&
                 SelectedPlayer.gameObject.activeSelf)
             {
                 return SelectedPlayer;
@@ -1124,9 +1133,9 @@ namespace Nekoyume.Game
             return SelectedPlayer;
         }
 
-        public Player GetPlayer(Vector3 position, bool forceCreate = false)
+        public Player GetPlayer(Vector3 position)
         {
-            var player = GetPlayer(forceCreate);
+            var player = GetPlayer();
             player.transform.position = position;
             return player;
         }
@@ -1192,12 +1201,14 @@ namespace Nekoyume.Game
                 {
                     Debug.Log("player is null");
                 }
+
                 if (ch is Player)
                 {
                     character = characters.FirstOrDefault(x =>
                         x.GetComponent<SortingGroup>().sortingLayerName == "Character");
                 }
             }
+
             character?.Set(caster);
 
             return character;
@@ -1236,7 +1247,7 @@ namespace Nekoyume.Game
 
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuMimisbrunnr)
             {
-                menuNames.Add(nameof(MimisbrunnrPreparation));
+                menuNames.Add("Mimisbrunnr");
             }
 
             var celebratesPopup = Widget.Find<CelebratesPopup>();

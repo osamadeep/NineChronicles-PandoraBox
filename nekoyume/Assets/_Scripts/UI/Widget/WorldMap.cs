@@ -6,6 +6,7 @@ using Nekoyume.Model.Quest;
 using Nekoyume.UI.Module;
 using UnityEngine;
 using mixpanel;
+using Nekoyume.EnumType;
 using UnityEngine.UI;
 
 namespace Nekoyume.UI
@@ -94,43 +95,7 @@ namespace Nekoyume.UI
         public void Show(WorldInformation worldInformation)
         {
             HasNotification = false;
-            SharedViewModel.WorldInformation = worldInformation;
-            if (worldInformation is null)
-            {
-                return;
-            }
-
-            foreach (var worldButton in _worldButtons)
-            {
-                if (!worldButton.IsShown)
-                {
-                    continue;
-                }
-
-                var worldId = worldButton.Id;
-                var worldIsUnlocked =
-                    worldInformation.TryGetWorld(worldId, out var worldModel) &&
-                    worldModel.IsUnlocked;
-
-                UpdateNotificationInfo();
-
-                var isIncludedInQuest = StageIdToNotify >= worldButton.StageBegin && StageIdToNotify <= worldButton.StageEnd;
-
-                if (worldIsUnlocked)
-                {
-                    worldButton.HasNotification.Value = isIncludedInQuest;
-                    worldButton.Unlock();
-                }
-                else
-                {
-                    worldButton.Lock();
-                }
-            }
-
-            if (!worldInformation.TryGetFirstWorld(out var firstWorld))
-            {
-                throw new Exception("worldInformation.TryGetFirstWorld() failed!");
-            }
+            SetWorldInformation(worldInformation);
 
             var status = Find<Status>();
             status.Close(true);
@@ -147,6 +112,48 @@ namespace Nekoyume.UI
         public override void Close(bool ignoreCloseAnimation = false)
         {
             base.Close(true);
+        }
+
+        public void SetWorldInformation(WorldInformation worldInformation)
+        {
+            SharedViewModel.WorldInformation = worldInformation;
+            if (worldInformation is null)
+            {
+                return;
+            }
+
+            foreach (var worldButton in _worldButtons)
+            {
+                if (!worldButton.IsShown)
+                {
+                    continue;
+                }
+
+                var buttonWorldId = worldButton.Id;
+                var worldIsUnlocked =
+                    worldInformation.TryGetWorld(buttonWorldId, out var worldModel) &&
+                    worldModel.IsUnlocked;
+
+                UpdateNotificationInfo();
+
+                var isIncludedInQuest =
+                    StageIdToNotify >= worldButton.StageBegin && StageIdToNotify <= worldButton.StageEnd;
+
+                if (worldIsUnlocked)
+                {
+                    worldButton.HasNotification.Value = isIncludedInQuest;
+                    worldButton.Unlock();
+                }
+                else
+                {
+                    worldButton.Lock();
+                }
+            }
+
+            if (!worldInformation.TryGetFirstWorld(out var firstWorld))
+            {
+                throw new Exception("worldInformation.TryGetFirstWorld() failed!");
+            }
         }
 
         private void ShowWorld(int worldId)
@@ -180,7 +187,7 @@ namespace Nekoyume.UI
             SelectedStageId = stageId;
 
             var stageInfo = Find<StageInformation>();
-            stageInfo.Show(SharedViewModel, worldRow, StageInformation.StageType.Quest);
+            stageInfo.Show(SharedViewModel, worldRow, StageType.HackAndSlash);
         }
 
         public void UpdateNotificationInfo()

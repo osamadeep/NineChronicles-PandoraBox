@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Libplanet;
 using Libplanet.Assets;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.State.Modifiers;
 using Nekoyume.State.Subjects;
@@ -34,7 +35,8 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(agentAddress, modifier);
 
             //FIXME Avoid LocalLayer duplicate modify gold.
-            var state = new GoldBalanceState(agentAddress, await Game.Game.instance.Agent.GetBalanceAsync(agentAddress, gold.Currency));
+            var state = new GoldBalanceState(agentAddress,
+                await Game.Game.instance.Agent.GetBalanceAsync(agentAddress, gold.Currency));
             if (!state.address.Equals(agentAddress))
             {
                 return;
@@ -72,11 +74,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -166,11 +168,11 @@ namespace Nekoyume.State
         private static void RemoveItemInternal(Address avatarAddress, AvatarStateModifier modifier)
         {
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -200,11 +202,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -225,11 +227,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -254,11 +256,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -326,6 +328,7 @@ namespace Nekoyume.State
 
             await TryResetLoadedAvatarState(avatarAddress);
         }
+
         #endregion
 
         #region Avatar / Quest
@@ -341,11 +344,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -386,6 +389,41 @@ namespace Nekoyume.State
 
         #region Avatar
 
+        public static void SetItemEquip(
+            Address avatarAddress,
+            ItemBase item,
+            bool equip,
+            bool resetState = true)
+        {
+            if (!(item is INonFungibleItem nonFungibleItem))
+            {
+                return;
+            }
+
+            var modifier = new AvatarInventoryItemEquippedModifier(nonFungibleItem.NonFungibleId, equip);
+            LocalLayer.Instance.Add(avatarAddress, modifier);
+
+            if (!TryGetLoadedAvatarState(
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
+            {
+                return;
+            }
+
+            outAvatarState = modifier.Modify(outAvatarState);
+
+            if (!resetState ||
+                !isCurrentAvatarState)
+            {
+                return;
+            }
+
+            ReactiveAvatarState.UpdateInventory(outAvatarState.inventory);
+        }
+
         /// <summary>
         /// Change the equipment's mounting status.
         /// </summary>
@@ -403,11 +441,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -434,11 +472,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -463,11 +501,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
+                    avatarAddress,
+                    out var outAvatarState,
+                    out _,
+                    out var isCurrentAvatarState)
+               )
             {
                 return;
             }
@@ -547,7 +585,7 @@ namespace Nekoyume.State
         private static async Task TryResetLoadedAvatarState(Address avatarAddress)
         {
             if (!TryGetLoadedAvatarState(avatarAddress, out _, out var outKey,
-                out var isCurrentAvatarState))
+                    out var isCurrentAvatarState))
             {
                 return;
             }

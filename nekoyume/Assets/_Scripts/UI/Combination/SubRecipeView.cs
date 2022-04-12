@@ -55,6 +55,7 @@ namespace Nekoyume.UI
 
         [SerializeField] private List<OptionView> optionViews = null;
         [SerializeField] private List<OptionView> skillViews = null;
+        [SerializeField] private TextMeshProUGUI levelText = null;
 
         [SerializeField] private RequiredItemRecipeView requiredItemRecipeView = null;
 
@@ -69,6 +70,7 @@ namespace Nekoyume.UI
         private RecipeInfo _selectedRecipeInfo;
 
         private const string StatTextFormat = "{0} {1}";
+        private const int MimisbrunnrRecipeIndex = 2;
 
         private void Awake()
         {
@@ -130,7 +132,6 @@ namespace Nekoyume.UI
                     : stat.ValueAsInt.ToString();
                 statText.text = string.Format(StatTextFormat, stat.Type, statValueText);
                 recipeCell.Show(equipmentRow, false);
-
             }
             else if (recipeRow is ConsumableItemRecipeSheet.Row consumableRow)
             {
@@ -198,6 +199,7 @@ namespace Nekoyume.UI
             {
                 optionView.ParentObject.SetActive(false);
             }
+
             foreach (var skillView in skillViews)
             {
                 skillView.ParentObject.SetActive(false);
@@ -230,6 +232,26 @@ namespace Nekoyume.UI
                         .Aggregate((a, b) => a * b);
 
                     SetOptions(options);
+
+                    var sheet = Game.Game.instance.TableSheets.ItemRequirementSheet;
+                    var resultItemRow = equipmentRow.GetResultEquipmentItemRow();
+
+                    if (!sheet.TryGetValue(resultItemRow.Id, out var row))
+                    {
+                        levelText.enabled = false;
+                    }
+                    else
+                    {
+                        var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
+                        levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
+                        var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= level;
+                        levelText.color = hasEnoughLevel
+                            ? Palette.GetColor(EnumType.ColorType.ButtonEnabled)
+                            : Palette.GetColor(EnumType.ColorType.TextDenial);
+
+                        levelText.enabled = true;
+                    }
+
                     requiredItemRecipeView.SetData(
                         baseMaterialInfo,
                         subRecipe.Materials,
@@ -255,14 +277,31 @@ namespace Nekoyume.UI
                 costAP = consumableRow.RequiredActionPoint;
                 recipeId = consumableRow.Id;
 
+                var sheet = Game.Game.instance.TableSheets.ItemRequirementSheet;
+                var resultItemRow = consumableRow.GetResultConsumableItemRow();
+
+                if (!sheet.TryGetValue(resultItemRow.Id, out var row))
+                {
+                    levelText.enabled = false;
+                }
+                else
+                {
+                    levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", row.Level);
+                    var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= row.Level;
+                    levelText.color = hasEnoughLevel
+                        ? Palette.GetColor(EnumType.ColorType.ButtonEnabled)
+                        : Palette.GetColor(EnumType.ColorType.TextDenial);
+
+                    levelText.enabled = true;
+                }
+
                 var materials = consumableRow.Materials
                     .Select(x => CreateMaterial(x.Id, x.Count));
                 materialList.AddRange(materials);
             }
 
             blockIndexText.text = blockIndex.ToString();
-            greatSuccessRateText.text = greatSuccessRate == 0m ?
-                "-" : greatSuccessRate.ToString("P1");
+            greatSuccessRateText.text = greatSuccessRate == 0m ? "-" : greatSuccessRate.ToString("0.0%");
 
             var recipeInfo = new RecipeInfo
             {
@@ -275,7 +314,7 @@ namespace Nekoyume.UI
             _selectedRecipeInfo = recipeInfo;
 
             var submittable = CheckMaterialAndSlot();
-            button.SetCost(ConditionalCostButton.CostType.NCG, (int) _selectedRecipeInfo.CostNCG);
+            button.SetCost(ConditionalCostButton.CostType.NCG, (int)_selectedRecipeInfo.CostNCG);
             button.Interactable = submittable;
         }
 
@@ -307,17 +346,18 @@ namespace Nekoyume.UI
                     var optionView = optionViews.First(x => !x.ParentObject.activeSelf);
 
                     optionView.OptionText.text = option.OptionRowToString();
-                    optionView.PercentageText.text = (ratio.NormalizeFromTenThousandths()).ToString("P0");
+                    optionView.PercentageText.text = (ratio.NormalizeFromTenThousandths()).ToString("0%");
                     optionView.ParentObject.transform.SetSiblingIndex(siblingIndex);
                     optionView.ParentObject.SetActive(true);
                 }
                 else
                 {
                     var skillView = skillViews.First(x => !x.ParentObject.activeSelf);
-                    var description = skillSheet.TryGetValue(option.SkillId, out var skillRow) ?
-                        skillRow.GetLocalizedName() : string.Empty;
+                    var description = skillSheet.TryGetValue(option.SkillId, out var skillRow)
+                        ? skillRow.GetLocalizedName()
+                        : string.Empty;
                     skillView.OptionText.text = description;
-                    skillView.PercentageText.text = (ratio.NormalizeFromTenThousandths()).ToString("P0");
+                    skillView.PercentageText.text = (ratio.NormalizeFromTenThousandths()).ToString("0%");
                     skillView.ParentObject.transform.SetSiblingIndex(siblingIndex);
                     skillView.ParentObject.SetActive(true);
                 }
@@ -405,8 +445,8 @@ namespace Nekoyume.UI
             foreach (var material in materials)
             {
                 var itemCount = inventory.TryGetFungibleItems(material.material, out var outFungibleItems)
-                            ? outFungibleItems.Sum(e => e.count)
-                            : 0;
+                    ? outFungibleItems.Sum(e => e.count)
+                    : 0;
 
                 if (material.count > itemCount)
                 {

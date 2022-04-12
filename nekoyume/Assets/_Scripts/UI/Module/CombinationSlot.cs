@@ -38,56 +38,39 @@ namespace Nekoyume.UI.Module
             WaitingReceive,
         }
 
-        [SerializeField]
-        private SimpleItemView itemView;
+        [SerializeField] private SimpleItemView itemView;
 
-        [SerializeField]
-        private SimpleItemView waitingReceiveItemView;
+        [SerializeField] private SimpleItemView waitingReceiveItemView;
 
-        [SerializeField]
-        private TouchHandler touchHandler;
+        [SerializeField] private TouchHandler touchHandler;
 
-        [SerializeField]
-        private Slider progressBar;
+        [SerializeField] private Slider progressBar;
 
-        [SerializeField]
-        private Image hasNotificationImage;
+        [SerializeField] private Image hasNotificationImage;
 
-        [SerializeField]
-        private TextMeshProUGUI lockText;
+        [SerializeField] private TextMeshProUGUI lockText;
 
-        [SerializeField]
-        private TextMeshProUGUI requiredBlockIndexText;
+        [SerializeField] private TextMeshProUGUI requiredBlockIndexText;
 
-        [SerializeField]
-        private TextMeshProUGUI itemNameText;
+        [SerializeField] private TextMeshProUGUI itemNameText;
 
-        [SerializeField]
-        private TextMeshProUGUI hourglassCountText;
+        [SerializeField] private TextMeshProUGUI hourglassCountText;
 
-        [SerializeField]
-        private TextMeshProUGUI preparingText;
+        [SerializeField] private TextMeshProUGUI preparingText;
 
-        [SerializeField]
-        private TextMeshProUGUI waitingReceiveText;
+        [SerializeField] private TextMeshProUGUI waitingReceiveText;
 
-        [SerializeField]
-        private GameObject lockContainer;
+        [SerializeField] private GameObject lockContainer;
 
-        [SerializeField]
-        private GameObject baseContainer;
+        [SerializeField] private GameObject baseContainer;
 
-        [SerializeField]
-        private GameObject noneContainer;
+        [SerializeField] private GameObject noneContainer;
 
-        [SerializeField]
-        private GameObject preparingContainer;
+        [SerializeField] private GameObject preparingContainer;
 
-        [SerializeField]
-        private GameObject workingContainer;
+        [SerializeField] private GameObject workingContainer;
 
-        [SerializeField]
-        private GameObject waitReceiveContainer;
+        [SerializeField] private GameObject waitReceiveContainer;
 
 
         private CombinationSlotState _state;
@@ -99,6 +82,7 @@ namespace Nekoyume.UI.Module
 
         public SlotType Type { get; private set; } = SlotType.Empty;
         public CacheType CachedType { get; private set; }
+
         public bool IsCached
         {
             get
@@ -310,7 +294,8 @@ namespace Nekoyume.UI.Module
             var cost = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
             var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
                 r.ItemSubType == ItemSubType.Hourglass);
-            var isEnough = States.Instance.CurrentAvatarState.inventory.HasFungibleItem(row.ItemId, currentBlockIndex, cost);
+            var isEnough =
+                States.Instance.CurrentAvatarState.inventory.HasFungibleItem(row.ItemId, currentBlockIndex, cost);
 
             hasNotificationImage.enabled = isEnough;
         }
@@ -343,10 +328,10 @@ namespace Nekoyume.UI.Module
             preparingText.text = string.Format(
                 L10nManager.Localize("UI_COMBINATION_SLOT_IDENTIFYING"),
                 item.GetLocalizedName(useElementalIcon: false, ignoreLevel: true));
-
         }
 
-        private static void OnClickSlot(SlotType type, CombinationSlotState state, int slotIndex, long currentBlockIndex)
+        private static void OnClickSlot(SlotType type, CombinationSlotState state, int slotIndex,
+            long currentBlockIndex)
         {
             switch (type)
             {
@@ -364,15 +349,15 @@ namespace Nekoyume.UI.Module
                         .GetLayerRootTransform(WidgetType.Widget);
                     var statusWidget = Widget.Find<Status>();
                     foreach (var widget in MainCanvas.instance.Widgets.Where(widget =>
-                        widget.isActiveAndEnabled
-                        && widget.transform.parent.Equals(widgetLayerRoot)
-                        && !widget.Equals(statusWidget)))
+                                 widget.isActiveAndEnabled
+                                 && widget.transform.parent.Equals(widgetLayerRoot)
+                                 && !widget.Equals(statusWidget)))
                     {
                         widget.Close(true);
                     }
 
                     Widget.Find<Craft>()?.gameObject.SetActive(false);
-                    Widget.Find<UpgradeEquipment>()?.gameObject.SetActive(false);
+                    Widget.Find<Enhancement>()?.gameObject.SetActive(false);
                     Widget.Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Combination);
                     Widget.Find<CombinationMain>().Show();
                     Widget.Find<CombinationSlotsPopup>().Close();
@@ -387,8 +372,13 @@ namespace Nekoyume.UI.Module
                     //    L10nManager.Localize("UI_COMBINATION_NOTIFY_IDENTIFYING"),
                     //    NotificationCell.NotificationType.Information);
                     try
-                    { Widget.Find<CombinationSlotPopup>().Show(state, slotIndex, currentBlockIndex); }
-                    catch { }
+                    {
+                        Widget.Find<CombinationSlotPopup>().Show(state, slotIndex, currentBlockIndex);
+                    }
+                    catch
+                    {
+                    }
+
                     break;
             }
         }

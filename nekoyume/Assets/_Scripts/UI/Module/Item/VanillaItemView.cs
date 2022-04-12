@@ -19,11 +19,9 @@ namespace Nekoyume.UI.Module
 
         public Image iconImage = null;
 
-        [SerializeField]
-        protected Image gradeImage = null;
+        [SerializeField] protected Image gradeImage = null;
 
-        [SerializeField]
-        protected UIHsvModifier gradeHsv = null;
+        [SerializeField] protected UIHsvModifier gradeHsv = null;
 
         private Tweener _tweener;
 
@@ -49,7 +47,7 @@ namespace Nekoyume.UI.Module
             gameObject.SetActive(false);
         }
 
-        public virtual void SetData(ItemSheet.Row itemRow)
+        public virtual void SetData(ItemSheet.Row itemRow, System.Action onClick = null)
         {
             if (itemRow is null)
             {

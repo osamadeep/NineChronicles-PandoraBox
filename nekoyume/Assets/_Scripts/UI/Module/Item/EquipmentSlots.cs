@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Battle;
+using Nekoyume.Helper;
 using Nekoyume.Model;
 using Nekoyume.Model.Elemental;
 using Nekoyume.Model.Item;
-using Nekoyume.Model.State;
+using Nekoyume.State;
 using UnityEngine;
 
 namespace Nekoyume.UI.Module
@@ -21,8 +22,7 @@ namespace Nekoyume.UI.Module
         private Action<EquipmentSlot> _onSlotClicked;
         private Action<EquipmentSlot> _onSlotDoubleClicked;
 
-        [SerializeField]
-        private EquipmentSlot[] slots = null;
+        [SerializeField] private EquipmentSlot[] slots = null;
 
         private void Awake()
         {
@@ -79,7 +79,8 @@ namespace Nekoyume.UI.Module
         public void SetPlayerEquipments(
             Player player,
             Action<EquipmentSlot> onClick,
-            Action<EquipmentSlot> onDoubleClick)
+            Action<EquipmentSlot> onDoubleClick,
+            List<ElementalType> elementalTypes = null)
         {
             Clear();
 
@@ -92,11 +93,27 @@ namespace Nekoyume.UI.Module
             _onSlotDoubleClicked = onDoubleClick;
 
             UpdateSlots(player.Level);
-
             foreach (var equipment in player.Equipments)
             {
                 TryToEquip(equipment);
             }
+
+            UpdateDim(elementalTypes);
+        }
+
+        public void SetPlayerConsumables(int avatarLevel,
+            Action<EquipmentSlot> onClick,
+            Action<EquipmentSlot> onDoubleClick)
+        {
+            Clear();
+
+            foreach (var slot in slots)
+            {
+                slot.Set(avatarLevel);
+            }
+
+            _onSlotClicked = onClick;
+            _onSlotDoubleClicked = onDoubleClick;
         }
 
         public bool TryToEquip(Costume costume)
@@ -151,7 +168,8 @@ namespace Nekoyume.UI.Module
         /// <param name="slot"></param>
         /// <param name="elementalTypeToIgnore"></param>
         /// <returns></returns>
-        public bool TryGetToEquip(Equipment equipment, out EquipmentSlot slot, ElementalType? elementalTypeToIgnore = null)
+        public bool TryGetToEquip(Equipment equipment, out EquipmentSlot slot,
+            ElementalType? elementalTypeToIgnore = null)
         {
             if (equipment is null)
             {
@@ -173,19 +191,19 @@ namespace Nekoyume.UI.Module
             {
                 // Find the first slot which contains the same `non-fungible item`
                 slot = typeSlots.FirstOrDefault(e =>
-                            !e.IsEmpty &&
-                            e.Item is INonFungibleItem nonFungibleItem &&
-                            nonFungibleItem.NonFungibleId.Equals(equipment.NonFungibleId))
-                        // Find the first empty slot.
-                        ?? typeSlots.FirstOrDefault(e => e.IsEmpty)
-                        // Find the first slot of `ElementalType` that is different from `elementalTypeToIgnore`.
-                        ?? (elementalTypeToIgnore != null
-                            ? typeSlots.FirstOrDefault(e =>
-                                !e.Item.ElementalType.Equals(elementalTypeToIgnore))
-                            : null)
-                        // Find the first slot with the lowest 'CP'.
-                        ?? typeSlots.OrderBy(e => CPHelper.GetCP((ItemUsable) e.Item))
-                            .First();
+                           !e.IsEmpty &&
+                           e.Item is INonFungibleItem nonFungibleItem &&
+                           nonFungibleItem.NonFungibleId.Equals(equipment.NonFungibleId))
+                       // Find the first empty slot.
+                       ?? typeSlots.FirstOrDefault(e => e.IsEmpty)
+                       // Find the first slot of `ElementalType` that is different from `elementalTypeToIgnore`.
+                       ?? (elementalTypeToIgnore != null
+                           ? typeSlots.FirstOrDefault(e =>
+                               !e.Item.ElementalType.Equals(elementalTypeToIgnore))
+                           : null)
+                       // Find the first slot with the lowest 'CP'.
+                       ?? typeSlots.OrderBy(e => CPHelper.GetCP((ItemUsable)e.Item))
+                           .First();
             }
             else
             {
@@ -212,8 +230,8 @@ namespace Nekoyume.UI.Module
             slot = slots.FirstOrDefault(e =>
                 !e.IsLock &&
                 !e.IsEmpty &&
-                ((INonFungibleItem) e.Item).NonFungibleId
-                .Equals(((INonFungibleItem) itemBase).NonFungibleId) &&
+                ((INonFungibleItem)e.Item).NonFungibleId
+                .Equals(((INonFungibleItem)itemBase).NonFungibleId) &&
                 e.Item.Equals(itemBase));
             return slot;
         }
@@ -245,9 +263,28 @@ namespace Nekoyume.UI.Module
 
         private void UpdateSlots(int avatarLevel)
         {
-            foreach (var equipmentSlot in slots)
+            foreach (var slot in slots)
             {
-                equipmentSlot.Set(avatarLevel);
+                slot.Set(avatarLevel);
+            }
+        }
+
+        private void UpdateDim(List<ElementalType> elementalTypes)
+        {
+            if (elementalTypes is null)
+            {
+                return;
+            }
+
+            foreach (var slot in slots)
+            {
+                if (slot.Item == null)
+                {
+                    slot.SetDim(false);
+                    continue;
+                }
+
+                slot.SetDim(!elementalTypes.Exists(x => x.Equals(slot.Item.ElementalType)));
             }
         }
 

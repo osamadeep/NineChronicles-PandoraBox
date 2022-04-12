@@ -356,16 +356,18 @@ namespace Nekoyume.Game.Character
             {
                 return;
             }
+
             var id = weapon?.Id ?? 0;
             var level = weapon?.level ?? 0;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (UnityEngine.Random.Range(0,10) == 1)
+            if (UnityEngine.Random.Range(0, 10) == 1)
             {
                 id = 10141001;
                 level = 10;
                 AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
                 VFXController.instance.Create<VFX.BattleAttack01VFX>(transform.position);
             }
+
             var sprite = SpriteHelper.GetPlayerSpineTextureWeapon(id);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var levelVFXPrefab = ResourcesHelper.GetAuraWeaponPrefab(id, level); //id,level
@@ -575,18 +577,7 @@ namespace Nekoyume.Game.Character
         private bool TryGetCostumeRow(int costumeId, out CostumeItemSheet.Row row)
         {
             var sheet = Game.instance.TableSheets.CostumeItemSheet;
-            if (!sheet.TryGetValue(costumeId, out row, false))
-            {
-                return false;
-            }
-
-            var costume = Costumes.FirstOrDefault(costume => costume.Id == costumeId);
-            if (costume != null)
-            {
-                costume.Unequip();
-            }
-
-            return true;
+            return sheet.TryGetValue(costumeId, out row, false);
         }
 
         #endregion

@@ -9,6 +9,7 @@ using Libplanet;
 using Libplanet.Blocks;
 using Nekoyume.Action;
 using Nekoyume.Game.Controller;
+using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.State;
 using Nekoyume.UI.Model;
@@ -21,35 +22,17 @@ using StateExtensions = Nekoyume.Model.State.StateExtensions;
 namespace Nekoyume.UI
 {
     using Nekoyume.Model.BattleStatus;
-    using Nekoyume.PandoraBox;
-    using TMPro;
     using UniRx;
 
     public class RankingBoard : Widget
     {
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI FightCountTxt = null;
-        [SerializeField] private Button RefreshButton = null;
-        [SerializeField] private Slider FightCountSldr = null;
-        public Transform CellsListContainer = null;
-        public GameObject waitingForLaodBlocker;
-        public GameObject LoadingImage;
-        [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private ArenaRankScroll arenaRankScroll = null;
 
-        [SerializeField]
-        private ArenaRankScroll arenaRankScroll = null;
+        [SerializeField] private ArenaRankCell currentAvatarCellView = null;
 
-        [SerializeField]
-        private ArenaRankCell currentAvatarCellView = null;
-
-        [SerializeField]
-        private SpeechBubble speechBubble = null;
+        [SerializeField] private SpeechBubble speechBubble = null;
 
         private Nekoyume.Model.State.RankingInfo[] _avatarRankingStates;
 
@@ -61,66 +44,6 @@ namespace Nekoyume.UI
         private readonly List<IDisposable> _disposablesFromShow = new List<IDisposable>();
 
         private ArenaInfoList _arenaInfoList;
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void ChangeSliderArenaCount()
-        {
-            FightCountTxt.text = FightCountSldr.value.ToString();
-            PandoraBoxMaster.ArenaTicketsToUse = int.Parse(FightCountTxt.text);
-        }
-
-        public async void RefreshBoard()
-        {
-            waitingForLaodBlocker.SetActive(true);
-            RefreshButton.interactable = false;
-            RefreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "...";
-
-            //clear fav list, not optimal
-            PandoraBoxMaster.ArenaFavTargets.Clear();
-            for (int i = 0; i < 10; i++) //fav max count
-            {
-                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
-                if (PlayerPrefs.HasKey(key))
-                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
-            }
-
-            WeeklyArenaState weeklyArenaState = null;
-            var agent = Game.Game.instance.Agent;
-            if (!_cachedBlockHash.Equals(agent.BlockTipHash))
-            {
-                _cachedBlockHash = agent.BlockTipHash;
-                await UniTask.Run(async () =>
-                {
-                    var gameConfigState = States.Instance.GameConfigState;
-                    var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
-                    var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
-                    weeklyArenaState =
-                        new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
-                    States.Instance.SetWeeklyArenaState(weeklyArenaState);
-                    await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
-                });
-            }
-
-            UpdateArena();
-        }
-
-        System.Collections.IEnumerator RefreshCooldown()
-        {
-            RefreshButton.interactable = false;
-            int cooldown = 20;
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                cooldown = 5;
-            TextMeshProUGUI buttonText = RefreshButton.GetComponentInChildren<TextMeshProUGUI>();
-
-            for (int i = 0; i < cooldown; i++)
-            {
-                buttonText.text = (cooldown - i).ToString();
-                yield return new WaitForSeconds(1);
-            }
-            buttonText.text = "";
-            RefreshButton.interactable = true;
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
         {
@@ -157,18 +80,6 @@ namespace Nekoyume.UI
 
         private async void ShowAsync(WeeklyArenaState weeklyArenaState = null)
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            LoadingImage.SetActive(false);
-            waitingForLaodBlocker.SetActive(false);
-            PandoraBoxMaster.ArenaFavTargets.Clear();
-            for (int i = 0; i < 10; i++) //fav max count
-            {
-                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
-                if (PlayerPrefs.HasKey(key))
-                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
-            }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             Find<DataLoadingScreen>().Show();
 
             var stage = Game.Game.instance.Stage;
@@ -187,7 +98,8 @@ namespace Nekoyume.UI
                         var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
                         var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
                         weeklyArenaState =
-                            new WeeklyArenaState((Bencodex.Types.Dictionary) await agent.GetStateAsync(weeklyArenaAddress));
+                            new WeeklyArenaState(
+                                (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
                         States.Instance.SetWeeklyArenaState(weeklyArenaState);
                         await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
                     });
@@ -208,14 +120,16 @@ namespace Nekoyume.UI
 
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Battle);
             UpdateArena();
+            Game.Event.OnUpdatePlayerEquip.Subscribe(player =>
+                {
+                    arenaRankScroll.UpdateConditionalStateOfChallengeButtons
+                        .OnNext(Util.CanBattle(player, Array.Empty<int>()));
+                })
+                .AddTo(_disposablesFromShow);
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            Find<FriendInfoPopup>().Close(true);
-            Find<FriendInfoPopupPandora>().Close(true);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _disposablesFromShow.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
             speechBubble.Hide();
@@ -275,6 +189,10 @@ namespace Nekoyume.UI
                         rank = tuple.rank,
                         arenaInfo = tuple.arenaInfo,
                     }).ToList(), true);
+                arenaRankScroll.UpdateConditionalStateOfChallengeButtons
+                    .OnNext(
+                        Util.CanBattle(Game.Game.instance.Stage.SelectedPlayer,
+                            Array.Empty<int>()));
                 // NOTE: If you want to test many arena cells, use below instead of above.
                 // arenaRankScroll.Show(Enumerable
                 //     .Range(1, 1000)
@@ -306,23 +224,23 @@ namespace Nekoyume.UI
                     false);
             }
 
-            currentAvatarCellView.Show((
-                currentAvatarRank,
-                currentAvatarArenaInfo,
-                currentAvatarArenaInfo));
-
+            var currentAvatarCanBattle =
+                Util.CanBattle(Game.Game.instance.Stage.SelectedPlayer,
+                    Array.Empty<int>());
             arenaRankScroll.Show(_weeklyCachedInfo
                 .Select(tuple => new ArenaRankCell.ViewModel
                 {
                     rank = tuple.rank,
                     arenaInfo = tuple.arenaInfo,
                     currentAvatarArenaInfo = currentAvatarArenaInfo,
+                    currentAvatarCanBattle = currentAvatarCanBattle
                 }).ToList(), true);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            waitingForLaodBlocker.SetActive(false);
-            StartCoroutine(RefreshCooldown());
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            currentAvatarCellView.Show((
+                currentAvatarRank,
+                currentAvatarArenaInfo,
+                currentAvatarArenaInfo,
+                false));
         }
 
         private static void OnClickAvatarInfo(RectTransform rectTransform, Address address)
@@ -356,7 +274,7 @@ namespace Nekoyume.UI
             {
                 avatarInfo.Close();
             }
-            else if(friendInfoPopup.gameObject.activeSelf)
+            else if (friendInfoPopup.gameObject.activeSelf)
             {
                 friendInfoPopup.Close();
             }
@@ -380,10 +298,6 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
-
-
-
-
             if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
             {
                 // For backward compatibility, create list based on previous week.
@@ -397,6 +311,7 @@ namespace Nekoyume.UI
                     copiedState.Update(prevWeekly, state.ResetIndex);
                     _arenaInfoList.Update(copiedState, true);
                 }
+
                 var rawList =
                     await Game.Game.instance.Agent.GetStateAsync(
                         state.address.Derive("address_list"));
@@ -413,6 +328,7 @@ namespace Nekoyume.UI
                             infoList.Add(info);
                         }
                     }
+
                     _arenaInfoList.Update(infoList);
                 }
             }
@@ -422,25 +338,16 @@ namespace Nekoyume.UI
                 _arenaInfoList.Update(state, false);
             }
 
-            int topPlayer = 20;
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                topPlayer = 100;
-
-            var infos = state.GetArenaInfos(1, topPlayer); //3
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-            int lower = 20 + (PandoraBoxMaster.Instance.Settings.ArenaListLower * PandoraBoxMaster.Instance.Settings.ArenaListStep);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
+            var infos = _arenaInfoList.GetArenaInfos(1, 3);
             if (States.Instance.CurrentAvatarState != null)
             {
                 var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-                var infos2 = _arenaInfoList.GetArenaInfos(currentAvatarAddress, upper, lower);
+                var infos2 = _arenaInfoList.GetArenaInfos(currentAvatarAddress, 90, 10);
                 // Player does not play prev & this week arena.
                 if (!infos2.Any() && _arenaInfoList.OrderedArenaInfos.Any())
                 {
                     var address = _arenaInfoList.OrderedArenaInfos.Last().AvatarAddress;
-                    infos2 = _arenaInfoList.GetArenaInfos(address, 90, 10);
+                    infos2 = _arenaInfoList.GetArenaInfos(address, 90, 0);
                 }
 
                 infos.AddRange(infos2);
@@ -449,9 +356,6 @@ namespace Nekoyume.UI
 
             var addressList = infos.Select(i => i.arenaInfo.AvatarAddress).ToList();
             var avatarStates = await Game.Game.instance.Agent.GetAvatarStates(addressList);
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            avatarStatesPandora = avatarStates;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _weeklyCachedInfo = infos
                 .Select(tuple =>
                 {

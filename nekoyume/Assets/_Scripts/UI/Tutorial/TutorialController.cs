@@ -158,7 +158,7 @@ namespace Nekoyume.UI
                     preset.isSkipArrowAnimation),
                 new GuideDialogData(
                     data.emojiType,
-                    (DialogCommaType) preset.commaId,
+                    (DialogCommaType)preset.commaId,
                     script,
                     target)
             };
@@ -171,9 +171,9 @@ namespace Nekoyume.UI
             return data;
         }
 
-        private static int GetCheckPoint(int clearedStageId)
+        public static int GetCheckPoint(int clearedStageId)
         {
-            if(PlayerPrefs.HasKey(CheckPoint))
+            if (PlayerPrefs.HasKey(CheckPoint))
             {
                 return PlayerPrefs.GetInt(CheckPoint);
             }
@@ -188,6 +188,7 @@ namespace Nekoyume.UI
             {
                 value = 2;
             }
+
             return PlayerPrefs.GetInt(CheckPoint, value);
         }
 

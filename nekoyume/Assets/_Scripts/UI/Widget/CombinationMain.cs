@@ -6,20 +6,15 @@ namespace Nekoyume.UI
 {
     public class CombinationMain : Widget
     {
-        [SerializeField]
-        private Button combineButton = null;
+        [SerializeField] private Button combineButton = null;
 
-        [SerializeField]
-        private Button upgradeButton = null;
+        [SerializeField] private Button upgradeButton = null;
 
-        [SerializeField]
-        private Button closeButton = null;
+        [SerializeField] private Button closeButton = null;
 
-        [SerializeField]
-        private Image craftNotificationImage = null;
+        [SerializeField] private Image craftNotificationImage = null;
 
-        [SerializeField]
-        private SpeechBubble speechBubble = null;
+        [SerializeField] private SpeechBubble speechBubble = null;
 
         protected override void Awake()
         {
@@ -35,7 +30,7 @@ namespace Nekoyume.UI
             upgradeButton.onClick.AddListener(() =>
             {
                 Close(true);
-                Find<UpgradeEquipment>().Show();
+                Find<Enhancement>().Show();
                 AudioController.PlayClick();
             });
 

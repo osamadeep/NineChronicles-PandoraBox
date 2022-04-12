@@ -21,20 +21,13 @@ namespace Nekoyume.UI
             public string pageUrlFormat;
         }
 
-        [SerializeField]
-        private Image contentImage;
+        [SerializeField] private Image contentImage;
 
-        [SerializeField]
-        private Button detailButton;
+        [SerializeField] private Button detailButton;
 
-        [SerializeField]
-        private Button closeButton;
-        
-        [SerializeField]
-        private Blur blur;
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private NoticeInfo[] noticeList =
+        [SerializeField] private NoticeInfo[] noticeList =
         {
             new NoticeInfo
             {
@@ -51,9 +44,9 @@ namespace Nekoyume.UI
         private static bool CanShowNoticePopup(NoticeInfo notice)
         {
             if (notice == null) return false;
-            
+
             if (!Game.Game.instance.Stage.TutorialController.IsCompleted) return false;
-            
+
             if (!Util.IsInTime(notice.beginTime, notice.endTime, false)) return false;
 
             var lastNoticeDayKey = string.Format(LastNoticeDayKeyFormat, notice.name);
@@ -62,7 +55,8 @@ namespace Nekoyume.UI
                 "yyyy/MM/dd HH:mm:ss",
                 null);
             var now = DateTime.UtcNow;
-            var isNewDay = now.Year != lastNoticeDay.Year || now.Month != lastNoticeDay.Month || now.Day != lastNoticeDay.Day;
+            var isNewDay = now.Year != lastNoticeDay.Year || now.Month != lastNoticeDay.Month ||
+                           now.Day != lastNoticeDay.Day;
             if (isNewDay) PlayerPrefs.SetString(lastNoticeDayKey, now.ToString("yyyy/MM/dd HH:mm:ss"));
 
             return isNewDay;
@@ -83,11 +77,6 @@ namespace Nekoyume.UI
                 Close();
                 AudioController.PlayClick();
             });
-
-            blur.button.onClick.AddListener(() =>
-            {
-                Close();
-            });
         }
 
         public override void Show(bool ignoreStartAnimation = false)
@@ -100,20 +89,6 @@ namespace Nekoyume.UI
 
             contentImage.sprite = firstNotice.contentImage;
             base.Show(ignoreStartAnimation);
-            if (blur)
-            {
-                blur.Show();
-            }
-        }
-        
-        public override void Close(bool ignoreCloseAnimation = false)
-        {
-            if (blur && blur.isActiveAndEnabled)
-            {
-                blur.Close();
-            }
-
-            base.Close(ignoreCloseAnimation);
         }
 
         private void GoToNoticePage()

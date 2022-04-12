@@ -36,10 +36,12 @@ using NCTx = Libplanet.Tx.Transaction<Libplanet.Action.PolymorphicAction<Nekoyum
 
 namespace Nekoyume.BlockChain
 {
+    using System.Threading;
     using UniRx;
 
     public class RPCAgent : MonoBehaviour, IAgent, IActionEvaluationHubReceiver
     {
+        private const int RpcConnectionRetryCount = 10;
         private const float TxProcessInterval = 1.0f;
         private readonly ConcurrentQueue<NCAction> _queuedActions = new ConcurrentQueue<NCAction>();
 
@@ -86,12 +88,14 @@ namespace Nekoyume.BlockChain
 
         public readonly Subject<RPCAgent> OnPreloadEnded = new Subject<RPCAgent>();
 
+        public readonly Subject<(RPCAgent, int retryCount)> OnRetryAttempt = new Subject<(RPCAgent, int)>();
+
         public int AppProtocolVersion { get; private set; }
 
         public BlockHash BlockTipHash { get; private set; }
 
         private readonly Subject<(NCTx tx, List<NCAction> actions)> _onMakeTransactionSubject =
-                new Subject<(NCTx tx, List<NCAction> actions)>();
+            new Subject<(NCTx tx, List<NCAction> actions)>();
 
         public IObservable<(NCTx tx, List<NCAction> actions)> OnMakeTransaction => _onMakeTransactionSubject;
 
@@ -125,7 +129,8 @@ namespace Nekoyume.BlockChain
             yield return null;
             var task = Task.Run(async () =>
             {
-                _genesis = await BlockManager.ImportBlockAsync(options.GenesisBlockPath ?? BlockManager.GenesisBlockPath);
+                _genesis = await BlockManager.ImportBlockAsync(options.GenesisBlockPath ??
+                                                               BlockManager.GenesisBlockPath);
             });
             yield return new WaitUntil(() => task.IsCompleted);
             var appProtocolVersion = options.AppProtocolVersion is null
@@ -153,16 +158,19 @@ namespace Nekoyume.BlockChain
                 await Task.CompletedTask;
                 return value;
             }
+
             byte[] raw = await _service.GetState(address.ToByteArray(), BlockTipHash.ToByteArray());
             IValue result = _codec.Decode(raw);
             if (Game.Game.instance.CachedAddresses.ContainsKey(address))
             {
                 Game.Game.instance.CachedAddresses[address] = true;
             }
+
             if (Game.Game.instance.CachedStates.ContainsKey(address))
             {
                 Game.Game.instance.CachedStates.AddOrUpdate(address, result);
             }
+
             return result;
         }
 
@@ -175,7 +183,7 @@ namespace Nekoyume.BlockChain
                 BlockTipHash.ToByteArray()
             );
             byte[] raw = result.ResponseAsync.Result;
-            var serialized = (Bencodex.Types.List) _codec.Decode(raw);
+            var serialized = (Bencodex.Types.List)_codec.Decode(raw);
             return FungibleAssetValue.FromRawValue(
                 new Currency(serialized.ElementAt(0)),
                 serialized.ElementAt(1).ToBigInteger());
@@ -190,13 +198,14 @@ namespace Nekoyume.BlockChain
                 await Task.CompletedTask;
                 return value;
             }
+
             // FIXME: `CurrencyExtension.Serialize()` should be changed to `Currency.Serialize()`.
             byte[] raw = await _service.GetBalance(
                 address.ToByteArray(),
                 _codec.Encode(CurrencyExtensions.Serialize(currency)),
                 BlockTipHash.ToByteArray()
             );
-            var serialized = (Bencodex.Types.List) _codec.Decode(raw);
+            var serialized = (Bencodex.Types.List)_codec.Decode(raw);
             var balance = FungibleAssetValue.FromRawValue(
                 new Currency(serialized.ElementAt(0)),
                 serialized.ElementAt(1).ToBigInteger());
@@ -218,6 +227,7 @@ namespace Nekoyume.BlockChain
             {
                 result[new Address(kv.Key)] = new AvatarState((Dictionary)_codec.Decode(kv.Value));
             }
+
             return result;
         }
 
@@ -231,6 +241,7 @@ namespace Nekoyume.BlockChain
             {
                 result[new Address(kv.Key)] = _codec.Decode(kv.Value);
             }
+
             return result;
         }
 
@@ -248,19 +259,36 @@ namespace Nekoyume.BlockChain
         private void Awake()
         {
             OnDisconnected
+                .ObserveOnMainThread()
                 .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Disconnected"))
                 .AddTo(_disposables);
             OnRetryStarted
+                .ObserveOnMainThread()
                 .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Started"))
                 .AddTo(_disposables);
             OnRetryEnded
+                .ObserveOnMainThread()
                 .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Ended"))
                 .AddTo(_disposables);
             OnPreloadStarted
+                .ObserveOnMainThread()
                 .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Started"))
                 .AddTo(_disposables);
             OnPreloadEnded
+                .ObserveOnMainThread()
                 .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Ended"))
+                .AddTo(_disposables);
+            OnRetryAttempt
+                .ObserveOnMainThread()
+                .Subscribe(tuple =>
+                {
+                    Debug.Log($"Retry rpc connection. (count: {tuple.retryCount})");
+                    var message =
+                        L10nManager.Localize("UI_RETRYING_RPC_CONNECTION_FORMAT",
+                            RpcConnectionRetryCount - tuple.retryCount + 1,
+                            RpcConnectionRetryCount);
+                    Widget.Find<DimmedLoadingScreen>()?.Show(message, true);
+                })
                 .AddTo(_disposables);
             Game.Event.OnUpdateAddresses.AddListener(UpdateSubscribeAddresses);
         }
@@ -279,6 +307,7 @@ namespace Nekoyume.BlockChain
             {
                 await _hub.DisposeAsync();
             }
+
             if (!(_channel is null))
             {
                 await _channel?.ShutdownAsync();
@@ -289,10 +318,7 @@ namespace Nekoyume.BlockChain
 
         private IEnumerator CoJoin(Action<bool> callback)
         {
-            Task t = Task.Run(async () =>
-            {
-                await Join();
-            });
+            Task t = Task.Run(async () => { await Join(); });
 
             yield return new WaitUntil(() => t.IsCompleted);
 
@@ -340,7 +366,6 @@ namespace Nekoyume.BlockChain
                 States.Instance.SetWeeklyArenaState(weeklyArenaState);
 
                 ActionRenderHandler.Instance.GoldCurrency = goldCurrency;
-
             });
 
             yield return new WaitUntil(() => currencyTask.IsCompleted);
@@ -371,10 +396,7 @@ namespace Nekoyume.BlockChain
                     continue;
                 }
 
-                Task task = Task.Run(async () =>
-                {
-                    await MakeTransaction(new List<NCAction> { action });
-                });
+                Task task = Task.Run(async () => { await MakeTransaction(new List<NCAction> { action }); });
                 yield return new WaitUntil(() => task.IsCompleted);
 
                 if (task.IsFaulted)
@@ -405,7 +427,7 @@ namespace Nekoyume.BlockChain
 
             foreach (var action in actions)
             {
-                var ga = (GameAction) action.InnerAction;
+                var ga = (GameAction)action.InnerAction;
                 _transactions.TryAdd(ga.Id, tx.Id);
             }
         }
@@ -477,28 +499,35 @@ namespace Nekoyume.BlockChain
         private async void RetryRpc()
         {
             OnRetryStarted.OnNext(this);
-            var retryCount = 10;
+            var retryCount = RpcConnectionRetryCount;
             while (retryCount > 0)
             {
-                Debug.Log($"Retry rpc connection. (count: {retryCount})");
+                OnRetryAttempt.OnNext((this, retryCount));
                 await Task.Delay(5000);
                 try
                 {
-                    _hub = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(_channel, this);
+                    _hub = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(_channel,
+                        this);
                 }
                 catch (ObjectDisposedException)
                 {
                     break;
                 }
+
                 try
                 {
                     Debug.Log($"Trying to join hub...");
-                    await Join();
+                    await Join(true);
                     Debug.Log($"Join complete! Registering disconnect event...");
                     RegisterDisconnectEvent(_hub);
                     UpdateSubscribeAddresses();
                     OnRetryEnded.OnNext(this);
                     return;
+                }
+                catch (TimeoutException toe)
+                {
+                    Debug.LogWarning($"TimeoutException occurred. Retrying... {retryCount}\n{toe}");
+                    retryCount--;
                 }
                 catch (RpcException re)
                 {
@@ -521,9 +550,18 @@ namespace Nekoyume.BlockChain
             OnDisconnected.OnNext(this);
         }
 
-        private async Task Join()
+        private async Task Join(bool isRetry = false)
         {
-            await _hub.JoinAsync(Address.ToHex());
+            if (isRetry)
+            {
+                var joinTask = _hub.JoinAsync(Address.ToHex()).AsUniTask();
+                await joinTask.Timeout(TimeSpan.FromSeconds(10));
+            }
+            else
+            {
+                await _hub.JoinAsync(Address.ToHex());
+            }
+
             await _service.AddClient(Address.ToByteArray());
         }
 
@@ -580,7 +618,6 @@ namespace Nekoyume.BlockChain
                         errorMsg, L10nManager.Localize("UI_OK"), false);
                     popup.SetCancelCallbackToExit();
                 });
-
         }
 
         public void OnPreloadStart()

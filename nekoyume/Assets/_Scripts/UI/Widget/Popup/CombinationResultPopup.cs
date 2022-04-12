@@ -53,47 +53,33 @@ namespace Nekoyume.UI
         }
 #endif
 
-        [SerializeField]
-        private Image _iconImage;
+        [SerializeField] private Image _iconImage;
 
-        [SerializeField]
-        private Sprite _equipmentIconSprite;
+        [SerializeField] private Sprite _equipmentIconSprite;
 
-        [SerializeField]
-        private Sprite _consumableIconSprite;
+        [SerializeField] private Sprite _consumableIconSprite;
 
-        [SerializeField]
-        private GameObject _titleSuccessObject;
+        [SerializeField] private GameObject _titleSuccessObject;
 
-        [SerializeField]
-        private GameObject _titleGreatSuccessObject;
+        [SerializeField] private GameObject _titleGreatSuccessObject;
 
-        [SerializeField]
-        private GameObject _titleFoodSuccessObject;
+        [SerializeField] private GameObject _titleFoodSuccessObject;
 
-        [SerializeField]
-        private ResultItem _resultItem;
+        [SerializeField] private ResultItem _resultItem;
 
-        [SerializeField]
-        private List<CoveredItemOptionView> _itemStatOptionViews;
+        [SerializeField] private List<CoveredItemOptionView> _itemStatOptionViews;
 
-        [SerializeField]
-        private List<CoveredItemOptionView> _itemSkillOptionViews;
+        [SerializeField] private List<CoveredItemOptionView> _itemSkillOptionViews;
 
-        [SerializeField]
-        private List<ItemOptionIconView> _itemOptionIconViews;
+        [SerializeField] private List<ItemOptionIconView> _itemOptionIconViews;
 
-        [SerializeField]
-        private float _delayTimeOfShowOptions;
+        [SerializeField] private float _delayTimeOfShowOptions;
 
-        [SerializeField]
-        private float _intervalTimeOfDiscoverOptions;
+        [SerializeField] private float _intervalTimeOfDiscoverOptions;
 
-        [SerializeField]
-        private float _delayTimeOfIncreaseCPAnimation;
+        [SerializeField] private float _delayTimeOfIncreaseCPAnimation;
 
-        [SerializeField]
-        private float _dueTimeOfIncreaseCPAnimation;
+        [SerializeField] private float _dueTimeOfIncreaseCPAnimation;
 
 #if UNITY_EDITOR
         [Space(10)]
@@ -264,8 +250,8 @@ namespace Nekoyume.UI
                     continue;
                 }
 
-                var (skillName, power, chance) = skillOptions[i];
-                optionView.UpdateAsSkill(skillName, power, chance);
+                var (skillRow, power, chance) = skillOptions[i];
+                optionView.UpdateAsSkill(skillRow.GetLocalizedName(), power, chance);
             }
 
             if (itemUsable.ItemType == ItemType.Equipment)

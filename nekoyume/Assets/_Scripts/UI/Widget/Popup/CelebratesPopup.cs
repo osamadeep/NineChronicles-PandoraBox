@@ -29,50 +29,33 @@ namespace Nekoyume.UI
     {
         private const float ContinueTime = 3f;
 
-        [SerializeField]
-        private TextMeshProUGUI titleText = null;
+        [SerializeField] private TextMeshProUGUI titleText = null;
 
-        [SerializeField]
-        private TextMeshProUGUI continueText = null;
+        [SerializeField] private TextMeshProUGUI continueText = null;
 
-        [SerializeField]
-        private GameObject questRewards = null;
+        [SerializeField] private GameObject questRewards = null;
 
-        [SerializeField]
-        private SimpleCountableItemView[] questRewardViews = null;
+        [SerializeField] private SimpleCountableItemView[] questRewardViews = null;
 
-        [SerializeField]
-        private GameObject recipeAreaParent = null;
+        [SerializeField] private GameObject recipeAreaParent = null;
 
-        [SerializeField]
-        private RecipeCell recipeCell = null;
+        [SerializeField] private RecipeCell recipeCell = null;
 
-        [SerializeField]
-        private GameObject[] gradeImages = null;
+        [SerializeField] private GameObject[] gradeImages = null;
 
-        [SerializeField]
-        private TextMeshProUGUI recipeNameText = null;
+        [SerializeField] private TextMeshProUGUI recipeNameText = null;
 
-        [SerializeField]
-        private TextMeshProUGUI recipeOptionText = null;
+        [SerializeField] private TextMeshProUGUI recipeOptionText = null;
 
-        [SerializeField]
-        private GameObject menuContainer = null;
+        [SerializeField] private GameObject menuContainer = null;
 
-        [SerializeField]
-        private Image menuImage = null;
+        [SerializeField] private Image menuImage = null;
 
-        [SerializeField]
-        private TextMeshProUGUI menuText = null;
+        [SerializeField] private TextMeshProUGUI menuText = null;
 
-        [SerializeField]
-        private Blur blur = null;
+        [SerializeField] private GraphicAlphaTweener graphicAlphaTweener = null;
 
-        [SerializeField]
-        private GraphicAlphaTweener graphicAlphaTweener = null;
-
-        [SerializeField]
-        private SkeletonGraphic npcSkeletonGraphic;
+        [SerializeField] private SkeletonGraphic npcSkeletonGraphic;
 
         private readonly List<Tweener> _tweeners = new List<Tweener>();
         private readonly WaitForSeconds _waitItemInterval = new WaitForSeconds(0.4f);
@@ -84,12 +67,6 @@ namespace Nekoyume.UI
         private PraiseVFX _praiseVFX;
 
         #region override
-
-        protected override void Awake()
-        {
-            base.Awake();
-            blur.onClick = () => Close();
-        }
 
         public override void Initialize()
         {
@@ -122,7 +99,7 @@ namespace Nekoyume.UI
                 case nameof(Shop):
                     menuText.text = L10nManager.Localize("UI_MAIN_MENU_SHOP");
                     break;
-                case nameof(MimisbrunnrPreparation):
+                case "Mimisbrunnr":
                     menuText.text = L10nManager.Localize("UI_MAIN_MENU_MIMISBRUNNR");
                     break;
             }
@@ -264,7 +241,6 @@ namespace Nekoyume.UI
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
-            blur.button.interactable = false;
             graphicAlphaTweener.Play();
             StopEffects();
 
@@ -436,7 +412,6 @@ namespace Nekoyume.UI
 
         private IEnumerator CoContinueTimer(float timer)
         {
-            blur.button.interactable = true;
             var format = L10nManager.Localize("UI_PRESS_TO_CONTINUE_FORMAT");
             continueText.alpha = 1f;
 

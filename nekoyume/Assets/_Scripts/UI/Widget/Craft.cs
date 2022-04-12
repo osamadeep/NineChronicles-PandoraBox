@@ -89,11 +89,11 @@ namespace Nekoyume.UI
             });
 
             equipmentSubRecipeView.CombinationActionSubject
-                .Subscribe(CombinationEquipmentAction)
+                .Subscribe(OnClickEquipmentAction)
                 .AddTo(gameObject);
 
             consumableSubRecipeView.CombinationActionSubject
-                .Subscribe(CombinationConsumableAction)
+                .Subscribe(OnClickConsumableAction)
                 .AddTo(gameObject);
         }
 
@@ -142,7 +142,7 @@ namespace Nekoyume.UI
             Show();
 
             if (!Game.Game.instance.TableSheets
-                .EquipmentItemRecipeSheet.TryGetValue(equipmentRecipeId, out var row))
+                    .EquipmentItemRecipeSheet.TryGetValue(equipmentRecipeId, out var row))
             {
                 return;
             }
@@ -226,8 +226,9 @@ namespace Nekoyume.UI
         private void LoadRecipeModel()
         {
             var jsonAsset = Resources.Load<TextAsset>(ConsumableRecipeGroupPath);
-            var group = jsonAsset is null ?
-                default : JsonSerializer.Deserialize<CombinationRecipeGroup>(jsonAsset.text);
+            var group = jsonAsset is null
+                ? default
+                : JsonSerializer.Deserialize<CombinationRecipeGroup>(jsonAsset.text);
 
             SharedModel = new RecipeModel(
                 Game.Game.instance.TableSheets.EquipmentItemRecipeSheet.Values,
@@ -244,9 +245,9 @@ namespace Nekoyume.UI
 
             if (quest is null ||
                 !Game.Game.instance.TableSheets.EquipmentItemRecipeSheet
-                .TryGetValue(quest.RecipeId, out var row) ||
+                    .TryGetValue(quest.RecipeId, out var row) ||
                 !States.Instance.CurrentAvatarState.worldInformation
-                .TryGetLastClearedStageId(out var clearedStage))
+                    .TryGetLastClearedStageId(out var clearedStage))
             {
                 SharedModel.NotifiedRow.Value = null;
                 return;
@@ -254,6 +255,44 @@ namespace Nekoyume.UI
 
             var stageId = row.UnlockStage;
             SharedModel.NotifiedRow.Value = clearedStage >= stageId ? row : null;
+        }
+
+        private void OnClickEquipmentAction(SubRecipeView.RecipeInfo recipeInfo)
+        {
+            var requirementSheet = Game.Game.instance.TableSheets.ItemRequirementSheet;
+            var recipeSheet = Game.Game.instance.TableSheets.EquipmentItemRecipeSheet;
+            if (!recipeSheet.TryGetValue(recipeInfo.RecipeId, out var recipeRow))
+            {
+                return;
+            }
+
+            var resultItemRow = recipeRow.GetResultEquipmentItemRow();
+            if (!requirementSheet.TryGetValue(resultItemRow.Id, out var requirementRow))
+            {
+                CombinationEquipmentAction(recipeInfo);
+                return;
+            }
+
+            CombinationEquipmentAction(recipeInfo);
+        }
+
+        private void OnClickConsumableAction(SubRecipeView.RecipeInfo recipeInfo)
+        {
+            var requirementSheet = Game.Game.instance.TableSheets.ItemRequirementSheet;
+            var recipeSheet = Game.Game.instance.TableSheets.ConsumableItemRecipeSheet;
+            if (!recipeSheet.TryGetValue(recipeInfo.RecipeId, out var recipeRow))
+            {
+                return;
+            }
+
+            var resultItemRow = recipeRow.GetResultConsumableItemRow();
+            if (!requirementSheet.TryGetValue(resultItemRow.Id, out var requirementRow))
+            {
+                CombinationConsumableAction(recipeInfo);
+                return;
+            }
+
+            CombinationConsumableAction(recipeInfo);
         }
 
         private void CombinationEquipmentAction(SubRecipeView.RecipeInfo recipeInfo)
@@ -276,7 +315,7 @@ namespace Nekoyume.UI
             }
 
             var slots = Find<CombinationSlotsPopup>();
-            slots.SetCaching(slotIndex, true, requiredBlockIndex, itemUsable:equipment);
+            slots.SetCaching(slotIndex, true, requiredBlockIndex, itemUsable: equipment);
 
             equipmentSubRecipeView.UpdateView();
             Game.Game.instance.ActionManager.CombinationEquipment(recipeInfo, slotIndex).Subscribe();
@@ -297,7 +336,7 @@ namespace Nekoyume.UI
                 consumableRow.GetResultConsumableItemRow(), Guid.Empty, default);
             var requiredBlockIndex = consumableRow.RequiredBlockIndex;
             var slots = Find<CombinationSlotsPopup>();
-            slots.SetCaching(slotIndex, true, requiredBlockIndex, itemUsable:consumable);
+            slots.SetCaching(slotIndex, true, requiredBlockIndex, itemUsable: consumable);
 
             consumableSubRecipeView.UpdateView();
             Game.Game.instance.ActionManager.CombinationConsumable(recipeInfo, slotIndex).Subscribe();

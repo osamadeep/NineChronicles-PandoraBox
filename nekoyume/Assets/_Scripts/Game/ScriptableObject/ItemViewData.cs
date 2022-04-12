@@ -23,6 +23,8 @@ namespace Nekoyume.Game.ScriptableObject
 
         [SerializeField] private Material enhancementMaterial;
 
+        [SerializeField] private Color itemGradeParticleColor;
+
         public Material EnhancementMaterial => enhancementMaterial;
 
         public float GradeHsvValue => gradeHsvValue;
@@ -34,6 +36,8 @@ namespace Nekoyume.Game.ScriptableObject
         public float GradeHsvRange => gradeHsvRange;
 
         public Sprite GradeBackground => gradeBackground;
+
+        public Color ItemGradeParticleColor => itemGradeParticleColor;
 
         public int Grade => grade;
     }
