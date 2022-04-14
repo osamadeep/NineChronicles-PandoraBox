@@ -107,8 +107,8 @@ namespace Nekoyume
         private readonly ReactiveProperty<ItemSubTypeFilter> _selectedSubTypeFilter =
             new ReactiveProperty<ItemSubTypeFilter>(ItemSubTypeFilter.All);
 
-        private readonly ReactiveProperty<ShopSortFilter> _selectedSortFilter =
-            new ReactiveProperty<ShopSortFilter>(ShopSortFilter.Class);
+        private readonly ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter =
+            new ReactiveProperty<Nekoyume.EnumType.ShopSortFilter>(Nekoyume.EnumType.ShopSortFilter.Class);
 
         private readonly ReactiveProperty<List<int>> _selectedItemIds =
             new ReactiveProperty<List<int>>(new List<int>());
@@ -246,7 +246,7 @@ namespace Nekoyume
 
             sortButton.onClick.AddListener(() =>
             {
-                var count = Enum.GetNames(typeof(ShopSortFilter)).Length;
+                var count = Enum.GetNames(typeof(Nekoyume.EnumType.ShopSortFilter)).Length;
                 _selectedSortFilter.Value = (int)_selectedSortFilter.Value < count - 1
                     ? _selectedSortFilter.Value + 1
                     : 0;
@@ -363,7 +363,7 @@ namespace Nekoyume
             _resetAnimator.Play(_hashDisabled);
 
             _selectedSubTypeFilter.SetValueAndForceNotify(ItemSubTypeFilter.Weapon);
-            _selectedSortFilter.SetValueAndForceNotify(ShopSortFilter.Class);
+            _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
             _selectedItemIds.Value.Clear();
             _isAscending.SetValueAndForceNotify(false);
             _levelLimit.SetValueAndForceNotify(false);
@@ -396,13 +396,13 @@ namespace Nekoyume
 
             return _selectedSortFilter.Value switch
             {
-                ShopSortFilter.CP => _isAscending.Value
+                Nekoyume.EnumType.ShopSortFilter.CP => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.CombatPoint).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.CombatPoint).ToList(),
-                ShopSortFilter.Price => _isAscending.Value
+                Nekoyume.EnumType.ShopSortFilter.Price => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Price).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.Price).ToList(),
-                ShopSortFilter.Class => _isAscending.Value
+                Nekoyume.EnumType.ShopSortFilter.Class => _isAscending.Value
                     ? models.OrderBy(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
                         .ToList()

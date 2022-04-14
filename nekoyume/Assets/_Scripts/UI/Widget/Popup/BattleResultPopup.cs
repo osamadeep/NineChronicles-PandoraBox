@@ -26,7 +26,7 @@ namespace Nekoyume.UI
 
     public class BattleResultPopup : PopupWidget
     {
-        public enum  NextState
+        public enum NextState
         {
             None,
             GoToMain,
@@ -84,58 +84,45 @@ namespace Nekoyume.UI
         }
 
 
-
         private const int Timer = 10;
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, 1.2f, 10f);
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button returnQuestButton = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button returnQuestButton = null;
+
         [SerializeField] private Button hideButton = null;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private CanvasGroup canvasGroup = null;
 
-        [SerializeField]
-        private GameObject victoryImageContainer = null;
+        [SerializeField] private GameObject victoryImageContainer = null;
 
-        [SerializeField]
-        private GameObject defeatImageContainer = null;
+        [SerializeField] private GameObject defeatImageContainer = null;
 
-        [SerializeField]
-        private TextMeshProUGUI worldStageId = null;
+        [SerializeField] private TextMeshProUGUI worldStageId = null;
 
-        [SerializeField]
-        private GameObject topArea = null;
+        [SerializeField] private GameObject topArea = null;
 
-        [SerializeField]
-        private DefeatTextArea defeatTextArea = default;
+        [SerializeField] private DefeatTextArea defeatTextArea = default;
 
-        [SerializeField]
-        private RewardsArea rewardsArea = default;
+        [SerializeField] private RewardsArea rewardsArea = default;
 
-        [SerializeField]
-        private TextMeshProUGUI bottomText = null;
+        [SerializeField] private TextMeshProUGUI bottomText = null;
 
-        [SerializeField]
-        private Button closeButton = null;
+        [SerializeField] private Button closeButton = null;
 
-        [SerializeField]
-        private Button nextButton = null;
+        [SerializeField] private Button nextButton = null;
 
-        [SerializeField]
-        private Button repeatButton = null;
+        [SerializeField] private Button repeatButton = null;
 
-        [SerializeField]
-        private StageProgressBar stageProgressBar = null;
+        [SerializeField] private StageProgressBar stageProgressBar = null;
 
-        [SerializeField]
-        private GameObject[] victoryResultTexts = null;
+        [SerializeField] private GameObject[] victoryResultTexts = null;
 
-        [SerializeField]
-        private ActionPoint actionPoint = null;
+        [SerializeField] private ActionPoint actionPoint = null;
 
         private BattleWin01VFX _battleWin01VFX;
 
@@ -163,32 +150,23 @@ namespace Nekoyume.UI
             base.Awake();
 
             closeButton.OnClickAsObservable().Subscribe(_ =>
-                {
-                    if (States.Instance.CurrentAvatarState.worldInformation
-                        .TryGetUnlockedWorldByStageClearedBlockIndex(out var world))
-                    {
-                        var canExit = world.StageClearedId >= Battle.RequiredStageForExitButton;
-                        if (canExit)
-                        {
-                            StartCoroutine(OnClickClose());
-                        }
-                    }
-                }).AddTo(gameObject);
-
-            returnQuestButton.OnClickAsObservable().Subscribe(_ =>
             {
-                GoToQuestPreperation();
+                if (States.Instance.CurrentAvatarState.worldInformation
+                    .TryGetUnlockedWorldByStageClearedBlockIndex(out var world))
+                {
+                    var canExit = world.StageClearedId >= Battle.RequiredStageForExitButton;
+                    if (canExit)
+                    {
+                        StartCoroutine(OnClickClose());
+                    }
+                }
             }).AddTo(gameObject);
 
-            nextButton.OnClickAsObservable().Subscribe(_ =>
-                {
-                    StartCoroutine(OnClickNext());
-                }).AddTo(gameObject);
+            returnQuestButton.OnClickAsObservable().Subscribe(_ => { GoToQuestPreperation(); }).AddTo(gameObject);
 
-            repeatButton.OnClickAsObservable().Subscribe(_ =>
-                {
-                    StartCoroutine(OnClickRepeat());
-                }).AddTo(gameObject);
+            nextButton.OnClickAsObservable().Subscribe(_ => { StartCoroutine(OnClickNext()); }).AddTo(gameObject);
+
+            repeatButton.OnClickAsObservable().Subscribe(_ => { StartCoroutine(OnClickRepeat()); }).AddTo(gameObject);
 
             CloseWidget = closeButton.onClick.Invoke;
             SubmitWidget = nextButton.onClick.Invoke;
@@ -205,6 +183,7 @@ namespace Nekoyume.UI
             {
                 yield return CoDialog(SharedModel.StageID);
             }
+
             GoToMain();
         }
 
@@ -257,7 +236,8 @@ namespace Nekoyume.UI
             SharedModel = model;
             _IsAlreadyOut = false;
 
-            worldStageId.text = $"{SharedModel.WorldName} {StageInformation.GetStageIdString(SharedModel.StageID, true)}";
+            worldStageId.text =
+                $"{SharedModel.WorldName} {StageInformation.GetStageIdString(SharedModel.StageID, true)}";
             actionPoint.SetActionPoint(model.ActionPoint);
             actionPoint.SetEventTriggerEnabled(true);
 
@@ -308,6 +288,7 @@ namespace Nekoyume.UI
                     {
                         UpdateViewAsDefeat(SharedModel.State);
                     }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -449,9 +430,9 @@ namespace Nekoyume.UI
             {
                 case NextState.GoToMain:
                     SubmitWidget = closeButton.onClick.Invoke;
-                    fullFormat = SharedModel.ActionPointNotEnough ?
-                        L10nManager.Localize("UI_BATTLE_RESULT_NOT_ENOUGH_ACTION_POINT_FORMAT") :
-                        L10nManager.Localize("UI_BATTLE_EXIT_FORMAT");
+                    fullFormat = SharedModel.ActionPointNotEnough
+                        ? L10nManager.Localize("UI_BATTLE_RESULT_NOT_ENOUGH_ACTION_POINT_FORMAT")
+                        : L10nManager.Localize("UI_BATTLE_EXIT_FORMAT");
                     break;
                 case NextState.RepeatStage:
                     SubmitWidget = repeatButton.onClick.Invoke;
@@ -484,7 +465,7 @@ namespace Nekoyume.UI
 
             yield return new WaitUntil(() => CanClose);
 
-            var floatTime = (float) limitSeconds;
+            var floatTime = (float)limitSeconds;
             var floatTimeMinusOne = limitSeconds - 1f;
             while (limitSeconds > 0)
             {
@@ -655,6 +636,7 @@ namespace Nekoyume.UI
         {
             StartCoroutine(CoGoToNextMimisbrunnrStageClose(log));
         }
+
         private IEnumerator CoGoToNextMimisbrunnrStageClose(BattleLog log)
         {
             if (Find<Menu>().IsActive())
@@ -683,6 +665,7 @@ namespace Nekoyume.UI
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
         }
+
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void GoToQuestPreperation()
         {
@@ -694,7 +677,7 @@ namespace Nekoyume.UI
             Find<WorldMap>().Show();
             Find<StageInformation>().Show();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Main);
-            Find<QuestPreparation>().Show();
+            Find<BattlePreparation>().Show();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

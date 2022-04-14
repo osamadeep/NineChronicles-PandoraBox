@@ -14,7 +14,7 @@ namespace Nekoyume.PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100171";
+        public static string OriginalVersionId = "v100172";
         public static string VersionId = "010042";
 
         //Pandora Database
@@ -28,9 +28,9 @@ namespace Nekoyume.PandoraBox
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
-        public static int NumberOfProfiles=4;
+        public static int NumberOfProfiles = 4;
         public static int LoginIndex;
-        public static int ArenaTicketsToUse=1;
+        public static int ArenaTicketsToUse = 1;
         public static List<string> ArenaFavTargets = new List<string>();
         public static bool IsRankingSimulate; //simulate ranking battle
         public static bool IsHackAndSlashSimulate; //simulate h&s
@@ -56,12 +56,12 @@ namespace Nekoyume.PandoraBox
             }
         }
 
-        public void SpeedTimeScale(int speed=1)
+        public void SpeedTimeScale(int speed = 1)
         {
             if (speed != 1)
             {
                 Time.timeScale = Settings.FightSpeed;
-                DOTween.timeScale = Settings.MenuSpeed/ Settings.FightSpeed;
+                DOTween.timeScale = Settings.MenuSpeed / Settings.FightSpeed;
             }
             else
             {
@@ -77,6 +77,7 @@ namespace Nekoyume.PandoraBox
                 if (player.Address.ToLower() == address.ToLower())
                     return player;
             }
+
             return new PandoraPlayer();
         }
 
@@ -93,12 +94,11 @@ namespace Nekoyume.PandoraBox
             CurrentGuildPlayer = null;
             CurrentGuild = null;
 
-            CurrentGuildPlayer = PanDatabase.GuildPlayers.Find(x => x.IsEqual(States.Instance.CurrentAvatarState.address.ToString()));
+            CurrentGuildPlayer =
+                PanDatabase.GuildPlayers.Find(x => x.IsEqual(States.Instance.CurrentAvatarState.address.ToString()));
             if (CurrentGuildPlayer is null)
                 return;
             CurrentGuild = PanDatabase.Guilds.Find(x => x.Tag == CurrentGuildPlayer.Guild);
-
-
         }
 
         public void ShowError(int errorNumber, string text)
@@ -107,30 +107,22 @@ namespace Nekoyume.PandoraBox
             //16 cannot cast the link content
             //5 old version
             //101 player banned
-            UIErrorWindow.transform.Find("TitleTxt").GetComponent<TextMeshProUGUI>().text = $"Error <color=red>{errorNumber}</color>!";
+            UIErrorWindow.transform.Find("TitleTxt").GetComponent<TextMeshProUGUI>().text =
+                $"Error <color=red>{errorNumber}</color>!";
             UIErrorWindow.transform.Find("MessageTxt").GetComponent<TextMeshProUGUI>().text = text;
             UIErrorWindow.SetActive(true);
         }
-
-
-
-
     }
 
     public class PandoraSettings
     {
         //General
-        [HideInInspector]
-        public bool WhatsNewShown { get; set; } = false;
-        [HideInInspector]
-        public bool IsStory { get; set; } = true;
-        [HideInInspector]
-        public bool IsMultipleLogin { get; set; } = true;
+        [HideInInspector] public bool WhatsNewShown { get; set; } = false;
+        [HideInInspector] public bool IsStory { get; set; } = true;
+        [HideInInspector] public bool IsMultipleLogin { get; set; } = true;
 
-        [HideInInspector]
-        public int BlockShowType { get; set; } = 0;
-        [HideInInspector]
-        public int MenuSpeed { get; set; } = 3;
+        [HideInInspector] public int BlockShowType { get; set; } = 0;
+        [HideInInspector] public int MenuSpeed { get; set; } = 3;
 
         //[HideInInspector]
         //public float MusicVolume { get; set; } = 0.7f;
@@ -148,25 +140,18 @@ namespace Nekoyume.PandoraBox
         //public int ResolutionIndex { get; set; } = 2;
 
 
-
         //PVE
-        [HideInInspector]
-        public int FightSpeed { get; set; } = 1;
-        [HideInInspector]
-        public int RaidCooldown { get; set; } = 30;
-        [HideInInspector]
-        public bool RaidMethodIsSweep { get; set; }
+        [HideInInspector] public int FightSpeed { get; set; } = 1;
+        [HideInInspector] public int RaidCooldown { get; set; } = 30;
+        [HideInInspector] public bool RaidMethodIsSweep { get; set; }
 
         //PVP
 
-        [HideInInspector]
-        public int ArenaListUpper { get; set; } = 0;
+        [HideInInspector] public int ArenaListUpper { get; set; } = 0;
 
-        [HideInInspector]
-        public int ArenaListLower { get; set; } = 0;
+        [HideInInspector] public int ArenaListLower { get; set; } = 0;
 
-        [HideInInspector]
-        public int ArenaListStep { get; set; } = 90;
+        [HideInInspector] public int ArenaListStep { get; set; } = 90;
 
         public void Save()
         {
@@ -206,7 +191,8 @@ namespace Nekoyume.PandoraBox
             }
 
             //check difference
-            if (int.Parse(PandoraBoxMaster.VersionId.Substring(0,5)) > int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver").Substring(0, 5)))
+            if (int.Parse(PandoraBoxMaster.VersionId.Substring(0, 5)) >
+                int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver").Substring(0, 5)))
             {
                 WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
@@ -217,9 +203,12 @@ namespace Nekoyume.PandoraBox
 
             //General
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
-            WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown)));
-            IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory)));
-            IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin)));
+            WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown",
+                System.Convert.ToInt32(WhatsNewShown)));
+            IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory",
+                System.Convert.ToInt32(IsStory)));
+            IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin",
+                System.Convert.ToInt32(IsMultipleLogin)));
             //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
             //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
             //MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
@@ -231,7 +220,8 @@ namespace Nekoyume.PandoraBox
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             RaidCooldown = PlayerPrefs.GetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-            RaidMethodIsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep", System.Convert.ToInt32(RaidMethodIsSweep)));
+            RaidMethodIsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep",
+                System.Convert.ToInt32(RaidMethodIsSweep)));
 
             //PVP
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
@@ -242,7 +232,5 @@ namespace Nekoyume.PandoraBox
             //Load ingame changes
             DOTween.timeScale = MenuSpeed;
         }
-
-
     }
 }

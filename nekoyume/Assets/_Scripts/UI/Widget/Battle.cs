@@ -14,44 +14,35 @@ namespace Nekoyume.UI
     public class Battle : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private UnityEngine.UI.Button exitMenu = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private UnityEngine.UI.Button exitMenu = null;
+
         public GameObject simulateText = null;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private TextMeshProUGUI stageText = null;
 
-        [SerializeField]
-        private GuidedQuest guidedQuest = null;
+        [SerializeField] private GuidedQuest guidedQuest = null;
 
-        [SerializeField]
-        private BossStatus bossStatus = null;
+        [SerializeField] private BossStatus bossStatus = null;
 
-        [SerializeField]
-        private Toggle repeatToggle = null;
+        [SerializeField] private Toggle repeatToggle = null;
 
-        [SerializeField]
-        private Toggle exitToggle = null;
+        [SerializeField] private Toggle exitToggle = null;
 
-        [SerializeField]
-        private HelpButton helpButton = null;
+        [SerializeField] private HelpButton helpButton = null;
 
-        [SerializeField]
-        private BossStatus enemyPlayerStatus = null;
+        [SerializeField] private BossStatus enemyPlayerStatus = null;
 
-        [SerializeField]
-        private StageProgressBar stageProgressBar = null;
+        [SerializeField] private StageProgressBar stageProgressBar = null;
 
-        [SerializeField]
-        private ComboText comboText = null;
+        [SerializeField] private ComboText comboText = null;
 
-        [SerializeField]
-        private GameObject boostEffectObject = null;
+        [SerializeField] private GameObject boostEffectObject = null;
 
-        [SerializeField]
-        private TMP_Text boostCountText;
+        [SerializeField] private TMP_Text boostCountText;
 
         public BossStatus BossStatus => bossStatus;
         public BossStatus EnemyPlayerStatus => enemyPlayerStatus;
@@ -100,7 +91,7 @@ namespace Nekoyume.UI
             });
             CloseWidget = null;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            exitMenu.onClick.AddListener(() => { ExitToMenu(); });
+            //exitMenu.onClick.AddListener(() => { ExitToMenu(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -153,10 +144,8 @@ namespace Nekoyume.UI
 
             guidedQuest.Hide(true);
             base.Show();
-            guidedQuest.Show(States.Instance.CurrentAvatarState, () =>
-            {
-                guidedQuest.SetWorldQuestToInProgress(stageId);
-            });
+            guidedQuest.Show(States.Instance.CurrentAvatarState,
+                () => { guidedQuest.SetWorldQuestToInProgress(stageId); });
 
             stageText.text = $"STAGE {StageInformation.GetStageIdString(stageId, true)}";
             stageText.gameObject.SetActive(true);
@@ -200,6 +189,7 @@ namespace Nekoyume.UI
         }
 
         #region tutorial
+
         public void ShowForTutorial(bool isPrologue, int stageId = 0)
         {
             if (isPrologue)
@@ -225,6 +215,7 @@ namespace Nekoyume.UI
             gameObject.SetActive(true);
             Find<HeaderMenuStatic>().Close(true);
         }
+
         #endregion
     }
 }

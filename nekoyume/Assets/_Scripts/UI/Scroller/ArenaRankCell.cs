@@ -13,6 +13,10 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Scroller
 {
+    using Nekoyume.PandoraBox;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
     using UniRx;
 
     public class ArenaRankCell : RectCell<
@@ -27,7 +31,29 @@ namespace Nekoyume.UI.Scroller
             public bool currentAvatarCanBattle;
         }
 
-        [SerializeField] private Image backgroundImage = null;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Sprite[] Banners = null;
+
+        //[SerializeField] private GameObject challengeButton = null;
+        [SerializeField] private GameObject playerBanner = null;
+        [SerializeField] private TextMeshProUGUI gainPointText = null;
+        [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [SerializeField] private TextMeshProUGUI winRateText = null;
+        [SerializeField] private GameObject FavTarget = null;
+        public GameObject BlinkSelected = null;
+
+        //for simulate
+        //ViewModel currentViewModel = null; //we will get this when cell show
+        ArenaInfo currentAvatarArenaInfo = null;
+
+        //guild info
+        GuildPlayer enemyGuildPlayer;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private Image backgroundImage = null;
 
         [SerializeField] private bool controlBackgroundImage = false;
 
@@ -78,6 +104,11 @@ namespace Nekoyume.UI.Scroller
                 {
                     if (avatarState is null)
                     {
+                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                        Widget.Find<RankingBoard>().avatarLoadingImage.SetActive(true);
+                        Widget.Find<FriendInfoPopupPandora>().Close(true);
+                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                         var (exist, state) =
                             await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
                         avatarState = exist ? state : null;
@@ -87,7 +118,19 @@ namespace Nekoyume.UI.Scroller
                         }
                     }
 
-                    Widget.Find<FriendInfoPopup>().Show(avatarState);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||currentViewModel
+                    var currentAddress = States.Instance.CurrentAvatarState?.address;
+                    var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState, ArenaInfo, arenaInfo, true);
+
+                    //clear selected cells and select the new one.
+                    Transform clc = Widget.Find<RankingBoard>().CellsListContainer;
+                    foreach (Transform item in clc)
+                        item.GetComponent<ArenaRankCell>().BlinkSelected.SetActive(false);
+                    BlinkSelected.SetActive(true);
+
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    //Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
                 .AddTo(gameObject);
 
@@ -106,8 +149,12 @@ namespace Nekoyume.UI.Scroller
                 .Subscribe(_ =>
                 {
                     AudioController.PlayClick();
-                    Context.OnClickChallenge.OnNext(this);
-                    _onClickChallenge.OnNext(this);
+                    //Context.OnClickChallenge.OnNext(this);
+                    //_onClickChallenge.OnNext(this);
+
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    ChallangeRemainingTickets();
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 })
                 .AddTo(gameObject);
 
@@ -131,6 +178,181 @@ namespace Nekoyume.UI.Scroller
                 })
                 .AddTo(gameObject);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ChallangeRemainingTickets()
+        {
+            AudioController.PlayClick();
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                StartCoroutine(StartFightCount());
+            }
+            else
+            {
+                if (PandoraBoxMaster.ArenaTicketsToUse > 1)
+                {
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: This is Premium Feature! Please select 1 Fight",
+                        NotificationCell.NotificationType.Alert);
+                }
+                else
+                {
+                    if (PandoraBoxMaster.ArenaTicketsToUse == 1)
+                    {
+                        Widget.Find<FriendInfoPopupPandora>().Close(true);
+                        Context.OnClickChallenge.OnNext(this);
+                        _onClickChallenge.OnNext(this);
+                    }
+                }
+            }
+        }
+
+        IEnumerator StartFightCount()
+        {
+            Widget.Find<FriendInfoPopupPandora>().Close(true);
+
+            var currentAddress = States.Instance.CurrentAvatarState?.address;
+            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+
+            //Debug.LogError("Fights Count: " + PandoraBoxMaster.ArenaTicketsToUse);
+            //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
+
+            var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
+
+
+            Widget.Find<ArenaBattleLoadingScreen>().Show(ArenaInfo);
+
+
+            for (int i = 0;
+                 i < Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0,
+                     _viewModel.currentAvatarArenaInfo.DailyChallengeCount);
+                 i++)
+            {
+                //Context.OnClickChallenge.OnNext(this);
+                //_onClickChallenge.OnNext(this);
+
+                yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
+
+                Game.Game.instance.ActionManager.RankingBattle(
+                    ArenaInfo.AvatarAddress,
+                    currentAvatarInventory.Costumes
+                        .Where(i => i.equipped)
+                        .Select(i => i.ItemId).ToList(),
+                    currentAvatarInventory.Equipments
+                        .Where(i => i.equipped)
+                        .Select(i => i.ItemId).ToList()
+                ).Subscribe();
+
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Fight Arena <color=green>" +
+                                                    (i + 1)
+                                                    + "</color>/" + Mathf.Clamp(PandoraBoxMaster.ArenaTicketsToUse, 0,
+                                                        _viewModel.currentAvatarArenaInfo.DailyChallengeCount) + "!",
+                    NotificationCell.NotificationType.Information);
+            }
+        }
+
+        private class LocalRandom : System.Random, Libplanet.Action.IRandom
+        {
+            public LocalRandom(int Seed)
+                : base(Seed)
+            {
+            }
+
+            public int Seed => throw new NotImplementedException();
+        }
+
+        public void SimulateOnce()
+        {
+            var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora
+                .FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
+
+            System.Random rnd = new System.Random();
+            var simulator = new RankingSimulator(
+                new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                States.Instance.CurrentAvatarState,
+                enemyState.Value,
+                new List<Guid>(),
+                Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                Action.RankingBattle.StageId,
+                currentAvatarArenaInfo,
+                ArenaInfo,
+                Game.Game.instance.TableSheets.CostumeStatSheet
+            );
+            simulator.SimulatePandora();
+            var log = simulator.Log;
+
+            Widget.Find<FriendInfoPopupPandora>().Close(true);
+            PandoraBoxMaster.IsRankingSimulate = true;
+            Widget.Find<RankingBoard>().GoToStage(log);
+        }
+
+        IEnumerator GetEnemyState()
+        {
+            winRateText.text = ".?.";
+
+            var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora
+                .FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
+
+            //current local player
+            var currentAddress = States.Instance.CurrentAvatarState?.address;
+            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+            //
+
+
+            int totalSimulations = 5;
+            int win = 0;
+            //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
+            for (int i = 0; i < totalSimulations; i++)
+            {
+                System.Random rnd = new System.Random();
+                var simulator = new RankingSimulator(
+                    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                    States.Instance.CurrentAvatarState,
+                    enemyState.Value,
+                    new List<Guid>(),
+                    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                    Action.RankingBattle.StageId,
+                    arenaInfo,
+                    ArenaInfo,
+                    Game.Game.instance.TableSheets.CostumeStatSheet
+                );
+                simulator.SimulatePandora();
+                var log = simulator.Log;
+                //battleLogDebug += "," + log.result.ToString() ;
+
+                if (log.result.ToString().ToUpper() == "WIN")
+                    win++;
+                yield return new WaitForSeconds(0.05f);
+            }
+            //Debug.LogError(battleLogDebug);
+
+            float finalRatio = (float)win / (float)totalSimulations;
+            float FinalValue = (int)(finalRatio * 100f);
+
+            //if (finalRatio == 1)
+            //    effect.SetActive(true);
+
+            if (finalRatio <= 0.5f)
+                winRateText.text = $"<color=red>{FinalValue}</color>%";
+            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                winRateText.text = $"<color=#FF4900>{FinalValue}</color>%";
+            else
+                winRateText.text = $"<color=green>{FinalValue}</color>%";
+
+            //if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
+            //{
+            //    Widget.Find<RankingBoard>().GoToStage(log);
+            //}
+        }
+
+        public void ShowGuildInfo()
+        {
+            if (enemyGuildPlayer is null)
+                return;
+            Widget.Find<GuildInfo>().Show(enemyGuildPlayer.Guild);
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Show((
             int rank,
@@ -190,9 +412,85 @@ namespace Nekoyume.UI.Scroller
             }
 
             UpdateRank(_viewModel.rank);
-            nameText.text = ArenaInfo.AvatarName;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo is null)
+                BlinkSelected.SetActive(false);
+            else
+                BlinkSelected.SetActive(itemData.arenaInfo.AvatarAddress ==
+                                        Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo.AvatarAddress);
+
+
+            PandoraPlayer enemyPan = PandoraBoxMaster.GetPandoraPlayer(ArenaInfo.AgentAddress.ToString());
+            enemyGuildPlayer = null;
+            enemyGuildPlayer =
+                PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(ArenaInfo.AvatarAddress.ToString()));
+
+            if (enemyGuildPlayer is null)
+                nameText.text = ArenaInfo.AvatarName.Split('<')[0];
+            else
+            {
+                if (PandoraBoxMaster.CurrentGuildPlayer is null)
+                {
+                    nameText.text =
+                        $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
+                }
+                else
+                {
+                    if (enemyGuildPlayer.Guild == PandoraBoxMaster.CurrentGuildPlayer.Guild)
+                        nameText.text =
+                            $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
+                    else
+                        nameText.text =
+                            $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {ArenaInfo.AvatarName.Split('<')[0]}";
+                }
+            }
+
             scoreText.text = ArenaInfo.Score.ToString();
-            cpText.text = GetCP(ArenaInfo);
+            FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
+
+
+            playerBanner.SetActive(enemyPan.ArenaBanner != 0);
+            if (enemyPan.ArenaBanner != 0)
+            {
+                playerBanner.transform.Find("Bg").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
+                playerBanner.transform.Find("Bg/Bg_add").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
+            }
+
+            int he, me;
+            me = CPHelper.GetCPV2(
+                States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
+                Game.Game.instance.TableSheets.CostumeStatSheet);
+            he = int.Parse(GetCP(ArenaInfo));
+
+            if (he > me + 10000)
+                cpText.text = "<color=red>" + GetCP(ArenaInfo) + "</color>";
+            else if (he <= me + 10000 && he > me)
+                cpText.text = "<color=#FF4900>" + GetCP(ArenaInfo) + "</color>";
+            else if (he <= me && he > me - 10000)
+                cpText.text = "<color=#4CA94C>" + GetCP(ArenaInfo) + "</color>";
+            else
+                cpText.text = "<color=green>" + GetCP(ArenaInfo) + "</color>";
+
+            gainPointText.gameObject.SetActive(!_isCurrentUser);
+
+            string tempTxt =
+                $"(<color=green>{ArenaInfo.ArenaRecord.Win}</color>/<color=red>{ArenaInfo.ArenaRecord.Lose}</color>)";
+            if (ArenaInfo.DailyChallengeCount > 0)
+                tempTxt += $" - (<color=green>{ArenaInfo.DailyChallengeCount}</color>)";
+            else
+                tempTxt += $" - (<color=red>{ArenaInfo.DailyChallengeCount}</color>)";
+            extraInfoText.text = tempTxt;
+
+            me = currentAvatarArenaInfo is null ? 0 : currentAvatarArenaInfo.Score;
+            he = ArenaInfo.Score;
+
+            StartCoroutine(UpdateGainText(me, he));
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            //nameText.text = ArenaInfo.AvatarName;
+            //scoreText.text = ArenaInfo.Score.ToString();
+            //cpText.text = GetCP(ArenaInfo);
 
             challengeCountTextContainer.SetActive(_isCurrentUser);
             challengeButton.gameObject.SetActive(!_isCurrentUser);
@@ -220,8 +518,98 @@ namespace Nekoyume.UI.Scroller
                 challengeButton.SetConditionalState(_viewModel.currentAvatarCanBattle);
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                StartCoroutine(GetEnemyState());
+            }
+
+            winRateText.gameObject.SetActive(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             characterView.Show();
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        IEnumerator UpdateGainText(int myScore, int hisScore)
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(0.2f);
+                int sum = 0;
+                for (int i = 0; i < PandoraBoxMaster.ArenaTicketsToUse; i++)
+                {
+                    int prevoiusPoints = 0; //prevoius accumilated points
+                    for (int j = 0; j < i; j++)
+                    {
+                        prevoiusPoints += AccumulatedPoints(myScore + (prevoiusPoints), hisScore);
+                    }
+
+                    sum += AccumulatedPoints(myScore + (prevoiusPoints), hisScore);
+                }
+
+                if (sum / (PandoraBoxMaster.ArenaTicketsToUse * 20) >= 1)
+                    gainPointText.text = "<color=green>+" + sum + "</color>";
+                else
+                    gainPointText.text = "<color=red>+" + sum + "</color>";
+            }
+        }
+
+        int AccumulatedPoints(int me, int he)
+        {
+            if (he > me + 500)
+            {
+                return 60;
+            }
+            else if (he > me + 400 && he <= me + 500)
+            {
+                return 45;
+            }
+            else if (he > me + 300 && he <= me + 400)
+            {
+                return 35;
+            }
+            else if (he > me + 200 && he <= me + 300)
+            {
+                return 25;
+            }
+            else if (he > me + 100 && he <= me + 200)
+            {
+                return 22;
+            }
+            else if (he > me && he <= me + 100)
+            {
+                return 20;
+            }
+            else if (he <= me && he > me - 100)
+            {
+                return 15;
+            }
+            else if (he <= me - 100 && he > me - 200)
+            {
+                return 10;
+            }
+            else if (he <= me - 200 && he > me - 300)
+            {
+                return 8;
+            }
+            else if (he <= me - 300 && he > me - 400)
+            {
+                return 4;
+            }
+            else if (he <= me - 400 && he > me - 500)
+            {
+                return 2;
+            }
+            else if (he <= me - 500)
+            {
+                return 1;
+            }
+            else
+                return 0;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateRank(int rank)
         {

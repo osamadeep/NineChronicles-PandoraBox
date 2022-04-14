@@ -24,8 +24,8 @@ namespace Nekoyume
         private readonly ReactiveProperty<ItemSubTypeFilter> _selectedSubTypeFilter =
             new ReactiveProperty<ItemSubTypeFilter>(ItemSubTypeFilter.All);
 
-        private readonly ReactiveProperty<ShopSortFilter> _selectedSortFilter =
-            new ReactiveProperty<ShopSortFilter>(ShopSortFilter.Class);
+        private readonly ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter =
+            new ReactiveProperty<Nekoyume.EnumType.ShopSortFilter>(Nekoyume.EnumType.ShopSortFilter.Class);
 
         public void ClearSelectedItem()
         {
@@ -62,11 +62,11 @@ namespace Nekoyume
                 {
                     try
                     {
-                        return (ShopSortFilter)index;
+                        return (Nekoyume.EnumType.ShopSortFilter)index;
                     }
                     catch
                     {
-                        return ShopSortFilter.Class;
+                        return Nekoyume.EnumType.ShopSortFilter.Class;
                     }
                 })
                 .Subscribe(filter => _selectedSortFilter.Value = filter).AddTo(gameObject);
@@ -108,7 +108,7 @@ namespace Nekoyume
             itemSubTypeFilter.SetValueWithoutNotify(0);
             sortFilter.SetValueWithoutNotify(0);
             _selectedSubTypeFilter.Value = ItemSubTypeFilter.All;
-            _selectedSortFilter.Value = ShopSortFilter.Class;
+            _selectedSortFilter.Value = Nekoyume.EnumType.ShopSortFilter.Class;
             _selectedItem = null;
         }
 
@@ -118,10 +118,10 @@ namespace Nekoyume
             var models = items[_selectedSubTypeFilter.Value];
             return _selectedSortFilter.Value switch
             {
-                ShopSortFilter.CP => models.OrderByDescending(x => x.OrderDigest.CombatPoint)
+                Nekoyume.EnumType.ShopSortFilter.CP => models.OrderByDescending(x => x.OrderDigest.CombatPoint)
                     .ToList(),
-                ShopSortFilter.Price => models.OrderByDescending(x => x.OrderDigest.Price).ToList(),
-                ShopSortFilter.Class => models.OrderByDescending(x => x.Grade)
+                Nekoyume.EnumType.ShopSortFilter.Price => models.OrderByDescending(x => x.OrderDigest.Price).ToList(),
+                Nekoyume.EnumType.ShopSortFilter.Class => models.OrderByDescending(x => x.Grade)
                     .ThenByDescending(x => x.ItemBase.ItemType).ToList(),
                 _ => throw new ArgumentOutOfRangeException()
             };
