@@ -17,12 +17,15 @@ using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
 using UnityEngine.UI;
+using StateExtensions = Nekoyume.Model.State.StateExtensions;
 
 namespace Nekoyume.UI
 {
     using Cysharp.Threading.Tasks;
+    using Libplanet;
     using Libplanet.Blocks;
     using Nekoyume.Helper;
+    using Nekoyume.UI.Model;
     using Nekoyume.UI.Scroller;
     using PandoraBox;
     using System.Collections.Immutable;
@@ -49,6 +52,7 @@ namespace Nekoyume.UI
         [SerializeField] private Button randomButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
+        private ArenaInfoList _arenaInfoList = new ArenaInfoList();
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -582,10 +586,11 @@ namespace Nekoyume.UI
             ArenaInfo arenaInfoTickets = null;
             if (currentAddress != null)
             {
-                var avatarAddress = currentAddress.Value;
+                //var avatarAddress = currentAddress.Value;
                 if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
                 {
-                    var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
+                    var infoAddress =
+                        States.Instance.WeeklyArenaState.address.Derive(currentAddress.Value.ToByteArray());
                     var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
                     if (rawInfo is Dictionary dictionary)
                     {
@@ -604,71 +609,54 @@ namespace Nekoyume.UI
                 return;
             }
 
-            Debug.LogError("1");
             OneLineSystem.Push(MailType.System,
                 "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...",
                 NotificationCell.NotificationType.Information);
+
             randomButton.interactable = false;
             randomButton.transform.GetChild(0).gameObject.SetActive(true);
             PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
 
+
             BlockHash? _cachedBlockHash = null;
 
             WeeklyArenaState weeklyArenaState = null;
-            if (weeklyArenaState is null)
+            var agent = Game.Game.instance.Agent;
+            if (!_cachedBlockHash.Equals(agent.BlockTipHash))
             {
-                var agent = Game.Game.instance.Agent;
-                if (!_cachedBlockHash.Equals(agent.BlockTipHash))
+                _cachedBlockHash = agent.BlockTipHash;
+                await UniTask.Run(async () =>
                 {
-                    _cachedBlockHash = agent.BlockTipHash;
-                    await UniTask.Run(async () =>
-                    {
-                        var gameConfigState = States.Instance.GameConfigState;
-                        var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
-                        var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
-                        weeklyArenaState =
-                            new WeeklyArenaState(
-                                (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
-                        States.Instance.SetWeeklyArenaState(weeklyArenaState);
-                        await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
-                    });
-                }
-            }
-            else
-            {
-                await UniTask.Run(async () => { await UpdateWeeklyCache(weeklyArenaState); });
+                    var gameConfigState = States.Instance.GameConfigState;
+                    var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
+                    var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
+                    weeklyArenaState =
+                        new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
+                    States.Instance.SetWeeklyArenaState(weeklyArenaState);
+                    await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
+                });
             }
 
-            Debug.LogError("2");
-            weeklyArenaState = States.Instance.WeeklyArenaState;
+            //var weeklyArenaState = States.Instance.WeeklyArenaState;
             if (weeklyArenaState is null)
-            {
                 return;
-            }
 
-            Debug.LogError("2.1");
-            if (!currentAddress.HasValue)
-            {
+            var avatarAddress = States.Instance.CurrentAvatarState?.address;
+            if (!avatarAddress.HasValue)
                 return;
-            }
 
-            Debug.LogError("2.2");
             if (!_weeklyCachedInfo.Any())
             {
                 //UpdateBoard();
                 return;
             }
 
-
-            Debug.LogError("3");
             ArenaInfo arenaInfo = _weeklyCachedInfo[0].arenaInfo;
-            Debug.LogError("3.1");
             if (!arenaInfo.Active)
             {
                 arenaInfo.Activate();
             }
 
-            Debug.LogError("3.2");
             //Debug.LogError(arenaInfo.AvatarName + " " + arenaInfo.CombatPoint);
 
             //find myself
@@ -682,7 +670,6 @@ namespace Nekoyume.UI
 
             //find suitable enemy
             var selectedEnemyArenaInfo = _weeklyCachedInfo[0];
-            Debug.LogError("4");
             int tryLowerCP = 0; //try to find lower rank and lower cp, after this pass value we search for anyone!
             while
                 (tryLowerCP++ <
@@ -706,8 +693,6 @@ namespace Nekoyume.UI
                     break;
                 }
             }
-
-            Debug.LogError("5");
 
             //final attack
             //Widget.Find<ArenaBattleLoadingScreen>().Show(new ArenaInfo(selectedEnemyArenaInfo.arenaInfo)); <-- for visual simulate
@@ -739,16 +724,60 @@ namespace Nekoyume.UI
 
         private async Task UpdateWeeklyCache(WeeklyArenaState state)
         {
+            // For backward compatibility, create list based on previous week.
+            if (!_arenaInfoList.Locked)
+            {
+                var prevWeekAddress = ArenaHelper.GetPrevWeekAddress();
+                var rawWeekly = await Game.Game.instance.Agent.GetStateAsync(prevWeekAddress);
+                var prevWeekly = new WeeklyArenaState(rawWeekly);
+                var copiedState = new WeeklyArenaState(state.address);
+                copiedState.Update(prevWeekly, state.ResetIndex);
+                _arenaInfoList.Update(copiedState, true);
+            }
+
+            var rawList =
+                await Game.Game.instance.Agent.GetStateAsync(
+                    state.address.Derive("address_list"));
+            if (rawList is List list)
+            {
+                List<Address> avatarAddressList = list.ToList(Nekoyume.Model.State.StateExtensions.ToAddress);
+                List<Address> arenaInfoAddressList = new List<Address>();
+                foreach (var avatarAddress in avatarAddressList)
+                {
+                    var arenaInfoAddress = state.address.Derive(avatarAddress.ToByteArray());
+                    if (!arenaInfoAddressList.Contains(arenaInfoAddress))
+                    {
+                        arenaInfoAddressList.Add(arenaInfoAddress);
+                    }
+                }
+
+                Dictionary<Address, IValue> result =
+                    await Game.Game.instance.Agent.GetStateBulk(arenaInfoAddressList);
+                var infoList = new List<ArenaInfo>();
+                foreach (var iValue in result.Values)
+                {
+                    if (iValue is Dictionary dictionary)
+                    {
+                        var info = new ArenaInfo(dictionary);
+                        infoList.Add(info);
+                    }
+                }
+
+                _arenaInfoList.Update(infoList);
+            }
+
+
             int upper = 10;
             int lower = 10;
 
             var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-            var infos = state.GetArenaInfos(upper, lower);
+
+            var infos = _arenaInfoList.GetArenaInfos(currentAvatarAddress, upper, lower);
             // Player does not play prev & this week arena.
             if (!infos.Any() && state.OrderedArenaInfos.Any())
             {
                 var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                infos = state.GetArenaInfos(20, 0);
+                infos = state.GetArenaInfos(30, 0);
             }
 
             infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
@@ -770,6 +799,7 @@ namespace Nekoyume.UI
                     var arenaInfo = tuple.arenaInfo;
 #pragma warning disable 618
                     arenaInfo.Level = avatarState.level;
+                    arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
                     arenaInfo.CombatPoint = avatarState.GetCP();
 #pragma warning restore 618
                     return tuple;

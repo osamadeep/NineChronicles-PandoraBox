@@ -116,20 +116,6 @@ namespace Nekoyume.UI.Module
                 {
                     IsLocked = false;
                 }
-
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
-                if (transform.Find("LevelText"))
-                {
-                    transform.Find("LevelText").gameObject.SetActive(true);
-                    if (equipmentRow.UnlockStage > clearedStage)
-                        transform.Find("LevelText").GetComponent<TextMeshProUGUI>().text =
-                            $"<color=red>{equipmentRow.UnlockStage}</color>";
-                    else
-                        transform.Find("LevelText").GetComponent<TextMeshProUGUI>().text =
-                            $"<color=green>{equipmentRow.UnlockStage}</color>";
-                }
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else if (recipeRow is ConsumableItemRecipeSheet.Row consumableRow)
             {
@@ -138,13 +124,6 @@ namespace Nekoyume.UI.Module
                 equipmentView.Hide();
                 consumableView.Show(viewData, resultItem);
                 IsLocked = false;
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
-                if (transform.Find("LevelText"))
-                {
-                    transform.Find("LevelText").gameObject.SetActive(false);
-                }
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else
             {

@@ -44,6 +44,10 @@ namespace Nekoyume.UI
             public TextMeshProUGUI PercentageText;
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        bool CanCraft = false;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private GameObject toggleParent = null;
         [SerializeField] private List<Toggle> categoryToggles = null;
         [SerializeField] private RecipeCell recipeCell = null;
@@ -243,6 +247,15 @@ namespace Nekoyume.UI
                     else
                     {
                         var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
+
+                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                        var currentAvatarLevel =
+                            States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
+                                out var clearedStage);
+                        //Debug.LogError(currentAvatarLevel + "  " + level + " " + clearedStage);
+                        CanCraft = clearedStage >= level;
+                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                         levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
                         var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= level;
                         levelText.color = hasEnoughLevel
@@ -368,6 +381,15 @@ namespace Nekoyume.UI
 
         public void CombineCurrentRecipe()
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!CanCraft)
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
+                    NotificationCell.NotificationType.Alert);
+                return;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var loadingScreen = Widget.Find<CombinationLoadingScreen>();
             if (loadingScreen.isActiveAndEnabled)
             {

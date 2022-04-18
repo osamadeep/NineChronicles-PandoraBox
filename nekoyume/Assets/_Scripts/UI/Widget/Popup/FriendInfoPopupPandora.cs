@@ -34,11 +34,15 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
         private GameObject paidMember = null;
 
-        [SerializeField] private Button copyButton = null;
+        [SerializeField] private AvatarStats currentAvatarStats = null;
         [SerializeField] private TextMeshProUGUI rateText = null;
+        [SerializeField] private Button multipleSimulateButton = null;
+        [SerializeField] private Button soloSimulateButton = null;
         [SerializeField] private Button NemesisButton = null;
         [SerializeField] private Button ResetNemesisButton = null;
-        [SerializeField] private AvatarStats currentAvatarStats = null;
+
+        [SerializeField] private Button copyButton = null;
+        //AvatarState tempAvatarState;
 
         //for simulate
         [HideInInspector] public ArenaInfo enemyArenaInfo = null;
@@ -78,6 +82,8 @@ namespace Nekoyume.UI
             equipmentSlots.gameObject.SetActive(true);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            multipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
+            soloSimulateButton.OnClickAsObservable().Subscribe(_ => SoloSimulate()).AddTo(gameObject);
             copyButton.OnClickAsObservable().Subscribe(_ => CopyPlayerInfo()).AddTo(gameObject);
             NemesisButton.OnClickAsObservable().Subscribe(_ => SetNemesis()).AddTo(gameObject);
             ResetNemesisButton.OnClickAsObservable().Subscribe(_ => ResetAllNemesis()).AddTo(gameObject);
@@ -100,22 +106,19 @@ namespace Nekoyume.UI
                 , NotificationCell.NotificationType.Information);
         }
 
-
-        AvatarState tempAvatarState;
-
         void CopyPlayerInfo()
         {
             string playerInfo =
                 "```prolog\n" +
-                "Avatar Name      : " + tempAvatarState.NameWithHash + "\n" +
-                "Avatar Address   : " + tempAvatarState.address + "\n" +
-                "Account Address  : " + tempAvatarState.agentAddress + "\n" +
+                "Avatar Name      : " + avatarState.NameWithHash + "\n" +
+                "Avatar Address   : " + avatarState.address + "\n" +
+                "Account Address  : " + avatarState.agentAddress + "\n" +
                 "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
                 "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString() + "\n" +
                 "```";
             ClipboardHelper.CopyToClipboard(playerInfo);
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" +
-                                                tempAvatarState.NameWithHash
+                                                avatarState.NameWithHash
                                                 + "</color>) Info copy to Clipboard Successfully!",
                 NotificationCell.NotificationType.Information);
         }
@@ -124,7 +127,7 @@ namespace Nekoyume.UI
         public void SetNemesis()
         {
             TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString()))
+            if (PandoraBoxMaster.ArenaFavTargets.Contains(avatarState.address.ToString()))
             {
                 for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
                 {
@@ -133,14 +136,14 @@ namespace Nekoyume.UI
                     //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                PandoraBoxMaster.ArenaFavTargets.Remove(tempAvatarState.address.ToString());
+                PandoraBoxMaster.ArenaFavTargets.Remove(avatarState.address.ToString());
                 for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
                 {
                     string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                     PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + avatarState.NameWithHash
                     + " removed from your nemesis list!", NotificationCell.NotificationType.Information);
             }
             else
@@ -155,9 +158,9 @@ namespace Nekoyume.UI
                         , NotificationCell.NotificationType.Information);
                 else
                 {
-                    PandoraBoxMaster.ArenaFavTargets.Add(tempAvatarState.address.ToString());
+                    PandoraBoxMaster.ArenaFavTargets.Add(avatarState.address.ToString());
                     OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: " + tempAvatarState.NameWithHash +
+                        "<color=green>Pandora Box</color>: " + avatarState.NameWithHash +
                         " added to your nemesis list!"
                         , NotificationCell.NotificationType.Information);
                     for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
@@ -169,7 +172,7 @@ namespace Nekoyume.UI
                 }
             }
 
-            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(tempAvatarState.address.ToString())
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(avatarState.address.ToString())
                 ? "Remove Nemesis"
                 : "Set Nemesis";
         }
@@ -182,7 +185,9 @@ namespace Nekoyume.UI
             currentAvatarArenaInfo = currentAvatarAI;
             avatarState = avatarStt;
 
-            rateText.text = "Win Rate : .?.";
+            multipleSimulateButton.interactable = true;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+            rateText.text = "Win Rate :";
 
             InitializePlayer(avatarState);
             UpdateSlotView(avatarState);
@@ -200,7 +205,7 @@ namespace Nekoyume.UI
         }
 
 
-        public void SimulateOnce()
+        public void SoloSimulate()
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
@@ -230,7 +235,7 @@ namespace Nekoyume.UI
             Widget.Find<RankingBoard>().GoToStage(log);
         }
 
-        public void SimulateMultiple()
+        public void MultipleSimulate()
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
@@ -246,11 +251,12 @@ namespace Nekoyume.UI
 
         IEnumerator GetEnemyState()
         {
-            rateText.text = "Win Rate : .?.";
+            multipleSimulateButton.interactable = false;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
+            rateText.text = "Win Rate :";
 
             int totalSimulations = 100;
             int win = 0;
-            //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
             for (int i = 0; i < totalSimulations; i++)
             {
                 System.Random rnd = new System.Random();
@@ -267,19 +273,14 @@ namespace Nekoyume.UI
                 );
                 simulator.SimulatePandora();
                 var log = simulator.Log;
-                //battleLogDebug += "," + log.result.ToString() ;
 
                 if (log.result.ToString().ToUpper() == "WIN")
                     win++;
                 yield return new WaitForSeconds(0.05f);
             }
-            //Debug.LogError(battleLogDebug);
 
             float finalRatio = (float)win / (float)totalSimulations;
             float FinalValue = (int)(finalRatio * 100f);
-
-            //if (finalRatio == 1)
-            //    effect.SetActive(true);
 
             if (finalRatio <= 0.5f)
                 rateText.text = $"Win Rate : <color=red>{FinalValue}</color>%";
@@ -287,16 +288,19 @@ namespace Nekoyume.UI
                 rateText.text = $"Win Rate : <color=#FF4900>{FinalValue}</color>%";
             else
                 rateText.text = $"Win Rate : <color=green>{FinalValue}</color>%";
+
+            multipleSimulateButton.interactable = true;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
 
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-        public override void Show(bool ignoreShowAnimation = false)
-        {
-            var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
-            Show(currentAvatarState, ignoreShowAnimation);
-        }
+        //public override void Show(bool ignoreShowAnimation = false)
+        //{
+        //    var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
+        //    Show(currentAvatarState, ignoreShowAnimation);
+        //}
 
         protected override void OnCompleteOfCloseAnimationInternal()
         {
@@ -305,14 +309,20 @@ namespace Nekoyume.UI
 
         #endregion
 
-        public void Show(AvatarState avatarState, bool ignoreShowAnimation = false)
-        {
-            base.Show(ignoreShowAnimation);
+        //public void Show(AvatarState avatarState, bool ignoreShowAnimation = false)
+        //{
+        //    base.Show(ignoreShowAnimation);
 
-            InitializePlayer(avatarState);
-            UpdateSlotView(avatarState);
-            UpdateStatViews();
-        }
+        //    InitializePlayer(avatarState);
+        //    UpdateSlotView(avatarState);
+        //    UpdateStatViews();
+
+        //    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        //    multipleSimulateButton.interactable = true;
+        //    multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+        //    rateText.text = "Win Rate :";
+        //    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        //}
 
         private void InitializePlayer(AvatarState avatarState)
         {

@@ -15,20 +15,24 @@ namespace Nekoyume.UI
 {
     public class RankingBattleResultPopup : PopupWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextButton NoUpdateButton = null;
+
+        [SerializeField] private TextButton MenuButton = null;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
         private GameObject victoryImageContainer = null;
 
-        [SerializeField]
-        private GameObject defeatImageContainer = null;
+        [SerializeField] private GameObject defeatImageContainer = null;
 
-        [SerializeField]
-        private TextButton submitButton = null;
+        [SerializeField] private TextButton submitButton = null;
 
-        [SerializeField]
-        private TextMeshProUGUI scoreText = null;
+        [SerializeField] private TextMeshProUGUI scoreText = null;
 
-        [SerializeField]
-        private List<SimpleCountableItemView> rewards = null;
+        [SerializeField] private List<SimpleCountableItemView> rewards = null;
 
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, .25f, 10f);
 
@@ -38,6 +42,9 @@ namespace Nekoyume.UI
             CloseWidget = null;
             SubmitWidget = BackToRanking;
             submitButton.OnClick = BackToRanking;
+
+            NoUpdateButton.OnClick = BackToArena;
+            MenuButton.OnClick = BackToMenu;
         }
 
         public void Show(BattleLog log, IReadOnlyList<CountableItem> reward)
@@ -97,7 +104,7 @@ namespace Nekoyume.UI
         }
 
         public void BackToArena()
-        {           
+        {
             Game.Game.instance.Stage.objectPool.ReleaseAll();
             Game.Game.instance.Stage.IsInStage = false;
             ActionCamera.instance.SetPosition(0f, 0f);

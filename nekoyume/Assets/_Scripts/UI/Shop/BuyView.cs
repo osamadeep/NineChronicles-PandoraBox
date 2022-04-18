@@ -29,7 +29,18 @@ namespace Nekoyume
             Multiple,
         }
 
-        [SerializeField] private CartView cartView;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private UnityEngine.UI.Toggle PriceToggle;
+
+        [SerializeField] private TMP_InputField priceValueTxt = null;
+        [SerializeField] private TMP_Dropdown IsLessDrop = null;
+        [SerializeField] private TMP_Dropdown ItemElementType = null;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private CartView cartView;
 
         [SerializeField] private List<ToggleDropdown> toggleDropdowns = new List<ToggleDropdown>();
 
@@ -192,6 +203,12 @@ namespace Nekoyume
 
             Game.Game.instance.Agent.BlockIndexSubject.Subscribe(_ => UpdateView(false))
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PriceToggle.onValueChanged.AddListener(_ => { UpdateView(); });
+            IsLessDrop.onValueChanged.AddListener(_ => { UpdateView(); });
+            ItemElementType.onValueChanged.AddListener(_ => { UpdateView(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         protected override void InitInteractiveUI()
@@ -370,6 +387,17 @@ namespace Nekoyume
             _mode.SetValueAndForceNotify(BuyMode.Single);
 
             ClearSelectedItems();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            ItemElementType.value = 5; //all elements
+            if (PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Time);
+            }
+            else
+            {
+                _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         protected override IEnumerable<ShopItem> GetSortedModels(
@@ -394,6 +422,39 @@ namespace Nekoyume
                 models = models.Where(x => Util.IsUsableItem(x.ItemBase)).ToList();
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PriceToggle.isOn)
+            {
+                switch (IsLessDrop.value)
+                {
+                    case 0:
+                        models = models.Where(x => x.OrderDigest.Price.MajorUnit < int.Parse(priceValueTxt.text))
+                            .ToList();
+                        break;
+                    case 1:
+                        models = models.Where(x => x.OrderDigest.Price.MajorUnit == int.Parse(priceValueTxt.text))
+                            .ToList();
+                        break;
+                    case 2:
+                        models = models.Where(x => x.OrderDigest.Price.MajorUnit > int.Parse(priceValueTxt.text))
+                            .ToList();
+                        break;
+                }
+            }
+
+            if (ItemElementType.value != 5)
+            {
+                models = models.Where(x =>
+                    x.ItemBase.ElementalType == (Nekoyume.Model.Elemental.ElementalType)ItemElementType.value).ToList();
+            }
+
+            //SharedModel.isPrice = PriceToggle.isOn;
+            //SharedModel.priceValue = priceValueTxt.text == "" ? 0 : int.Parse(priceValueTxt.text);
+            //SharedModel.isLess = IsLessDrop.value == 0 ? true : false;
+            //SharedModel.elementaltype = ItemElementType.value;
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             return _selectedSortFilter.Value switch
             {
                 Nekoyume.EnumType.ShopSortFilter.CP => _isAscending.Value
@@ -409,6 +470,12 @@ namespace Nekoyume
                     : models.OrderByDescending(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
                         .ToList(),
+                Nekoyume.EnumType.ShopSortFilter.Time => _isAscending.Value
+                    ? models.OrderBy(x => x.OrderDigest.StartedBlockIndex).ToList()
+                    : models.OrderByDescending(x => x.OrderDigest.StartedBlockIndex).ToList(),
+                Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
+                    ? models.OrderBy(x => x.OrderDigest.Level).ToList()
+                    : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -482,5 +549,12 @@ namespace Nekoyume
 
             _selectedItemIds.Value = containItemIds;
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void OnPriceToggle()
+        {
+            OnSearch();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

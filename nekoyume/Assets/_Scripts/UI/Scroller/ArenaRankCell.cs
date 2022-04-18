@@ -102,13 +102,12 @@ namespace Nekoyume.UI.Scroller
             characterView.OnClickCharacterIcon
                 .Subscribe(async avatarState =>
                 {
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    Widget.Find<RankingBoard>().avatarLoadingImage.SetActive(true);
+                    Widget.Find<FriendInfoPopupPandora>().Close(true);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     if (avatarState is null)
                     {
-                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                        Widget.Find<RankingBoard>().avatarLoadingImage.SetActive(true);
-                        Widget.Find<FriendInfoPopupPandora>().Close(true);
-                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
                         var (exist, state) =
                             await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
                         avatarState = exist ? state : null;

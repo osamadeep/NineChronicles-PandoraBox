@@ -12,13 +12,32 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Model.Mail;
+    using Nekoyume.PandoraBox;
+    using Nekoyume.State;
+    using Nekoyume.UI.Scroller;
     using System.Collections;
+    using TMPro;
     using UniRx;
     using UnityEngine.UI;
 
     public abstract class ItemTooltip : NewVerticalTooltipWidget
     {
-        [SerializeField] protected ItemTooltipDetail detail;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI OwnerName;
+
+        public TextMeshProUGUI MarketPriceText;
+        [SerializeField] private RectTransform DiscordHolder;
+        ShopItem currentShopItem;
+        Nekoyume.Model.State.AvatarState currentSellerAvatar;
+        PandoraPlayer currentSeller;
+        bool isShopBuy;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        protected ItemTooltipDetail detail;
 
         [SerializeField] protected ConditionalButton submitButton;
 
@@ -46,6 +65,277 @@ namespace Nekoyume.UI
         protected bool _isClickedButtonArea;
 
         protected override PivotPresetType TargetPivotPresetType => PivotPresetType.TopRight;
+
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        protected override void Update()
+        {
+            base.Update();
+
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                if (isShopBuy)
+                {
+                    if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    {
+                        if (currentSeller.IsIgnoringMessage)
+                            OneLineSystem.Push(MailType.System,
+                                "<color=green>Pandora Box</color>: Owner Prefer not to contacted!",
+                                NotificationCell.NotificationType.Alert);
+                        else
+                            Application.OpenURL($"https://discordapp.com/users/{currentSeller.DiscordID}");
+                    }
+                    else
+                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player Not Premium!",
+                            NotificationCell.NotificationType.Alert);
+                }
+                else
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This item Belong to you!",
+                        NotificationCell.NotificationType.Alert);
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (isShopBuy)
+                {
+                    string itemString = "===== Pandora Item Information =====";
+
+                    if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                    {
+                        if (currentSeller.IsProtected)
+                        {
+                            itemString += "\nOwner Name    : PRIVATE";
+                            itemString += "\nOwner Address : PRIVATE";
+                            itemString += "\nItem Name     : " + currentShopItem.ItemBase.GetLocalizedName(false);
+                            try
+                            {
+                                itemString += "\nItem Stats    : " + GetItemMainStats();
+                            }
+                            catch
+                            {
+                            }
+
+                            try
+                            {
+                                itemString += "\nItem Skills   : " + GetItemSkills();
+                            }
+                            catch
+                            {
+                            }
+
+                            itemString += "\nItem Shop ID  : " + currentShopItem.OrderDigest.OrderId;
+                            itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
+                            itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
+                            itemString += "\nItem Name     : " + currentShopItem.ItemBase.GetLocalizedName(false);
+                            try
+                            {
+                                itemString += "\nItem Stats    : " + GetItemMainStats();
+                            }
+                            catch
+                            {
+                            }
+
+                            try
+                            {
+                                itemString += "\nItem Skills   : " + GetItemSkills();
+                            }
+                            catch
+                            {
+                            }
+
+                            itemString += "\nItem Shop ID  : " + currentShopItem.OrderDigest.OrderId;
+                            itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
+                        }
+                    }
+                    else
+                    {
+                        itemString += "\nOwner Name    : " + currentSellerAvatar.NameWithHash;
+                        itemString += "\nOwner Address : " + currentSellerAvatar.agentAddress;
+                        itemString += "\nItem Name     : " + currentShopItem.ItemBase.GetLocalizedName(false);
+                        try
+                        {
+                            itemString += "\nItem Stats    : " + GetItemMainStats();
+                        }
+                        catch
+                        {
+                        }
+
+                        try
+                        {
+                            itemString += "\nItem Skills   : " + GetItemSkills();
+                        }
+                        catch
+                        {
+                        }
+
+                        itemString += "\nItem Shop ID  : " + currentShopItem.OrderDigest.OrderId;
+                        itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
+                    }
+
+                    ClipboardHelper.CopyToClipboard(itemString);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Item Info copy to Clipboard Successfully!",
+                        NotificationCell.NotificationType.Information);
+                }
+                else
+                {
+                    string itemString = "===== Pandora Item Information =====";
+                    PandoraPlayer buyer =
+                        PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
+                    itemString += "\nOwner Name    : " + States.Instance.CurrentAvatarState.NameWithHash;
+                    itemString += "\nOwner Address : " + buyer.Address;
+                    itemString += "\nItem Name     : " + currentShopItem.ItemBase.GetLocalizedName(false);
+                    try
+                    {
+                        itemString += "\nItem Stats    : " + GetItemMainStats();
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        itemString += "\nItem Skills   : " + GetItemSkills();
+                    }
+                    catch
+                    {
+                    }
+
+                    itemString += "\nTime (Utc)    : " + DateTime.UtcNow;
+
+                    ClipboardHelper.CopyToClipboard(itemString);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Item Info copy to Clipboard Successfully!",
+                        NotificationCell.NotificationType.Information);
+                }
+            }
+        }
+
+        void PrepareDiscordBackground(RectTransform target)
+        {
+            //panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
+            panel.Find("ItemMoreOption").gameObject.SetActive(false);
+            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
+            //panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer/TradableText").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer/LvText").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(false);
+            MarketPriceText.gameObject.SetActive(true);
+            MarketPriceText.text = PandoraBoxMaster.MarketPriceValue;
+            panel.GetComponent<Image>().enabled = false;
+            panel.sizeDelta = new Vector2(380, 415);
+            if (panel.anchoredPosition.y < -180) //fix when block # cover the helper tool 
+                panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -180);
+            UpdateAnchoredPosition(target);
+            DiscordHolder.sizeDelta = panel.sizeDelta;
+            DiscordHolder.position = panel.position;
+            DiscordHolder.gameObject.SetActive(true);
+        }
+
+        void ResetDiscordBackground(RectTransform target)
+        {
+            panel.GetComponent<Image>().enabled = true;
+            panel.Find("ItemMoreOption").gameObject.SetActive(true);
+            //panel.Find("ViewGroup_Item/Content/OptionSpacer1").gameObject.SetActive(false);
+            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
+            //panel.Find("ViewGroup_Item/Content/OptionSpacer2").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer/TradableText").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer/LvText").gameObject.SetActive(false);
+            MarketPriceText.text = "";
+            panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(true);
+            panel.sizeDelta = new Vector2(380, 600);
+            DiscordHolder.gameObject.SetActive(false);
+            UpdateAnchoredPosition(target);
+        }
+
+        string GetItemMainStats()
+        {
+            //ToDO: Not Optimize way to get the stats
+            Transform content = panel
+                .Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/OptionArea").transform;
+            string tmp = "";
+            StatView statView;
+
+            if (content.Find("StatView_01").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_01").GetComponent<StatView>();
+                tmp += statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+
+            if (content.Find("StatView_02").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_02").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+
+            if (content.Find("StatView_03").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_03").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+
+            if (content.Find("StatView_04").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_04").GetComponent<StatView>();
+                tmp += " || " + statView.statTypeText.text + ": " + statView.valueText.text;
+            }
+
+            return tmp;
+        }
+
+        string GetItemSkills()
+        {
+            //ToDO: Not Optimize way to get the stats
+            Transform content = panel
+                .Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/OptionArea").transform;
+            string tmp = "";
+            Module.SkillView skillView;
+            bool isSkill = false;
+
+            if (content.Find("SkillView").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView").GetComponent<Module.SkillView>();
+                tmp += skillView.nameText.text + ":( " + skillView.powerText.text + ", " + skillView.chanceText.text +
+                       " )";
+                isSkill = true;
+            }
+
+            if (content.Find("SkillView (1)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (1)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " +
+                       skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+
+            if (content.Find("SkillView (2)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (2)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " +
+                       skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+
+            if (content.Find("SkillView (3)").gameObject.activeInHierarchy)
+            {
+                skillView = content.Find("SkillView (3)").GetComponent<Module.SkillView>();
+                tmp += " || " + skillView.nameText.text + ":( " + skillView.powerText.text + ", " +
+                       skillView.chanceText.text + " )";
+                isSkill = true;
+            }
+
+            if (isSkill)
+                return tmp;
+            else
+                return "No Skill!";
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         protected override void Awake()
         {
@@ -152,6 +442,7 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(submitButton.gameObject));
         }
 
+        //this for sell items, no need to show owner since its me
         public virtual void Show(
             ShopItem item,
             System.Action onRegister,
@@ -180,11 +471,32 @@ namespace Nekoyume.UI
                  item.ItemBase.ItemType == ItemType.Costume));
             _onClose = onClose;
 
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            isShopBuy = false;
+            currentShopItem = item;
+            var order = Util.GetOrder(item.OrderDigest.OrderId);
+            if (OwnerName)
+                OwnerName.text = "";
+
+#if UNITY_EDITOR
+            Debug.LogError(item.OrderDigest.OrderId);
+#endif
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             scrollbar.value = 1f;
             UpdatePosition(target);
             base.Show();
             StartCoroutine(CoUpdate(sell.gameObject));
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBoxMaster.MarketPriceHelper)
+                PrepareDiscordBackground(target);
+            else
+                ResetDiscordBackground(target);
         }
+
 
         public virtual void Show(
             ShopItem item,
@@ -211,11 +523,66 @@ namespace Nekoyume.UI
                  item.ItemBase.ItemType == ItemType.Costume));
             _onClose = onClose;
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            isShopBuy = true;
+            OwnerName.text = "";
+            SetSellerName(item.OrderDigest.OrderId);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             scrollbar.value = 1f;
             UpdatePosition(target);
             base.Show();
             StartCoroutine(CoUpdate(buy.gameObject));
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBoxMaster.MarketPriceHelper)
+                PrepareDiscordBackground(target);
+            else
+                ResetDiscordBackground(target);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public async void SetSellerName(Guid guid)
+        {
+            var order = await Util.GetOrder(guid);
+
+
+            var (exist, avatarState) = await States.TryGetAvatarStateAsync(order.SellerAvatarAddress);
+            if (!exist)
+            {
+                Debug.LogError("NOT EXIST!");
+                OwnerName.gameObject.SetActive(false);
+            }
+            else
+            {
+                currentSellerAvatar = avatarState;
+                currentSeller = PandoraBoxMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
+
+                if (currentSeller.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                {
+                    if (currentSeller.IsProtected)
+                        OwnerName.text = "<size=120%><color=green>PRIVATE!</color>";
+                    else
+                        OwnerName.text = "<size=120%><color=green>[P] </color>" + avatarState.NameWithHash;
+                }
+                else
+                {
+                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                    {
+                        OwnerName.text = "<size=120%>" + avatarState.NameWithHash;
+                    }
+                    else
+                    {
+                        OwnerName.text = "<size=120%><color=green>PREMIUM FEATURE!</color>";
+                    }
+                }
+#if UNITY_EDITOR
+                Debug.LogError(avatarState.agentAddress + "  |  " + order.OrderId);
+#endif
+                OwnerName.gameObject.SetActive(true);
+            }
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         public virtual void Show(
             EnhancementInventoryItem item,
