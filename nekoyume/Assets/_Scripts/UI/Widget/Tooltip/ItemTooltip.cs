@@ -30,6 +30,7 @@ namespace Nekoyume.UI
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
         ShopItem currentShopItem;
+        ItemBase currentItemBase; //for copy item info
         Nekoyume.Model.State.AvatarState currentSellerAvatar;
         PandoraPlayer currentSeller;
         bool isShopBuy;
@@ -188,7 +189,7 @@ namespace Nekoyume.UI
                         PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString());
                     itemString += "\nOwner Name    : " + States.Instance.CurrentAvatarState.NameWithHash;
                     itemString += "\nOwner Address : " + buyer.Address;
-                    itemString += "\nItem Name     : " + currentShopItem.ItemBase.GetLocalizedName(false);
+                    itemString += "\nItem Name     : " + currentItemBase.GetLocalizedName(false);
                     try
                     {
                         itemString += "\nItem Stats    : " + GetItemMainStats();
@@ -215,41 +216,30 @@ namespace Nekoyume.UI
             }
         }
 
-        void PrepareDiscordBackground(RectTransform target)
+        void EnableShopTool()
         {
-            //panel.Find("ViewGroup/Content/OptionSpacer1").gameObject.SetActive(false);
-            panel.Find("ItemMoreOption").gameObject.SetActive(false);
-            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
-            //panel.Find("ViewGroup/Content/OptionSpacer2").gameObject.SetActive(false);
-            panel.Find("ViewGroup_Item/Group/Footer/TradableText").gameObject.SetActive(false);
-            panel.Find("ViewGroup_Item/Group/Footer/LvText").gameObject.SetActive(false);
-            panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(false);
-            MarketPriceText.gameObject.SetActive(true);
             MarketPriceText.text = PandoraBoxMaster.MarketPriceValue;
+            MarketPriceText.gameObject.SetActive(true);
             panel.GetComponent<Image>().enabled = false;
+            panel.Find("ItemMoreOption").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(false);
+            panel.Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/ItemDescriptionText")
+                .GetComponent<TextMeshProUGUI>().text = "";
             panel.sizeDelta = new Vector2(380, 415);
             if (panel.anchoredPosition.y < -180) //fix when block # cover the helper tool 
                 panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -180);
-            UpdateAnchoredPosition(target);
-            DiscordHolder.sizeDelta = panel.sizeDelta;
-            DiscordHolder.position = panel.position;
             DiscordHolder.gameObject.SetActive(true);
         }
 
-        void ResetDiscordBackground(RectTransform target)
+        void DisableShopTool()
         {
+            MarketPriceText.gameObject.SetActive(false);
             panel.GetComponent<Image>().enabled = true;
             panel.Find("ItemMoreOption").gameObject.SetActive(true);
-            //panel.Find("ViewGroup_Item/Content/OptionSpacer1").gameObject.SetActive(false);
-            //panel.Find("ViewGroup/Content/ScrollArea").gameObject.SetActive(false);
-            //panel.Find("ViewGroup_Item/Content/OptionSpacer2").gameObject.SetActive(false);
-            panel.Find("ViewGroup_Item/Group/Footer/TradableText").gameObject.SetActive(false);
-            panel.Find("ViewGroup_Item/Group/Footer/LvText").gameObject.SetActive(false);
-            MarketPriceText.text = "";
             panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(true);
-            panel.sizeDelta = new Vector2(380, 600);
+            //panel.Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/ItemDescriptionText").GetComponent<TextMeshProUGUI>().text ="";
+            //panel.sizeDelta = new Vector2(380, 600);
             DiscordHolder.gameObject.SetActive(false);
-            UpdateAnchoredPosition(target);
         }
 
         string GetItemMainStats()
@@ -410,6 +400,7 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(submitButton.gameObject));
         }
 
+        //when it come from avatar profile
         public virtual void Show(
             InventoryItem item,
             string submitText,
@@ -436,10 +427,21 @@ namespace Nekoyume.UI
             _onClose = onClose;
             _onBlocked = onBlocked;
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            isShopBuy = false;
+            OwnerName.text = "";
+            currentItemBase = item.ItemBase;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             scrollbar.value = 1f;
             UpdatePosition(target);
             base.Show();
             StartCoroutine(CoUpdate(submitButton.gameObject));
+            //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            if (PandoraBoxMaster.MarketPriceHelper)
+                EnableShopTool();
+            else
+                DisableShopTool();
         }
 
         //this for sell items, no need to show owner since its me
@@ -492,9 +494,9 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(sell.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (PandoraBoxMaster.MarketPriceHelper)
-                PrepareDiscordBackground(target);
+                EnableShopTool();
             else
-                ResetDiscordBackground(target);
+                DisableShopTool();
         }
 
 
@@ -535,9 +537,9 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(buy.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (PandoraBoxMaster.MarketPriceHelper)
-                PrepareDiscordBackground(target);
+                EnableShopTool();
             else
-                ResetDiscordBackground(target);
+                DisableShopTool();
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||

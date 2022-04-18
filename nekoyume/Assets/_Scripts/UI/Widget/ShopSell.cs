@@ -137,6 +137,10 @@ namespace Nekoyume.UI
 
         private void ShowSellTooltip(ShopItem model, RectTransform target)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);
             tooltip.Show(model,
                 () => ShowUpdateSellPopup(model),
