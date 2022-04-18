@@ -257,6 +257,10 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<CombinationSlotsPopup>());
             yield return null;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<ChronoSlotsPopup>());
+            yield return null;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<RankPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<ChatPopup>());

@@ -829,6 +829,11 @@ namespace Nekoyume.UI
             Find<HeaderMenuStatic>().Show();
         }
 
+        public void ShowChronoTool()
+        {
+            Find<ChronoSlotsPopup>().Show();
+        }
+
         public void FastCharacterSwitch()
         {
             if (PandoraUtil.IsBusy())
