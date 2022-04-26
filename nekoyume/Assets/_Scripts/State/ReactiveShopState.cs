@@ -61,8 +61,11 @@ namespace Nekoyume.State
         private static ConcurrentDictionary<Guid, ItemBase> CachedShopItems { get; } =
             new ConcurrentDictionary<Guid, ItemBase>();
 
+
         private static readonly Dictionary<ItemSubType, List<OrderDigest>> _buyDigest =
             new Dictionary<ItemSubType, List<OrderDigest>>();
+
+        private static List<Guid> _removedOrderIds { get; } = new List<Guid>();
 
         public static OrderDigest GetSellDigest(Guid tradableId,
             long requiredBlockIndex,
@@ -94,6 +97,8 @@ namespace Nekoyume.State
         {
             await UniTask.Run(async () =>
             {
+                _removedOrderIds.Clear();
+
                 foreach (var itemSubType in list)
                 {
                     var digests = await GetBuyOrderDigests(itemSubType);
@@ -120,13 +125,19 @@ namespace Nekoyume.State
 
             _buyDigest[itemSubType] = d;
 
-            var r = new List<OrderDigest>();
+            var buyDigests = new List<OrderDigest>();
             foreach (var pair in _buyDigest)
             {
-                r.AddRange(pair.Value);
+                buyDigests.AddRange(pair.Value);
             }
 
-            BuyDigest.Value = r;
+            var removeList = buyDigests.Where(digest => _removedOrderIds.Contains(digest.OrderId)).ToList();
+            foreach (var orderDigest in removeList)
+            {
+                buyDigests.Remove(orderDigest);
+            }
+
+            BuyDigest.Value = buyDigests;
         }
 
         public static async Task UpdateSellDigests()
@@ -144,6 +155,11 @@ namespace Nekoyume.State
             var item = BuyDigest.Value.FirstOrDefault(x => x.OrderId.Equals(orderId));
             if (item != null)
             {
+                if (!_removedOrderIds.Contains(orderId))
+                {
+                    _removedOrderIds.Add(orderId);
+                }
+
                 BuyDigest.Value.Remove(item);
                 BuyDigest.SetValueAndForceNotify(BuyDigest.Value);
             }

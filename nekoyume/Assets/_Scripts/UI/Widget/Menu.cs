@@ -112,6 +112,10 @@ namespace Nekoyume.UI
                 };
                 buttonList.ForEach(button => button.interactable = stateType == AnimationStateType.Shown);
             }).AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            randomButton.OnClickAsObservable().Subscribe(_ => RandomArenaFight()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
@@ -197,22 +201,15 @@ namespace Nekoyume.UI
                 PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
 
             var currentAddress = States.Instance.CurrentAvatarState?.address;
-            if (currentAddress != null)
+            if (currentAddress.HasValue)
             {
                 ArenaInfo arenaInfo = null;
                 var avatarAddress = currentAddress.Value;
-                if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
+                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
+                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
+                if (rawInfo is Dictionary dictionary)
                 {
-                    var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
-                    var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                    if (rawInfo is Dictionary dictionary)
-                    {
-                        arenaInfo = new ArenaInfo(dictionary);
-                    }
-                }
-                else
-                {
-                    arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    arenaInfo = new ArenaInfo(dictionary);
                 }
 
                 rankingExclamationMark.gameObject.SetActive(
@@ -440,7 +437,22 @@ namespace Nekoyume.UI
             PandoraBoxMaster.SetCurrentPandoraPlayer(
                 PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
             string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
+            PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
+                System.Convert.ToInt32(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium()));
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
+
+            //load favorite items
+            PandoraBoxMaster.FavItems.Clear();
+            for (int i = 0; i < PandoraBoxMaster.FavItemsMaxCount; i++) //fav max count
+            {
+                string key = "_PandoraBox_General_FavItems0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (i > 9)
+                    key = "_PandoraBox_General_FavItems" + i + "_" + States.Instance.CurrentAvatarState.address;
+
+                if (PlayerPrefs.HasKey(key))
+                    PandoraBoxMaster.FavItems.Add(PlayerPrefs.GetString(key));
+            }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -584,22 +596,14 @@ namespace Nekoyume.UI
 
             var currentAddress = States.Instance.CurrentAvatarState?.address;
             ArenaInfo arenaInfoTickets = null;
-            if (currentAddress != null)
+            if (currentAddress.HasValue)
             {
-                //var avatarAddress = currentAddress.Value;
-                if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
+                var avatarAddress2 = currentAddress.Value;
+                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress2.ToByteArray());
+                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
+                if (rawInfo is Dictionary dictionary)
                 {
-                    var infoAddress =
-                        States.Instance.WeeklyArenaState.address.Derive(currentAddress.Value.ToByteArray());
-                    var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                    if (rawInfo is Dictionary dictionary)
-                    {
-                        arenaInfoTickets = new ArenaInfo(dictionary);
-                    }
-                }
-                else
-                {
-                    arenaInfoTickets = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    arenaInfoTickets = new ArenaInfo(dictionary);
                 }
             }
 
@@ -614,6 +618,7 @@ namespace Nekoyume.UI
                 NotificationCell.NotificationType.Information);
 
             randomButton.interactable = false;
+            randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Fighting...";
             randomButton.transform.GetChild(0).gameObject.SetActive(true);
             PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
 

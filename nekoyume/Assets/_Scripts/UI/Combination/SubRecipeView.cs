@@ -249,11 +249,16 @@ namespace Nekoyume.UI
                         var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
 
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                        var currentAvatarLevel =
+                        var unlockStage = equipmentRow.UnlockStage;
+                        var clearedStage =
                             States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
-                                out var clearedStage);
+                                out var stageId)
+                                ? stageId
+                                : 0;
+                        var diff = unlockStage - clearedStage;
+
                         //Debug.LogError(currentAvatarLevel + "  " + level + " " + clearedStage);
-                        CanCraft = clearedStage >= level;
+                        CanCraft = diff <= 0;
                         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                         levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
@@ -446,7 +451,7 @@ namespace Nekoyume.UI
 
             if (States.Instance.CurrentAvatarState.actionPoint < _selectedRecipeInfo.CostAP)
             {
-                errorMessage = L10nManager.Localize("UI_NOT_ENOUGH_AP");
+                errorMessage = L10nManager.Localize("ERROR_ACTION_POINT");
                 return false;
             }
 

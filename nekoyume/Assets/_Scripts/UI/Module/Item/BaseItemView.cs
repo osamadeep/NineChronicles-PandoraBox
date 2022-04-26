@@ -5,6 +5,7 @@ using Nekoyume.Game.Character;
 using Nekoyume.Game.ScriptableObject;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
+using Nekoyume.PandoraBox;
 using Nekoyume.TableData;
 using Nekoyume.UI.Module;
 using TMPro;
@@ -15,7 +16,14 @@ namespace Nekoyume
 {
     public class BaseItemView : MonoBehaviour
     {
-        [SerializeField] private GameObject container;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] public GameObject FeatureObj = null;
+        public GameObject FavoriteObj = null;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private GameObject container;
 
         [SerializeField] private GameObject emptyObject;
 
@@ -131,6 +139,26 @@ namespace Nekoyume
         {
             var row = GetRow(itemBase);
             var add = itemBase is TradableMaterial ? 1 : 0;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            FeatureObj.SetActive(false);
+            FavoriteObj.SetActive(false);
+            if (itemBase is INonFungibleItem nonFungibleItem)
+            {
+                var nonFungibleId = nonFungibleItem.NonFungibleId;
+                //Debug.LogError(nonFungibleId);
+                FeatureObj.SetActive(false);
+                FeatureItem currentFeatureItem =
+                    PandoraBoxMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
+
+                if (!(currentFeatureItem is null) && currentFeatureItem.IsValid())
+                    FeatureObj.SetActive(true);
+
+                //if (nonFungibleId.ToString() == "8208c642-6848-4fba-81b3-494f36178e19" || nonFungibleId.ToString() == "4e8f40e9-00a2-4e0e-89fe-1d686da22702")
+                FavoriteObj.SetActive(PandoraBoxMaster.FavItems.Contains(nonFungibleId.ToString()));
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             return itemViewData.GetItemViewData(row.Grade + add);
         }
     }

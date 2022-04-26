@@ -510,7 +510,7 @@ namespace Nekoyume
             return loading.activeSelf;
         }
 
-        protected override void UpdateView(bool resetPage = true)
+        protected override void UpdateView(bool resetPage = true, int page = 0)
         {
             var expiredItems = _selectedItems.Where(x => x.Expired.Value).ToList();
             foreach (var item in expiredItems)
@@ -529,7 +529,7 @@ namespace Nekoyume
                     throw new ArgumentOutOfRangeException();
             }
 
-            base.UpdateView(resetPage);
+            base.UpdateView(resetPage, page);
         }
 
         private void OnSearch()

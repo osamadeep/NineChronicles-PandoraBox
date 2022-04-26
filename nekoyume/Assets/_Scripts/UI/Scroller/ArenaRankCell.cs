@@ -97,6 +97,8 @@ namespace Nekoyume.UI.Scroller
 
         public IObservable<ArenaRankCell> OnClickChallenge => _onClickChallenge;
 
+        private static bool IsLoadingAvatarState = false;
+
         private void Awake()
         {
             characterView.OnClickCharacterIcon
@@ -106,11 +108,19 @@ namespace Nekoyume.UI.Scroller
                     Widget.Find<RankingBoard>().avatarLoadingImage.SetActive(true);
                     Widget.Find<FriendInfoPopupPandora>().Close(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+                    if (IsLoadingAvatarState)
+                    {
+                        return;
+                    }
+
                     if (avatarState is null)
                     {
+                        IsLoadingAvatarState = true;
                         var (exist, state) =
                             await States.TryGetAvatarStateAsync(ArenaInfo.AvatarAddress);
                         avatarState = exist ? state : null;
+                        IsLoadingAvatarState = false;
                         if (avatarState is null)
                         {
                             return;
@@ -129,6 +139,7 @@ namespace Nekoyume.UI.Scroller
                     BlinkSelected.SetActive(true);
 
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                     //Widget.Find<FriendInfoPopup>().Show(avatarState);
                 })
                 .AddTo(gameObject);
@@ -265,19 +276,28 @@ namespace Nekoyume.UI.Scroller
             var enemyState = Widget.Find<RankingBoard>().avatarStatesPandora
                 .FirstOrDefault(t => t.Value.address == ArenaInfo.AvatarAddress);
 
-            System.Random rnd = new System.Random();
             var simulator = new RankingSimulator(
-                new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                new Cheat.DebugRandom(),
                 States.Instance.CurrentAvatarState,
                 enemyState.Value,
                 new List<Guid>(),
                 Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                Action.RankingBattle.StageId,
-                currentAvatarArenaInfo,
-                ArenaInfo,
-                Game.Game.instance.TableSheets.CostumeStatSheet
+                999999
             );
-            simulator.SimulatePandora();
+
+            //System.Random rnd = new System.Random();
+            //var simulator = new RankingSimulator(
+            //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+            //    States.Instance.CurrentAvatarState,
+            //    enemyState.Value,
+            //    new List<Guid>(),
+            //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+            //    Action.RankingBattle.StageId,
+            //    currentAvatarArenaInfo,
+            //    ArenaInfo,
+            //    Game.Game.instance.TableSheets.CostumeStatSheet
+            //);
+            simulator.Simulate();
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
@@ -303,19 +323,28 @@ namespace Nekoyume.UI.Scroller
             //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
             for (int i = 0; i < totalSimulations; i++)
             {
-                System.Random rnd = new System.Random();
                 var simulator = new RankingSimulator(
-                    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                    new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
                     enemyState.Value,
                     new List<Guid>(),
                     Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                    Action.RankingBattle.StageId,
-                    arenaInfo,
-                    ArenaInfo,
-                    Game.Game.instance.TableSheets.CostumeStatSheet
+                    999999
                 );
-                simulator.SimulatePandora();
+
+                //System.Random rnd = new System.Random();
+                //var simulator = new RankingSimulator(
+                //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                //    States.Instance.CurrentAvatarState,
+                //    enemyState.Value,
+                //    new List<Guid>(),
+                //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                //    Action.RankingBattle.StageId,
+                //    arenaInfo,
+                //    ArenaInfo,
+                //    Game.Game.instance.TableSheets.CostumeStatSheet
+                //);
+                simulator.Simulate();
                 var log = simulator.Log;
                 //battleLogDebug += "," + log.result.ToString() ;
 
@@ -514,7 +543,7 @@ namespace Nekoyume.UI.Scroller
             else
             {
                 characterView.SetByArenaInfo(ArenaInfo);
-                challengeButton.SetConditionalState(_viewModel.currentAvatarCanBattle);
+                UpdateChallengeButton(_viewModel.currentAvatarCanBattle);
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||

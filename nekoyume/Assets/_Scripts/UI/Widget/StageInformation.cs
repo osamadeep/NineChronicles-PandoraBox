@@ -233,6 +233,10 @@ namespace Nekoyume.UI
             switch (_stageType)
             {
                 case StageType.HackAndSlash:
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    PandoraBox.PandoraBoxMaster.SelectedWorldID = _sharedViewModel.SelectedWorldId.Value;
+                    PandoraBox.PandoraBoxMaster.SelectedStageID = _sharedViewModel.SelectedStageId.Value;
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     Find<BattlePreparation>().Show(StageType.HackAndSlash,
                         _sharedViewModel.SelectedWorldId.Value,
                         _sharedViewModel.SelectedStageId.Value,

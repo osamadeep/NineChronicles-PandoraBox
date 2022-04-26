@@ -22,8 +22,7 @@ namespace Nekoyume.UI.Module
             Hourglass
         }
 
-        [SerializeField]
-        private List<TextMeshProUGUI> costTexts = null;
+        [SerializeField] private List<TextMeshProUGUI> costTexts = null;
 
         private CostType _costType = CostType.NCG;
 
@@ -53,14 +52,16 @@ namespace Nekoyume.UI.Module
             {
                 text.text = value.ToString();
             }
+
             UpdateObjects();
         }
 
         public override void UpdateObjects()
         {
             base.UpdateObjects();
-            CostTextColor = CheckCost() ? Palette.GetColor(ColorType.ButtonEnabled) :
-                Palette.GetColor(ColorType.ButtonDisabled);
+            CostTextColor = CheckCost()
+                ? Palette.GetColor(ColorType.ButtonEnabled)
+                : Palette.GetColor(ColorType.ButtonDisabled);
         }
 
         protected bool CheckCost()
@@ -101,16 +102,18 @@ namespace Nekoyume.UI.Module
                             NotificationCell.NotificationType.Alert);
                         return;
                     }
+
                     break;
                 case CostType.ActionPoint:
                     if (States.Instance.CurrentAvatarState.actionPoint < _cost)
                     {
                         OneLineSystem.Push(
                             MailType.System,
-                            L10nManager.Localize("UI_NOT_ENOUGH_AP"),
+                            L10nManager.Localize("ERROR_ACTION_POINT"),
                             NotificationCell.NotificationType.Alert);
                         return;
                     }
+
                     break;
                 case CostType.Hourglass:
                     var inventory = States.Instance.CurrentAvatarState.inventory;
@@ -123,6 +126,7 @@ namespace Nekoyume.UI.Module
                             NotificationCell.NotificationType.Alert);
                         return;
                     }
+
                     break;
                 default:
                     break;

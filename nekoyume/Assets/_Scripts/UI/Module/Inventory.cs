@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Battle;
@@ -120,7 +120,8 @@ namespace Nekoyume.UI.Module
                 }
 
                 _selectedModel = null;
-                foreach (var item in inventory.Items.OrderByDescending(x => x.item is ITradableItem))
+                foreach (var item in
+                         inventory.Items.OrderByDescending(x => x.item is ITradableItem))
                 {
                     if (item.Locked)
                     {
@@ -269,8 +270,8 @@ namespace Nekoyume.UI.Module
             {
                 ItemType.Consumable => _consumables,
                 ItemType.Costume => _costumes,
-                ItemType.Equipment => GetOrderedEquipments(),
-                ItemType.Material => _materials,
+                ItemType.Equipment => GetOrganizedEquipments(),
+                ItemType.Material => GetOrganizedMaterials(),
                 _ => throw new ArgumentOutOfRangeException(nameof(itemType), itemType, null)
             };
         }
@@ -282,7 +283,7 @@ namespace Nekoyume.UI.Module
             _onDoubleClickItem?.Invoke(item);
         }
 
-        private List<InventoryItem> GetOrderedEquipments()
+        private List<InventoryItem> GetOrganizedEquipments()
         {
             var bestItems = GetUsableBestEquipments();
             UpdateEquipmentNotification(bestItems);
@@ -293,6 +294,7 @@ namespace Nekoyume.UI.Module
             }
 
             result = result.OrderByDescending(x => bestItems.Exists(y => y.Equals(x)))
+                .ThenBy(x => x.ItemBase.ItemSubType)
                 .ThenByDescending(x => Util.IsUsableItem(x.ItemBase)).ToList();
 
             if (_elementalTypes.Any())
@@ -302,6 +304,14 @@ namespace Nekoyume.UI.Module
             }
 
             return result;
+        }
+
+        private List<InventoryItem> GetOrganizedMaterials()
+        {
+            return _materials.OrderByDescending(x =>
+                    x.ItemBase.ItemSubType == ItemSubType.ApStone ||
+                    x.ItemBase.ItemSubType == ItemSubType.Hourglass)
+                .ThenBy(x => x.ItemBase is ITradableItem).ToList();
         }
 
         private void UpdateEquipmentNotification(IEnumerable<InventoryItem> bestItems)
@@ -351,7 +361,8 @@ namespace Nekoyume.UI.Module
 
                         if (!selectedEquipments.ContainsKey(item.ItemBase.ItemSubType))
                         {
-                            selectedEquipments.Add(item.ItemBase.ItemSubType, new List<InventoryItem>());
+                            selectedEquipments.Add(item.ItemBase.ItemSubType,
+                                new List<InventoryItem>());
                         }
 
                         selectedEquipments[item.ItemBase.ItemSubType].Add(item);

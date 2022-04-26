@@ -19,6 +19,7 @@ using UnityEngine.UI;
 namespace Nekoyume.UI.Module
 {
     using Bencodex.Types;
+    using Nekoyume.Model.Mail;
     using Nekoyume.PandoraBox;
     using Nekoyume.State.Subjects;
     using Nekoyume.UI.Scroller;
@@ -53,6 +54,10 @@ namespace Nekoyume.UI.Module
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: This is Premium Feature!",
+                    NotificationCell.NotificationType.Alert);
+                return;
             }
 
             Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
@@ -96,21 +101,14 @@ namespace Nekoyume.UI.Module
         {
             var currentAddress = state?.address;
             ArenaInfo arenaInfo = null;
-            if (currentAddress != null)
+            if (currentAddress.HasValue)
             {
-                var avatarAddress = currentAddress.Value;
-                if (Game.Game.instance.Agent.BlockIndex >= RankingBattle.UpdateTargetBlockIndex)
+                var avatarAddress2 = currentAddress.Value;
+                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress2.ToByteArray());
+                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
+                if (rawInfo is Dictionary dictionary)
                 {
-                    var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
-                    var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                    if (rawInfo is Dictionary dictionary)
-                    {
-                        arenaInfo = new ArenaInfo(dictionary);
-                    }
-                }
-                else
-                {
-                    arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    arenaInfo = new ArenaInfo(dictionary);
                 }
             }
 

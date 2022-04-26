@@ -60,12 +60,12 @@ namespace Nekoyume.UI
                     {
                         maxCount = _data.Item.Value.MaxCount.Value;
                     }
+
                     var count = InputFieldValueToValue<int>(countInputField);
                     var result = Mathf.Clamp(count, 1, maxCount);
                     countInputField.text = result.ToString();
                     _data.OnChangeCount.OnNext(result);
                 }
-
             }).AddTo(_disposablesForAwake);
 
             addCountButton.OnClickAsObservable().Subscribe(_ =>
@@ -108,7 +108,6 @@ namespace Nekoyume.UI
                     var price = InputFieldValueToValue<decimal>(priceInputField);
                     _data.OnChangePrice.OnNext(price);
                 }
-
             }).AddTo(_disposablesForAwake);
 
             resetPriceButton.OnClickAsObservable()
@@ -119,18 +118,15 @@ namespace Nekoyume.UI
                 int digit = i;
                 addPriceButton[i].OnClickAsObservable().Subscribe(_ =>
                 {
-                    var price = InputFieldValueToValue<int>(priceInputField) +
-                                (int) Mathf.Pow(DefaultPrice, digit);
+                    var price = InputFieldValueToValue<decimal>(priceInputField) +
+                                (int)Mathf.Pow(DefaultPrice, digit);
                     _data.OnChangePrice.OnNext(price);
                 }).AddTo(_disposablesForAwake);
             }
 
             reregisterButton.Text = L10nManager.Localize("UI_REREGISTER");
             reregisterButton.OnSubmitSubject
-                .Subscribe(_ =>
-                {
-                    _data?.OnClickReregister.OnNext(_data);
-                })
+                .Subscribe(_ => { _data?.OnClickReregister.OnNext(_data); })
                 .AddTo(_disposablesForAwake);
 
             notificationButton.OnClickAsObservable().Subscribe(_ =>
@@ -150,7 +146,7 @@ namespace Nekoyume.UI
 
                 _data?.OnClickCancel.OnNext(_data);
             };
-            
+
             L10nManager.OnLanguageChange.Subscribe(_ =>
             {
                 reregisterButton.Text = L10nManager.Localize("UI_REREGISTER");
@@ -221,9 +217,9 @@ namespace Nekoyume.UI
         private bool IsValid()
         {
             if (decimal.TryParse(_data.TotalPrice.Value.GetQuantityString(),
-                NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price))
+                    NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price))
             {
-                if (price - (int) price > 0)
+                if (price - (int)price > 0)
                 {
                     return false;
                 }
@@ -248,20 +244,22 @@ namespace Nekoyume.UI
             if (typeof(T) == typeof(decimal))
             {
                 if (!decimal.TryParse(inputField.text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,
-                    out var price))
+                        out var price))
                 {
                     price = 0;
                 }
+
                 return (T)Convert.ChangeType(price, typeof(T));
             }
 
             if (typeof(T) == typeof(int))
             {
                 if (!int.TryParse(inputField.text, NumberStyles.Number, CultureInfo.InvariantCulture,
-                    out var price))
+                        out var price))
                 {
                     price = 0;
                 }
+
                 return (T)Convert.ChangeType(price, typeof(T));
             }
 

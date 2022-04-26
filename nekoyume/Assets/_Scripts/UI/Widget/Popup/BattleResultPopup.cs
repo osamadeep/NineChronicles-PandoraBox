@@ -677,7 +677,12 @@ namespace Nekoyume.UI
             Find<WorldMap>().Show();
             Find<StageInformation>().Show();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Main);
-            Find<BattlePreparation>().Show();
+            //Find<BattlePreparation>().Show();
+            Find<BattlePreparation>().Show(EnumType.StageType.HackAndSlash,
+                PandoraBoxMaster.SelectedWorldID,
+                PandoraBoxMaster.SelectedStageID,
+                $"Back {PandoraBoxMaster.SelectedStageID}",
+                true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

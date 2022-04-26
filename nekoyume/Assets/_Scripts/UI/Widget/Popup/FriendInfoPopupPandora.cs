@@ -215,19 +215,28 @@ namespace Nekoyume.UI
                 return;
             }
 
-            System.Random rnd = new System.Random();
             var simulator = new RankingSimulator(
-                new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                new Cheat.DebugRandom(),
                 States.Instance.CurrentAvatarState,
                 avatarState,
                 new List<System.Guid>(),
                 Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                Action.RankingBattle.StageId,
-                currentAvatarArenaInfo,
-                enemyArenaInfo,
-                Game.Game.instance.TableSheets.CostumeStatSheet
+                999999
             );
-            simulator.SimulatePandora();
+
+            //System.Random rnd = new System.Random();
+            //var simulator = new RankingSimulator(
+            //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+            //    States.Instance.CurrentAvatarState,
+            //    avatarState,
+            //    new List<System.Guid>(),
+            //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+            //    Action.RankingBattle.StageId,
+            //    currentAvatarArenaInfo,
+            //    enemyArenaInfo,
+            //    Game.Game.instance.TableSheets.CostumeStatSheet
+            //);
+            simulator.Simulate();
             var log = simulator.Log;
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
@@ -259,19 +268,28 @@ namespace Nekoyume.UI
             int win = 0;
             for (int i = 0; i < totalSimulations; i++)
             {
-                System.Random rnd = new System.Random();
                 var simulator = new RankingSimulator(
-                    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                    new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
                     avatarState,
                     new List<System.Guid>(),
                     Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                    Action.RankingBattle.StageId,
-                    currentAvatarArenaInfo,
-                    enemyArenaInfo,
-                    Game.Game.instance.TableSheets.CostumeStatSheet
+                    999999
                 );
-                simulator.SimulatePandora();
+
+                //System.Random rnd = new System.Random();
+                //var simulator = new RankingSimulator(
+                //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
+                //    States.Instance.CurrentAvatarState,
+                //    avatarState,
+                //    new List<System.Guid>(),
+                //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                //    Action.RankingBattle.StageId,
+                //    currentAvatarArenaInfo,
+                //    enemyArenaInfo,
+                //    Game.Game.instance.TableSheets.CostumeStatSheet
+                //);
+                simulator.Simulate();
                 var log = simulator.Log;
 
                 if (log.result.ToString().ToUpper() == "WIN")

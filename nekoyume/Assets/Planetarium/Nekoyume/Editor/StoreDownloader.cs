@@ -18,7 +18,7 @@ namespace Planetarium.Nekoyume.Editor
         public static void DownloadAndExtractMainNetStore()
         {
             if (!EditorUtility.DisplayDialog("Question", "This job takes a very long time. Do you want to continue?",
-                "Yes", "No"))
+                    "Yes", "No"))
             {
                 Debug.Log("Downloading store canceled");
                 return;
@@ -54,9 +54,9 @@ namespace Planetarium.Nekoyume.Editor
             while (!asyncOperation.isDone)
             {
                 if (EditorUtility.DisplayCancelableProgressBar(
-                    "Download",
-                    $"url: {url}\ndownload to: {downloadFilePath}",
-                    asyncOperation.progress))
+                        "Download",
+                        $"url: {url}\ndownload to: {downloadFilePath}",
+                        asyncOperation.progress))
                 {
                     request.Abort();
                     Debug.Log("Downloading store canceled");
@@ -68,6 +68,7 @@ namespace Planetarium.Nekoyume.Editor
             }
 
             yield return asyncOperation;
+            Debug.Log($"Download completed. \"{downloadFilePath}\"");
             EditorUtility.ClearProgressBar();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -87,7 +88,7 @@ namespace Planetarium.Nekoyume.Editor
             {
                 File.Delete(downloadFilePath);
             }
-            
+
             Debug.Log($"Download and extract the Main-net store finished. Extracted at \"{extractPath}\"");
         }
     }

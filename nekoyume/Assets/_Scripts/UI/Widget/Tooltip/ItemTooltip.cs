@@ -106,11 +106,19 @@ namespace Nekoyume.UI
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (currentItemBase is INonFungibleItem nonFungibleItem)
+                if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 {
-                    var nonFungibleId = nonFungibleItem.NonFungibleId;
-                    Debug.LogError(nonFungibleId);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: This is Premium Feature!",
+                        NotificationCell.NotificationType.Alert);
+                    return;
                 }
+
+                //if (currentItemBase is INonFungibleItem nonFungibleItem)
+                //{
+                //    var nonFungibleId = nonFungibleItem.NonFungibleId;
+                //    //Debug.LogError(nonFungibleId);
+                //}
 
                 //States.Instance.CurrentAvatarState.inventory.AddItem(currentItemBase);
                 //InventoryItem xx = new InventoryItem(currentItemBase,1,true,false,true);
@@ -128,6 +136,11 @@ namespace Nekoyume.UI
                         NotificationCell.NotificationType.Information);
                 }
             }
+
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                AddRemoveFavoriteItem();
+            }
         }
 
         public async void SetSellerName(Guid guid)
@@ -139,7 +152,7 @@ namespace Nekoyume.UI
             if (!exist)
             {
                 Debug.LogError("NOT EXIST!");
-                OwnerName.gameObject.SetActive(false);
+                OwnerName.text = "";
             }
             else
             {
@@ -167,7 +180,6 @@ namespace Nekoyume.UI
 #if UNITY_EDITOR
                 Debug.LogError(avatarState.agentAddress + "  |  " + order.OrderId + "  |  " + $"{avatarState.name} <color=#A68F7E>#{avatarState.address.ToHex().Substring(0, 4)}</color>");
 #endif
-                OwnerName.gameObject.SetActive(true);
             }
         }
 
@@ -200,6 +212,12 @@ namespace Nekoyume.UI
                 itemString += "\nOwner Avatar Name    : PREMIUM FEATURE";
                 itemString += "\nOwner Agent  Address : PREMIUM FEATURE";
                 itemString += "\nOwner Avatar Address : PREMIUM FEATURE";
+            }
+
+            if (currentItemBase is INonFungibleItem nonFungibleItem)
+            {
+                var nonFungibleId = nonFungibleItem.NonFungibleId;
+                itemString += "\nItem Unique ID       : " + nonFungibleId;
             }
 
             itemString += "\nItem Localized Name  : " + currentItemBase.GetLocalizedName(false);
@@ -334,6 +352,68 @@ namespace Nekoyume.UI
                 return "No Skill!";
         }
 
+        public void AddRemoveFavoriteItem()
+        {
+            if (currentItemBase is INonFungibleItem nonFungibleItem)
+            {
+                var nonFungibleId = nonFungibleItem.NonFungibleId;
+
+                if (PandoraBoxMaster.FavItems.Contains(nonFungibleId.ToString()))
+                {
+                    for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                    {
+                        string key = "_PandoraBox_General_FavItems0" + i + "_" +
+                                     States.Instance.CurrentAvatarState.address;
+                        if (i > 9)
+                            key = "_PandoraBox_General_FavItems" + i + "_" + States.Instance.CurrentAvatarState.address;
+                        PlayerPrefs.DeleteKey(key);
+                    }
+
+                    PandoraBoxMaster.FavItems.Remove(nonFungibleId.ToString());
+                    for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                    {
+                        string key = "_PandoraBox_General_FavItems0" + i + "_" +
+                                     States.Instance.CurrentAvatarState.address;
+                        if (i > 9)
+                            key = "_PandoraBox_General_FavItems" + i + "_" + States.Instance.CurrentAvatarState.address;
+                        PlayerPrefs.SetString(key, PandoraBoxMaster.FavItems[i]);
+                    }
+
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " +
+                                                        currentItemBase.GetLocalizedName()
+                                                        + " Removed from your Favorite list!",
+                        NotificationCell.NotificationType.Information);
+                }
+                else
+                {
+                    int maxCount = 2;
+                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                        maxCount = 15;
+
+                    if (PandoraBoxMaster.FavItems.Count > maxCount)
+                        OneLineSystem.Push(MailType.System,
+                            "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of Favorite, please remove some!"
+                            , NotificationCell.NotificationType.Information);
+                    else
+                    {
+                        PandoraBoxMaster.FavItems.Add(nonFungibleId.ToString());
+                        OneLineSystem.Push(MailType.System,
+                            "<color=green>Pandora Box</color>: " + currentItemBase.GetLocalizedName() +
+                            " added to your Favorite list!"
+                            , NotificationCell.NotificationType.Information);
+                        for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                        {
+                            string key = "_PandoraBox_General_FavItems0" + i + "_" +
+                                         States.Instance.CurrentAvatarState.address;
+                            if (i > 9)
+                                key = "_PandoraBox_General_FavItems" + i + "_" +
+                                      States.Instance.CurrentAvatarState.address;
+                            PlayerPrefs.SetString(key, PandoraBoxMaster.FavItems[i]);
+                        }
+                    }
+                }
+            }
+        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 

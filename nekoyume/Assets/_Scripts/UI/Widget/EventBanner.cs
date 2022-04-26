@@ -6,23 +6,17 @@ namespace Nekoyume.UI.Module
 {
     public class EventBanner : Widget
     {
-        [SerializeField]
-        private RectTransform content = null;
+        [SerializeField] private RectTransform content = null;
 
-        [SerializeField]
-        private RectTransform indexContent = null;
+        [SerializeField] private RectTransform indexContent = null;
 
-        [SerializeField]
-        private GameObject Banner;
+        [SerializeField] private GameObject Banner;
 
-        [SerializeField]
-        private GameObject IndexOn;
+        [SerializeField] private GameObject IndexOn;
 
-        [SerializeField]
-        private GameObject IndexOff;
+        [SerializeField] private GameObject IndexOff;
 
-        [SerializeField]
-        private PageView pageView;
+        [SerializeField] private PageView pageView;
 
         private void Awake()
         {
@@ -30,6 +24,7 @@ namespace Nekoyume.UI.Module
             {
                 var banner = Instantiate(Banner, content);
                 banner.GetComponent<EventBannerItem>().Set(info.SeasonBanner, info.SeasonUrl);
+                banner.transform.SetAsFirstSibling();
             }
 
             var destroyList = new List<GameObject>();

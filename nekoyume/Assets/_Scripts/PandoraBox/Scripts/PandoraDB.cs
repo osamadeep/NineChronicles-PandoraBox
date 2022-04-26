@@ -7,7 +7,8 @@ namespace Nekoyume.PandoraBox
 {
     public class PandoraDB
     {
-        public static string DBPath; 
+        public static string DBPath;
+
         public static IEnumerator GetDatabase()
         {
             DBPath = DatabasePath.PandoraDatabasePath;
@@ -17,15 +18,19 @@ namespace Nekoyume.PandoraBox
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                PandoraBoxMaster.Instance.ShowError(404, "Cannot connect to Pandora Server, please visit us for more information!");
+                PandoraBoxMaster.Instance.ShowError(404,
+                    "Cannot connect to Pandora Server, please visit us for more information!");
             }
             else
             {
                 try
                 {
                     PandoraBoxMaster.PanDatabase = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text);
-                }// Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
-                catch { PandoraBoxMaster.Instance.ShowError(16, "Something wrong, please visit us for more information!"); }
+                } // Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
+                catch
+                {
+                    PandoraBoxMaster.Instance.ShowError(16, "Something wrong, please visit us for more information!");
+                }
             }
         }
 
@@ -33,7 +38,7 @@ namespace Nekoyume.PandoraBox
         {
             string r = "";
             r += UnityEngine.Random.Range(
-                          1000000, 8000000).ToString();
+                1000000, 8000000).ToString();
             string result = url + "?p=" + r;
             return result;
         }
@@ -46,6 +51,7 @@ namespace Nekoyume.PandoraBox
         public List<string> AllowedVersions;
         public List<Guild> Guilds;
         public List<GuildPlayer> GuildPlayers;
+        public List<FeatureItem> FeatureItems;
         public int DiceRoll;
         public int TrialPremium;
         public List<PandoraPlayer> Players;
@@ -75,7 +81,6 @@ namespace Nekoyume.PandoraBox
                 result = true;
             return result;
         }
-
     }
 
     [System.Serializable]
@@ -88,7 +93,6 @@ namespace Nekoyume.PandoraBox
         public string Link;
         public int Type;
         public string Language;
-
     }
 
     [System.Serializable]
@@ -102,6 +106,27 @@ namespace Nekoyume.PandoraBox
         public bool IsEqual(string otherAddress)
         {
             return AvatarAddress.ToLower() == otherAddress.ToLower();
+        }
+    }
+
+    [System.Serializable]
+    public class FeatureItem
+    {
+        public string ItemID;
+        public int EndBlock;
+
+        public bool IsEqual(string otherID)
+        {
+            return ItemID.ToLower() == otherID.ToLower();
+        }
+
+        public bool IsValid()
+        {
+            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
+            bool result = false;
+            if (EndBlock >= currentBlock)
+                result = true;
+            return result;
         }
     }
 }
