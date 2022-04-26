@@ -20,6 +20,7 @@ namespace Nekoyume.UI.Module
 {
     using Bencodex.Types;
     using Nekoyume.PandoraBox;
+    using Nekoyume.State.Subjects;
     using Nekoyume.UI.Scroller;
     using UniRx;
 
@@ -48,6 +49,23 @@ namespace Nekoyume.UI.Module
             currentAvatarState = avatarState;
         }
 
+        public void CollectAP()
+        {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+            }
+
+            Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
+
+            var address = currentAvatarState.address;
+            if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
+            {
+                GameConfigStateSubject.ActionPointState.Remove(address);
+            }
+
+            GameConfigStateSubject.ActionPointState.Add(address, true);
+        }
+
         public void SetSlot(long currentBlockIndex, int slotIndex, AvatarState state = null)
         {
             _slotIndex = slotIndex;
@@ -59,7 +77,10 @@ namespace Nekoyume.UI.Module
         {
             AvatarNameText.text = state.NameWithHash;
             AvatarAddressText.text = state.address.ToString();
-            APText.text = "Action Points: " + state.actionPoint.ToString() + "/120";
+
+            var blockCount = Game.Game.instance.Agent.BlockIndex - state.dailyRewardReceivedIndex + 1;
+
+            APText.text = "Action Points: " + blockCount + " " + state.actionPoint.ToString() + "/120";
 
 
             UpdateArena(state, currentBlockIndex);

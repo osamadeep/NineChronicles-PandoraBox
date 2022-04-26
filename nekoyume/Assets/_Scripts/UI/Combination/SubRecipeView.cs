@@ -299,6 +299,14 @@ namespace Nekoyume.UI
                 }
                 else
                 {
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    var currentAvatarLevel =
+                        States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
+                            out var clearedStage);
+                    //Debug.LogError(currentAvatarLevel + "  " + row.Level + " " + clearedStage);
+                    CanCraft = clearedStage >= row.Level;
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                     levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", row.Level);
                     var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= row.Level;
                     levelText.color = hasEnoughLevel

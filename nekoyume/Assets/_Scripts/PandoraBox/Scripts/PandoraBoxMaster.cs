@@ -15,7 +15,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100174";
-        public static string VersionId = "010043";
+        public static string VersionId = "010044A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -28,7 +28,7 @@ namespace Nekoyume.PandoraBox
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
-        public static int NumberOfProfiles = 4;
+        public static int NumberOfProfiles = 5;
         public static int LoginIndex;
         public static int ArenaTicketsToUse = 1;
         public static List<string> ArenaFavTargets = new List<string>();
@@ -43,6 +43,9 @@ namespace Nekoyume.PandoraBox
         public AudioMixer Audiomixer;
         public GameObject CosmicSword;
         public Sprite CosmicIcon;
+
+        //Inventory
+        //public static List<Model.Item.ItemBase> TestShopItems = new List<Model.Item.ItemBase>();
 
         private void Awake()
         {

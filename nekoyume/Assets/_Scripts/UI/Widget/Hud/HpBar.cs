@@ -13,14 +13,11 @@ namespace Nekoyume.UI
 {
     public class HpBar : ProgressBar
     {
-        [SerializeField]
-        private BuffLayout buffLayout = null;
+        [SerializeField] private BuffLayout buffLayout = null;
 
-        [SerializeField]
-        private TextMeshProUGUI levelText = null;
+        [SerializeField] private TextMeshProUGUI levelText = null;
 
-        [SerializeField]
-        private Slider additionalSlider = null;
+        [SerializeField] private Slider additionalSlider = null;
 
         public HpBarVFX HpVFX { get; private set; }
 
@@ -56,13 +53,30 @@ namespace Nekoyume.UI
         public void Set(int current, int additional, int max)
         {
             SetText($"{current} / {max}");
-            SetValue((float) math.min(current, max - additional) / max);
+            SetValue((float)math.min(current, max - additional) / max);
 
             bool isHPBoosted = additional > 0;
             additionalSlider.gameObject.SetActive(isHPBoosted);
             if (isHPBoosted)
-                additionalSlider.value = (float) current / max;
+                additionalSlider.value = (float)current / max;
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void SetPandora(int current, int additional, int max, int ATK, int DEF, float SPD)
+        {
+            SetText($"<size=80%>" +
+                    $"<color=#FFFFFF>HP:</color><color=green>{current}</color>" +
+                    $"<color=#FFFFFF>,ATK:</color><color=green>{ATK}</color>" +
+                    $"<color=#FFFFFF>,DEF:</color><color=green>{DEF}</color>" +
+                    $"<color=#FFFFFF>,SPD:</color><color=green>{SPD / 100f}</color>");
+            SetValue((float)math.min(current, max - additional) / max);
+
+            bool isHPBoosted = additional > 0;
+            additionalSlider.gameObject.SetActive(isHPBoosted);
+            if (isHPBoosted)
+                additionalSlider.value = (float)current / max;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void OnDestroy()
         {

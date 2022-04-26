@@ -20,8 +20,7 @@ namespace Nekoyume.Game.Character
     {
         protected const float AnimatorTimeScale = 1.2f;
 
-        [SerializeField]
-        private bool shouldContainHUD = true;
+        [SerializeField] private bool shouldContainHUD = true;
 
         public GameObject attackPoint;
         public SortingGroup sortingGroup;
@@ -80,6 +79,7 @@ namespace Nekoyume.Game.Character
         protected bool AttackEndCalled { get; set; }
 
         private bool _forceQuit;
+
         protected virtual bool CanRun
         {
             get
@@ -90,7 +90,6 @@ namespace Nekoyume.Game.Character
                 }
 
                 return !Mathf.Approximately(RunSpeed, 0f);
-
             }
         }
 
@@ -209,7 +208,11 @@ namespace Nekoyume.Game.Character
             }
 
             HudContainer.UpdatePosition(gameObject, HUDOffset);
-            HPBar.Set(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP);
+            //HPBar.Set(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            HPBar.SetPandora(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP, CharacterModel.ATK, CharacterModel.DEF,
+                CharacterModel.SPD);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             HPBar.SetBuffs(CharacterModel.Buffs);
             HPBar.SetLevel(Level);
 
@@ -222,6 +225,7 @@ namespace Nekoyume.Game.Character
             {
                 SpeechBubble = Widget.Create<SpeechBubble>();
             }
+
             SpeechBubble.enable = true;
 
             if (SpeechBubble.gameObject.activeSelf)
@@ -279,7 +283,6 @@ namespace Nekoyume.Game.Character
 
         protected virtual void OnDeadStart()
         {
-
         }
 
         protected virtual void OnDeadEnd()
@@ -484,7 +487,8 @@ namespace Nekoyume.Game.Character
             }
         }
 
-        protected virtual void ProcessAttack(CharacterBase target, Model.BattleStatus.Skill.SkillInfo skill, bool isLastHit,
+        protected virtual void ProcessAttack(CharacterBase target, Model.BattleStatus.Skill.SkillInfo skill,
+            bool isLastHit,
             bool isConsiderElementalType)
         {
             if (!target) return;
@@ -558,6 +562,7 @@ namespace Nekoyume.Game.Character
                 {
                     Animator.Attack();
                 }
+
                 _forceQuit = false;
                 var coroutine = StartCoroutine(CoTimeOut());
                 yield return new WaitUntil(() => AttackEndCalled || _forceQuit);
@@ -566,6 +571,7 @@ namespace Nekoyume.Game.Character
                 {
                     continue;
                 }
+
                 PostAnimationForTheKindOfAttack();
                 break;
             }
@@ -584,13 +590,15 @@ namespace Nekoyume.Game.Character
                 {
                     Animator.CastAttack();
                 }
+
                 _forceQuit = false;
                 var coroutine = StartCoroutine(CoTimeOut());
                 yield return new WaitUntil(() => AttackEndCalled || _forceQuit);
                 StopCoroutine(coroutine);
                 if (_forceQuit)
                 {
-                    continue;;
+                    continue;
+                    ;
                 }
 
                 PostAnimationForTheKindOfAttack();
@@ -602,7 +610,8 @@ namespace Nekoyume.Game.Character
         private IEnumerator CoAnimationCastBlow(IReadOnlyList<Model.BattleStatus.Skill.SkillInfo> infos)
         {
             var info = infos.First();
-            var copy = new Model.BattleStatus.Skill.SkillInfo(info.Target, info.Effect, info.Critical, info.SkillCategory,
+            var copy = new Model.BattleStatus.Skill.SkillInfo(info.Target, info.Effect, info.Critical,
+                info.SkillCategory,
                 info.WaveTurn, ElementalType.Normal, info.SkillTargetType, info.Buff);
             yield return StartCoroutine(CoAnimationCast(copy));
 
@@ -897,6 +906,7 @@ namespace Nekoyume.Game.Character
                         }
                     }
                 }
+
                 yield return new WaitForSeconds(waitSeconds);
                 var coroutine = StartCoroutine(stage.CoSkill(action));
                 yield return coroutine;
@@ -946,7 +956,9 @@ namespace Nekoyume.Game.Character
         public IEnumerable<Model.BattleStatus.Skill.SkillInfo> buffInfos;
         public Func<IReadOnlyList<Model.BattleStatus.Skill.SkillInfo>, IEnumerator> func;
 
-        public ActionParams(CharacterBase characterBase, IEnumerable<Model.BattleStatus.Skill.SkillInfo> enumerable, IEnumerable<Model.BattleStatus.Skill.SkillInfo> buffInfos1, Func<IReadOnlyList<Model.BattleStatus.Skill.SkillInfo>, IEnumerator> coNormalAttack)
+        public ActionParams(CharacterBase characterBase, IEnumerable<Model.BattleStatus.Skill.SkillInfo> enumerable,
+            IEnumerable<Model.BattleStatus.Skill.SkillInfo> buffInfos1,
+            Func<IReadOnlyList<Model.BattleStatus.Skill.SkillInfo>, IEnumerator> coNormalAttack)
         {
             character = characterBase;
             skillInfos = enumerable;

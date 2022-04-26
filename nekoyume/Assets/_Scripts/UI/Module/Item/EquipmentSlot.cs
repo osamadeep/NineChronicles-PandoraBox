@@ -224,7 +224,6 @@ namespace Nekoyume.UI.Module
             gradeHsv.hue = gradeData.GradeHsvHue;
             gradeHsv.saturation = gradeData.GradeHsvSaturation;
             gradeHsv.value = gradeData.GradeHsvValue;
-
             optionTagBg.gameObject.SetActive(false);
             enhancementImage.gameObject.SetActive(false);
             if (itemBase is Equipment equip)

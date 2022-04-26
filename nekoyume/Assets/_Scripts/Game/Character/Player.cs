@@ -286,6 +286,7 @@ namespace Nekoyume.Game.Character
 
         public void UnequipCostume(Costume costume, bool ignoreEquipmentsAndCustomize = false)
         {
+            //costume = new Costume(_tableSheets.CostumeItemSheet.First, Guid.NewGuid());
             if (costume is null)
             {
                 return;
@@ -360,18 +361,21 @@ namespace Nekoyume.Game.Character
             var id = weapon?.Id ?? 0;
             var level = weapon?.level ?? 0;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (UnityEngine.Random.Range(0, 10) == 1)
-            {
-                id = 10141001;
-                level = 10;
-                AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
-                VFXController.instance.Create<VFX.BattleAttack01VFX>(transform.position);
-            }
+            //if (UnityEngine.Random.Range(0, 10) == 1)
+            //{
+            //    id = 10141001;
+            //    level = 10;
+            //    AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
+            //    VFXController.instance.Create<VFX.BattleAttack01VFX>(transform.position);
+            //}
 
-            var sprite = SpriteHelper.GetPlayerSpineTextureWeapon(id);
+            //var sprite = SpriteHelper.GetPlayerSpineTextureWeapon(id);
+            //var levelVFXPrefab = ResourcesHelper.GetAuraWeaponPrefab(id, level); //id,level
+            //SpineController.UpdateWeapon(id, sprite, levelVFXPrefab);
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            var levelVFXPrefab = ResourcesHelper.GetAuraWeaponPrefab(id, level); //id,level
-            //var sprite = weapon.GetPlayerSpineTexture();
+            var levelVFXPrefab = ResourcesHelper.GetAuraWeaponPrefab(id, level);
+            var sprite = weapon.GetPlayerSpineTexture();
             SpineController.UpdateWeapon(id, sprite, levelVFXPrefab);
         }
 
@@ -389,6 +393,15 @@ namespace Nekoyume.Game.Character
 
         private void UpdateCustomize()
         {
+            ////|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //System.Random xx = new System.Random();
+            //int y = xx.Next(TableSheetsHelper.MakeTableSheets().CostumeItemSheet.Values.Count);
+
+            //Costume x = new Costume(TableSheetsHelper.MakeTableSheets().CostumeItemSheet.First, Guid.NewGuid());
+            //EquipCostume(x);
+            ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             if (IsFullCostumeEquipped)
             {
                 return;

@@ -461,6 +461,27 @@ namespace Nekoyume.BlockChain
                 .DoOnError(e => HandleException(action.Id, e));
         }
 
+        public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
+        {
+            var blockCount = Game.Game.instance.Agent.BlockIndex -
+                avatarState.dailyRewardReceivedIndex + 1;
+
+            var action = new DailyReward
+            {
+                avatarAddress = avatarState.address,
+            };
+            action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+            //LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            ProcessAction(action);
+
+            return _agent.ActionRenderer.EveryRender<DailyReward>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e => HandleException(action.Id, e));
+        }
+
         public IObservable<ActionBase.ActionEvaluation<ItemEnhancement>> ItemEnhancement(
             Equipment baseEquipment,
             Equipment materialEquipment,

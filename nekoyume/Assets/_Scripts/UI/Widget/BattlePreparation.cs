@@ -387,13 +387,13 @@ namespace Nekoyume.UI
 
             if (!slot.IsEmpty)
             {
+                Debug.LogError("?");
                 Unequip(slot, true);
             }
 
             var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
             slot.Set(itemBase, OnClickSlot, OnDoubleClickSlot);
             LocalLayerModifier.SetItemEquip(currentAvatarState.address, slot.Item, true);
-
             var player = Game.Game.instance.Stage.GetPlayer();
             switch (itemBase)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Battle;
@@ -120,8 +120,7 @@ namespace Nekoyume.UI.Module
                 }
 
                 _selectedModel = null;
-                foreach (var item in
-                         inventory.Items.OrderByDescending(x => x.item is ITradableItem))
+                foreach (var item in inventory.Items.OrderByDescending(x => x.item is ITradableItem))
                 {
                     if (item.Locked)
                     {
