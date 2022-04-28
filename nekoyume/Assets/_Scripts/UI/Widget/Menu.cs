@@ -437,8 +437,11 @@ namespace Nekoyume.UI
             PandoraBoxMaster.SetCurrentPandoraPlayer(
                 PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
             string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
-            PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
-                System.Convert.ToInt32(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium()));
+
+            //set max login count
+            if (PlayerPrefs.GetInt("_PandoraBox_General_IsPremiumLogin") != 1)
+                PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
+                    System.Convert.ToInt32(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium()));
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
 
             //load favorite items

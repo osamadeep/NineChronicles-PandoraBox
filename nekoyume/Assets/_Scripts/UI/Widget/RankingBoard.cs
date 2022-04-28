@@ -437,6 +437,10 @@ namespace Nekoyume.UI
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
                 topPlayer = 100;
 
+#if UNITY_EDITOR
+            topPlayer = 200;
+#endif
+
             var infos = _arenaInfoList.GetArenaInfos(1, topPlayer); //3
             int upper = 50 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper *
                               PandoraBoxMaster.Instance.Settings.ArenaListStep);

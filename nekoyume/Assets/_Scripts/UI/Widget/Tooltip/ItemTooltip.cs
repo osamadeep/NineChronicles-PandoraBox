@@ -30,6 +30,7 @@ namespace Nekoyume.UI
 
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
+        [SerializeField] protected Button CloseButton;
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
 
@@ -446,6 +447,10 @@ namespace Nekoyume.UI
                     acquisitionPlaceDescription.Show(panel, _descriptionButtonRectTransform);
                 });
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CloseButton.onClick.AddListener(() => { Close(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)

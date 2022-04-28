@@ -38,6 +38,7 @@ namespace Nekoyume.UI.Scroller
         //[SerializeField] private GameObject challengeButton = null;
         [SerializeField] private GameObject playerBanner = null;
         [SerializeField] private TextMeshProUGUI gainPointText = null;
+        [SerializeField] private TextMeshProUGUI gainRealPointText = null;
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI winRateText = null;
         [SerializeField] private GameObject FavTarget = null;
@@ -320,7 +321,6 @@ namespace Nekoyume.UI.Scroller
 
             int totalSimulations = 5;
             int win = 0;
-            //string battleLogDebug = $"Battle: {arenaInfo.AvatarName.Split('<')[0]}+{ArenaInfo.AvatarName.Split('<')[0]} = ";
             for (int i = 0; i < totalSimulations; i++)
             {
                 var simulator = new RankingSimulator(
@@ -331,27 +331,37 @@ namespace Nekoyume.UI.Scroller
                     Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
                     999999
                 );
-
-                //System.Random rnd = new System.Random();
-                //var simulator = new RankingSimulator(
-                //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
-                //    States.Instance.CurrentAvatarState,
-                //    enemyState.Value,
-                //    new List<Guid>(),
-                //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                //    Action.RankingBattle.StageId,
-                //    arenaInfo,
-                //    ArenaInfo,
-                //    Game.Game.instance.TableSheets.CostumeStatSheet
-                //);
                 simulator.Simulate();
                 var log = simulator.Log;
-                //battleLogDebug += "," + log.result.ToString() ;
-
                 if (log.result.ToString().ToUpper() == "WIN")
                     win++;
                 yield return new WaitForSeconds(0.05f);
             }
+
+            //gainRealPointText value
+            int AccumilatedEnemyScore = 0;
+            int AccumilatedPlayerScore = 0;
+            for (int i = 0; i < PandoraBoxMaster.ArenaTicketsToUse; i++)
+            {
+                var simulator = new RankingSimulator(
+                    new Cheat.DebugRandom(),
+                    States.Instance.CurrentAvatarState,
+                    enemyState.Value,
+                    new List<Guid>(),
+                    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
+                    999999
+                );
+                simulator.Simulate();
+                var log = simulator.Log;
+                var (challengerScore, defenderScore) = ArenaScoreHelper.GetScore(
+                    _viewModel.currentAvatarArenaInfo.Score + AccumilatedPlayerScore,
+                    _viewModel.arenaInfo.Score + AccumilatedEnemyScore, log.result);
+                AccumilatedEnemyScore += defenderScore;
+                AccumilatedPlayerScore += challengerScore;
+                yield return new WaitForSeconds(0.05f);
+            }
+
+
             //Debug.LogError(battleLogDebug);
 
             float finalRatio = (float)win / (float)totalSimulations;
@@ -366,6 +376,21 @@ namespace Nekoyume.UI.Scroller
                 winRateText.text = $"<color=#FF4900>{FinalValue}</color>%";
             else
                 winRateText.text = $"<color=green>{FinalValue}</color>%";
+
+
+            if (AccumilatedPlayerScore / (PandoraBoxMaster.ArenaTicketsToUse * 20) >= 1)
+                gainRealPointText.text = "<color=green>+" + AccumilatedPlayerScore + "</color>";
+            else if (((float)AccumilatedPlayerScore / (float)(PandoraBoxMaster.ArenaTicketsToUse * 20f)) < 0)
+            {
+                gainRealPointText.text = "<color=red>" + AccumilatedPlayerScore + "</color>";
+            }
+            else
+            {
+                gainRealPointText.text = "<color=red>+" + AccumilatedPlayerScore + "</color>";
+            }
+
+            gainRealPointText.gameObject.SetActive(true);
+
 
             //if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
             //{
@@ -547,6 +572,7 @@ namespace Nekoyume.UI.Scroller
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            gainRealPointText.gameObject.SetActive(false);
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
                 StartCoroutine(GetEnemyState());
@@ -577,65 +603,21 @@ namespace Nekoyume.UI.Scroller
                     sum += AccumulatedPoints(myScore + (prevoiusPoints), hisScore);
                 }
 
-                if (sum / (PandoraBoxMaster.ArenaTicketsToUse * 20) >= 1)
-                    gainPointText.text = "<color=green>+" + sum + "</color>";
-                else
-                    gainPointText.text = "<color=red>+" + sum + "</color>";
+                gainPointText.text = "[" + sum + "]";
+
+                //if (sum / (PandoraBoxMaster.ArenaTicketsToUse * 20) >= 1)
+                //    gainPointText.text = "<color=green>+" + sum + "</color>";
+                //else
+                //    gainPointText.text = "<color=red>+" + sum + "</color>";
             }
         }
 
         int AccumulatedPoints(int me, int he)
         {
-            if (he > me + 500)
-            {
-                return 60;
-            }
-            else if (he > me + 400 && he <= me + 500)
-            {
-                return 45;
-            }
-            else if (he > me + 300 && he <= me + 400)
-            {
-                return 35;
-            }
-            else if (he > me + 200 && he <= me + 300)
-            {
-                return 25;
-            }
-            else if (he > me + 100 && he <= me + 200)
-            {
-                return 22;
-            }
-            else if (he > me && he <= me + 100)
-            {
-                return 20;
-            }
-            else if (he <= me && he > me - 100)
-            {
-                return 15;
-            }
-            else if (he <= me - 100 && he > me - 200)
-            {
-                return 10;
-            }
-            else if (he <= me - 200 && he > me - 300)
-            {
-                return 8;
-            }
-            else if (he <= me - 300 && he > me - 400)
-            {
-                return 4;
-            }
-            else if (he <= me - 400 && he > me - 500)
-            {
-                return 2;
-            }
-            else if (he <= me - 500)
-            {
-                return 1;
-            }
-            else
-                return 0;
+            //var  = scoreGetter(Score, enemyInfo.Score, result);
+            var (challengerScore, defenderScore) =
+                ArenaScoreHelper.GetScore(me, he, Nekoyume.Model.BattleStatus.BattleLog.Result.Win);
+            return challengerScore;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
