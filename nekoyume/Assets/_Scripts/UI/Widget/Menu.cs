@@ -49,6 +49,7 @@ namespace Nekoyume.UI
         private TextMeshProUGUI arenaRemains;
 
         [SerializeField] private TextMeshProUGUI arenaCount;
+        [SerializeField] private TextMeshProUGUI arenaCurrentPositionText;
         [SerializeField] private Button randomButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
@@ -456,6 +457,7 @@ namespace Nekoyume.UI
                     PandoraBoxMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
 
+            ArenaCurrentPosition();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -578,7 +580,6 @@ namespace Nekoyume.UI
         {
             base.OnEnable();
             StartCoroutine(arenaRemainsTime());
-            //StartCoroutine(arenaRemainsCount());
             StartCoroutine(ShowWhatsNew());
 
             DailyBonus.IsTrying = false;
@@ -878,8 +879,72 @@ namespace Nekoyume.UI
             }
         }
 
+        public async void ArenaCurrentPosition()
+        {
+            arenaCurrentPositionText.text = "";
+            await Task.Delay(2000);
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                return;
+
+            while (true)
+            {
+                BlockHash? _cachedBlockHash = null;
+
+                WeeklyArenaState weeklyArenaState = null;
+                var agent = Game.Game.instance.Agent;
+                if (!_cachedBlockHash.Equals(agent.BlockTipHash))
+                {
+                    _cachedBlockHash = agent.BlockTipHash;
+                    await UniTask.Run(async () =>
+                    {
+                        var gameConfigState = States.Instance.GameConfigState;
+                        var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
+                        var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
+                        weeklyArenaState =
+                            new WeeklyArenaState(
+                                (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
+                        States.Instance.SetWeeklyArenaState(weeklyArenaState);
+                        await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
+                    });
+                }
+
+                //var weeklyArenaState = States.Instance.WeeklyArenaState;
+                if (weeklyArenaState is null)
+                    return;
+
+                var avatarAddress = States.Instance.CurrentAvatarState?.address;
+                if (!avatarAddress.HasValue)
+                    return;
+
+                if (!_weeklyCachedInfo.Any())
+                {
+                    //UpdateBoard();
+                    return;
+                }
+
+                ArenaInfo arenaInfo = _weeklyCachedInfo[0].arenaInfo;
+                if (!arenaInfo.Active)
+                {
+                    arenaInfo.Activate();
+                }
+
+                var currentArenaInfo = _weeklyCachedInfo[0];
+                for (int i = 0; i < _weeklyCachedInfo.Count; i++)
+                    if (_weeklyCachedInfo[i].arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
+                    {
+                        currentArenaInfo = _weeklyCachedInfo[i];
+                        break;
+                    }
+
+                arenaCurrentPositionText.text = "#" + currentArenaInfo.rank;
+
+                await Task.Delay(300000); //300000 = 5 minutes
+            }
+        }
+
         IEnumerator arenaRemainsTime()
         {
+            arenaRemains.text = "";
             yield return new WaitForSeconds(1);
             var gameConfigState = States.Instance.GameConfigState;
             while (true)

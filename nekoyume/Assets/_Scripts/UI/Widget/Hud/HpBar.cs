@@ -62,13 +62,13 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void SetPandora(int current, int additional, int max, int ATK, int DEF, float SPD)
+        public void SetPandora(int current, int additional, int max, int ATK, int DEF, string SPD)
         {
             SetText($"<size=80%>" +
                     $"<color=#FFFFFF>HP:</color><color=green>{current}</color>" +
                     $"<color=#FFFFFF>,ATK:</color><color=green>{ATK}</color>" +
                     $"<color=#FFFFFF>,DEF:</color><color=green>{DEF}</color>" +
-                    $"<color=#FFFFFF>,SPD:</color><color=green>{SPD / 100f}</color>");
+                    $"<color=#FFFFFF>,SPD:</color><color=green>{SPD}</color>");
             SetValue((float)math.min(current, max - additional) / max);
 
             bool isHPBoosted = additional > 0;

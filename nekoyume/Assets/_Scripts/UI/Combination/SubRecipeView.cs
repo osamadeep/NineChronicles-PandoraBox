@@ -45,10 +45,14 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        bool CanCraft = false;
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] bool CanCraft = false;
+        [SerializeField] private TextMeshProUGUI UnlockText = null;
 
-        [SerializeField] private GameObject toggleParent = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private GameObject toggleParent = null;
+
         [SerializeField] private List<Toggle> categoryToggles = null;
         [SerializeField] private RecipeCell recipeCell = null;
         [SerializeField] private TextMeshProUGUI titleText = null;
@@ -249,16 +253,17 @@ namespace Nekoyume.UI
                         var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
 
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
                         var unlockStage = equipmentRow.UnlockStage;
                         var clearedStage =
                             States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
                                 out var stageId)
                                 ? stageId
                                 : 0;
-                        var diff = unlockStage - clearedStage;
 
                         //Debug.LogError(currentAvatarLevel + "  " + level + " " + clearedStage);
-                        CanCraft = diff <= 0;
+                        CanCraft = clearedStage >= unlockStage;
+                        UnlockText.text = "Unlock Level: " + unlockStage;
                         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                         levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
@@ -305,11 +310,9 @@ namespace Nekoyume.UI
                 else
                 {
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    var currentAvatarLevel =
-                        States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
-                            out var clearedStage);
-                    //Debug.LogError(currentAvatarLevel + "  " + row.Level + " " + clearedStage);
-                    CanCraft = clearedStage >= row.Level;
+                    var unlockStage = row.Level;
+                    CanCraft = true;
+                    UnlockText.text = "";
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                     levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", row.Level);
