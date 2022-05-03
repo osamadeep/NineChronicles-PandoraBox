@@ -21,23 +21,17 @@ namespace Nekoyume.PandoraBox
     {
         public static Raid Instance;
 
-        [SerializeField]
-        TMP_InputField StageIDText;
+        [SerializeField] TMP_InputField StageIDText;
 
-        [SerializeField]
-        TMP_InputField CurrentTriesManual;
+        [SerializeField] TMP_InputField CurrentTriesManual;
 
-        [SerializeField]
-        GameObject RotateShape;
+        [SerializeField] GameObject RotateShape;
 
-        [SerializeField]
-        Button RaidButton = null;
+        [SerializeField] Button RaidButton = null;
 
-        [SerializeField]
-        TextMeshProUGUI RaidButtonText = null;
+        [SerializeField] TextMeshProUGUI RaidButtonText = null;
 
-        [SerializeField]
-        TextMeshProUGUI CurrentTriesText = null;
+        [SerializeField] TextMeshProUGUI CurrentTriesText = null;
 
         private Game.Character.Player _player;
 
@@ -76,10 +70,9 @@ namespace Nekoyume.PandoraBox
             //        break;
             //}
             RectTransform rt = GetComponent<RectTransform>();
-            bool isMenu= false;
+            bool isMenu = false;
             while (true)
             {
-                
                 yield return new WaitForSeconds(0.5f);
                 try
                 {
@@ -99,14 +92,12 @@ namespace Nekoyume.PandoraBox
                 }
                 catch
                 {
-
                 }
             }
         }
 
         public void StartRaid()
         {
-
             if (isBusy)
             {
                 isBusy = false;
@@ -120,12 +111,14 @@ namespace Nekoyume.PandoraBox
             {
                 totalCount = int.Parse(CurrentTriesManual.text);
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
-                if (int.Parse(StageIDText.text) > clearedStage +1)
+                if (int.Parse(StageIDText.text) > clearedStage + 1)
                 {
-                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: You Didnt Open {int.Parse(StageIDText.text)} yet!"
+                    OneLineSystem.Push(MailType.System,
+                        $"<color=green>Pandora Box</color>: You Didnt Open {int.Parse(StageIDText.text)} yet!"
                         , NotificationCell.NotificationType.Alert);
                     return;
                 }
+
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
 
                 if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
@@ -136,10 +129,12 @@ namespace Nekoyume.PandoraBox
                 {
                     if (tries <= 0)
                     {
-                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You have <b>0</b> Action Points!"
-                        , NotificationCell.NotificationType.Alert);
+                        OneLineSystem.Push(MailType.System,
+                            "<color=green>Pandora Box</color>: You have <b>0</b> Action Points!"
+                            , NotificationCell.NotificationType.Alert);
                         return;
                     }
+
                     StartCoroutine(StartRaid(totalCount));
                 }
             }
@@ -147,7 +142,6 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator StartRaid(int count)
         {
-
             isBusy = true;
             PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
             RotateShape.SetActive(true);
@@ -159,7 +153,8 @@ namespace Nekoyume.PandoraBox
             //yield return new WaitForSeconds(AllowedCooldown);
             yield return new WaitForSeconds(AllowedCooldown);
             _player = Game.Game.instance.Stage.GetPlayer();
-            var stage = Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i => i.Id == int.Parse(StageIDText.text));
+            var stage = Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i =>
+                i.Id == int.Parse(StageIDText.text));
 
             int worldID = 0;
             if (stage.Id < 51)
@@ -188,20 +183,20 @@ namespace Nekoyume.PandoraBox
 
             if (!RaidMethodIsSweep)
             {
-                //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address, _requiredCost * count);
                 ActionRenderHandler.Instance.Pending = true;
 
-                //Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, count).Subscribe();
-                Game.Game.instance.ActionManager.HackAndSlash(
-                    _player.Costumes,
-                    _player.Equipments,
-                    new List<Consumable>(),
-                    worldID,
-                    stage.Id,
-                    count).Subscribe();
+                //Game.Game.instance.ActionManager.HackAndSlash(
+                //    _player.Costumes,
+                //    _player.Equipments,
+                //    new List<Consumable>(),
+                //    worldID,
+                //    stage.Id,
+                //    count).Subscribe();
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Raiding for Stage <color=red>" + stage.Id
-                + "</color> (<color=green>" + count + "</color>) times ...", NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: Sending Raiding for Stage <color=red>" + stage.Id
+                    + "</color> (<color=green>" + count + "</color>) times ...",
+                    NotificationCell.NotificationType.Information);
             }
             else
             {
@@ -209,19 +204,19 @@ namespace Nekoyume.PandoraBox
                 {
                     if (!isBusy)
                         yield break;
-                    RaidButtonText.text = $"(<color=green>{count- (i+1)}</color>)Cancel!";
-                    //LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,_requiredCost);
+                    RaidButtonText.text = $"(<color=green>{count - (i + 1)}</color>)Cancel!";
                     ActionRenderHandler.Instance.Pending = true;
-                    Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
+                    //Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
 
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Sending Raiding Stage <color=red>" + stage.Id
-                        + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...", NotificationCell.NotificationType.Information);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Sending Raiding Stage <color=red>" + stage.Id
+                        + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...",
+                        NotificationCell.NotificationType.Information);
                     yield return new WaitForSeconds(AllowedCooldown);
-
                 }
             }
+
             StartCoroutine(Cooldown());
-            //OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...");
         }
 
         public void Show(bool isReversed)
@@ -235,6 +230,7 @@ namespace Nekoyume.PandoraBox
                 GetComponent<AnchoredPositionSingleTweener>().PlayTween();
             }
         }
+
         IEnumerator Cooldown()
         {
             int i = 45;
@@ -249,6 +245,7 @@ namespace Nekoyume.PandoraBox
                 RaidButtonText.text = "" + i--;
                 yield return new WaitForSeconds(1f);
             }
+
             RaidButtonText.text = "RAID!";
             RaidButton.interactable = true;
             StageIDText.interactable = true;

@@ -37,10 +37,11 @@ namespace Nekoyume.UI
         private static readonly Vector3 PlayerPosition = new Vector3(1999.8f, 1999.3f, 3f);
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private Button sweepButton = null;
+        [Header("PANDORA CUSTOM FIELDS")]
+        //[SerializeField] private Button sweepButton = null;
+        [SerializeField]
+        private TextMeshProUGUI countText;
 
-        [SerializeField] private TextMeshProUGUI countText;
         [SerializeField] private Button fillButton = null;
 
         [Space(50)]
@@ -84,6 +85,8 @@ namespace Nekoyume.UI
 
         [SerializeField] private GameObject coverToBlockClick = null;
 
+        [SerializeField] private Button sweepPopupButton;
+
         [SerializeField] private Button boostPopupButton;
 
         [SerializeField] private GameObject mimisbrunnrBg;
@@ -112,6 +115,9 @@ namespace Nekoyume.UI
 
         private bool EnoughToPlay =>
             States.Instance.CurrentAvatarState.actionPoint >= _requiredCost;
+
+        private bool IsStageCleared =>
+            States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value);
 
         #region override
 
@@ -159,7 +165,6 @@ namespace Nekoyume.UI
 
             CloseWidget = () => Close(true);
 
-
             _stageId.Subscribe(SubscribeStage).AddTo(gameObject);
 
             startButton.OnSubmitSubject.Where(_ => !_stage.IsInStage)
@@ -168,9 +173,22 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            sweepButton.OnClickAsObservable().Subscribe(_ => Sweep()).AddTo(gameObject);
-            fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
+            //sweepButton.OnClickAsObservable().Subscribe(_ => Sweep()).AddTo(gameObject);
+            //fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            sweepPopupButton.OnClickAsObservable()
+                .Where(_ => IsStageCleared)
+                .Subscribe(_ => Find<SweepPopup>().Show(_worldId, _stageId.Value));
+
+            sweepPopupButton.OnClickAsObservable().Where(_ => !IsStageCleared)
+                .ThrottleFirst(TimeSpan.FromSeconds(2f))
+                .Subscribe(_ =>
+                    OneLineSystem.Push(
+                        MailType.System,
+                        L10nManager.Localize("UI_SWEEP_UNLOCK_CONDITION"),
+                        NotificationCell.NotificationType.Alert))
+                .AddTo(gameObject);
 
             boostPopupButton.OnClickAsObservable()
                 .Where(_ => EnoughToPlay && !_stage.IsInStage)
@@ -244,7 +262,7 @@ namespace Nekoyume.UI
             base.Show(ignoreShowAnimation);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            sweepButton.gameObject.SetActive(true);
+            //sweepButton.gameObject.SetActive(true);
 
             //var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
             //if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
@@ -765,8 +783,7 @@ namespace Nekoyume.UI
                         equipments,
                         consumables,
                         _worldId,
-                        _stageId.Value,
-                        1
+                        _stageId.Value
                     ).Subscribe();
                     break;
                 case StageType.Mimisbrunnr:
@@ -789,8 +806,8 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private void AvailableAP()
         {
-            sweepButton.transform.parent.Find("Slider").GetComponent<Slider>().value =
-                ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
+            //sweepButton.transform.parent.Find("Slider").GetComponent<Slider>().value =
+            //    ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
         }
 
         private void Sweep()
@@ -804,7 +821,7 @@ namespace Nekoyume.UI
             Find<LoadingScreen>().Show();
 
             startButton.gameObject.SetActive(false);
-            sweepButton.gameObject.SetActive(false);
+            //sweepButton.gameObject.SetActive(false);
 
             //var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
             //if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
@@ -835,7 +852,7 @@ namespace Nekoyume.UI
             for (int i = 0; i < count; i++)
             {
                 Game.Game.instance.ActionManager.HackAndSlash(costumes, equipments, consumables, _worldId,
-                    _stageId.Value, 1);
+                    _stageId.Value);
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: Sending Battle Fight <color=green>" + (i + 1) + "</color>/" +
                     count, NotificationCell.NotificationType.Information);
@@ -921,7 +938,21 @@ namespace Nekoyume.UI
                 .Select(slot => (Consumable)slot.Item).Select(food => food.Id);
             var canBattle = Util.CanBattle(_player, foodIds);
             startButton.gameObject.SetActive(canBattle);
-            boostPopupButton.gameObject.SetActive(canBattle);
+
+            switch (_stageType)
+            {
+                case StageType.HackAndSlash:
+                    boostPopupButton.gameObject.SetActive(false);
+                    sweepPopupButton.gameObject.SetActive(avatarState.worldInformation.IsStageCleared(_stageId.Value));
+                    break;
+                case StageType.Mimisbrunnr:
+                    boostPopupButton.gameObject.SetActive(canBattle);
+                    sweepPopupButton.gameObject.SetActive(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             blockStartingTextObject.SetActive(!canBattle);
         }
 

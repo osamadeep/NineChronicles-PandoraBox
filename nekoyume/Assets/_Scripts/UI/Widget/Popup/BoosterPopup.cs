@@ -15,29 +15,21 @@ namespace Nekoyume.UI
 {
     public class BoosterPopup : PopupWidget
     {
-        [SerializeField]
-        private Button cancelButton;
+        [SerializeField] private Button cancelButton;
 
-        [SerializeField]
-        private Button submitButton;
+        [SerializeField] private Button submitButton;
 
-        [SerializeField]
-        private Slider apSlider;
+        [SerializeField] private Slider apSlider;
 
-        [SerializeField]
-        private TMP_Text boostCountText;
+        [SerializeField] private TMP_Text boostCountText;
 
-        [SerializeField]
-        private TMP_Text needAPText;
+        [SerializeField] private TMP_Text needAPText;
 
-        [SerializeField]
-        private TMP_Text ownAPText;
+        [SerializeField] private TMP_Text ownAPText;
 
-        [SerializeField]
-        private Button boostPlusButton;
+        [SerializeField] private Button boostPlusButton;
 
-        [SerializeField]
-        private Button boostMinusButton;
+        [SerializeField] private Button boostMinusButton;
 
         private Stage _stage;
         private Player _player;
@@ -139,10 +131,10 @@ namespace Nekoyume.UI
                     _equipments,
                     _consumables,
                     _worldId,
-                    _stageId,
-                    (int)apSlider.value
+                    _stageId
                 ).Subscribe();
             }
+
             Debug.LogError("HACK: STEP 1");
         }
 

@@ -15,41 +15,29 @@ namespace Nekoyume.UI
 {
     public class RaidPopup : PopupWidget
     {
-        [SerializeField]
-        private Button cancelButton;
+        [SerializeField] private Button cancelButton;
 
-        [SerializeField]
-        private Button submitButton;
+        [SerializeField] private Button submitButton;
 
-        [SerializeField]
-        private Slider apSlider;
+        [SerializeField] private Slider apSlider;
 
-        [SerializeField]
-        private Slider roundSlider;
+        [SerializeField] private Slider roundSlider;
 
-        [SerializeField]
-        private TMP_Text boostCountText;
+        [SerializeField] private TMP_Text boostCountText;
 
-        [SerializeField]
-        private TMP_Text roundCountText;
+        [SerializeField] private TMP_Text roundCountText;
 
-        [SerializeField]
-        private TMP_Text needAPText;
+        [SerializeField] private TMP_Text needAPText;
 
-        [SerializeField]
-        private TMP_Text ownAPText;
+        [SerializeField] private TMP_Text ownAPText;
 
-        [SerializeField]
-        private Button boostPlusButton;
+        [SerializeField] private Button boostPlusButton;
 
-        [SerializeField]
-        private Button boostMinusButton;
+        [SerializeField] private Button boostMinusButton;
 
-        [SerializeField]
-        private Button roundPlusButton;
+        [SerializeField] private Button roundPlusButton;
 
-        [SerializeField]
-        private Button roundMinusButton;
+        [SerializeField] private Button roundMinusButton;
 
         private Stage _stage;
         private Player _player;
@@ -155,15 +143,16 @@ namespace Nekoyume.UI
             }
             else
             {
-                Game.Game.instance.ActionManager.HackAndSlash(
-                    _costumes,
-                    _equipments,
-                    _consumables,
-                    _worldId,
-                    _stageId,
-                    (int)apSlider.value
-                ).Subscribe();
+                //Game.Game.instance.ActionManager.HackAndSlash(
+                //    _costumes,
+                //    _equipments,
+                //    _consumables,
+                //    _worldId,
+                //    _stageId,
+                //    (int)apSlider.value
+                //).Subscribe();
             }
+
             Debug.LogError("HACK: STEP 1");
         }
 
