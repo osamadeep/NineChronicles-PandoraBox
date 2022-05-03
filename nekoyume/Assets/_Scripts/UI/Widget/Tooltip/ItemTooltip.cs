@@ -215,12 +215,6 @@ namespace Nekoyume.UI
                 itemString += "\nOwner Avatar Address : PREMIUM FEATURE";
             }
 
-            if (currentItemBase is INonFungibleItem nonFungibleItem)
-            {
-                var nonFungibleId = nonFungibleItem.NonFungibleId;
-                itemString += "\nItem Unique ID       : " + nonFungibleId;
-            }
-
             itemString += "\nItem Localized Name  : " + currentItemBase.GetLocalizedName(false);
             try
             {
@@ -238,8 +232,19 @@ namespace Nekoyume.UI
             {
             }
 
-            if (!(currentShopItem is null))
+            if (currentItemBase is ITradableItem tradableItem)
+            {
+                if (currentItemBase is INonFungibleItem nonFungibleItem)
+                {
+                    itemString += "\nItem Unique ID       : " + nonFungibleItem.NonFungibleId;
+                }
+
                 itemString += "\nItem Shop ID         : " + currentShopItem.OrderDigest.OrderId;
+                itemString += "\nItem Price           : " + currentShopItem.OrderDigest.Price;
+                if (currentShopItem.OrderDigest.ItemCount > 1)
+                    itemString += "\nItem Count           : " + currentShopItem.OrderDigest.ItemCount;
+            }
+
             itemString += "\nCurrent Time (Utc)   : " + DateTime.UtcNow;
 
             return itemString;

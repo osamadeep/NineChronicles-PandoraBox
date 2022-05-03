@@ -36,7 +36,9 @@ namespace Nekoyume.UI.Scroller
         private Sprite[] Banners = null;
 
         //[SerializeField] private GameObject challengeButton = null;
-        [SerializeField] private GameObject playerBanner = null;
+        [SerializeField] private Transform playerBanner = null;
+
+        //[SerializeField] private GameObject playerBanner = null;
         [SerializeField] private TextMeshProUGUI gainPointText = null;
         [SerializeField] private TextMeshProUGUI gainRealPointText = null;
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
@@ -502,13 +504,14 @@ namespace Nekoyume.UI.Scroller
             scoreText.text = ArenaInfo.Score.ToString();
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(ArenaInfo.AvatarAddress.ToString()));
 
+            //arena banner
 
-            playerBanner.SetActive(enemyPan.ArenaBanner != 0);
-            if (enemyPan.ArenaBanner != 0)
-            {
-                playerBanner.transform.Find("Bg").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
-                playerBanner.transform.Find("Bg/Bg_add").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
-            }
+            //playerBanner.SetActive(enemyPan.ArenaBanner != 0);
+            //if (enemyPan.ArenaBanner != 0)
+            //{
+            //    playerBanner.transform.Find("Bg").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
+            //    playerBanner.transform.Find("Bg/Bg_add").GetComponent<Image>().sprite = Banners[enemyPan.ArenaBanner];
+            //}
 
             int he, me;
             me = CPHelper.GetCPV2(

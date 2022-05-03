@@ -52,6 +52,8 @@ namespace Nekoyume.PandoraBox
         public List<Guild> Guilds;
         public List<GuildPlayer> GuildPlayers;
         public List<FeatureItem> FeatureItems;
+        public List<NFTItem> NFTItems;
+        public List<NFTOwner> NFTOwners;
         public int DiceRoll;
         public int TrialPremium;
         public List<PandoraPlayer> Players;
@@ -128,5 +130,25 @@ namespace Nekoyume.PandoraBox
                 result = true;
             return result;
         }
+    }
+
+    [System.Serializable]
+    public class NFTItem
+    {
+        public string ItemID;
+        public string ItemName;
+        public string ItemDesc;
+        public string ContractAddress;
+        public string TokenID;
+        public int Quantity;
+    }
+
+    [System.Serializable]
+    public class NFTOwner
+    {
+        public string Address;
+        public string AvatarAddress;
+        public List<string> OwnedItems;
+        public string CurrentArenaBanner;
     }
 }

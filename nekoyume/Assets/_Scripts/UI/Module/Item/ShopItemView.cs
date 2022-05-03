@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
@@ -7,6 +7,8 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI.Module
 {
+    using Nekoyume.PandoraBox;
+    using Nekoyume.State;
     using UniRx;
 
     [RequireComponent(typeof(BaseItemView))]
@@ -41,6 +43,22 @@ namespace Nekoyume.UI.Module
             baseItemView.ItemImage.overrideSprite = baseItemView.GetItemIcon(model.ItemBase);
 
             var data = baseItemView.GetItemViewData(model.ItemBase);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Guild items
+
+            GuildPlayer guildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x =>
+                x.Address.ToString() == model.OrderDigest.SellerAgentAddress.ToString());
+            if (!(guildPlayer is null) && !(PandoraBoxMaster.CurrentGuild is null))
+            {
+                if (PandoraBoxMaster.CurrentGuild.Tag == guildPlayer.Guild && model.OrderDigest.SellerAgentAddress !=
+                    States.Instance.CurrentAvatarState.address)
+                {
+                    baseItemView.GuildObj.SetActive(true);
+                }
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             baseItemView.GradeImage.overrideSprite = data.GradeBackground;
             baseItemView.GradeHsv.range = data.GradeHsvRange;
             baseItemView.GradeHsv.hue = data.GradeHsvHue;
@@ -73,7 +91,18 @@ namespace Nekoyume.UI.Module
 
             baseItemView.CountText.gameObject.SetActive(model.ItemBase.ItemType == ItemType.Material);
             baseItemView.CountText.text = model.OrderDigest.ItemCount.ToString();
-            baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+            //baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (model.OrderDigest.ItemCount == 1)
+                baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+            else
+            {
+                string unitPrice = ((float)model.OrderDigest.Price.MajorUnit / (float)model.OrderDigest.ItemCount)
+                    .ToString(); //.ToString("0.00");
+                baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString()
+                                              + $"({unitPrice})";
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             model.Selected.Subscribe(b => baseItemView.SelectObject.SetActive(b)).AddTo(_disposables);
             model.Expired.Subscribe(b => baseItemView.ExpiredObject.SetActive(b)).AddTo(_disposables);

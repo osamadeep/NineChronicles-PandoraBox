@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -35,7 +35,7 @@ namespace Nekoyume.UI.Module
 
         [SerializeField] private GameObject shopPrefab;
 
-        protected readonly Dictionary<ItemSubTypeFilter, List<ShopItem>> _items =
+        public Dictionary<ItemSubTypeFilter, List<ShopItem>> _items =
             new Dictionary<ItemSubTypeFilter, List<ShopItem>>();
 
         private readonly List<ShopItem> _selectedModels = new List<ShopItem>();

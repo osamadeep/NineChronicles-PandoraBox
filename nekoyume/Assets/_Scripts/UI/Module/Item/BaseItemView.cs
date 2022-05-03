@@ -19,6 +19,7 @@ namespace Nekoyume
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public GameObject FeatureObj = null;
         public GameObject FavoriteObj = null;
+        public GameObject GuildObj = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -143,6 +144,7 @@ namespace Nekoyume
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             FeatureObj.SetActive(false);
             FavoriteObj.SetActive(false);
+            GuildObj.SetActive(false);
             if (itemBase is INonFungibleItem nonFungibleItem)
             {
                 var nonFungibleId = nonFungibleItem.NonFungibleId;
@@ -157,8 +159,8 @@ namespace Nekoyume
                 //if (nonFungibleId.ToString() == "8208c642-6848-4fba-81b3-494f36178e19" || nonFungibleId.ToString() == "4e8f40e9-00a2-4e0e-89fe-1d686da22702")
                 FavoriteObj.SetActive(PandoraBoxMaster.FavItems.Contains(nonFungibleId.ToString()));
             }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             return itemViewData.GetItemViewData(row.Grade + add);
         }
     }

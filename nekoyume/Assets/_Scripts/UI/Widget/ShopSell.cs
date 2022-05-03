@@ -17,6 +17,7 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
     using System.Collections;
     using System.Collections.Generic;
@@ -33,7 +34,8 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
-        [SerializeField] private Button Relist = null;
+        [SerializeField] private Button RelistExpireBtn = null;
+        [SerializeField] private Button RelistAllBtn = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -55,8 +57,85 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void EnableMarketHelper(TextMeshProUGUI text)
         {
-            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
-            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+            PandoraBoxMaster.MarketPriceHelper = !PandoraBoxMaster.MarketPriceHelper;
+            text.text = PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+        }
+
+        public void RelistExpired()
+        {
+            RelistExpireBtn.interactable = false;
+            List<ShopItem> items = new List<ShopItem>();
+            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
+            int blockToExpire = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 4000 : 0;
+            foreach (var item in view._items[EnumType.ItemSubTypeFilter.All])
+            {
+                if (!(item.ItemBase is ITradableItem tradableItem)) //get only tradable items, no need for rest
+                    break;
+                if (item.OrderDigest.ExpiredBlockIndex < currentBlock + blockToExpire) // get only near expire items
+                    items.Add(item);
+            }
+
+            StartCoroutine(StartRelistExpired(items));
+        }
+
+        private IEnumerator StartRelistExpired(List<ShopItem> items)
+        {
+            yield return new WaitForSeconds(0);
+            int cooldown = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 3 : 8;
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
+                NotificationCell.NotificationType.Information);
+
+            int counter = 0;
+            foreach (var item in items)
+            {
+                counter++;
+                //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
+                Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
+                    item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
+                Analyzer.Instance.Track("Unity/UpdateSell");
+                OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
+                                                     $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
+                                                     $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
+                    NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(cooldown);
+            }
+        }
+
+        public void RelistAll()
+        {
+            List<ShopItem> items = new List<ShopItem>();
+            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
+            foreach (var item in view._items[EnumType.ItemSubTypeFilter.All])
+            {
+                if (!(item.ItemBase is ITradableItem tradableItem)) //get only tradable items, no need for rest
+                    break;
+                items.Add(item);
+            }
+
+            StartCoroutine(StartRelistAll(items));
+        }
+
+        private IEnumerator StartRelistAll(List<ShopItem> items)
+        {
+            yield return new WaitForSeconds(0);
+            int cooldown = 2;
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
+                NotificationCell.NotificationType.Information);
+
+            int counter = 0;
+            foreach (var item in items)
+            {
+                counter++;
+                //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
+                Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
+                    item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
+                Analyzer.Instance.Track("Unity/UpdateSell");
+                OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
+                                                     $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
+                                                     $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
+                    NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(cooldown);
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -87,6 +166,12 @@ namespace Nekoyume.UI
                 Close(true);
                 Game.Event.OnRoomEnter.Invoke(true);
             };
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            RelistExpireBtn.onClick.AddListener(() => { RelistExpired(); });
+            RelistAllBtn.onClick.AddListener(() => { RelistAll(); });
+            RelistAllBtn.gameObject.SetActive(Application.isEditor);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Initialize()
@@ -138,7 +223,7 @@ namespace Nekoyume.UI
         private void ShowSellTooltip(ShopItem model, RectTransform target)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            PandoraBoxMaster.MarketPriceValue = PriceText.text;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);
@@ -150,6 +235,9 @@ namespace Nekoyume.UI
 
         public override void Show(bool ignoreShowAnimation = false)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            RelistExpireBtn.interactable = true;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             ShowAsync(ignoreShowAnimation);
         }
 
