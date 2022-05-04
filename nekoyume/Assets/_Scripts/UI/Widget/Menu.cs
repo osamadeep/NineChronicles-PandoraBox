@@ -938,7 +938,7 @@ namespace Nekoyume.UI
 
                 arenaCurrentPositionText.text = "#" + currentArenaInfo.rank;
 
-                await Task.Delay(300000); //300000 = 5 minutes
+                await Task.Delay(600000); //300000 = 5 minutes
             }
         }
 
