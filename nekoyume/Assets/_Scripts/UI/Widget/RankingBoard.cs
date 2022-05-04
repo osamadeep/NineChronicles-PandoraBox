@@ -452,7 +452,7 @@ namespace Nekoyume.UI
                 topPlayer = 100;
 
 #if UNITY_EDITOR
-            topPlayer = 600;
+            topPlayer = 300;
 #endif
 
             var infos = _arenaInfoList.GetArenaInfos(1, topPlayer); //3

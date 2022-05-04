@@ -149,6 +149,11 @@ namespace Nekoyume.Game.Character
 
             EquipCostumes(model.Costumes);
             EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Costume xx = new Costume(TableSheetsHelper.MakeTableSheets().CostumeItemSheet.First, new Guid("90220000"));
+            //Costumes.Add(xx);
+            //EquipCostume(xx);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (!SpeechBubble)
             {
