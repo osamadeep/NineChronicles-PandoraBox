@@ -20,6 +20,7 @@ namespace Nekoyume.UI
         private TextButton NoUpdateButton = null;
 
         [SerializeField] private TextButton MenuButton = null;
+        [SerializeField] private TextMeshProUGUI BounsPointsTxt = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -63,6 +64,14 @@ namespace Nekoyume.UI
             }
 
             scoreText.text = $"{log.score}";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int difference = log.score - Find<RankingBoard>().OldScore;
+            //Debug.LogError(log.score + "  " + Find<RankingBoard>().OldScore + "  " + difference);
+            if (difference <= 0)
+                BounsPointsTxt.text = $"<color=red>{difference}";
+            else
+                BounsPointsTxt.text = $"<color=green>+{difference}";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             for (var i = 0; i < rewards.Count; i++)
             {
                 var view = rewards[i];

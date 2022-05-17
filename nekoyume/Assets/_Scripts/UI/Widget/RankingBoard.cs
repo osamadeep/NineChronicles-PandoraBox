@@ -38,6 +38,7 @@ namespace Nekoyume.UI
         public Transform CellsListContainer = null;
         public GameObject waitingForLaodBlocker;
         public GameObject avatarLoadingImage;
+        public int OldScore;
         [HideInInspector] public Dictionary<Address, AvatarState> avatarStatesPandora;
 
         [Space(50)]
@@ -452,7 +453,7 @@ namespace Nekoyume.UI
                 topPlayer = 100;
 
 #if UNITY_EDITOR
-            topPlayer = 300;
+            topPlayer = 50;
 #endif
 
             var infos = _arenaInfoList.GetArenaInfos(1, topPlayer); //3

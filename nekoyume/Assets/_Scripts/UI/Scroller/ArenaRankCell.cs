@@ -37,6 +37,7 @@ namespace Nekoyume.UI.Scroller
 
         //[SerializeField] private GameObject challengeButton = null;
         [SerializeField] private Transform playerBanner = null;
+        [SerializeField] private Image rarityMockupImage = null;
 
         //[SerializeField] private GameObject playerBanner = null;
         [SerializeField] private TextMeshProUGUI gainPointText = null;
@@ -195,6 +196,7 @@ namespace Nekoyume.UI.Scroller
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChallangeRemainingTickets()
         {
+            Widget.Find<RankingBoard>().OldScore = _viewModel.currentAvatarArenaInfo.Score;
             AudioController.PlayClick();
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
@@ -468,7 +470,20 @@ namespace Nekoyume.UI.Scroller
 
             UpdateRank(_viewModel.rank);
 
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+            //set background color depend on rank
+            if (_viewModel.rank % 2 == 0)
+            {
+                GetComponent<Image>().color = new Color(14f / 256f, 14f / 256f, 14f / 256f);
+            }
+            else
+            {
+                GetComponent<Image>().color = new Color(51f / 256f, 47f / 256f, 37f / 256f);
+            }
+                rarityMockupImage.color = new Color(14f / 256f, 14f / 256f, 14f / 256f);
+
             if (Widget.Find<FriendInfoPopupPandora>().enemyArenaInfo is null)
                 BlinkSelected.SetActive(false);
             else

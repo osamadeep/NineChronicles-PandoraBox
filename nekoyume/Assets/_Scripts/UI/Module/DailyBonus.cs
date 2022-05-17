@@ -183,7 +183,11 @@ namespace Nekoyume.UI.Module
         {
             IsTrying = true;
             yield return new WaitForSeconds(1f);
-            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
+
+            //if you login with another avatar address
+            bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
+
+            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0 && isOriginal)
             {
                 if (actionPoint != null && actionPoint.NowCharging)
                 {

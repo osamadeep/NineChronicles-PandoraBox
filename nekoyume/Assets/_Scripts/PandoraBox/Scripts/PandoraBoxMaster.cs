@@ -15,7 +15,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100193";
-        public static string VersionId = "010047";
+        public static string VersionId = "010048A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -24,6 +24,7 @@ namespace Nekoyume.PandoraBox
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //General
+        public static string InspectedAddress = "";//"0x1a155C59a73D024a70Ca9fe280ba719359072170";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
@@ -38,6 +39,7 @@ namespace Nekoyume.PandoraBox
         public static int SelectedWorldID; // pve simulate
         public static int SelectedStageID; // pve simulate
 
+
         //Objects
         public PandoraSettings Settings;
         public GameObject UIErrorWindow;
@@ -48,7 +50,10 @@ namespace Nekoyume.PandoraBox
         public Sprite CosmicIcon;
 
         //Inventory
-        //public static List<Model.Item.ItemBase> TestShopItems = new List<Model.Item.ItemBase>();
+        public static List<Model.Item.ItemBase> TestShopItems = new List<Model.Item.ItemBase>();
+
+        //Skins
+        public static Color StickManOutlineColor;
 
         private void Awake()
         {

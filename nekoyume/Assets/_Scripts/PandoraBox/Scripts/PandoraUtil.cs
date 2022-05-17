@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Nekoyume.PandoraBox
 {
-    public class PandoraUtil : MonoBehaviour
+    public static class PandoraUtil
     {
         public enum ActionType { Idle,HackAndSlash,Ranking}
 
@@ -27,5 +27,49 @@ namespace Nekoyume.PandoraBox
                     return false;
             }
         }
+
+        static Color32[] gradeColors = new Color32[6]
+        {       
+                Color.white,
+                new Color(0, 193f/256f, 18f/256f),
+                new Color(80f/256f, 106f/256f, 253f/256f),
+                new Color(243f/256f, 68f/256f, 201f/256f),
+                new Color(246f/256f, 153f/256f, 36f/256f),
+                Color.red
+        };
+
+        public static PandoraItem GetPandoraItem(string itemName)
+        {
+            //0 01 4 0002
+            PandoraItem item = new PandoraItem();
+            item.IsBlockchain = System.Convert.ToBoolean(int.Parse(itemName.Substring(0, 1)));
+            item.Type = int.Parse(itemName.Substring(1,2)); //decide what kind of items its, for arena banner it should be 01
+            item.Grade = (Grade)int.Parse(itemName.Substring(3, 1)); // banner grade and color
+            item.ID = itemName.Substring(4, 4); // item ID is different on the NFT ItemID
+            //Debug.LogError(arenaBanner.IsBlockchain + " " + arenaBanner.Type + " " + arenaBanner.Grade + " " + arenaBanner.ID);
+
+            item.Color = gradeColors[(int)item.Grade];
+            return item;
+        }
     }
+
+    public class PandoraItem
+    {
+        public bool IsBlockchain;
+        public int Type;
+        public Grade Grade;
+        public string ID;
+        public Color Color;
+    }
+
+    public enum Grade
+    {
+        COMMON = 0,
+        UNCOMMON = 1,
+        RARE = 2,
+        EPIC = 3,
+        LEGENDARY = 4,
+        MYTHIC = 5
+    }
+
 }

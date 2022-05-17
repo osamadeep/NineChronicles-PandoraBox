@@ -205,6 +205,7 @@ namespace Nekoyume.UI
             });
 
             Close();
+
             Find<SweepResultPopup>().Show(stageRow, worldId, apPlayCount, apStonePlayCount, _gainedExp);
         }
     }

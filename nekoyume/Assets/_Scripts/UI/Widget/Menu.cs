@@ -892,21 +892,24 @@ namespace Nekoyume.UI
 
                 WeeklyArenaState weeklyArenaState = null;
                 var agent = Game.Game.instance.Agent;
-                if (!_cachedBlockHash.Equals(agent.BlockTipHash))
-                {
-                    _cachedBlockHash = agent.BlockTipHash;
-                    await UniTask.Run(async () =>
+                try
+                { 
+                    if (!_cachedBlockHash.Equals(agent.BlockTipHash))
                     {
-                        var gameConfigState = States.Instance.GameConfigState;
-                        var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
-                        var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
-                        weeklyArenaState =
-                            new WeeklyArenaState(
-                                (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
-                        States.Instance.SetWeeklyArenaState(weeklyArenaState);
-                        await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
-                    });
-                }
+                        _cachedBlockHash = agent.BlockTipHash;
+                        await UniTask.Run(async () =>
+                        {
+                            var gameConfigState = States.Instance.GameConfigState;
+                            var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
+                            var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
+                            weeklyArenaState =
+                                new WeeklyArenaState(
+                                    (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
+                            States.Instance.SetWeeklyArenaState(weeklyArenaState);
+                            await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
+                        });
+                    }
+                } catch { }
 
                 //var weeklyArenaState = States.Instance.WeeklyArenaState;
                 if (weeklyArenaState is null)
@@ -936,7 +939,7 @@ namespace Nekoyume.UI
                         break;
                     }
 
-                arenaCurrentPositionText.text = "#" + currentArenaInfo.rank;
+                arenaCurrentPositionText.text = "#" + currentArenaInfo.rank + $" ({currentArenaInfo.arenaInfo.Score})";
 
                 await Task.Delay(600000); //300000 = 5 minutes
             }

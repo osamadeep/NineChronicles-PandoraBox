@@ -112,6 +112,15 @@ namespace Nekoyume.BlockChain
             var actionType = gameAction.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
+            if (!isOriginal)
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _agent.EnqueueAction(gameAction);
             _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
         }

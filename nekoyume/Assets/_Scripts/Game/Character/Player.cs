@@ -150,7 +150,8 @@ namespace Nekoyume.Game.Character
             EquipCostumes(model.Costumes);
             EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //ChangeSpineObject("Character/FullCostume/90220000", true,false);
+            //ChangeSpineObject("Character/Player/10200000", true);
+            //ChangeSpineObject("Character/FullCostume/90220000", true);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (!SpeechBubble)

@@ -383,7 +383,7 @@ namespace Nekoyume.UI
                 {
                     var skillView = skillViews.First(x => !x.ParentObject.activeSelf);
                     var description = skillSheet.TryGetValue(option.SkillId, out var skillRow)
-                        ? skillRow.GetLocalizedName()
+                        ? skillRow.GetLocalizedName() + $" ({option.SkillDamageMin}-{option.SkillDamageMax})"
                         : string.Empty;
                     skillView.OptionText.text = description;
                     skillView.PercentageText.text = (ratio.NormalizeFromTenThousandths()).ToString("0%");
