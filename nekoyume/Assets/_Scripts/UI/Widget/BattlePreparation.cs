@@ -870,7 +870,7 @@ namespace Nekoyume.UI
                     _stageId.Value,
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
                     StageSimulator.ConstructorVersionV100080,
-                    1, PandoraBoxMaster.IsHackAndSlashSimulate);
+                    1, true);
 
                 simulator.Simulate(1);
                 var log = simulator.Log;
