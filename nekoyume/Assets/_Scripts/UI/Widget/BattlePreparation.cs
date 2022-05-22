@@ -38,7 +38,9 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI rateText = null;
+        [SerializeField] private TextMeshProUGUI[] winStarTexts = null;
+        //[SerializeField] private TextMeshProUGUI win2Text = null;
+        //[SerializeField] private TextMeshProUGUI win3Text = null;
         [SerializeField] private Button multipleSimulateButton = null;
         [SerializeField] private Button soloSimulateButton = null;
 
@@ -270,6 +272,12 @@ namespace Nekoyume.UI
             //var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
             //if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
             //    _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
+
+            foreach (var item in winStarTexts)
+            {
+                item.text = "?";
+            }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -826,10 +834,13 @@ namespace Nekoyume.UI
         {
             multipleSimulateButton.interactable = false;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
-            rateText.text = "Win Rate :";
+            foreach (var item in winStarTexts)
+            {
+                item.text = "?";
+            }
 
             int totalSimulations = 100;
-            int win = 0;
+            int[] winStars = { 0,0,0};
             for (int i = 0; i < totalSimulations; i++)
             {
                 var costumes = _player.Costumes;
@@ -864,20 +875,39 @@ namespace Nekoyume.UI
                 simulator.Simulate(1);
                 var log = simulator.Log;
 
-                if (log.result.ToString().ToUpper() == "WIN")
-                    win++;
+                if (log.clearedWaveNumber == 2)
+                {
+                    winStars[2]++;
+                    winStars[1]++;
+                    winStars[0]++;
+                }
+                else if (log.clearedWaveNumber == 1)
+                {
+                    winStars[1]++;
+                    winStars[0]++;
+                }
+                else if (log.clearedWaveNumber == 0)
+                {
+                    winStars[0]++;
+                }
+
                 yield return new WaitForSeconds(0.05f);
             }
+            //Debug.LogError(winStar1 + " " + winStar2 + " " + winStar3);
 
-            float finalRatio = (float)win / (float)totalSimulations;
-            float FinalValue = (int)(finalRatio * 100f);
 
-            if (finalRatio <= 0.5f)
-                rateText.text = $"Win Rate : <color=red>{FinalValue}</color>%";
-            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
-                rateText.text = $"Win Rate : <color=#FF4900>{FinalValue}</color>%";
-            else
-                rateText.text = $"Win Rate : <color=green>{FinalValue}</color>%";
+            for (int i = 0; i < 3; i++)
+            {
+                float finalRatio = (float)winStars[i] / (float)totalSimulations;
+                float FinalValue = (int)(finalRatio * 100f);
+
+                if (finalRatio <= 0.5f)
+                    winStarTexts[i].text = $"<color=red>{FinalValue}</color>%";
+                else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                    winStarTexts[i].text = $"<color=#FF4900>{FinalValue}</color>%";
+                else
+                    winStarTexts[i].text = $"<color=green>{FinalValue}</color>%";
+            }
 
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
