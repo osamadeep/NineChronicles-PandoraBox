@@ -881,6 +881,27 @@ namespace Nekoyume.UI
 
         public async void ArenaCurrentPosition()
         {
+            //remove arena lock
+            var currentAddress = States.Instance.CurrentAvatarState?.address;
+            if (currentAddress.HasValue)
+            {
+                ArenaInfo arenaInfo = null;
+                var avatarAddress = currentAddress.Value;
+                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
+                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
+                if (rawInfo is Dictionary dictionary)
+                {
+                    arenaInfo = new ArenaInfo(dictionary);
+                }
+
+                if (arenaInfo.DailyChallengeCount == 0)
+                {
+                    PandoraBoxMaster.IsRankingSimulate = false;
+                    ClearRemainingTickets();
+                }
+            }
+
+
             arenaCurrentPositionText.text = "";
             await Task.Delay(2000);
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())

@@ -181,24 +181,18 @@ namespace Nekoyume.PandoraBox
             }
 
 
-            if (!RaidMethodIsSweep)
-            {
-                ActionRenderHandler.Instance.Pending = true;
+            //if (!RaidMethodIsSweep)
+            //{
+            //    ActionRenderHandler.Instance.Pending = true;
 
-                //Game.Game.instance.ActionManager.HackAndSlash(
-                //    _player.Costumes,
-                //    _player.Equipments,
-                //    new List<Consumable>(),
-                //    worldID,
-                //    stage.Id,
-                //    count).Subscribe();
+            //    Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id).Subscribe();
 
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Sending Raiding for Stage <color=red>" + stage.Id
-                    + "</color> (<color=green>" + count + "</color>) times ...",
-                    NotificationCell.NotificationType.Information);
-            }
-            else
+            //    OneLineSystem.Push(MailType.System,
+            //        "<color=green>Pandora Box</color>: Sending Raiding for Stage <color=red>" + stage.Id
+            //        + "</color> (<color=green>" + count + "</color>) times ...",
+            //        NotificationCell.NotificationType.Information);
+            //}
+            //else
             {
                 for (int i = 0; i < count; i++)
                 {
@@ -206,7 +200,7 @@ namespace Nekoyume.PandoraBox
                         yield break;
                     RaidButtonText.text = $"(<color=green>{count - (i + 1)}</color>)Cancel!";
                     ActionRenderHandler.Instance.Pending = true;
-                    //Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id, 1).Subscribe();
+                    Game.Game.instance.ActionManager.HackAndSlash(_player, worldID, stage.Id).Subscribe();
 
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: Sending Raiding Stage <color=red>" + stage.Id

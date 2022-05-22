@@ -38,10 +38,11 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
-        //[SerializeField] private Button sweepButton = null;
-        [SerializeField]
-        private TextMeshProUGUI countText;
+        [SerializeField] private TextMeshProUGUI rateText = null;
+        [SerializeField] private Button multipleSimulateButton = null;
+        [SerializeField] private Button soloSimulateButton = null;
 
+        [SerializeField] private TextMeshProUGUI countText;
         [SerializeField] private Button fillButton = null;
 
         [Space(50)]
@@ -175,6 +176,8 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //sweepButton.OnClickAsObservable().Subscribe(_ => Sweep()).AddTo(gameObject);
             //fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
+            soloSimulateButton.OnClickAsObservable().Subscribe(_ => SimulateBattlePandora()).AddTo(gameObject);
+            multipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             sweepPopupButton.OnClickAsObservable()
@@ -804,6 +807,82 @@ namespace Nekoyume.UI
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public void MultipleSimulate()
+        {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
+                    NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            StartCoroutine(GetEnemyState());
+        }
+
+
+        IEnumerator GetEnemyState()
+        {
+            multipleSimulateButton.interactable = false;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
+            rateText.text = "Win Rate :";
+
+            int totalSimulations = 100;
+            int win = 0;
+            for (int i = 0; i < totalSimulations; i++)
+            {
+                var costumes = _player.Costumes;
+                var equipments = equipmentSlots
+                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                    .Select(slot => (Equipment)slot.Item)
+                    .ToList();
+
+                var consumables = consumableSlots
+                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                    .Select(slot => (Consumable)slot.Item)
+                    .ToList();
+
+                List<Guid> costumesN;
+                List<Guid> equipmentsN;
+                List<Guid> foodsN;
+
+                costumesN = costumes.Select(c => c.ItemId).ToList();
+                equipmentsN = equipments.Select(e => e.ItemId).ToList();
+                foodsN = consumables.Select(f => f.ItemId).ToList();
+
+                var simulator = new StageSimulator(
+                    new Cheat.DebugRandom(),
+                    States.Instance.CurrentAvatarState,
+                    foodsN,
+                    _worldId,
+                    _stageId.Value,
+                    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+                    StageSimulator.ConstructorVersionV100080,
+                    1, PandoraBoxMaster.IsHackAndSlashSimulate);
+
+                simulator.Simulate(1);
+                var log = simulator.Log;
+
+                if (log.result.ToString().ToUpper() == "WIN")
+                    win++;
+                yield return new WaitForSeconds(0.05f);
+            }
+
+            float finalRatio = (float)win / (float)totalSimulations;
+            float FinalValue = (int)(finalRatio * 100f);
+
+            if (finalRatio <= 0.5f)
+                rateText.text = $"Win Rate : <color=red>{FinalValue}</color>%";
+            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                rateText.text = $"Win Rate : <color=#FF4900>{FinalValue}</color>%";
+            else
+                rateText.text = $"Win Rate : <color=green>{FinalValue}</color>%";
+
+            multipleSimulateButton.interactable = true;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+        }
+
         private void AvailableAP()
         {
             //sweepButton.transform.parent.Find("Slider").GetComponent<Slider>().value =
