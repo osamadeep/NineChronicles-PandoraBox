@@ -863,38 +863,37 @@ namespace Nekoyume.UI
                 foodsN = consumables.Select(f => f.ItemId).ToList();
 
                 var simulator = new StageSimulator(
-                    new Cheat.DebugRandom(),
-                    States.Instance.CurrentAvatarState,
-                    foodsN,
-                    _worldId,
-                    _stageId.Value,
-                    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
-                    StageSimulator.ConstructorVersionV100080,
-                    1, true);
-
+                new Cheat.DebugRandom(),
+                States.Instance.CurrentAvatarState,
+                foodsN,
+                _worldId,
+                _stageId.Value,
+                Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+                Game.Game.instance.TableSheets.CostumeStatSheet,
+                StageSimulator.ConstructorVersionV100080);
                 simulator.Simulate(1);
+
                 var log = simulator.Log;
 
-                if (log.clearedWaveNumber == 2)
+                if (log.clearedWaveNumber == 3)
                 {
                     winStars[2]++;
                     winStars[1]++;
                     winStars[0]++;
                 }
-                else if (log.clearedWaveNumber == 1)
+                else if (log.clearedWaveNumber == 2)
                 {
                     winStars[1]++;
                     winStars[0]++;
                 }
-                else if (log.clearedWaveNumber == 0)
+                else if (log.clearedWaveNumber == 1)
                 {
                     winStars[0]++;
                 }
-
+                //Debug.LogError(simulator.Log.diffScore + " " + simulator.Log.clearedWaveNumber + " " + simulator.Log.result + " " + simulator.Log.score + " " + simulator.Log.waveCount);
                 yield return new WaitForSeconds(0.05f);
             }
             //Debug.LogError(winStar1 + " " + winStar2 + " " + winStar3);
-
 
             for (int i = 0; i < 3; i++)
             {
