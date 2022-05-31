@@ -256,6 +256,13 @@ namespace Nekoyume.BlockChain
 
         #region Mono
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public int GetQueueCount()
+        {
+            return _queuedActions.Count;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private void Awake()
         {
             OnDisconnected

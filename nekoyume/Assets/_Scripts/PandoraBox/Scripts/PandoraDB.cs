@@ -139,6 +139,7 @@ namespace Nekoyume.PandoraBox
         public string ItemID;
         public string ItemName;
         public string ItemDesc;
+        public string PrefabLocation;
         public string ContractAddress;
         public string TokenID;
         public int Quantity;
@@ -151,6 +152,8 @@ namespace Nekoyume.PandoraBox
         public string AvatarAddress;
         public List<string> OwnedItems;
         public string CurrentArenaBanner;
+        public string CurrentFullCostume;
+        public string CurrentPortrait;
     }
 
     [System.Serializable]

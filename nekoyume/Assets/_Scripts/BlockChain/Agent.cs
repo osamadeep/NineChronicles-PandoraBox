@@ -343,6 +343,11 @@ namespace Nekoyume.BlockChain
             return;
         }
 
+        public int GetQueueCount()
+        {
+            return _queuedActions.Count;
+        }
+
         private void Awake()
         {
             ForceDotNet.Force();

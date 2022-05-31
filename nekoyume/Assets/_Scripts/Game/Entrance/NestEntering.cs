@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using Nekoyume.BlockChain;
@@ -41,6 +41,10 @@ namespace Nekoyume.Game.Entrance
                 if (States.Instance.AvatarStates.TryGetValue(i, out var avatarState))
                 {
                     player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    player.avatarAddress = avatarState.address.ToString();
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                     player.SpineController.Appear();
                     active = true;
                 }

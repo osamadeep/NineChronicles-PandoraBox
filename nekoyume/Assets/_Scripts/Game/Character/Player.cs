@@ -13,6 +13,7 @@ using Nekoyume.TableData;
 namespace Nekoyume.Game.Character
 {
     using Nekoyume.Game.Controller;
+    using Nekoyume.PandoraBox;
     // NOTE: Avoid Ambiguous invocation:
     // System.IDisposable Subscribe<T>(this IObservable<T>, Action<T>)
     // System.ObservableExtensions and UniRx.ObservableExtensions
@@ -44,6 +45,10 @@ namespace Nekoyume.Game.Character
 
         protected override Vector3 DamageTextForce => new Vector3(-0.1f, 0.5f);
         protected override Vector3 HudTextPosition => transform.TransformPoint(0f, 1.7f, 0f);
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public string avatarAddress;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public PlayerSpineController SpineController { get; private set; }
 
@@ -108,11 +113,13 @@ namespace Nekoyume.Game.Character
         protected override void OnDisable()
         {
             base.OnDisable();
+            avatarAddress = "";
             Destroy(_cachedCharacterTitle);
         }
 
         private void OnDestroy()
         {
+            avatarAddress = "";
             Animator.Dispose();
         }
 
@@ -120,6 +127,9 @@ namespace Nekoyume.Game.Character
 
         public void Set(AvatarState avatarState)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            avatarAddress = avatarState.address.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var tableSheets = Game.instance.TableSheets;
             Set(new Model.Player(avatarState, tableSheets.CharacterSheet,
                 tableSheets.CharacterLevelSheet, tableSheets.EquipmentItemSetEffectSheet));
@@ -147,8 +157,46 @@ namespace Nekoyume.Game.Character
             _disposablesForModel.DisposeAllAndClear();
             CharacterModel = model;
 
-            EquipCostumes(model.Costumes);
-            EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //get pandora Costumes
+            if (avatarAddress != "") //not null
+            {
+                NFTOwner currentNFTOwner = new NFTOwner();
+                //Debug.LogError(avatarAddress);
+                currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == avatarAddress.ToLower());
+                if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+                {
+                    if (currentNFTOwner.CurrentFullCostume != "")
+                    {
+                        EquipCostumes(model.Costumes);
+                        //EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+                        NFTItem fullCostume = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentFullCostume);
+
+                        ChangeSpineObject(fullCostume.PrefabLocation, true);
+                    }
+                    else
+                    {
+                        //wear other items
+                        EquipCostumes(model.Costumes);
+                        EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+                    }
+                }
+                else
+                {
+                    //nothing to add
+                    EquipCostumes(model.Costumes);
+                    EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+                }
+            }
+            else
+            {
+                EquipCostumes(model.Costumes);
+                EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            //EquipCostumes(model.Costumes);
+            //EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //ChangeSpineObject("Character/Player/10200000", true);
             //ChangeSpineObject("Character/FullCostume/90220000", true);

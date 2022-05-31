@@ -125,6 +125,13 @@ namespace Nekoyume.BlockChain
             _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public int GetQueueCount()
+        {
+            return _agent.GetQueueCount();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         #region Actions
 
         public IObservable<ActionBase.ActionEvaluation<CreateAvatar>> CreateAvatar(int index,

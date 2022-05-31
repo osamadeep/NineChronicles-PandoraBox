@@ -381,6 +381,8 @@ namespace Nekoyume.Game
             yield return StartCoroutine(CoRankingBattleEnter(log));
             Widget.Find<ArenaBattleLoadingScreen>().Close();
             _positionCheckCoroutine = StartCoroutine(CheckPosition(log));
+            //Widget.Find<UI.Battle>().EnemyPlayerStatus.GetComponent<Player>().avatarAddress = PandoraBoxMaster.CurrentArenaEnemyAddress;
+
             foreach (var e in log)
             {
                 yield return StartCoroutine(e.CoExecute(this));
@@ -1124,6 +1126,9 @@ namespace Nekoyume.Game
 
             var go = PlayerFactory.Create(States.Instance.CurrentAvatarState);
             SelectedPlayer = go.GetComponent<Player>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            SelectedPlayer.avatarAddress = States.Instance.CurrentAvatarState.address.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (SelectedPlayer is null)
             {

@@ -30,10 +30,14 @@ namespace Nekoyume.Game.Factory
         {
             var objectPool = Game.instance.Stage.objectPool;
             var enemy = objectPool.Get<Character.EnemyPlayer>(position);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            enemy.avatarAddress = PandoraBox.PandoraBoxMaster.CurrentArenaEnemyAddress;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             if (!enemy)
                 throw new NotFoundComponentException<Character.EnemyPlayer>();
 
             var player = Game.instance.Stage.GetPlayer();
+
             enemy.Set(spawnCharacter, player,true);
 
             // y좌표값에 따른 정렬 처리

@@ -78,6 +78,9 @@ namespace Nekoyume.UI
         private void InitializePlayer(AvatarState avatarState)
         {
             _player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _player.avatarAddress = avatarState.address.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var t = _player.transform;
             t.localScale = Vector3.one;
 

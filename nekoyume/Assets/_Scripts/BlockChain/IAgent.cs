@@ -68,5 +68,7 @@ namespace Nekoyume.BlockChain
         Task<Dictionary<Address, AvatarState>> GetAvatarStates(IEnumerable<Address> addressList);
 
         Task<Dictionary<Address, IValue>> GetStateBulk(IEnumerable<Address> addressList);
+
+        public int GetQueueCount();
     }
 }

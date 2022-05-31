@@ -15,7 +15,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100200";
-        public static string VersionId = "010050";
+        public static string VersionId = "010051A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -38,6 +38,7 @@ namespace Nekoyume.PandoraBox
         public static bool IsHackAndSlashSimulate; //simulate h&s
         public static int SelectedWorldID; // pve simulate
         public static int SelectedStageID; // pve simulate
+        public static string CurrentArenaEnemyAddress;
 
 
         //Objects

@@ -826,11 +826,11 @@ namespace Nekoyume.UI
                 return;
             }
 
-            StartCoroutine(GetEnemyState());
+            StartCoroutine(IEMultipleSimulate());
         }
 
 
-        IEnumerator GetEnemyState()
+        IEnumerator IEMultipleSimulate()
         {
             multipleSimulateButton.interactable = false;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
@@ -863,14 +863,14 @@ namespace Nekoyume.UI
                 foodsN = consumables.Select(f => f.ItemId).ToList();
 
                 var simulator = new StageSimulator(
-                new Cheat.DebugRandom(),
-                States.Instance.CurrentAvatarState,
-                foodsN,
-                _worldId,
-                _stageId.Value,
-                Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
-                Game.Game.instance.TableSheets.CostumeStatSheet,
-                StageSimulator.ConstructorVersionV100080);
+                    new Cheat.DebugRandom(),
+                    States.Instance.CurrentAvatarState,
+                    foodsN,
+                    _worldId,
+                    _stageId.Value,
+                    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+                    StageSimulator.ConstructorVersionV100080,
+                    1, true);
                 simulator.Simulate(1);
 
                 var log = simulator.Log;

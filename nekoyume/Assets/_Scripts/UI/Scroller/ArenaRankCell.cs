@@ -32,11 +32,11 @@ namespace Nekoyume.UI.Scroller
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private Sprite[] Banners = null;
+        [Header("PANDORA CUSTOM FIELDS")]
+        //[SerializeField] private Sprite[] Banners = null;
 
         //[SerializeField] private GameObject challengeButton = null;
-        [SerializeField] private Transform playerBanner = null;
+        [SerializeField] private Transform bannerHolder = null;
         [SerializeField] private Image rarityMockupImage = null;
 
         //[SerializeField] private GameObject playerBanner = null;
@@ -185,6 +185,7 @@ namespace Nekoyume.UI.Scroller
                 .Subscribe(player =>
                 {
                     characterView.SetByPlayer(player);
+
                     cpText.text = CPHelper.GetCPV2(
                         States.Instance.CurrentAvatarState,
                         Game.Game.instance.TableSheets.CharacterSheet,
@@ -439,6 +440,9 @@ namespace Nekoyume.UI.Scroller
 
             var currentAvatarState = States.Instance.CurrentAvatarState;
             characterView.SetByAvatarState(currentAvatarState);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            ForceChangePortraitImage(currentAvatarState.address.ToString());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             nameText.text = currentAvatarState.NameWithHash;
             scoreText.text = "-";
             cpText.text = "-";
@@ -521,6 +525,41 @@ namespace Nekoyume.UI.Scroller
 
             //arena banner
 
+            NFTOwner currentNFTOwner = new NFTOwner();
+            //Debug.LogError(avatarAddress);
+            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == ArenaInfo.AvatarAddress.ToString().ToLower());
+            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            {
+                if (currentNFTOwner.CurrentArenaBanner != "")
+                {
+                    NFTItem arenaBanner = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
+                    if (bannerHolder.childCount > 0)
+                    {
+                        PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
+                        if (currentBanner.ItemName != arenaBanner.ItemName)
+                        {
+                            Destroy(bannerHolder.GetChild(0).gameObject);
+                            Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                        }
+                    }
+                    else
+                    {
+                        Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                    }
+                }
+                else
+                {
+                    //clear arena slot
+                    if (bannerHolder.childCount > 0)
+                        Destroy(bannerHolder.GetChild(0).gameObject);
+                }
+            }
+            else
+            {
+                if (bannerHolder.childCount > 0)
+                    Destroy(bannerHolder.GetChild(0).gameObject);
+            }
+
             //playerBanner.SetActive(enemyPan.ArenaBanner != 0);
             //if (enemyPan.ArenaBanner != 0)
             //{
@@ -573,6 +612,9 @@ namespace Nekoyume.UI.Scroller
                 {
                     player = Game.Game.instance.Stage.GetPlayer();
                     characterView.SetByPlayer(player);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    ForceChangePortraitImage(player.avatarAddress.ToString());
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     player.gameObject.SetActive(false);
                 }
                 else
@@ -586,6 +628,10 @@ namespace Nekoyume.UI.Scroller
             else
             {
                 characterView.SetByArenaInfo(ArenaInfo);
+                characterView.AvatarAddress = ArenaInfo.AvatarAddress.ToString().ToLower();
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //ForceChangePortraitImage(ArenaInfo.AvatarAddress.ToString());
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 UpdateChallengeButton(_viewModel.currentAvatarCanBattle);
             }
 
@@ -603,6 +649,26 @@ namespace Nekoyume.UI.Scroller
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        void ForceChangePortraitImage(string address)
+        {
+            NFTOwner currentNFTOwner = new NFTOwner();
+            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == address.ToLower());
+            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            {
+                if (currentNFTOwner.CurrentPortrait != "")
+                {
+                    NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
+                    if ((portrait is null))
+                    {
+                        {
+                            var image = Resources.Load<Sprite>(portrait.PrefabLocation);
+                            characterView.transform.GetChild(0).GetComponent<Image>().overrideSprite = image;
+                        }
+                    }
+                }
+            }
+        }
 
         IEnumerator UpdateGainText(int myScore, int hisScore)
         {

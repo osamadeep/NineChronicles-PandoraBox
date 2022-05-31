@@ -10,6 +10,7 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class FramedCharacterView : VanillaCharacterView
@@ -66,7 +67,7 @@ namespace Nekoyume.UI.Module
         public override void SetByPlayer(Player player)
         {
             base.SetByPlayer(player);
-            
+
             if (!isTitleFrame)
             {
                 return;
@@ -100,7 +101,6 @@ namespace Nekoyume.UI.Module
                 frameImage.enabled = false;
                 return;
             }
-
             frameImage.overrideSprite = image;
             frameImage.SetNativeSize();
             frameImage.enabled = true;

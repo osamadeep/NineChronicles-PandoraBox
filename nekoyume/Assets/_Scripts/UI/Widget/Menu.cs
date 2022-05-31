@@ -711,7 +711,7 @@ namespace Nekoyume.UI
 
             for (int i = 0; i < arenaInfoTickets.DailyChallengeCount; i++) //arenaInfoTickets.DailyChallengeCount
             {
-                await Task.Delay(PandoraBoxMaster.ActionCooldown * 1000);
+                await Task.Delay(500);
                 //yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
                 Game.Game.instance.ActionManager.RankingBattle(
                     selectedEnemyArenaInfo.arenaInfo.AvatarAddress,

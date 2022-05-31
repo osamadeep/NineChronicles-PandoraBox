@@ -81,7 +81,7 @@ namespace Nekoyume.UI
         private IEnumerator StartRelistExpired(List<ShopItem> items)
         {
             yield return new WaitForSeconds(0);
-            int cooldown = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 3 : 8;
+            float cooldown = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 0.5f : 4;
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
                 NotificationCell.NotificationType.Information);
 
@@ -118,7 +118,7 @@ namespace Nekoyume.UI
         private IEnumerator StartRelistAll(List<ShopItem> items)
         {
             yield return new WaitForSeconds(0);
-            int cooldown = 2;
+            float cooldown = 0.2f;
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
                 NotificationCell.NotificationType.Information);
 

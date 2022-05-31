@@ -214,7 +214,7 @@ namespace Nekoyume.UI
                     NotificationCell.NotificationType.Alert);
                 return;
             }
-
+            PandoraBoxMaster.CurrentArenaEnemyAddress = avatarState.address.ToString().ToLower();
             var simulator = new RankingSimulator(
                 new Cheat.DebugRandom(),
                 States.Instance.CurrentAvatarState,
@@ -345,6 +345,9 @@ namespace Nekoyume.UI
         private void InitializePlayer(AvatarState avatarState)
         {
             _player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _player.avatarAddress = avatarState.address.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var t = _player.transform;
             t.localScale = Vector3.one;
 
@@ -427,6 +430,7 @@ namespace Nekoyume.UI
             Find<RankingBoard>().avatarLoadingImage.SetActive(false);
             Player _currentPlayer;
             _currentPlayer = PlayerFactory.Create(States.Instance.CurrentAvatarState).GetComponent<Player>();
+            _currentPlayer.avatarAddress = States.Instance.CurrentAvatarState.address.ToString();
             _currentPlayer.gameObject.SetActive(false);
             _tempStats = _currentPlayer.Model.Stats.Clone() as CharacterStats;
             stats = _tempStats.SetAll(_tempStats.Level, _currentPlayer.Equipments, _currentPlayer.Costumes, null,

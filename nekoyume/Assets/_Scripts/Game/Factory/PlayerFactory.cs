@@ -15,10 +15,24 @@ namespace Nekoyume.Game.Factory
             }
 
             var tableSheets = Game.instance.TableSheets;
-            return Create(new Player(avatarState,
-                                            tableSheets.CharacterSheet,
-                                            tableSheets.CharacterLevelSheet,
-                                            tableSheets.EquipmentItemSetEffectSheet));
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Player plr = new Player(avatarState, tableSheets.CharacterSheet, tableSheets.CharacterLevelSheet, tableSheets.EquipmentItemSetEffectSheet);
+            var objectPool = Game.instance.Stage.objectPool;
+            var player = objectPool.Get<Character.Player>();
+            player.avatarAddress = avatarState.address.ToString();
+            if (!player)
+            {
+                throw new NotFoundComponentException<Character.Player>();
+            }
+
+            player.Set(plr, true);
+            return player.gameObject;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            //return Create(new Player(avatarState,
+            //                                tableSheets.CharacterSheet,
+            //                                tableSheets.CharacterLevelSheet,
+            //                                tableSheets.EquipmentItemSetEffectSheet));
         }
 
         public static GameObject Create(Player model = null)

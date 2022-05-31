@@ -1140,6 +1140,9 @@ namespace Nekoyume.BlockChain
 
                 var rankingSimulatorSheets = tableSheets.GetRankingSimulatorSheets();
                 var player = new Player(States.Instance.CurrentAvatarState, rankingSimulatorSheets);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                PandoraBoxMaster.CurrentArenaEnemyAddress = previousEnemyArenaInfo.AvatarAddress.ToString().ToLower();
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 var simulator = new RankingSimulator(
                     new LocalRandom(eval.RandomSeed),
                     player,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -299,6 +299,9 @@ namespace Nekoyume.Helper
         public static Player CreatePlayer(AvatarState avatarState, Vector3 position)
         {
             var player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            player.avatarAddress = avatarState.address.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var t = player.transform;
             t.localScale = Vector3.one;
             t.position = position;

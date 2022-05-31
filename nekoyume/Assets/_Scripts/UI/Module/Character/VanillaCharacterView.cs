@@ -3,6 +3,7 @@ using Libplanet;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,10 @@ namespace Nekoyume.UI.Module
     {
         [SerializeField]
         private Image iconImage = null;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public string AvatarAddress;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Show()
         {
@@ -38,12 +43,44 @@ namespace Nekoyume.UI.Module
 
         public virtual void SetByAvatarState(AvatarState avatarState)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            AvatarAddress = avatarState.address.ToString().ToLower();
+            NFTOwner currentNFTOwner = new NFTOwner();
+            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
+            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            {
+                if (currentNFTOwner.CurrentPortrait != "")
+                {
+                    NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
+                    var image = Resources.Load<Sprite>(portrait.PrefabLocation);
+                    SetIcon(image);
+                    return;
+                }
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var id = avatarState.GetArmorIdForPortrait();
             SetByArmorId(id);
         }
 
         public virtual void SetByPlayer(Player player)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            AvatarAddress = player.avatarAddress.ToLower();
+            NFTOwner currentNFTOwner = new NFTOwner();
+            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
+            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            {
+                if (currentNFTOwner.CurrentPortrait != "")
+                {
+                    NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
+                    var image = Resources.Load<Sprite>(portrait.PrefabLocation);
+                    SetIcon(image);
+                    return;
+                }
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var fullCostume = player.Costumes
                 .FirstOrDefault(costume => costume.ItemSubType == ItemSubType.FullCostume);
             if (!(fullCostume is null))
