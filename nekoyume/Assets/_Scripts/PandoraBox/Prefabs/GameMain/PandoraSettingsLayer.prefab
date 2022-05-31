@@ -166,8 +166,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 3}
-  m_SizeDelta: {x: 0, y: -6}
+  m_AnchoredPosition: {x: -0.34999847, y: 3}
+  m_SizeDelta: {x: -11.58, y: -6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2970454999799661943
 CanvasRenderer:
@@ -197,7 +197,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sweep
+  m_text: Progress
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a682b7747d4a664089b7b1065aa0035, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 7a651b26cd62dc0479659cbcab053405, type: 2}
@@ -224,7 +224,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
+  m_fontSize: 14.3
   m_fontSizeBase: 14
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1512,7 +1512,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Boost
+  m_text: Farm
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a682b7747d4a664089b7b1065aa0035, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 7a651b26cd62dc0479659cbcab053405, type: 2}
@@ -3879,7 +3879,7 @@ GameObject:
   - component: {fileID: 1637295010256560902}
   - component: {fileID: 193764674294836560}
   m_Layer: 5
-  m_Name: SweepButton
+  m_Name: ProgressButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6354,8 +6354,8 @@ MonoBehaviour:
   arenaLoText: {fileID: 8152066484961063942}
   arenaUpSlider: {fileID: 8152066485166193499}
   arenaLoSlider: {fileID: 8152066485579489913}
-  boostImage: {fileID: 1831167165989242591}
-  sweepImage: {fileID: 1637295010256560902}
+  farmImage: {fileID: 1831167165989242591}
+  progressImage: {fileID: 1637295010256560902}
   multiLogOnImage: {fileID: 1789905558593617508}
   multiLogOffImage: {fileID: 1334134861766862124}
   introStoryOnImage: {fileID: 930006236137244923}
@@ -10695,7 +10695,7 @@ GameObject:
   - component: {fileID: 1831167165989242591}
   - component: {fileID: 5925667138621271459}
   m_Layer: 5
-  m_Name: BoostButton
+  m_Name: FarmButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

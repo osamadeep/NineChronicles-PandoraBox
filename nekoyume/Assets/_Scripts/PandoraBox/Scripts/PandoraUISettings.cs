@@ -50,10 +50,10 @@ namespace Nekoyume.PandoraBox
 
         //Raid Method
         [SerializeField]
-        Image boostImage;
+        Image farmImage;
 
         [SerializeField]
-        Image sweepImage;
+        Image progressImage;
 
         //multiple login
         [SerializeField]
@@ -142,14 +142,14 @@ namespace Nekoyume.PandoraBox
 
         public void ChangeRaidMethod(bool value)
         {
-            PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep = value;
+            PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress = value;
             LoadRaidMethod();
         }
 
         void LoadRaidMethod()
         {
-            sweepImage.color = PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            boostImage.color = !PandoraBoxMaster.Instance.Settings.RaidMethodIsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            progressImage.color = PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            farmImage.color = !PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMultipleLogin(bool value)

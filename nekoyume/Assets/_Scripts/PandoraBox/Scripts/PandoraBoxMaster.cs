@@ -156,7 +156,7 @@ namespace Nekoyume.PandoraBox
         //PVE
         [HideInInspector] public int FightSpeed { get; set; } = 1;
         [HideInInspector] public int RaidCooldown { get; set; } = 30;
-        [HideInInspector] public bool RaidMethodIsSweep { get; set; }
+        [HideInInspector] public bool RaidMethodIsProgress { get; set; }
 
         //PVP
 
@@ -185,7 +185,7 @@ namespace Nekoyume.PandoraBox
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             PlayerPrefs.SetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-            PlayerPrefs.SetInt("_PandoraBox_PVE_RaidMethodIsSweep", System.Convert.ToInt32(RaidMethodIsSweep));
+            PlayerPrefs.SetInt("_PandoraBox_PVE_RaidMethodIsProgress", System.Convert.ToInt32(RaidMethodIsProgress));
 
             //PVP
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
@@ -236,8 +236,8 @@ namespace Nekoyume.PandoraBox
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             RaidCooldown = PlayerPrefs.GetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-            RaidMethodIsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep",
-                System.Convert.ToInt32(RaidMethodIsSweep)));
+            RaidMethodIsProgress = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsProgress",
+                System.Convert.ToInt32(RaidMethodIsProgress)));
 
             //PVP
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
