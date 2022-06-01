@@ -37,6 +37,7 @@ namespace Nekoyume.PandoraBox
 
         bool isBusy = false;
         int totalCount;
+        public int CurrentStageID;
 
         void Awake()
         {
@@ -87,12 +88,14 @@ namespace Nekoyume.PandoraBox
                     if (Widget.Find<Menu>().IsActive() && !isMenu)
                     {
                         //rt.anchoredPosition = new Vector3(10, -250);
+                        StageIDText.text = PlayerPrefs.GetInt("_PandoraBox_PVE_LastRaidStage_" + States.Instance.CurrentAvatarState.address, 202).ToString();
                         GetComponent<AnchoredPositionSingleTweener>().PlayTween();
                         isMenu = true;
                     }
                     else if (!Widget.Find<Menu>().IsActive() && isMenu)
                     {
                         //rt.anchoredPosition = new Vector3(-400, -250);
+                        StageIDText.text = PlayerPrefs.GetInt("_PandoraBox_PVE_LastRaidStage_" + States.Instance.CurrentAvatarState.address, 202).ToString();
                         GetComponent<AnchoredPositionSingleTweener>().PlayReverse();
                         isMenu = false;
                     }
@@ -116,6 +119,7 @@ namespace Nekoyume.PandoraBox
             }
             else
             {
+                CurrentStageID = int.Parse(StageIDText.text);
                 totalCount = int.Parse(CurrentTriesManual.text);
                 States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
                 if (int.Parse(StageIDText.text) > clearedStage + 1)

@@ -115,6 +115,42 @@ namespace Nekoyume.UI
             playableDirector.Play();
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ShowPandora(int worldId,
+            int apPlayCount, int apStonePlayCount,
+            long exp, bool ignoreShowAnimation = false)
+        {
+            if (!Game.Game.instance.TableSheets.StageSheet.TryGetValue(PandoraBox.Raid.Instance.CurrentStageID, out var stageRow))
+            {
+                throw new System.Exception();
+            }
+
+            _stageRow = stageRow;
+            _fixedApStonePlayCount = States.Instance.GameConfigState.ActionPointMax / stageRow.CostAP;
+            _apPlayCount = apPlayCount;
+            _apStonePlayCount = apStonePlayCount;
+
+            loadingRewind.IsRunning = true;
+            stageText.text = $"STAGE {stageRow.Id}";
+            expText.text = $"EXP + {exp}";
+            UpdateTitleDeco(worldId);
+
+            base.Show(ignoreShowAnimation);
+
+            for (var i = 0; i < questions.Count; i++)
+            {
+                var isActive = i < stageRow.Rewards.Count;
+                questions[i].SetActive(isActive);
+            }
+
+            ApplySpeed(7);
+            _attackCount.SetValueAndForceNotify(7);
+            _sweepRewind.SetValueAndForceNotify(true);
+            playableDirector.Play();
+            ApplySpeed(7);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private void UpdateTitleDeco(int worldId)
         {
             if (_titleDeco)

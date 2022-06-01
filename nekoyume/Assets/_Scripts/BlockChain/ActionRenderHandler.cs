@@ -977,6 +977,16 @@ namespace Nekoyume.BlockChain
         {
             if (eval.Exception is null)
             {
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
+                {
+                    Widget.Find<SweepResultPopup>().ShowPandora(eval.Action.worldId, eval.Action.actionPoint, eval.Action.apStoneCount,0);
+                    //Widget.Find<SweepResultPopup>().OnBattleFinish();
+                    ActionRenderHandler.Instance.Pending = false;
+                }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
                 Widget.Find<SweepResultPopup>().OnActionRender(new LocalRandom(eval.RandomSeed));
 
                 if (eval.Action.apStoneCount > 0)
@@ -989,12 +999,18 @@ namespace Nekoyume.BlockChain
                 }
 
                 UpdateCurrentAvatarStateAsync().Forget();
+
+
             }
             else
             {
                 Widget.Find<SweepResultPopup>().Close();
                 Game.Game.BackToMain(false, eval.Exception.InnerException).Forget();
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void ResponseMimisbrunnr(ActionBase.ActionEvaluation<MimisbrunnrBattle> eval)
