@@ -49,7 +49,7 @@ namespace Nekoyume.UI.Module
             currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
-                if (currentNFTOwner.CurrentPortrait != "")
+                if (!string.IsNullOrEmpty(currentNFTOwner.CurrentPortrait))
                 {
                     NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
                     var image = Resources.Load<Sprite>(portrait.PrefabLocation);
@@ -71,7 +71,7 @@ namespace Nekoyume.UI.Module
             currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
-                if (currentNFTOwner.CurrentPortrait != "")
+                if (!string.IsNullOrEmpty(currentNFTOwner.CurrentPortrait))
                 {
                     NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
                     var image = Resources.Load<Sprite>(portrait.PrefabLocation);

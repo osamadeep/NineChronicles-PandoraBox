@@ -166,7 +166,7 @@ namespace Nekoyume.Game.Character
                 currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == avatarAddress.ToLower());
                 if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
                 {
-                    if (currentNFTOwner.CurrentFullCostume != "")
+                    if (!string.IsNullOrEmpty(currentNFTOwner.CurrentFullCostume))
                     {
                         EquipCostumes(model.Costumes);
                         //EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);

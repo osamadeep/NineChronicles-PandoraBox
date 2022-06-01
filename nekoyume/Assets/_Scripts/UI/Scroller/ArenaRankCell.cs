@@ -530,7 +530,7 @@ namespace Nekoyume.UI.Scroller
             currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == ArenaInfo.AvatarAddress.ToString().ToLower());
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
-                if (currentNFTOwner.CurrentArenaBanner != "")
+                if (!string.IsNullOrEmpty(currentNFTOwner.CurrentArenaBanner))
                 {
                     NFTItem arenaBanner = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
                     if (bannerHolder.childCount > 0)
@@ -656,7 +656,7 @@ namespace Nekoyume.UI.Scroller
             currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == address.ToLower());
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
-                if (currentNFTOwner.CurrentPortrait != "")
+                if (!string.IsNullOrEmpty(currentNFTOwner.CurrentPortrait))
                 {
                     NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
                     if ((portrait is null))
