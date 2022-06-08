@@ -825,13 +825,6 @@ namespace Nekoyume.UI
             randomButton.transform.GetChild(0).gameObject.SetActive(false);
         }
 
-        public void MiniGameShow()
-        {
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This Feature coming soon!",
-                NotificationCell.NotificationType.Information);
-            return;
-        }
-
         public void ForceShowMenu()
         {
             Widget.Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Main);
@@ -841,6 +834,11 @@ namespace Nekoyume.UI
         public void ShowChronoTool()
         {
             Find<ChronoSlotsPopup>().Show();
+        }
+
+        public void ShowMiniGame()
+        {
+            Find<NineRunnerPopup>().Show();
         }
 
         public void FastCharacterSwitch()

@@ -323,6 +323,8 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<RaidPopup>());
             yield return null;
+            secondWidgets.Add(Widget.Create<NineRunnerPopup>());
+            yield return null;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             // tooltip
