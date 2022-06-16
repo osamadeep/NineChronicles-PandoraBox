@@ -138,6 +138,13 @@ namespace Nekoyume.BlockChain
             }
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public int GetQueueCount()
+        {
+            return _queuedActions.Count;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public IEnumerator Initialize(
             CommandLineOptions options,
             PrivateKey privateKey,
