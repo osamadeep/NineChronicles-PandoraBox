@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Bencodex.Types;
 using Lib9c.Model.Order;
@@ -13,7 +14,6 @@ using Nekoyume.L10n;
 using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Item;
-using Nekoyume.Model;
 using Nekoyume.State;
 using Nekoyume.UI;
 using Nekoyume.Model.State;
@@ -24,7 +24,12 @@ using Nekoyume.UI.Module;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using mixpanel;
-using Material = Nekoyume.Model.Item.Material;
+using Nekoyume.Arena;
+using Nekoyume.Game;
+using Nekoyume.Model.Arena;
+using Nekoyume.Model.BattleStatus.Arena;
+using Nekoyume.Model.EnumType;
+using Unity.Mathematics;
 
 #if LIB9C_DEV_EXTENSIONS || UNITY_EDITOR
 using Lib9c.DevExtensions.Action;
@@ -33,7 +38,7 @@ using Lib9c.DevExtensions.Action;
 namespace Nekoyume.BlockChain
 {
     using Nekoyume.PandoraBox;
-    using Nekoyume.UI.Scroller;
+    using UI.Scroller;
     using UniRx;
 
     /// <summary>
@@ -81,7 +86,7 @@ namespace Nekoyume.BlockChain
                 {
                     var actionType = gameAction.GetActionTypeAttribute();
                     var elapsed = (DateTime.Now - enqueuedDateTime).TotalSeconds;
-                    Analyzer.Instance.Track($"Unity/ActionRender", new Value
+                    Analyzer.Instance.Track("Unity/ActionRender", new Value
                     {
                         ["ActionType"] = actionType.TypeIdentifier,
                         ["Elapsed"] = elapsed,
@@ -93,18 +98,21 @@ namespace Nekoyume.BlockChain
             GameConfig();
             CreateAvatar();
             TransferAsset();
+            MonsterCollect();
+            Stake();
 
             // Battle
             HackAndSlash();
-            RankingBattle();
             MimisbrunnrBattle();
             HackAndSlashSweep();
+            HackAndSlashRandomBuff();
 
             // Craft
             CombinationConsumable();
             CombinationEquipment();
             ItemEnhancement();
             RapidCombination();
+            Grinding();
 
             // Market
             Sell();
@@ -117,9 +125,17 @@ namespace Nekoyume.BlockChain
             RedeemCode();
             ChargeActionPoint();
             ClaimMonsterCollectionReward();
+            ClaimStakeReward();
+
+            // Crystal Unlocks
+            UnlockEquipmentRecipe();
+            UnlockWorld();
 #if LIB9C_DEV_EXTENSIONS || UNITY_EDITOR
             Testbed();
 #endif
+
+            // Arena
+            InitializeArenaActions();
         }
 
         public void Stop()
@@ -143,11 +159,7 @@ namespace Nekoyume.BlockChain
             _actionRenderer.EveryRender<CreateAvatar>()
                 .Where(ValidateEvaluationForCurrentAgent)
                 .ObserveOnMainThread()
-                .Subscribe(async eval =>
-                {
-                    await UpdateAgentStateAsync(eval);
-                    await UpdateAvatarState(eval, eval.Action.index);
-                })
+                .Subscribe(ResponseCreateAvatar)
                 .AddTo(_disposables);
         }
 
@@ -231,21 +243,48 @@ namespace Nekoyume.BlockChain
                 .AddTo(_disposables);
         }
 
-        private void RankingBattle()
-        {
-            _actionRenderer.EveryRender<RankingBattle>()
-                .Where(ValidateEvaluationForCurrentAgent)
-                .ObserveOnMainThread()
-                .Subscribe(ResponseRankingBattle)
-                .AddTo(_disposables);
-        }
-
         private void CombinationEquipment()
         {
             _actionRenderer.EveryRender<CombinationEquipment>()
                 .Where(ValidateEvaluationForCurrentAgent)
                 .ObserveOnMainThread()
                 .Subscribe(ResponseCombinationEquipment)
+                .AddTo(_disposables);
+        }
+
+        private void Grinding()
+        {
+            _actionRenderer.EveryRender<Grinding>()
+                .Where(ValidateEvaluationForCurrentAvatarState)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseGrinding)
+                .AddTo(_disposables);
+        }
+
+        private void UnlockEquipmentRecipe()
+        {
+            _actionRenderer.EveryRender<UnlockEquipmentRecipe>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseUnlockEquipmentRecipeAsync)
+                .AddTo(_disposables);
+        }
+
+        private void UnlockWorld()
+        {
+            _actionRenderer.EveryRender<UnlockWorld>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseUnlockWorld)
+                .AddTo(_disposables);
+        }
+
+        private void HackAndSlashRandomBuff()
+        {
+            _actionRenderer.EveryRender<HackAndSlashRandomBuff>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseHackAndSlashRandomBuff)
                 .AddTo(_disposables);
         }
 
@@ -284,6 +323,15 @@ namespace Nekoyume.BlockChain
                 .AddTo(_disposables);
         }
 
+        private void MonsterCollect()
+        {
+            _actionRenderer.EveryRender<MonsterCollect>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseMonsterCollect)
+                .AddTo(_disposables);
+        }
+
         private void ClaimMonsterCollectionReward()
         {
             _actionRenderer.EveryRender<ClaimMonsterCollectionReward>()
@@ -309,6 +357,71 @@ namespace Nekoyume.BlockChain
                 .ObserveOnMainThread()
                 .Subscribe(ResponseHackAndSlashSweep)
                 .AddTo(_disposables);
+        }
+
+        private void Stake()
+        {
+            _actionRenderer.EveryRender<Stake>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseStake)
+                .AddTo(_disposables);
+        }
+
+        private void ClaimStakeReward()
+        {
+            _actionRenderer.EveryRender<ClaimStakeReward>()
+                .Where(ValidateEvaluationForCurrentAvatarState)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseClaimStakeReward)
+                .AddTo(_disposables);
+        }
+
+        private void InitializeArenaActions()
+        {
+            _actionRenderer.EveryRender<JoinArena>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseJoinArenaAsync)
+                .AddTo(_disposables);
+
+            _actionRenderer.EveryRender<BattleArena>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseBattleArena)
+                .AddTo(_disposables);
+        }
+
+        private async UniTaskVoid ResponseCreateAvatar(ActionBase.ActionEvaluation<CreateAvatar> eval)
+        {
+            if (eval.Exception != null)
+            {
+                return;
+            }
+
+            await UpdateAgentStateAsync(eval);
+            await UpdateAvatarState(eval, eval.Action.index);
+            var avatarState
+                = await States.Instance.SelectAvatarAsync(eval.Action.index);
+            RenderQuest(
+                avatarState.address,
+                avatarState.questList.completedQuestIds);
+
+            var agentAddress = States.Instance.AgentState.address;
+            var avatarAddress = agentAddress.Derive(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    CreateAvatar2.DeriveFormat,
+                    eval.Action.index
+                )
+            );
+            DialogPopup.DeleteDialogPlayerPrefs(avatarAddress);
+
+            var loginDetail = Widget.Find<LoginDetail>();
+            if (loginDetail && loginDetail.IsActive())
+            {
+                loginDetail.OnRenderCreateAvatar(eval);
+            }
         }
 
         private void ResponseRapidCombination(ActionBase.ActionEvaluation<RapidCombination> eval)
@@ -371,6 +484,11 @@ namespace Nekoyume.BlockChain
                                 formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE";
                                 break;
                             case Action.ItemEnhancement.EnhancementResult.Fail:
+                                Analyzer.Instance.Track("Unity/ItemEnhancement Failed", new Value
+                                {
+                                    ["GainedCrystal"] = (long)enhancementResultModel.CRYSTAL.MajorUnit,
+                                    ["BurntNCG"] = (long)enhancementResultModel.gold,
+                                });
                                 formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE_FAIL";
                                 break;
                             default:
@@ -406,6 +524,11 @@ namespace Nekoyume.BlockChain
 
         private void ResponseCombinationEquipment(ActionBase.ActionEvaluation<CombinationEquipment> eval)
         {
+            if (eval.Action.payByCrystal)
+            {
+                Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+            }
+
             if (eval.Exception is null)
             {
                 var agentAddress = eval.Signer;
@@ -442,6 +565,18 @@ namespace Nekoyume.BlockChain
                 UpdateAgentStateAsync(eval).Forget();
                 UpdateCurrentAvatarStateAsync(eval).Forget();
                 RenderQuest(avatarAddress, avatarState.questList?.completedQuestIds);
+
+                if (eval.Action.payByCrystal)
+                {
+                    try
+                    {
+                        UpdateCrystalBalance(eval);
+                    }
+                    catch (BalanceDoesNotExistsException e)
+                    {
+                        Debug.LogError("Failed to update crystal balance : " + e);
+                    }
+                }
 
                 if (!(nextQuest is null))
                 {
@@ -532,7 +667,7 @@ namespace Nekoyume.BlockChain
 
                 // Notify
                 var format = L10nManager.Localize("NOTIFICATION_COMBINATION_COMPLETE");
-                UI.NotificationSystem.Reserve(
+                NotificationSystem.Reserve(
                     MailType.Workshop,
                     string.Format(format, result.itemUsable.GetLocalizedName()),
                     slot.UnlockBlockIndex,
@@ -545,6 +680,7 @@ namespace Nekoyume.BlockChain
 
         private void ResponseItemEnhancement(ActionBase.ActionEvaluation<ItemEnhancement> eval)
         {
+            Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
             if (eval.Exception is null)
             {
                 var agentAddress = eval.Signer;
@@ -559,6 +695,7 @@ namespace Nekoyume.BlockChain
                 }
 
                 LocalLayerModifier.ModifyAgentGold(agentAddress, result.gold);
+                LocalLayerModifier.ModifyAgentCrystalAsync(agentAddress, -result.CRYSTAL.MajorUnit).Forget();
                 LocalLayerModifier.AddItem(avatarAddress, itemUsable.TradableId, itemUsable.RequiredBlockIndex, 1);
                 foreach (var tradableId in result.materialItemIdList)
                 {
@@ -576,6 +713,17 @@ namespace Nekoyume.BlockChain
                 UpdateAgentStateAsync(eval).Forget();
                 UpdateCurrentAvatarStateAsync(eval).Forget();
                 RenderQuest(avatarAddress, avatarState.questList.completedQuestIds);
+                if (result.CRYSTAL.MajorUnit > 0)
+                {
+                    try
+                    {
+                        UpdateCrystalBalance(eval);
+                    }
+                    catch (BalanceDoesNotExistsException e)
+                    {
+                        Debug.LogError("Failed to update crystal balance : " + e);
+                    }
+                }
 
                 // Notify
                 string formatKey;
@@ -588,6 +736,11 @@ namespace Nekoyume.BlockChain
                         formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE";
                         break;
                     case Action.ItemEnhancement.EnhancementResult.Fail:
+                        Analyzer.Instance.Track("Unity/ItemEnhancement Failed", new Value
+                        {
+                            ["GainedCrystal"] = (long)result.CRYSTAL.MajorUnit,
+                            ["BurntNCG"] = (long)result.gold,
+                        });
                         formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE_FAIL";
                         break;
                     default:
@@ -597,7 +750,7 @@ namespace Nekoyume.BlockChain
                 }
 
                 var format = L10nManager.Localize(formatKey);
-                UI.NotificationSystem.Reserve(
+                NotificationSystem.Reserve(
                     MailType.Workshop,
                     string.Format(format, result.itemUsable.GetLocalizedName()),
                     slot.UnlockBlockIndex,
@@ -639,7 +792,7 @@ namespace Nekoyume.BlockChain
                     NotificationCell.NotificationType.Information);
 
                 UpdateCurrentAvatarStateAsync(eval).Forget();
-                ReactiveShopState.UpdateSellDigests();
+                ReactiveShopState.UpdateSellDigestsAsync().Forget();
             }
         }
 
@@ -671,7 +824,7 @@ namespace Nekoyume.BlockChain
             OneLineSystem.Push(MailType.Auction, message, NotificationCell.NotificationType.Information);
 
             UpdateCurrentAvatarStateAsync(eval).Forget();
-            ReactiveShopState.UpdateSellDigests();
+            ReactiveShopState.UpdateSellDigestsAsync().Forget();
         }
 
         private async void ResponseUpdateSell(ActionBase.ActionEvaluation<UpdateSell> eval)
@@ -698,7 +851,7 @@ namespace Nekoyume.BlockChain
 
             OneLineSystem.Push(MailType.Auction, message, NotificationCell.NotificationType.Information);
             UpdateCurrentAvatarStateAsync(eval).Forget();
-            ReactiveShopState.UpdateSellDigests();
+            ReactiveShopState.UpdateSellDigestsAsync().Forget();
         }
 
         private async void ResponseBuy(ActionBase.ActionEvaluation<Buy> eval)
@@ -738,7 +891,7 @@ namespace Nekoyume.BlockChain
                             errors.FirstOrDefault(tuple => tuple.orderId == purchaseInfo.OrderId);
 
                         var errorType = ((ShopErrorType)errorCode).ToString();
-                        LocalLayerModifier.ModifyAgentGold(agentAddress, price);
+                        LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, price).Forget();
 
                         string message;
                         if (count > 1)
@@ -756,7 +909,7 @@ namespace Nekoyume.BlockChain
                     }
                     else
                     {
-                        LocalLayerModifier.ModifyAgentGold(agentAddress, price);
+                        LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, price).Forget();
                         LocalLayerModifier.RemoveItem(avatarAddress, order.TradableId, order.ExpiredBlockIndex, count);
                         LocalLayerModifier.AddNewMail(avatarAddress, purchaseInfo.OrderId);
 
@@ -799,7 +952,7 @@ namespace Nekoyume.BlockChain
                     var count = order is FungibleOrder fungibleOrder ? fungibleOrder.ItemCount : 1;
                     var taxedPrice = order.Price - order.GetTax();
 
-                    LocalLayerModifier.ModifyAgentGold(agentAddress, -taxedPrice);
+                    LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, -taxedPrice).Forget();
                     LocalLayerModifier.AddNewMail(avatarAddress, purchaseInfo.OrderId);
 
                     string message;
@@ -861,7 +1014,7 @@ namespace Nekoyume.BlockChain
                             var task = UniTask.Run(() =>
                             {
                                 UpdateCurrentAvatarStateAsync(eval).Forget();
-                                UpdateWeeklyArenaState(eval);
+                                UpdateCrystalRandomSkillState(eval);
                                 var avatarState = States.Instance.CurrentAvatarState;
                                 RenderQuest(eval.Action.avatarAddress,
                                     avatarState.questList.completedQuestIds);
@@ -873,10 +1026,24 @@ namespace Nekoyume.BlockChain
                                 // ReSharper disable once ConvertClosureToMethodGroup
                                 .DoOnError(e => Debug.LogException(e));
                         });
+
+                var tableSheets = Game.Game.instance.TableSheets;
+
+                var skillsOnWaveStart = new List<Model.Skill.Skill>();
+                if (eval.Action.stageBuffId.HasValue)
+                {
+                    var skill = CrystalRandomSkillState.GetSkill(
+                        eval.Action.stageBuffId.Value,
+                        tableSheets.CrystalRandomBuffSheet,
+                        tableSheets.SkillSheet);
+                    skillsOnWaveStart.Add(skill);
+                }
+
                 var simulator = new StageSimulator(
                     new LocalRandom(eval.RandomSeed),
                     States.Instance.CurrentAvatarState,
                     eval.Action.foods,
+                    skillsOnWaveStart,
                     eval.Action.worldId,
                     eval.Action.stageId,
                     Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
@@ -885,6 +1052,15 @@ namespace Nekoyume.BlockChain
                 simulator.Simulate(1);
                 var log = simulator.Log;
                 Game.Game.instance.Stage.PlayCount = 1;
+
+                if (eval.Action.stageBuffId.HasValue)
+                {
+                    Analyzer.Instance.Track("Unity/Use Crystal Bonus Skill", new Value
+                    {
+                        ["RandomSkillId"] = eval.Action.stageBuffId,
+                        ["IsCleared"] = simulator.Log.IsClear,
+                    });
+                }
 
                 if (Widget.Find<LoadingScreen>().IsActive())
                 {
@@ -944,8 +1120,10 @@ namespace Nekoyume.BlockChain
                     Widget.Find<BattleResultPopup>().Show(_battleResultModel, false); //eval.Action.playCount ???
 
                     ActionRenderHandler.Instance.Pending = false;
-                    UpdateCurrentAvatarStateAsync(eval);
-                    UpdateWeeklyArenaState(eval);
+                    //UpdateCurrentAvatarStateAsync(eval);
+                    //UpdateWeeklyArenaState(eval);
+                    UpdateAgentStateAsync(eval).Forget();
+                    UpdateCurrentAvatarStateAsync(eval).Forget();
 
 
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -965,7 +1143,7 @@ namespace Nekoyume.BlockChain
                     Widget.Find<BattleResultPopup>().Close();
                 }
 
-                Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
+                Game.Game.BackToMainAsync(eval.Exception.InnerException, showLoadingScreen).Forget();
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -1005,7 +1183,7 @@ namespace Nekoyume.BlockChain
             else
             {
                 Widget.Find<SweepResultPopup>().Close();
-                Game.Game.BackToMain(false, eval.Exception.InnerException).Forget();
+                Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -1031,7 +1209,6 @@ namespace Nekoyume.BlockChain
                             var task = UniTask.Run(() =>
                             {
                                 UpdateCurrentAvatarStateAsync(eval).Forget();
-                                UpdateWeeklyArenaState(eval);
                                 var avatarState = States.Instance.CurrentAvatarState;
                                 RenderQuest(eval.Action.avatarAddress,
                                     avatarState.questList.completedQuestIds);
@@ -1043,6 +1220,7 @@ namespace Nekoyume.BlockChain
                                 // ReSharper disable once ConvertClosureToMethodGroup
                                 .DoOnError(e => Debug.LogException(e));
                         });
+
                 var simulator = new StageSimulator(
                     new LocalRandom(eval.RandomSeed),
                     States.Instance.CurrentAvatarState,
@@ -1089,137 +1267,138 @@ namespace Nekoyume.BlockChain
                     Widget.Find<BattleResultPopup>().Close();
                 }
 
-                Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
-            }
-        }
+        ////        Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
+        ////    }
+        ////}
 
-        private void ResponseRankingBattle(ActionBase.ActionEvaluation<RankingBattle> eval)
-        {
-            if (eval.Exception is null)
-            {
-                if (!ActionManager.IsLastBattleActionId(eval.Action.Id))
-                {
-                    return;
-                }
+        ////private void ResponseRankingBattle(ActionBase.ActionEvaluation<RankingBattle> eval)
+        ////{
+        ////    if (eval.Exception is null)
+        ////    {
+        ////        if (!ActionManager.IsLastBattleActionId(eval.Action.Id))
+        ////        {
+        ////            return;
+        ////        }
 
-                _disposableForBattleEnd?.Dispose();
-                _disposableForBattleEnd =
-                    Game.Game.instance.Stage.onEnterToStageEnd
-                        .First()
-                        .Subscribe(_ =>
-                        {
-                            var task = UniTask.Run(() =>
-                            {
-                                UpdateAgentStateAsync(eval).Forget();
-                                UpdateCurrentAvatarStateAsync().Forget();
-                                UpdateWeeklyArenaState(eval);
-                                _disposableForBattleEnd = null;
-                                Game.Game.instance.Stage.IsAvatarStateUpdatedAfterBattle = true;
-                            });
-                            task.ToObservable()
-                                .First()
-                                // ReSharper disable once ConvertClosureToMethodGroup
-                                .DoOnError(e => Debug.LogException(e));
-                        });
+        ////        _disposableForBattleEnd?.Dispose();
+        ////        _disposableForBattleEnd =
+        ////            Game.Game.instance.Stage.onEnterToStageEnd
+        ////                .First()
+        ////                .Subscribe(_ =>
+        ////                {
+        ////                    var task = UniTask.Run(() =>
+        ////                    {
+        ////                        UpdateAgentStateAsync(eval).Forget();
+        ////                        UpdateCurrentAvatarStateAsync().Forget();
+        ////                        UpdateWeeklyArenaState(eval);
+        ////                        _disposableForBattleEnd = null;
+        ////                        Game.Game.instance.Stage.IsAvatarStateUpdatedAfterBattle = true;
+        ////                    });
+        ////                    task.ToObservable()
+        ////                        .First()
+        ////                        // ReSharper disable once ConvertClosureToMethodGroup
+        ////                        .DoOnError(e => Debug.LogException(e));
+        ////                });
 
-                var tableSheets = Game.Game.instance.TableSheets;
-                ArenaInfo previousArenaInfo;
-                ArenaInfo previousEnemyArenaInfo;
-                EnemyPlayerDigest previousEnemyPlayerDigest;
-                if (eval.Extra is { })
-                {
-                    var aid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousArenaInfo)];
-                    previousArenaInfo = new ArenaInfo(aid);
-                    var eid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyArenaInfo)];
-                    previousEnemyArenaInfo = new ArenaInfo(eid);
-                    var epd = (List)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyPlayerDigest)];
-                    previousEnemyPlayerDigest = new EnemyPlayerDigest(epd);
-                }
-                else
-                {
-                    var previousAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.avatarAddress);
-                    var tuple = eval.PreviousStates.GetArenaInfo(
-                        eval.Action.weeklyArenaAddress,
-                        previousAvatarState,
-                        tableSheets.CharacterSheet,
-                        tableSheets.CostumeStatSheet);
-                    previousArenaInfo = tuple.arenaInfo;
-                    var previousEnemyAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.enemyAddress);
-                    var enemyTuple = eval.PreviousStates.GetArenaInfo(
-                        eval.Action.weeklyArenaAddress,
-                        previousEnemyAvatarState,
-                        tableSheets.CharacterSheet,
-                        tableSheets.CostumeStatSheet);
-                    previousEnemyArenaInfo = enemyTuple.arenaInfo;
-                    previousEnemyPlayerDigest = new EnemyPlayerDigest(previousEnemyAvatarState);
-                }
+        ////        var tableSheets = Game.Game.instance.TableSheets;
+        ////        ArenaInfo previousArenaInfo;
+        ////        ArenaInfo previousEnemyArenaInfo;
+        ////        EnemyPlayerDigest previousEnemyPlayerDigest;
+        ////        if (eval.Extra is { })
+        ////        {
+        ////            var aid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousArenaInfo)];
+        ////            previousArenaInfo = new ArenaInfo(aid);
+        ////            var eid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyArenaInfo)];
+        ////            previousEnemyArenaInfo = new ArenaInfo(eid);
+        ////            var epd = (List)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyPlayerDigest)];
+        ////            previousEnemyPlayerDigest = new EnemyPlayerDigest(epd);
+        ////        }
+        ////        else
+        ////        {
+        ////            var previousAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.avatarAddress);
+        ////            var tuple = eval.PreviousStates.GetArenaInfo(
+        ////                eval.Action.weeklyArenaAddress,
+        ////                previousAvatarState,
+        ////                tableSheets.CharacterSheet,
+        ////                tableSheets.CostumeStatSheet);
+        ////            previousArenaInfo = tuple.arenaInfo;
+        ////            var previousEnemyAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.enemyAddress);
+        ////            var enemyTuple = eval.PreviousStates.GetArenaInfo(
+        ////                eval.Action.weeklyArenaAddress,
+        ////                previousEnemyAvatarState,
+        ////                tableSheets.CharacterSheet,
+        ////                tableSheets.CostumeStatSheet);
+        ////            previousEnemyArenaInfo = enemyTuple.arenaInfo;
+        ////            previousEnemyPlayerDigest = new EnemyPlayerDigest(previousEnemyAvatarState);
+        ////        }
 
-                var rankingSimulatorSheets = tableSheets.GetRankingSimulatorSheets();
-                var player = new Player(States.Instance.CurrentAvatarState, rankingSimulatorSheets);
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                PandoraBoxMaster.CurrentArenaEnemyAddress = previousEnemyArenaInfo.AvatarAddress.ToString().ToLower();
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                var simulator = new RankingSimulator(
-                    new LocalRandom(eval.RandomSeed),
-                    player,
-                    previousEnemyPlayerDigest,
-                    new List<Guid>(),
-                    rankingSimulatorSheets,
-                    Action.RankingBattle.StageId,
-                    tableSheets.CostumeStatSheet
-                );
-                simulator.Simulate();
-                var challengerScoreDelta = previousArenaInfo.Update(
-                    previousEnemyArenaInfo,
-                    simulator.Result,
-                    ArenaScoreHelper.GetScore);
-                var rewards = RewardSelector.Select(
-                    simulator.Random,
-                    tableSheets.WeeklyArenaRewardSheet,
-                    tableSheets.MaterialItemSheet,
-                    player.Level,
-                    previousArenaInfo.GetRewardCount());
-                simulator.PostSimulate(rewards, challengerScoreDelta, previousArenaInfo.Score);
+        ////        var rankingSimulatorSheets = tableSheets.GetRankingSimulatorSheets();
+        ////        var player = new Player(States.Instance.CurrentAvatarState, rankingSimulatorSheets);
+        ////        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        ////        PandoraBoxMaster.CurrentArenaEnemyAddress = previousEnemyArenaInfo.AvatarAddress.ToString().ToLower();
+        ////        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        ////        var simulator = new RankingSimulator(
+        ////            new LocalRandom(eval.RandomSeed),
+        ////            player,
+        ////            previousEnemyPlayerDigest,
+        ////            new List<Guid>(),
+        ////            rankingSimulatorSheets,
+        ////            Action.RankingBattle.StageId,
+        ////            tableSheets.CostumeStatSheet
+        ////        );
+        ////        simulator.Simulate();
+        ////        var challengerScoreDelta = previousArenaInfo.Update(
+        ////            previousEnemyArenaInfo,
+        ////            simulator.Result,
+        ////            ArenaScoreHelper.GetScore);
+        ////        var rewards = RewardSelector.Select(
+        ////            simulator.Random,
+        ////            tableSheets.WeeklyArenaRewardSheet,
+        ////            tableSheets.MaterialItemSheet,
+        ////            player.Level,
+        ////            previousArenaInfo.GetRewardCount());
+        ////        simulator.PostSimulate(rewards, challengerScoreDelta, previousArenaInfo.Score);
 
-                //give option to know that battle is done
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Arena Random Fight " +
-                    "<color=green><b>Successfully</b></color> committed on the blockchain!"
-                    , NotificationCell.NotificationType.Information);
+        ////        //give option to know that battle is done
+        ////        OneLineSystem.Push(MailType.System,
+        ////            "<color=green>Pandora Box</color>: Arena Random Fight " +
+        ////            "<color=green><b>Successfully</b></color> committed on the blockchain!"
+        ////            , NotificationCell.NotificationType.Information);
 
 
-                if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
-                {
-                    Widget.Find<RankingBoard>().GoToStage(simulator.Log);
-                }
+        ////        if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
+        ////        {
+        ////            Widget.Find<RankingBoard>().GoToStage(simulator.Log);
+        ////        }
 
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.Ranking)
-                {
-                    ActionRenderHandler.Instance.Pending = false;
-                    UpdateAgentStateAsync(eval);
-                    UpdateCurrentAvatarStateAsync(eval);
-                    UpdateWeeklyArenaState(eval);
-                }
+        ////        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        ////        else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.Ranking)
+        ////        {
+        ////            ActionRenderHandler.Instance.Pending = false;
+        ////            UpdateAgentStateAsync(eval);
+        ////            UpdateCurrentAvatarStateAsync(eval);
+        ////            UpdateWeeklyArenaState(eval);
+        ////        }
 
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                Widget.Find<Menu>().ClearRemainingTickets();
-            }
-            else
-            {
-                var showLoadingScreen = false;
-                if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
-                {
-                    Widget.Find<ArenaBattleLoadingScreen>().Close();
-                }
+        ////        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        ////        Widget.Find<Menu>().ClearRemainingTickets();
+        ////    }
+        ////    else
+        ////    {
+        ////        var showLoadingScreen = false;
+        ////        if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
+        ////        {
+        ////            Widget.Find<ArenaBattleLoadingScreen>().Close();
+        ////        }
 
-                if (Widget.Find<RankingBattleResultPopup>().IsActive())
-                {
-                    showLoadingScreen = true;
-                    Widget.Find<RankingBattleResultPopup>().Close();
-                }
+        ////        if (Widget.Find<RankingBattleResultPopup>().IsActive())
+        ////        {
+        ////            showLoadingScreen = true;
+        ////            Widget.Find<RankingBattleResultPopup>().Close();
+        ////        }
 
-                Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
+        ////        Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
+                Game.Game.BackToMainAsync(eval.Exception.InnerException, showLoadingScreen).Forget();
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -1267,6 +1446,29 @@ namespace Nekoyume.BlockChain
                 }
 
                 UpdateCurrentAvatarStateAsync(eval).Forget();
+            }
+        }
+
+        private void ResponseMonsterCollect(ActionBase.ActionEvaluation<MonsterCollect> eval)
+        {
+            if (!(eval.Exception is null))
+            {
+                return;
+            }
+
+            NotificationSystem.Push(
+                MailType.System,
+                L10nManager.Localize("UI_MONSTERCOLLECTION_UPDATED"),
+                NotificationCell.NotificationType.Information);
+
+            UpdateAgentStateAsync(eval).Forget();
+            UpdateCurrentAvatarStateAsync(eval).Forget();
+            var (mcState, level, balance) = GetMonsterCollectionState(eval);
+            if (mcState != null)
+            {
+                UpdateMonsterCollectionState(mcState,
+                    new GoldBalanceState(mcState.address, balance),
+                    level);
             }
         }
 
@@ -1325,7 +1527,7 @@ namespace Nekoyume.BlockChain
             // ~LocalLayer
 
             // Notification
-            UI.NotificationSystem.Push(
+            NotificationSystem.Push(
                 MailType.System,
                 L10nManager.Localize("NOTIFICATION_CLAIM_MONSTER_COLLECTION_REWARD_COMPLETE"),
                 NotificationCell.NotificationType.Information);
@@ -1372,7 +1574,184 @@ namespace Nekoyume.BlockChain
                 }
             }
 
-            UpdateAgentStateAsync(eval);
+            UpdateAgentStateAsync(eval).Forget();
+        }
+
+        private void ResponseGrinding(ActionBase.ActionEvaluation<Grinding> eval)
+        {
+            if (!(eval.Exception is null))
+            {
+                return;
+            }
+
+            var avatarAddress = eval.Action.AvatarAddress;
+            var avatarState = eval.OutputStates.GetAvatarState(avatarAddress);
+            var mail = avatarState.mailBox.OfType<GrindingMail>().FirstOrDefault(m => m.id.Equals(eval.Action.Id));
+            if (mail is null)
+            {
+                return;
+            }
+
+            if (eval.Action.ChargeAp)
+            {
+                var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
+                    r.ItemSubType == ItemSubType.ApStone);
+                LocalLayerModifier.AddItem(avatarAddress, row.ItemId);
+
+                if (GameConfigStateSubject.ActionPointState.ContainsKey(eval.Action.AvatarAddress))
+                {
+                    GameConfigStateSubject.ActionPointState.Remove(eval.Action.AvatarAddress);
+                }
+            }
+
+            OneLineSystem.Push(MailType.Grinding,
+                L10nManager.Localize("UI_GRINDING_NOTIFY"),
+                NotificationCell.NotificationType.Information);
+            UpdateCurrentAvatarStateAsync(eval).Forget();
+            UpdateAgentStateAsync(eval).Forget();
+            try
+            {
+                UpdateCrystalBalance(eval);
+            }
+            catch (BalanceDoesNotExistsException e)
+            {
+                Debug.LogError("Failed to update crystal balance : " + e);
+            }
+        }
+
+        private async UniTaskVoid ResponseUnlockEquipmentRecipeAsync(
+            ActionBase.ActionEvaluation<UnlockEquipmentRecipe> eval)
+        {
+            Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+            var sharedModel = Craft.SharedModel;
+            var recipeIds = eval.Action.RecipeIds;
+            if (!(eval.Exception is null))
+            {
+                foreach (var id in eval.Action.RecipeIds)
+                {
+                    sharedModel.UnlockingRecipes.Remove(id);
+                }
+
+                sharedModel.SetUnlockedRecipes(sharedModel.UnlockedRecipes.Value);
+                sharedModel.UpdateUnlockableRecipes();
+                return;
+            }
+
+            var sheet = Game.Game.instance.TableSheets.EquipmentItemRecipeSheet;
+            var cost = CrystalCalculator.CalculateRecipeUnlockCost(recipeIds, sheet);
+            await UniTask.WhenAll(
+                LocalLayerModifier.ModifyAgentCrystalAsync(
+                    States.Instance.AgentState.address,
+                    cost.MajorUnit),
+                UpdateCurrentAvatarStateAsync(eval),
+                UpdateAgentStateAsync(eval));
+            try
+            {
+                UpdateCrystalBalance(eval);
+            }
+            catch (BalanceDoesNotExistsException e)
+            {
+                Debug.LogError("Failed to update crystal balance : " + e);
+            }
+
+            foreach (var id in recipeIds)
+            {
+                sharedModel.UnlockingRecipes.Remove(id);
+            }
+
+            recipeIds.AddRange(sharedModel.UnlockedRecipes.Value);
+            sharedModel.SetUnlockedRecipes(recipeIds);
+            sharedModel.UpdateUnlockableRecipes();
+        }
+
+        private void ResponseUnlockWorld(ActionBase.ActionEvaluation<UnlockWorld> eval)
+        {
+            Widget.Find<UnlockWorldLoadingScreen>().Close();
+
+            if (!(eval.Exception is null))
+            {
+                Debug.LogError($"unlock world exc : {eval.Exception.InnerException}");
+                return;
+                // Exception handling...
+            }
+
+            var worldMap = Widget.Find<WorldMap>();
+            worldMap.SharedViewModel.UnlockedWorldIds.AddRange(eval.Action.WorldIds);
+            worldMap.SetWorldInformation(States.Instance.CurrentAvatarState.worldInformation);
+
+            UpdateCurrentAvatarStateAsync(eval).Forget();
+            UpdateAgentStateAsync(eval).Forget();
+            try
+            {
+                UpdateCrystalBalance(eval);
+            }
+            catch (BalanceDoesNotExistsException e)
+            {
+                Debug.LogError("Failed to update crystal balance : " + e);
+            }
+        }
+
+        private void ResponseHackAndSlashRandomBuff(ActionBase.ActionEvaluation<HackAndSlashRandomBuff> eval)
+        {
+            if (!(eval.Exception is null))
+            {
+                Debug.LogError($"HackAndSlashRandomBuff exc : {eval.Exception.InnerException}");
+                return;
+            }
+
+            UpdateCurrentAvatarStateAsync(eval).Forget();
+            UpdateAgentStateAsync(eval).Forget();
+            UpdateCrystalRandomSkillState(eval);
+            try
+            {
+                UpdateCrystalBalance(eval);
+            }
+            catch (BalanceDoesNotExistsException e)
+            {
+                Debug.LogError("Failed to update crystal balance : " + e);
+            }
+
+            Widget.Find<BuffBonusLoadingScreen>().Close();
+            Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+            var skillState = States.Instance.CrystalRandomSkillState;
+            Widget.Find<BuffBonusResultPopup>().Show(skillState.StageId, skillState);
+        }
+
+        private void ResponseStake(ActionBase.ActionEvaluation<Stake> eval)
+        {
+            if (!(eval.Exception is null))
+            {
+                return;
+            }
+
+            NotificationSystem.Push(
+                MailType.System,
+                L10nManager.Localize("UI_MONSTERCOLLECTION_UPDATED"),
+                NotificationCell.NotificationType.Information);
+
+            var (state, level, balance) = GetStakeState(eval);
+            if (state != null)
+            {
+                UpdateStakeState(state, new GoldBalanceState(state.address, balance), level);
+            }
+
+            UpdateAgentStateAsync(eval).Forget();
+        }
+
+        private void ResponseClaimStakeReward(ActionBase.ActionEvaluation<ClaimStakeReward> eval)
+        {
+            if (!(eval.Exception is null))
+            {
+                return;
+            }
+
+            // Notification
+            NotificationSystem.Push(
+                MailType.System,
+                L10nManager.Localize("NOTIFICATION_CLAIM_MONSTER_COLLECTION_REWARD_COMPLETE"),
+                NotificationCell.NotificationType.Information);
+
+            UpdateCurrentAvatarStateAsync(eval).Forget();
         }
 
         public static void RenderQuest(Address avatarAddress, IEnumerable<int> ids)
@@ -1434,18 +1813,225 @@ namespace Nekoyume.BlockChain
                 .ObserveOnMainThread()
                 .Subscribe(ResponseTestbed)
                 .AddTo(_disposables);
+
+            _actionRenderer.EveryRender<CreateArenaDummy>()
+                .Where(ValidateEvaluationForCurrentAgent)
+                .ObserveOnMainThread()
+                .Subscribe(ResponseCreateArenaDummy)
+                .AddTo(_disposables);
         }
 
         private void ResponseTestbed(ActionBase.ActionEvaluation<CreateTestbed> eval)
         {
-            if (eval.Exception is null)
+        }
+
+        private void ResponseCreateArenaDummy(ActionBase.ActionEvaluation<CreateArenaDummy> eval)
+        {
+        }
+#endif
+
+        private static async UniTaskVoid ResponseJoinArenaAsync(ActionBase.ActionEvaluation<JoinArena> eval)
+        {
+            if (eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address)
             {
+                return;
+            }
+
+            var arenaJoin = Widget.Find<ArenaJoin>();
+            if (eval.Exception != null)
+            {
+                if (arenaJoin && arenaJoin.IsActive())
+                {
+                    arenaJoin.OnRenderJoinArena(eval);
+                }
+            }
+
+            UpdateCrystalBalance(eval);
+
+            var currentRound = TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(
+                Game.Game.instance.Agent.BlockIndex);
+            if (eval.Action.championshipId == currentRound.ChampionshipId &&
+                eval.Action.round == currentRound.Round)
+            {
+                await UniTask.WhenAll(
+                    RxProps.ArenaInfoTuple.UpdateAsync(),
+                    RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync());
             }
             else
             {
+                await RxProps.ArenaInfoTuple.UpdateAsync();
+            }
 
+            if (arenaJoin && arenaJoin.IsActive())
+            {
+                arenaJoin.OnRenderJoinArena(eval);
             }
         }
-#endif
+
+        private async UniTaskVoid ResponseBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)
+        {
+            if (!ActionManager.IsLastBattleActionId(eval.Action.Id) ||
+                eval.Action.myAvatarAddress != States.Instance.CurrentAvatarState.address)
+            {
+                return;
+            }
+
+            var arenaBattlePreparation = Widget.Find<ArenaBattlePreparation>();
+            if (eval.Exception != null)
+            {
+                if (arenaBattlePreparation && arenaBattlePreparation.IsActive())
+                {
+                    arenaBattlePreparation.OnRenderBattleArena(eval);
+                }
+
+                Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
+
+                return;
+            }
+
+            _disposableForBattleEnd?.Dispose();
+            _disposableForBattleEnd = Game.Game.instance.Arena.OnArenaEnd
+                .First()
+                .Subscribe(_ =>
+                {
+                    UniTask.Run(() =>
+                        {
+                            UpdateAgentStateAsync(eval).Forget();
+                            UpdateCurrentAvatarStateAsync().Forget();
+                            // TODO!!!! [`PlayersArenaParticipant`]를 개별로 업데이트 한다.
+                            // RxProps.PlayersArenaParticipant.UpdateAsync().Forget();
+                            _disposableForBattleEnd = null;
+                            Game.Game.instance.Arena.IsAvatarStateUpdatedAfterBattle = true;
+                        }).ToObservable()
+                        .First()
+                        // ReSharper disable once ConvertClosureToMethodGroup
+                        .DoOnError(e => Debug.LogException(e));
+                });
+
+            var tableSheets = Game.Game.instance.TableSheets;
+            ArenaPlayerDigest? myDigest = null;
+            ArenaPlayerDigest? enemyDigest = null;
+            int? previousMyScore = null;
+            if (eval.Extra is { })
+            {
+                myDigest = eval.Extra.TryGetValue(
+                    nameof(BattleArena.ExtraMyArenaPlayerDigest),
+                    out var myDigestValue)
+                    ? myDigestValue is List myDigestList
+                        ? new ArenaPlayerDigest(myDigestList)
+                        : (ArenaPlayerDigest?)null
+                    : null;
+
+                enemyDigest = eval.Extra.TryGetValue(
+                    nameof(BattleArena.ExtraEnemyArenaPlayerDigest),
+                    out var enemyDigestValue)
+                    ? enemyDigestValue is List enemyDigestList
+                        ? new ArenaPlayerDigest(enemyDigestList)
+                        : (ArenaPlayerDigest?)null
+                    : null;
+
+                previousMyScore = eval.Extra.TryGetValue(
+                    nameof(BattleArena.ExtraPreviousMyScore),
+                    out var previousMyScoreValue)
+                    ? previousMyScoreValue is Text previousMyScoreText
+                        ? previousMyScoreText.ToInteger()
+                        : ArenaScore.ArenaScoreDefault
+                    : ArenaScore.ArenaScoreDefault;
+            }
+
+            if (!myDigest.HasValue)
+            {
+                var myAvatarState
+                    = eval.OutputStates.GetAvatarStateV2(eval.Action.myAvatarAddress);
+                if (!eval.OutputStates.TryGetArenaAvatarState(
+                        ArenaAvatarState.DeriveAddress(eval.Action.myAvatarAddress),
+                        out var myArenaAvatarState))
+                {
+                    Debug.LogError("Failed to get ArenaAvatarState of mine");
+                }
+
+                myDigest
+                    = new ArenaPlayerDigest(myAvatarState, myArenaAvatarState);
+            }
+
+            if (!enemyDigest.HasValue)
+            {
+                var enemyAvatarState
+                    = eval.OutputStates.GetAvatarStateV2(eval.Action.enemyAvatarAddress);
+                if (!eval.OutputStates.TryGetArenaAvatarState(
+                        ArenaAvatarState.DeriveAddress(eval.Action.enemyAvatarAddress),
+                        out var enemyArenaAvatarState))
+                {
+                    Debug.LogError("Failed to get ArenaAvatarState of enemy");
+                }
+
+                enemyDigest
+                    = new ArenaPlayerDigest(enemyAvatarState, enemyArenaAvatarState);
+            }
+
+            previousMyScore ??= RxProps.PlayersArenaParticipant.HasValue
+                ? RxProps.PlayersArenaParticipant.Value.Score
+                : ArenaScore.ArenaScoreDefault;
+
+            var random = new LocalRandom(eval.RandomSeed);
+            // TODO!!!! ticket 수 만큼 돌려서 마지막 전투 결과를 띄운다.
+            // eval.Action.ticket
+            var simulator = new ArenaSimulator(random);
+            var log = simulator.Simulate(
+                myDigest.Value,
+                enemyDigest.Value,
+                tableSheets.GetArenaSimulatorSheets());
+
+            await UniTask.WhenAll(
+                RxProps.ArenaInfoTuple.UpdateAsync(),
+                RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync());
+            // NOTE: The `RxProps.PlayersArenaParticipant` updated when
+            //       the `RxProps.ArenaParticipantsOrderedWithScore` update.
+            log.Score = RxProps.PlayersArenaParticipant.HasValue
+                ? RxProps.PlayersArenaParticipant.Value.Score
+                : ArenaScore.ArenaScoreDefault;
+
+            var rewards = RewardSelector.Select(
+                random,
+                tableSheets.WeeklyArenaRewardSheet,
+                tableSheets.MaterialItemSheet,
+                myDigest.Value.Level,
+                maxCount: ArenaHelper.GetRewardCount(previousMyScore.Value));
+            if (log.Result == ArenaLog.ArenaResult.Win)
+            {
+                var championshipId = eval.Action.championshipId;
+                var round = eval.Action.round;
+                var hasMedalReward =
+                    tableSheets.ArenaSheet.TryGetValue(
+                        championshipId,
+                        out var row) &&
+                    row.Round.Any(e =>
+                        e.Round == round &&
+                        e.ArenaType != ArenaType.OffSeason);
+                if (hasMedalReward)
+                {
+                    var medalItemId = ArenaHelper.GetMedalItemId(
+                        eval.Action.championshipId,
+                        eval.Action.round);
+                    var medalItem = ItemFactory.CreateMaterial(
+                        tableSheets.MaterialItemSheet,
+                        medalItemId);
+                    if (medalItem is { })
+                    {
+                        rewards.Add(medalItem);
+                    }
+                }
+            }
+
+            if (arenaBattlePreparation && arenaBattlePreparation.IsActive())
+            {
+                arenaBattlePreparation.OnRenderBattleArena(eval);
+                Game.Game.instance.Arena.Enter(
+                    log,
+                    rewards,
+                    myDigest.Value,
+                    enemyDigest.Value);
+            }
+        }
     }
 }

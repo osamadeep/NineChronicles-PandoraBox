@@ -32,9 +32,7 @@ namespace Nekoyume.UI
 
         [SerializeField] private TextMeshProUGUI loadingText = null;
 
-        private Player player;
         private static readonly int Close1 = Animator.StringToHash("Close");
-
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void RollDice()
@@ -110,7 +108,13 @@ namespace Nekoyume.UI
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-        public void Show(ArenaInfo enemyInfo)
+        public void Show(
+            string playerName,
+            int playerLevel,
+            int playerFullCostumeOrArmorId,
+            string enemyName,
+            int enemyLevel,
+            int enemyFullCostumeOrArmorId)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             try
@@ -121,13 +125,10 @@ namespace Nekoyume.UI
             {
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            player = Game.Game.instance.Stage.GetPlayer();
-            var sprite = SpriteHelper.GetItemIcon(player.Model.armor?.Id ?? GameConfig.DefaultAvatarArmorId);
-            playerProfile.Set(player.Level, States.Instance.CurrentAvatarState.NameWithHash, sprite);
-            player.gameObject.SetActive(false);
-            var enemySprite = SpriteHelper.GetItemIcon(enemyInfo.ArmorId);
-            enemyProfile.Set(enemyInfo.Level, enemyInfo.AvatarName, enemySprite);
+            var playerSprite = SpriteHelper.GetItemIcon(playerFullCostumeOrArmorId);
+            playerProfile.Set(playerLevel, playerName, playerSprite);
+            var enemySprite = SpriteHelper.GetItemIcon(enemyFullCostumeOrArmorId);
+            enemyProfile.Set(enemyLevel, enemyName, enemySprite);
             loadingText.text = L10nManager.Localize("UI_MATCHING_OPPONENT");
             Show();
         }
@@ -154,7 +155,7 @@ namespace Nekoyume.UI
 
             tipText.text = pandoraTips[Random.Range(0, pandoraTips.Length - 1)];
             AudioController.instance.PlaySfx("sfx_useitem");
-            player.gameObject.SetActive(true);
+            //player.gameObject.SetActive(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

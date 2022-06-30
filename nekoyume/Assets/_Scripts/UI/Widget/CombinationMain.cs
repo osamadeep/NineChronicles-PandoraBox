@@ -10,7 +10,11 @@ namespace Nekoyume.UI
 
         [SerializeField] private Button upgradeButton = null;
 
-        [SerializeField] private Button closeButton = null;
+        [SerializeField]
+        private Button grindButton;
+
+        [SerializeField]
+        private Button closeButton = null;
 
         [SerializeField] private Image craftNotificationImage = null;
 
@@ -31,6 +35,13 @@ namespace Nekoyume.UI
             {
                 Close(true);
                 Find<Enhancement>().Show();
+                AudioController.PlayClick();
+            });
+
+            grindButton.onClick.AddListener(() =>
+            {
+                Close(true);
+                Find<Grind>().Show();
                 AudioController.PlayClick();
             });
 

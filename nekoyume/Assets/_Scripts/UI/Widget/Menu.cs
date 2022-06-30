@@ -1,21 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Bencodex.Types;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.State;
-using Nekoyume.UI.Module;
 using Nekoyume.Model.BattleStatus;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using mixpanel;
-using Nekoyume.Action;
 using Nekoyume.EnumType;
+using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
+using Nekoyume.State.Subjects;
+using Nekoyume.UI.Module;
+using Nekoyume.UI.Module.Lobby;
 using UnityEngine.UI;
 using StateExtensions = Nekoyume.Model.State.StateExtensions;
 
@@ -31,6 +32,7 @@ namespace Nekoyume.UI
     using System.Collections.Immutable;
     using System.Threading.Tasks;
     using TMPro;
+    using Scroller;
     using UniRx;
 
     public class Menu : Widget
@@ -57,8 +59,7 @@ namespace Nekoyume.UI
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        [SerializeField]
-        private MainMenu btnQuest = null;
+        [SerializeField] private MainMenu btnQuest = null;
 
         [SerializeField] private MainMenu btnCombination = null;
 
@@ -68,17 +69,19 @@ namespace Nekoyume.UI
 
         [SerializeField] private MainMenu btnMimisbrunnr = null;
 
+        [SerializeField] private MainMenu btnStaking = null;
+
         [SerializeField] private SpeechBubble[] speechBubbles = null;
 
         [SerializeField] private GameObject shopExclamationMark = null;
 
         [SerializeField] private GameObject combinationExclamationMark = null;
 
-        [SerializeField] private GameObject rankingExclamationMark = null;
-
         [SerializeField] private GameObject questExclamationMark = null;
 
         [SerializeField] private GameObject mimisbrunnrExclamationMark = null;
+
+        [SerializeField] private Image stakingLevelIcon;
 
         [SerializeField] private GuidedQuest guidedQuest = null;
 
@@ -109,14 +112,18 @@ namespace Nekoyume.UI
                     btnMimisbrunnr.GetComponent<Button>(),
                     btnQuest.GetComponent<Button>(),
                     btnRanking.GetComponent<Button>(),
-                    btnShop.GetComponent<Button>()
+                    btnShop.GetComponent<Button>(),
+                    btnStaking.GetComponent<Button>(),
                 };
                 buttonList.ForEach(button => button.interactable = stateType == AnimationStateType.Shown);
             }).AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            randomButton.OnClickAsObservable().Subscribe(_ => RandomArenaFight()).AddTo(gameObject);
+            //randomButton.OnClickAsObservable().Subscribe(_ => RandomArenaFight()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            MonsterCollectionStateSubject.Level.Subscribe(level =>
+                stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(level, true)).AddTo(gameObject);
         }
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
@@ -179,69 +186,60 @@ namespace Nekoyume.UI
             CombinationClickInternal(() => Find<Craft>().Show(recipeId));
         }
 
-        private async void UpdateButtons()
+        private void UpdateButtons()
         {
             btnQuest.Update();
             btnCombination.Update();
             btnShop.Update();
             btnRanking.Update();
             btnMimisbrunnr.Update();
+            btnStaking.Update();
 
             var addressHex = States.Instance.CurrentAvatarState.address.ToHex();
-            var firstOpenCombinationKey = string.Format(FirstOpenCombinationKeyFormat, addressHex);
-            var firstOpenShopKey = string.Format(FirstOpenShopKeyFormat, addressHex);
-            var firstOpenQuestKey = string.Format(FirstOpenQuestKeyFormat, addressHex);
-            var firstOpenMimisbrunnrKey = string.Format(FirstOpenMimisbrunnrKeyFormat, addressHex);
+            var firstOpenCombinationKey
+                = string.Format(FirstOpenCombinationKeyFormat, addressHex);
+            var firstOpenShopKey
+                = string.Format(FirstOpenShopKeyFormat, addressHex);
+            var firstOpenQuestKey
+                = string.Format(FirstOpenQuestKeyFormat, addressHex);
+            var firstOpenMimisbrunnrKey
+                = string.Format(FirstOpenMimisbrunnrKeyFormat, addressHex);
 
             combinationExclamationMark.gameObject.SetActive(
-                btnCombination.IsUnlocked &&
-                (PlayerPrefs.GetInt(firstOpenCombinationKey, 0) == 0 ||
-                 Craft.SharedModel.HasNotification));
+                btnCombination.IsUnlocked
+                && (PlayerPrefs.GetInt(firstOpenCombinationKey, 0) == 0 ||
+                    Craft.SharedModel.HasNotification));
             shopExclamationMark.gameObject.SetActive(
-                btnShop.IsUnlocked &&
-                PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
 
-            var currentAddress = States.Instance.CurrentAvatarState?.address;
-            if (currentAddress.HasValue)
-            {
-                ArenaInfo arenaInfo = null;
-                var avatarAddress = currentAddress.Value;
-                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
-                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                if (rawInfo is Dictionary dictionary)
-                {
-                    arenaInfo = new ArenaInfo(dictionary);
-                }
+                //            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //if (arenaInfo != null)
+                //{
+                //    randomButton.interactable = arenaInfo.DailyChallengeCount > 0;
+                //    randomButton.GetComponentInChildren<TextMeshProUGUI>().text =
+                //        "Random X" + arenaInfo.DailyChallengeCount;
 
-                rankingExclamationMark.gameObject.SetActive(
-                    btnRanking.IsUnlocked &&
-                    (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
-
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                if (arenaInfo != null)
-                {
-                    randomButton.interactable = arenaInfo.DailyChallengeCount > 0;
-                    randomButton.GetComponentInChildren<TextMeshProUGUI>().text =
-                        "Random X" + arenaInfo.DailyChallengeCount;
-
-                    if (arenaInfo.DailyChallengeCount > 0)
-                        arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
-                    else
-                        arenaCount.text = $"<color=red>{arenaInfo.DailyChallengeCount}</color>/5";
-                }
-                else
-                    arenaCount.text = "<color=red>!</color>";
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            }
+                //    if (arenaInfo.DailyChallengeCount > 0)
+                //        arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
+                //    else
+                //        arenaCount.text = $"<color=red>{arenaInfo.DailyChallengeCount}</color>/5";
+                //}
+                //else
+                //    arenaCount.text = "<color=red>!</color>";
+                ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                btnShop.IsUnlocked
+                && PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
 
             var worldMap = Find<WorldMap>();
             worldMap.UpdateNotificationInfo();
             var hasNotificationInWorldMap = worldMap.HasNotification;
 
             questExclamationMark.gameObject.SetActive(
-                (btnQuest.IsUnlocked && PlayerPrefs.GetInt(firstOpenQuestKey, 0) == 0) || hasNotificationInWorldMap);
-            mimisbrunnrExclamationMark.gameObject.SetActive((btnMimisbrunnr.IsUnlocked &&
-                                                             PlayerPrefs.GetInt(firstOpenMimisbrunnrKey, 0) == 0));
+                (btnQuest.IsUnlocked
+                 && PlayerPrefs.GetInt(firstOpenQuestKey, 0) == 0)
+                || hasNotificationInWorldMap);
+            mimisbrunnrExclamationMark.gameObject.SetActive(
+                btnMimisbrunnr.IsUnlocked
+                && PlayerPrefs.GetInt(firstOpenMimisbrunnrKey, 0) == 0);
         }
 
         private void HideButtons()
@@ -251,6 +249,7 @@ namespace Nekoyume.UI
             btnShop.gameObject.SetActive(false);
             btnRanking.gameObject.SetActive(false);
             btnMimisbrunnr.gameObject.SetActive(false);
+            btnStaking.gameObject.SetActive(false);
         }
 
         public void ShowWorld()
@@ -278,7 +277,6 @@ namespace Nekoyume.UI
             Close();
             var avatarState = States.Instance.CurrentAvatarState;
             Find<WorldMap>().Show(avatarState.worldInformation);
-            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
             AudioController.PlayClick();
         }
 
@@ -341,8 +339,17 @@ namespace Nekoyume.UI
                 return;
             }
 
+            if (btnRanking is ArenaMenu { State: ArenaMenu.ViewState.LoadingArenaData })
+            {
+                NotificationSystem.Push(
+                    MailType.System,
+                    L10nManager.Localize("UI_LOBBY_ARENA_MENU_LOADING_DATA"),
+                    NotificationCell.NotificationType.Information);
+                return;
+            }
+
             Close(true);
-            Find<RankingBoard>().Show();
+            Find<ArenaJoin>().Show();
             Analyzer.Instance.Track("Unity/Enter arena page");
             AudioController.PlayClick();
         }
@@ -415,6 +422,24 @@ namespace Nekoyume.UI
             HelpTooltip.HelpMe(100019, true);
         }
 
+        public void StakingClick()
+        {
+            if (!btnStaking.IsUnlocked)
+            {
+                btnStaking.JingleTheCat();
+                return;
+            }
+
+            if (States.Instance.StakingLevel < 1)
+            {
+                Find<StakingPopupNone>().Show();
+            }
+            else
+            {
+                Find<StakingPopup>().Show();
+            }
+        }
+
         public void UpdateGuideQuest(AvatarState avatarState)
         {
             guidedQuest.UpdateList(avatarState);
@@ -457,8 +482,10 @@ namespace Nekoyume.UI
                     PandoraBoxMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
 
-            ArenaCurrentPosition();
+            //ArenaCurrentPosition();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+            stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(States.Instance.StakingLevel, true);
         }
 
         protected override void OnCompleteOfShowAnimationInternal()
@@ -551,14 +578,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            // Temporarily lock tutorial recipe.
-            var skipMap = Craft.SharedModel.RecipeVFXSkipList;
-            if (skipMap.Contains(firstRecipeRow.Id))
-            {
-                skipMap.Remove(firstRecipeRow.Id);
-            }
-
-            Craft.SharedModel.SaveRecipeVFXSkipList();
+            Craft.SharedModel.DummyLockedRecipes.Add(firstRecipeRow.Id);
             GoToCombinationEquipmentRecipe(firstRecipeRow.Id);
         }
 
@@ -579,12 +599,12 @@ namespace Nekoyume.UI
         protected override void OnEnable()
         {
             base.OnEnable();
-            StartCoroutine(arenaRemainsTime());
+            //StartCoroutine(arenaRemainsTime());
             StartCoroutine(ShowWhatsNew());
 
             DailyBonus.IsTrying = false;
         }
-
+        /*
         public async void RandomArenaFight()
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
@@ -817,7 +837,7 @@ namespace Nekoyume.UI
                 .Where(tuple => tuple.rank > 0)
                 .ToList();
         }
-
+        */
         public void ClearRemainingTickets()
         {
             randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X0";
@@ -846,7 +866,7 @@ namespace Nekoyume.UI
             if (PandoraUtil.IsBusy())
                 return;
 
-            if (Game.Game.instance.Stage.IsInStage)
+            if (Game.Game.instance.IsInWorld)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
                     L10nManager.Localize("UI_BLOCK_EXIT"), NotificationCell.NotificationType.Information);
@@ -876,7 +896,7 @@ namespace Nekoyume.UI
                 PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
             }
         }
-
+        /*
         public async void ArenaCurrentPosition()
         {
             //remove arena lock
@@ -991,6 +1011,7 @@ namespace Nekoyume.UI
                 yield return new WaitForSeconds(3);
             }
         }
+        */
 
         //IEnumerator arenaRemainsCount()
         //{

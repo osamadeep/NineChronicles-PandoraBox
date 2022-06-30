@@ -1,9 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using JetBrains.Annotations;
-using Libplanet;
 using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
@@ -134,8 +133,6 @@ namespace Nekoyume.UI.Module
 
         private void OnSliderChange()
         {
-            //text.text = $"{(int)sliderAnimator.Value} / {(int)sliderAnimator.MaxValue}";
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
             {

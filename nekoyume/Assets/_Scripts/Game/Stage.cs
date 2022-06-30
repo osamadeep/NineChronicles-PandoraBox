@@ -71,6 +71,7 @@ namespace Nekoyume.Game
 
         private Camera _camera;
         private BattleLog _battleLog;
+        private List<ItemBase> _rewards;
         private BattleResultPopup.Model _battleResultModel;
         private bool _rankingBattle;
         private Coroutine _battleCoroutine;
@@ -86,7 +87,6 @@ namespace Nekoyume.Game
         public TutorialController TutorialController { get; private set; }
         public Enemy Boss { get; private set; }
         public AvatarState AvatarState { get; set; }
-        public bool IsInStage { get; set; }
         public bool IsShowHud { get; set; }
         public bool IsExitReserved { get; set; }
         public bool IsRepeatStage { get; set; }
@@ -127,7 +127,6 @@ namespace Nekoyume.Game
             Event.OnLoginDetail.AddListener(OnLoginDetail);
             Event.OnRoomEnter.AddListener(OnRoomEnter);
             Event.OnStageStart.AddListener(OnStageStart);
-            Event.OnRankingBattleStart.AddListener(OnRankingBattleStart);
         }
 
         public void Initialize()
@@ -156,30 +155,6 @@ namespace Nekoyume.Game
 
                 _battleLog = log;
                 PlayStage(_battleLog);
-            }
-            else
-            {
-                Debug.Log("Skip incoming battle. Battle is already simulating.");
-            }
-        }
-
-        private void OnRankingBattleStart(BattleLog log)
-        {
-#if TEST_LOG
-            Debug.Log($"[{nameof(Stage)}] {nameof(OnRankingBattleStart)}() enter");
-#endif
-            _rankingBattle = true;
-            if (_battleLog is null)
-            {
-                if (!(_battleCoroutine is null))
-                {
-                    StopCoroutine(_battleCoroutine);
-                    _battleCoroutine = null;
-                    objectPool.ReleaseAll();
-                }
-
-                _battleLog = log;
-                PlayRankingBattle(_battleLog);
             }
             else
             {
@@ -257,7 +232,7 @@ namespace Nekoyume.Game
 #endif
             showLoadingScreen = showScreen;
             gameObject.AddComponent<RoomEntering>();
-            IsInStage = false;
+            Game.instance.IsInWorld = false;
         }
 
         // todo: 배경 캐싱.
@@ -331,17 +306,6 @@ namespace Nekoyume.Game
             }
         }
 
-        private void PlayRankingBattle(BattleLog log)
-        {
-#if TEST_LOG
-            Debug.Log($"[{nameof(Stage)}] {nameof(PlayRankingBattle)}() enter");
-#endif
-            if (log?.Count > 0)
-            {
-                _battleCoroutine = StartCoroutine(CoPlayRankingBattle(log));
-            }
-        }
-
         private IEnumerator CoPlayStage(BattleLog log)
         {
 #if TEST_LOG
@@ -355,7 +319,7 @@ namespace Nekoyume.Game
                 .Select(r => r.Id)
                 .ToList();
 
-            IsInStage = true;
+            Game.instance.IsInWorld = true;
             yield return StartCoroutine(CoStageEnter(log));
             HelpTooltip.HelpMe(100005, true);
 
@@ -366,60 +330,6 @@ namespace Nekoyume.Game
 
             yield return StartCoroutine(CoStageEnd(log));
             ClearBattle();
-        }
-
-        private IEnumerator CoPlayRankingBattle(BattleLog log)
-        {
-#if TEST_LOG
-            Debug.Log($"[{nameof(Stage)}] {nameof(CoPlayRankingBattle)}() enter");
-#endif
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            Widget.Find<UI.Battle>().simulateText.SetActive(PandoraBoxMaster.IsRankingSimulate);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            IsInStage = true;
-            yield return StartCoroutine(CoRankingBattleEnter(log));
-            Widget.Find<ArenaBattleLoadingScreen>().Close();
-            _positionCheckCoroutine = StartCoroutine(CheckPosition(log));
-            //Widget.Find<UI.Battle>().EnemyPlayerStatus.GetComponent<Player>().avatarAddress = PandoraBoxMaster.CurrentArenaEnemyAddress;
-
-            foreach (var e in log)
-            {
-                yield return StartCoroutine(e.CoExecute(this));
-            }
-
-            StopCoroutine(_positionCheckCoroutine);
-            _positionCheckCoroutine = null;
-            yield return StartCoroutine(CoRankingBattleEnd(log));
-            ClearBattle();
-        }
-
-        private IEnumerator CheckPosition(BattleLog log)
-        {
-            var player = GetPlayer();
-            while (player.isActiveAndEnabled)
-            {
-                if (player.transform.localPosition.x >= 16f)
-                {
-                    _positionCheckCoroutine = null;
-
-                    if (log.FirstOrDefault(e => e is GetReward) is GetReward getReward)
-                    {
-                        var rewards = getReward.Rewards;
-                        foreach (var item in rewards)
-                        {
-                            var countableItem = new CountableItem(item, 1);
-                            _battleResultModel.AddReward(countableItem);
-                        }
-                    }
-
-                    yield return StartCoroutine(CoRankingBattleEnd(log, true));
-                    ClearBattle();
-                    StopAllCoroutines();
-                }
-
-                yield return new WaitForSeconds(1f);
-            }
         }
 
         public void ClearBattle()
@@ -496,7 +406,7 @@ namespace Nekoyume.Game
 #endif
             waveCount = log.waveCount;
             waveTurn = 1;
-            stageId = log.stageId;
+            stageId = 999999;
             if (!Game.instance.TableSheets.StageSheet.TryGetValue(stageId, out var data))
                 yield break;
 
@@ -680,57 +590,6 @@ namespace Nekoyume.Game
             }
         }
 
-        private IEnumerator CoRankingBattleEnd(BattleLog log, bool forceQuit = false)
-        {
-#if TEST_LOG
-            Debug.Log($"[{nameof(Stage)}] {nameof(CoRankingBattleEnd)}() enter");
-#endif
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!PandoraBoxMaster.IsRankingSimulate)
-            {
-                IsAvatarStateUpdatedAfterBattle = false;
-
-                // NOTE ActionRenderHandler.Instance.Pending should be false before _onEnterToStageEnd.OnNext() invoked.
-                ActionRenderHandler.Instance.Pending = false;
-                _onEnterToStageEnd.OnNext(this);
-                yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
-            }
-            //|||||||||||||| PANDORA CODE |||||||||||||||||||
-
-            var characters = GetComponentsInChildren<Character.CharacterBase>();
-
-            if (!forceQuit)
-            {
-                yield return new WaitWhile(() =>
-                    characters.Any(i => i.actions.Any()));
-            }
-
-            Boss = null;
-            var playerCharacter = log.result == BattleLog.Result.Win
-                ? GetPlayer()
-                : GetComponentInChildren<Character.EnemyPlayer>();
-
-            yield return new WaitForSeconds(0.75f);
-
-            //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            try //in case we Force quit to menu
-            {
-                playerCharacter.Animator.Win();
-                playerCharacter.ShowSpeech("PLAYER_WIN");
-
-                Widget.Find<UI.Battle>().Close();
-                Widget.Find<Status>().Close();
-
-                Widget.Find<RankingBattleResultPopup>().Show(log, _battleResultModel.Rewards);
-            }
-            catch
-            {
-            }
-
-            yield return null;
-        }
-
         public IEnumerator CoSpawnPlayer(Model.Player character)
         {
 #if TEST_LOG
@@ -786,7 +645,9 @@ namespace Nekoyume.Game
 
             if (!(AvatarState is null) && !ActionRenderHandler.Instance.Pending)
             {
-                ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(AvatarState);
+                ActionRenderHandler.Instance
+                    .UpdateCurrentAvatarStateAsync(AvatarState)
+                    .Forget();
             }
 
             yield return null;
@@ -913,7 +774,16 @@ namespace Nekoyume.Game
             var infos = skillInfos.ToList();
             var infosFirstWaveTurn = infos.First().WaveTurn;
             var time = Time.time;
+
+            //230 new code the next comment one
             yield return new WaitUntil(() => Time.time - time > 5f || waveTurn == infosFirstWaveTurn);
+
+            //// If a skill's wave turn is 0, it is casted regardless of turn.
+            //if (infosFirstWaveTurn > 0)
+            //{
+            //    yield return new WaitUntil(() => Time.time - time > 5f || waveTurn == infosFirstWaveTurn);
+            //}
+
             yield return StartCoroutine(CoBeforeSkill(character));
 
             yield return StartCoroutine(func(infos));
@@ -1242,12 +1112,12 @@ namespace Nekoyume.Game
 
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuShop)
             {
-                menuNames.Add("Shop");
+                menuNames.Add(nameof(Shop));
             }
 
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuRankingBoard)
             {
-                menuNames.Add(nameof(RankingBoard));
+                menuNames.Add(nameof(ArenaJoin));
             }
 
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuMimisbrunnr)

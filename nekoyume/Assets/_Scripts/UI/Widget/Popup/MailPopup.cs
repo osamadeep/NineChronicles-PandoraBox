@@ -273,8 +273,13 @@ namespace Nekoyume.UI
             var agentAddress = States.Instance.AgentState.address;
             var order = await Util.GetOrder(orderSellerMail.OrderId);
             var taxedPrice = order.Price - order.GetTax();
-            LocalLayerModifier.ModifyAgentGold(agentAddress, taxedPrice);
+            LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, taxedPrice).Forget();
             LocalLayerModifier.RemoveNewMail(avatarAddress, orderSellerMail.id);
+        }
+
+        public void Read(GrindingMail grindingMail)
+        {
+            Debug.Log($"[{nameof(GrindingMail)}] ItemCount: {grindingMail.ItemCount}, Asset: {grindingMail.Asset}");
         }
 
         public async void Read(OrderExpirationMail orderExpirationMail)
@@ -304,7 +309,7 @@ namespace Nekoyume.UI
                     LocalLayerModifier.AddItem(avatarAddress, order.TradableId,
                         order.ExpiredBlockIndex, 1);
                     LocalLayerModifier.RemoveNewMail(avatarAddress, cancelOrderMail.id);
-                    ReactiveShopState.UpdateSellDigests();
+                    ReactiveShopState.UpdateSellDigestsAsync().Forget();
                 });
         }
 
@@ -322,6 +327,13 @@ namespace Nekoyume.UI
             // LocalLayer
             UniTask.Run(async () =>
             {
+                if (itemEnhanceMail.attachment is ItemEnhancement.ResultModel result)
+                {
+                    await LocalLayerModifier.ModifyAgentCrystalAsync(
+                        States.Instance.AgentState.address,
+                        result.CRYSTAL.MajorUnit);
+                }
+
                 LocalLayerModifier.AddItem(
                     avatarAddress,
                     itemUsable.TradableId,

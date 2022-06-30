@@ -48,6 +48,8 @@ namespace Nekoyume.UI
 
         private TextMeshProUGUI _titleText = null;
 
+        private SystemType _type;
+
         public System.Action ConfirmCallback { get; set; }
         public System.Action CancelCallback { get; set; }
 
@@ -63,11 +65,14 @@ namespace Nekoyume.UI
                 ui.cancelButton.OnClick = Cancel;
                 ui.textGroupButton.onClick.AddListener(() =>
                 {
-                    ClipboardHelper.CopyToClipboard(ui.contentText.text);
-                    NotificationSystem.Push(
-                        MailType.System,
-                        L10nManager.Localize("UI_COPIED"),
-                        NotificationCell.NotificationType.Information);
+                    if (_type != SystemType.Information)
+                    {
+                        ClipboardHelper.CopyToClipboard(ui.contentText.text);
+                        NotificationSystem.Push(
+                            MailType.System,
+                            L10nManager.Localize("UI_COPIED"),
+                            NotificationCell.NotificationType.Information);
+                    }
                 });
             }
         }
@@ -162,6 +167,7 @@ namespace Nekoyume.UI
             SystemType type = SystemType.Error)
         {
             SetUIByType(type);
+            _type = type;
 
             void Test(string text, Action<bool> setActive, Action<string> setText)
             {

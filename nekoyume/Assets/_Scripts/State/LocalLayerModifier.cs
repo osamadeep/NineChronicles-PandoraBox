@@ -2,13 +2,13 @@ using System;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Libplanet;
 using Libplanet.Assets;
+using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.State.Modifiers;
-using Nekoyume.State.Subjects;
-using Nekoyume.TableData;
 
 namespace Nekoyume.State
 {
@@ -24,7 +24,7 @@ namespace Nekoyume.State
         /// </summary>
         /// <param name="agentAddress"></param>
         /// <param name="gold"></param>
-        public static async void ModifyAgentGold(Address agentAddress, FungibleAssetValue gold)
+        public static async UniTask ModifyAgentGoldAsync(Address agentAddress, FungibleAssetValue gold)
         {
             if (gold.Sign == 0)
             {
@@ -35,7 +35,8 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(agentAddress, modifier);
 
             //FIXME Avoid LocalLayer duplicate modify gold.
-            var state = new GoldBalanceState(agentAddress,
+            var state = new GoldBalanceState(
+                agentAddress,
                 await Game.Game.instance.Agent.GetBalanceAsync(agentAddress, gold.Currency));
             if (!state.address.Equals(agentAddress))
             {
@@ -52,10 +53,31 @@ namespace Nekoyume.State
                 return;
             }
 
-            ModifyAgentGold(agentAddress, new FungibleAssetValue(
+            var fav = new FungibleAssetValue(
                 States.Instance.GoldBalanceState.Gold.Currency,
                 gold,
-                0));
+                0);
+            ModifyAgentGoldAsync(agentAddress, fav).Forget();
+        }
+
+        public static async UniTask ModifyAgentCrystalAsync(Address agentAddress, BigInteger crystal)
+        {
+            if (crystal == 0)
+            {
+                return;
+            }
+
+            var fav = new FungibleAssetValue(
+                CrystalCalculator.CRYSTAL,
+                crystal,
+                0);
+            var modifier = new AgentCrystalModifier(fav);
+            LocalLayer.Instance.Add(agentAddress, modifier);
+            var crystalBalance
+                = await Game.Game.instance.Agent.GetBalanceAsync(
+                    agentAddress,
+                    CrystalCalculator.CRYSTAL);
+            States.Instance.SetCrystalBalance(crystalBalance);
         }
 
         /// <summary>
@@ -74,11 +96,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -168,11 +190,11 @@ namespace Nekoyume.State
         private static void RemoveItemInternal(Address avatarAddress, AvatarStateModifier modifier)
         {
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -202,11 +224,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -227,11 +249,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -256,11 +278,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -328,7 +350,6 @@ namespace Nekoyume.State
 
             await TryResetLoadedAvatarState(avatarAddress);
         }
-
         #endregion
 
         #region Avatar / Quest
@@ -344,11 +365,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -441,11 +462,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -472,11 +493,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -501,11 +522,11 @@ namespace Nekoyume.State
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
             if (!TryGetLoadedAvatarState(
-                    avatarAddress,
-                    out var outAvatarState,
-                    out _,
-                    out var isCurrentAvatarState)
-               )
+                avatarAddress,
+                out var outAvatarState,
+                out _,
+                out var isCurrentAvatarState)
+            )
             {
                 return;
             }
@@ -582,10 +603,10 @@ namespace Nekoyume.State
         /// Therefore, there is no need to additionally update `ReactiveAvatarState` after using this function.
         /// </summary>
         /// <param name="avatarAddress"></param>
-        private static async Task TryResetLoadedAvatarState(Address avatarAddress)
+        private static async UniTask TryResetLoadedAvatarState(Address avatarAddress)
         {
             if (!TryGetLoadedAvatarState(avatarAddress, out _, out var outKey,
-                    out var isCurrentAvatarState))
+                out var isCurrentAvatarState))
             {
                 return;
             }

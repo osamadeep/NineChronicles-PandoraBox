@@ -42,6 +42,8 @@ namespace Nekoyume.Game
     {
         [SerializeField] private Stage stage = null;
 
+        [SerializeField] private Arena arena = null;
+
         [SerializeField] private bool useSystemLanguage = true;
 
         [SerializeField] private LanguageTypeReactiveProperty languageType = default;
@@ -59,6 +61,7 @@ namespace Nekoyume.Game
         public Analyzer Analyzer { get; private set; }
 
         public Stage Stage => stage;
+        public Arena Arena => arena;
 
         // FIXME Action.PatchTableSheet.Execute()에 의해서만 갱신됩니다.
         // 액션 실행 여부와 상관 없이 최신 상태를 반영하게끔 수정해야합니다.
@@ -67,6 +70,7 @@ namespace Nekoyume.Game
         public ActionManager ActionManager { get; private set; }
 
         public bool IsInitialized { get; private set; }
+        public bool IsInWorld { get; set; }
 
         public Prologue Prologue => prologue;
 
@@ -183,6 +187,7 @@ namespace Nekoyume.Game
             ActionManager = new ActionManager(Agent);
             yield return SyncTableSheetsAsync().ToCoroutine();
             Debug.Log("[Game] Start() TableSheets synchronized");
+            RxProps.Start(Agent, States, TableSheets);
             // Initialize MainCanvas second
             yield return StartCoroutine(MainCanvas.instance.InitializeSecond());
             // Initialize NineChroniclesAPIClient.
@@ -191,6 +196,7 @@ namespace Nekoyume.Game
             RankPopup.UpdateSharedModel();
             // Initialize Stage
             Stage.Initialize();
+            Arena.Initialize();
 
             Widget.Find<VersionSystem>().SetVersion(Agent.AppProtocolVersion);
 
@@ -275,64 +281,7 @@ namespace Nekoyume.Game
 
         private static void OnRPCAgentPreloadStarted(RPCAgent rpcAgent)
         {
-            if (Widget.Find<IntroScreen>().IsActive() ||
-                Widget.Find<PreloadingScreen>().IsActive() ||
-                Widget.Find<Synopsis>().IsActive())
-            {
-                // NOTE: 타이틀 화면에서 리트라이와 프리로드가 완료된 상황입니다.
-                // FIXME: 이 경우에는 메인 로비가 아니라 기존 초기화 로직이 흐르도록 처리해야 합니다.
-                return;
-            }
-
-            var needToBackToMain = false;
-            var showLoadingScreen = false;
-            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
-            if (widget.IsActive())
-            {
-                widget.Close();
-            }
-
-            if (Widget.Find<LoadingScreen>().IsActive())
-            {
-                Widget.Find<LoadingScreen>().Close();
-                widget = Widget.Find<BattlePreparation>();
-                if (widget.IsActive())
-                {
-                    widget.Close(true);
-                    needToBackToMain = true;
-                }
-
-                widget = Widget.Find<Menu>();
-                if (widget.IsActive())
-                {
-                    widget.Close(true);
-                    needToBackToMain = true;
-                }
-            }
-            else if (Widget.Find<StageLoadingEffect>().IsActive())
-            {
-                Widget.Find<StageLoadingEffect>().Close();
-
-                if (Widget.Find<BattleResultPopup>().IsActive())
-                {
-                    Widget.Find<BattleResultPopup>().Close(true);
-                }
-
-                needToBackToMain = true;
-                showLoadingScreen = true;
-            }
-            else if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
-            {
-                Widget.Find<ArenaBattleLoadingScreen>().Close();
-                needToBackToMain = true;
-            }
-
-            if (!needToBackToMain)
-            {
-                return;
-            }
-
-            BackToMain(showLoadingScreen, new UnableToRenderWhenSyncingBlocksException());
+            // ignore.
         }
 
         private static void OnRPCAgentPreloadEnded(RPCAgent rpcAgent)
@@ -394,7 +343,8 @@ namespace Nekoyume.Game
                 return;
             }
 
-            BackToMain(showLoadingScreen, new UnableToRenderWhenSyncingBlocksException());
+            BackToMainAsync(new UnableToRenderWhenSyncingBlocksException(), showLoadingScreen)
+                .Forget();
         }
 
         private void QuitWithAgentConnectionError(RPCAgent rpcAgent)
@@ -466,6 +416,9 @@ namespace Nekoyume.Game
             TableSheets = new TableSheets(csv);
         }
 
+        // FIXME: Return some of exceptions when table csv is `Null` in the chain.
+        //        And if it is `Null` in the chain, then it should be handled in the caller.
+        //        Show a popup with error message and quit the application.
         private async UniTask SyncTableSheetsAsync()
         {
             var container
@@ -485,6 +438,7 @@ namespace Nekoyume.Game
             var dict = await Agent.GetStateBulk(map.Keys);
             var csv = dict.ToDictionary(
                 pair => map[pair.Key],
+                // NOTE: `pair.Value` is nullable when the chain not contains the `pair.Key`.
                 pair => pair.Value.ToDotnetString());
             TableSheets = new TableSheets(csv);
         }
@@ -551,7 +505,7 @@ namespace Nekoyume.Game
             }
         }
 
-        public static async UniTaskVoid BackToMain(bool showLoadingScreen, Exception exc)
+        public static async UniTaskVoid BackToMainAsync(Exception exc, bool showLoadingScreen = false)
         {
             Debug.LogException(exc);
 
@@ -560,13 +514,15 @@ namespace Nekoyume.Game
             instance.Stage.OnRoomEnterEnd
                 .First()
                 .Subscribe(_ => PopupError(key, code, errorMsg));
-
+            instance.Arena.OnRoomEnterEnd
+                .First()
+                .Subscribe(_ => PopupError(key, code, errorMsg));
             MainCanvas.instance.InitWidgetInMain();
         }
 
         public void BackToNest()
         {
-            if (Stage.IsInStage)
+            if (IsInWorld)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
                     L10nManager.Localize("UI_BLOCK_EXIT"),
@@ -859,7 +815,7 @@ namespace Nekoyume.Game
             return;
 #endif
             var isTrackable = true;
-            if (!Debug.isDebugBuild)
+            if (Debug.isDebugBuild)
             {
                 Debug.Log("This is debug build.");
                 isTrackable = false;

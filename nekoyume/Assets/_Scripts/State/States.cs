@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using Bencodex.Types;
 using Cysharp.Threading.Tasks;
 using Libplanet;
 using Nekoyume.Action;
-using Nekoyume.BlockChain;
 using Nekoyume.Model.State;
 using Nekoyume.State.Subjects;
 using Debug = UnityEngine.Debug;
 using static Lib9c.SerializeKeys;
+using StateExtensions = Nekoyume.Model.State.StateExtensions;
+using Libplanet.Assets;
+using Nekoyume.Helper;
 
 namespace Nekoyume.State
 {
@@ -24,11 +24,15 @@ namespace Nekoyume.State
     {
         public static States Instance => Game.Game.instance.States;
 
-        public WeeklyArenaState WeeklyArenaState { get; private set; }
-
         public AgentState AgentState { get; private set; }
 
         public GoldBalanceState GoldBalanceState { get; private set; }
+
+        public GoldBalanceState StakedBalanceState { get; private set; }
+
+        public StakeState StakeState { get; private set; }
+
+        public CrystalRandomSkillState CrystalRandomSkillState { get; set; }
 
         private readonly Dictionary<int, AvatarState> _avatarStates = new Dictionary<int, AvatarState>();
 
@@ -40,6 +44,10 @@ namespace Nekoyume.State
 
         public GameConfigState GameConfigState { get; private set; }
 
+        public FungibleAssetValue CrystalBalance { get; private set; }
+
+        public int StakingLevel { get; private set; }
+
         private readonly Dictionary<int, CombinationSlotState> _combinationSlotStates =
             new Dictionary<int, CombinationSlotState>();
 
@@ -49,19 +57,6 @@ namespace Nekoyume.State
         }
 
         #region Setter
-
-        public void SetWeeklyArenaState(WeeklyArenaState state)
-        {
-            if (state is null)
-            {
-                Debug.LogWarning($"[{nameof(States)}.{nameof(SetWeeklyArenaState)}] {nameof(state)} is null.");
-                return;
-            }
-
-            LocalLayer.Instance.InitializeWeeklyArena(state);
-            WeeklyArenaState = LocalLayer.Instance.Modify(state);
-            WeeklyArenaStateSubject.OnNext(WeeklyArenaState);
-        }
 
         /// <summary>
         /// 에이전트 상태를 할당한다.
@@ -108,6 +103,60 @@ namespace Nekoyume.State
             AgentStateSubject.OnNextGold(GoldBalanceState.Gold);
         }
 
+        public void SetCrystalBalance(FungibleAssetValue fav)
+        {
+            if (!fav.Currency.Equals(CrystalCalculator.CRYSTAL))
+            {
+                Debug.LogWarning($"Currency not matches. {fav.Currency}");
+                return;
+            }
+
+            CrystalBalance = LocalLayer.Instance.ModifyCrystal(fav);
+            AgentStateSubject.OnNextCrystal(CrystalBalance);
+        }
+
+        public void SetMonsterCollectionState(
+            MonsterCollectionState monsterCollectionState,
+            GoldBalanceState stakedBalanceState,
+            int level)
+        {
+            if (monsterCollectionState is null)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(States)}.{nameof(SetMonsterCollectionState)}] {nameof(monsterCollectionState)} is null.");
+                return;
+            }
+
+            StakingLevel = level;
+            StakedBalanceState = stakedBalanceState;
+            MonsterCollectionStateSubject.OnNextLevel(StakingLevel);
+        }
+
+        public void SetStakeState(StakeState stakeState, GoldBalanceState stakedBalanceState, int stakingLevel)
+        {
+            if (stakeState is null)
+            {
+                Debug.LogWarning($"[{nameof(States)}.{nameof(SetStakeState)}] {nameof(stakeState)} is null.");
+                return;
+            }
+
+            StakeState = stakeState;
+            StakedBalanceState = stakedBalanceState;
+            StakingLevel = stakingLevel;
+            MonsterCollectionStateSubject.OnNextLevel(stakingLevel);
+        }
+
+        public void SetCrystalRandomSkillState(CrystalRandomSkillState skillState)
+        {
+            if (skillState is null)
+            {
+                Debug.LogWarning($"[{nameof(States)}.{nameof(SetCrystalRandomSkillState)}] {nameof(skillState)} is null.");
+                return;
+            }
+
+            CrystalRandomSkillState = skillState;
+        }
+
         public async UniTask<AvatarState> AddOrReplaceAvatarStateAsync(
             Address avatarAddress,
             int index,
@@ -122,11 +171,12 @@ namespace Nekoyume.State
             return null;
         }
 
-        public static async UniTask<(bool exist, AvatarState avatarState)> TryGetAvatarStateAsync(Address address,
+        public static async UniTask<(bool exist, AvatarState avatarState)> TryGetAvatarStateAsync(
+            Address address,
             bool allowBrokenState = false)
         {
             AvatarState avatarState = null;
-            bool exist = false;
+            var exist = false;
             try
             {
                 avatarState = await GetAvatarStateAsync(address, allowBrokenState);
@@ -204,15 +254,9 @@ namespace Nekoyume.State
                 return null;
             }
 
-            //if (AgentState is null || !AgentState.avatarAddresses.ContainsValue(state.address))
-            //    throw new Exception(
-            //        $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (AgentState is null || (!AgentState.avatarAddresses.ContainsValue(state.address) && PandoraBox.PandoraBoxMaster.InspectedAddress == ""))
+            if (AgentState is null || !AgentState.avatarAddresses.ContainsValue(state.address))
                 throw new Exception(
                     $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             state = LocalLayer.Instance.Modify(state);
 
@@ -258,30 +302,36 @@ namespace Nekoyume.State
         /// <param name="initializeReactiveState"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public async UniTask<AvatarState> SelectAvatarAsync(int index, bool initializeReactiveState = true)
+        public async UniTask<AvatarState> SelectAvatarAsync(
+            int index,
+            bool initializeReactiveState = true)
         {
             if (!_avatarStates.ContainsKey(index))
             {
                 throw new KeyNotFoundException($"{nameof(index)}({index})");
             }
 
-            var isNew = CurrentAvatarKey != index;
+            var isNewlySelected = CurrentAvatarKey != index;
 
             CurrentAvatarKey = index;
             var avatarState = _avatarStates[CurrentAvatarKey];
-            if (PandoraBox.PandoraBoxMaster.InspectedAddress != "")
-            {
-                var (exist, state) = await States.TryGetAvatarStateAsync(
-                    new Address(PandoraBox.PandoraBoxMaster.InspectedAddress.Substring(2)));
-                Debug.LogError(PandoraBox.PandoraBoxMaster.InspectedAddress.Substring(2));
-                avatarState = state;
-            }
             LocalLayer.Instance.InitializeCurrentAvatarState(avatarState);
             UpdateCurrentAvatarState(avatarState, initializeReactiveState);
+            var agent = Game.Game.instance.Agent;
+            var worldIds =
+                await agent.GetStateAsync(avatarState.address.Derive("world_ids"));
+            var unlockedIds = worldIds != null && !(worldIds is Null)
+                ? worldIds.ToList(StateExtensions.ToInteger)
+                : new List<int>
+                {
+                    1,
+                    GameConfig.MimisbrunnrWorldId,
+                };
+            UI.Widget.Find<UI.WorldMap>().SharedViewModel.UnlockedWorldIds = unlockedIds;
 
-            if (isNew)
+            if (isNewlySelected)
             {
-                // notee: commit c1b7f0dc2e8fd922556b83f0b9b2d2d2b2626603 에서 코드 수정이 생기면서
+                // NOTE: commit c1b7f0dc2e8fd922556b83f0b9b2d2d2b2626603 에서 코드 수정이 생기면서
                 // SetCombinationSlotStatesAsync()가 호출이 안되는 이슈가 있어서 revert했습니다. 재수정 필요
                 _combinationSlotStates.Clear();
                 await UniTask.Run(async () =>
@@ -290,6 +340,15 @@ namespace Nekoyume.State
                     if (!exist)
                     {
                         return;
+                    }
+
+                    var avatarAddress = CurrentAvatarState.address;
+                    var skillStateAddress = Addresses.GetSkillStateAddressFromAvatarAddress(avatarAddress);
+                    var skillStateIValue = await Game.Game.instance.Agent.GetStateAsync(skillStateAddress);
+                    if (skillStateIValue is List serialized)
+                    {
+                        var skillState = new CrystalRandomSkillState(skillStateAddress, serialized);
+                        SetCrystalRandomSkillState(skillState);
                     }
 
                     await SetCombinationSlotStatesAsync(curAvatarState);

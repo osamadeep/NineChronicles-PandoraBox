@@ -41,7 +41,7 @@ namespace Nekoyume.UI.Module
             baseItemView.FocusObject.SetActive(false);
             baseItemView.ExpiredObject.SetActive(false);
             baseItemView.TradableObject.SetActive(false);
-            baseItemView.ElementalDisableObject.SetActive(false);
+            baseItemView.DimObject.SetActive(false);
             baseItemView.SelectObject.SetActive(false);
             baseItemView.SelectBaseItemObject.SetActive(false);
             baseItemView.SelectMaterialItemObject.SetActive(false);
@@ -54,7 +54,7 @@ namespace Nekoyume.UI.Module
             baseItemView.ItemImage.gameObject.SetActive(true);
             baseItemView.SpineItemImage.gameObject.SetActive(false);
 
-            baseItemView.ItemImage.overrideSprite = baseItemView.GetItemIcon(itemBase);
+            baseItemView.ItemImage.overrideSprite = BaseItemView.GetItemIcon(itemBase);
 
             var data = baseItemView.GetItemViewData(itemBase);
             baseItemView.GradeImage.overrideSprite = data.GradeBackground;

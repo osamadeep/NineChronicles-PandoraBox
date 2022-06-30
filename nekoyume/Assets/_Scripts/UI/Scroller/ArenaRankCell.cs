@@ -133,8 +133,8 @@ namespace Nekoyume.UI.Scroller
 
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||currentViewModel
                     var currentAddress = States.Instance.CurrentAvatarState?.address;
-                    var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-                    Widget.Find<FriendInfoPopupPandora>().Show(avatarState, ArenaInfo, arenaInfo, true);
+                    //var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+                    //Widget.Find<FriendInfoPopupPandora>().Show(avatarState, ArenaInfo, arenaInfo, true);
 
                     //clear selected cells and select the new one.
                     Transform clc = Widget.Find<RankingBoard>().CellsListContainer;
@@ -228,7 +228,7 @@ namespace Nekoyume.UI.Scroller
             Widget.Find<FriendInfoPopupPandora>().Close(true);
 
             var currentAddress = States.Instance.CurrentAvatarState?.address;
-            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+            //var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
 
             //Debug.LogError("Fights Count: " + PandoraBoxMaster.ArenaTicketsToUse);
             //for (int i = 0; i < arenaInfo.DailyChallengeCount; i++)
@@ -320,7 +320,7 @@ namespace Nekoyume.UI.Scroller
 
             //current local player
             var currentAddress = States.Instance.CurrentAvatarState?.address;
-            var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
+            //var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
             //
 
 
