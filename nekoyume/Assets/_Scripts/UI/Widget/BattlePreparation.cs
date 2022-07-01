@@ -864,13 +864,14 @@ namespace Nekoyume.UI
                 equipmentsN = equipments.Select(e => e.ItemId).ToList();
                 foodsN = consumables.Select(f => f.ItemId).ToList();
 
+                var tableSheets = Game.Game.instance.TableSheets;
                 var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
                     foodsN,
                     _worldId,
                     _stageId.Value,
-                    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+                    tableSheets.GetStageSimulatorSheets(),
                     StageSimulator.ConstructorVersionV100080,
                     1, true);
                 simulator.Simulate(1);

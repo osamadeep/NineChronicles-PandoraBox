@@ -88,7 +88,7 @@ namespace Nekoyume.UI.Module
             APText.text = "Action Points: " + blockCount + " " + state.actionPoint.ToString() + "/120";
 
 
-            UpdateArena(state, currentBlockIndex);
+            //UpdateArena(state, currentBlockIndex);
             UpdateNotification(state, currentBlockIndex);
         }
 
@@ -97,44 +97,44 @@ namespace Nekoyume.UI.Module
             hasNotificationImage.enabled = state.actionPoint > 0;
         }
 
-        private async void UpdateArena(AvatarState state, long currentBlockIndex)
-        {
-            var currentAddress = state?.address;
-            ArenaInfo arenaInfo = null;
-            if (currentAddress.HasValue)
-            {
-                var avatarAddress2 = currentAddress.Value;
-                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress2.ToByteArray());
-                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                if (rawInfo is Dictionary dictionary)
-                {
-                    arenaInfo = new ArenaInfo(dictionary);
-                }
-            }
+        //private async void UpdateArena(AvatarState state, long currentBlockIndex)
+        //{
+        //    var currentAddress = state?.address;
+        //    ArenaInfo arenaInfo = null;
+        //    if (currentAddress.HasValue)
+        //    {
+        //        var avatarAddress2 = currentAddress.Value;
+        //        var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress2.ToByteArray());
+        //        var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
+        //        if (rawInfo is Dictionary dictionary)
+        //        {
+        //            arenaInfo = new ArenaInfo(dictionary);
+        //        }
+        //    }
 
-            if (currentAddress == null || arenaInfo == null)
-                return;
-            //Debug.LogError(arenaInfo.AvatarName + "  " + arenaInfo.DailyChallengeCount);
+        //    if (currentAddress == null || arenaInfo == null)
+        //        return;
+        //    //Debug.LogError(arenaInfo.AvatarName + "  " + arenaInfo.DailyChallengeCount);
 
-            var gameConfigState = States.Instance.GameConfigState;
-            float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
-            var weeklyArenaState = States.Instance.WeeklyArenaState;
-            long _resetIndex = weeklyArenaState.ResetIndex;
-            float value;
+        //    var gameConfigState = States.Instance.GameConfigState;
+        //    float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
+        //    var weeklyArenaState = States.Instance.WeeklyArenaState;
+        //    long _resetIndex = weeklyArenaState.ResetIndex;
+        //    float value;
 
-            value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
-            var remainBlock = gameConfigState.DailyArenaInterval - value;
-            var time = Util.GetBlockToTime((int)remainBlock);
+        //    value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
+        //    var remainBlock = gameConfigState.DailyArenaInterval - value;
+        //    var time = Util.GetBlockToTime((int)remainBlock);
 
 
-            if (PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
-                ArenaText.text = "Arena : " + time + $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
-            else if (PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
-                ArenaText.text = "Arena : " + $"({value}/{gameConfigState.DailyArenaInterval})" +
-                                 $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
-            else
-                ArenaText.text = "Arena : " + $"{time} ({remainBlock})" +
-                                 $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
-        }
+        //    if (PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+        //        ArenaText.text = "Arena : " + time + $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
+        //    else if (PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+        //        ArenaText.text = "Arena : " + $"({value}/{gameConfigState.DailyArenaInterval})" +
+        //                         $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
+        //    else
+        //        ArenaText.text = "Arena : " + $"{time} ({remainBlock})" +
+        //                         $" ({arenaInfo.DailyChallengeCount.ToString()}/5)";
+        //}
     }
 }

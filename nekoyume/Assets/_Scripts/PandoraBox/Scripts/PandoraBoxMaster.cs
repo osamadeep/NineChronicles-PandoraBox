@@ -14,8 +14,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraBoxMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100221";
-        public static string VersionId = "010054";
+        public static string OriginalVersionId = "v100230";
+        public static string VersionId = "010055A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;

@@ -127,7 +127,8 @@ namespace Nekoyume.UI
             Find<LoadingScreen>().Show();
             Close();
 
-            _stage.IsInStage = true;
+            Game.Game.instance.IsInWorld = true;
+            //_stage.IsInStage = true;
             _stage.IsShowHud = true;
 
             if (_stageId >= GameConfig.MimisbrunnrStartStageId)

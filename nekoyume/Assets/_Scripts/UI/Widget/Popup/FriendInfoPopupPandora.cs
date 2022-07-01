@@ -241,7 +241,7 @@ namespace Nekoyume.UI
 
             Widget.Find<FriendInfoPopupPandora>().Close(true);
             PandoraBoxMaster.IsRankingSimulate = true;
-            Widget.Find<RankingBoard>().GoToStage(log);
+            //Widget.Find<RankingBoard>().GoToStage(log);
         }
 
         public void MultipleSimulate()
@@ -427,7 +427,7 @@ namespace Nekoyume.UI
             avatarStats.SetData(stats);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            Find<RankingBoard>().avatarLoadingImage.SetActive(false);
+            //Find<RankingBoard>().avatarLoadingImage.SetActive(false);
             Player _currentPlayer;
             _currentPlayer = PlayerFactory.Create(States.Instance.CurrentAvatarState).GetComponent<Player>();
             _currentPlayer.avatarAddress = States.Instance.CurrentAvatarState.address.ToString();

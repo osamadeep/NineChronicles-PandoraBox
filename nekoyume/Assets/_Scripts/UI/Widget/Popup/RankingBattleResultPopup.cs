@@ -73,8 +73,8 @@ namespace Nekoyume.UI
             }
 
             scoreText.text = $"{log.Score}";
-                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            int difference = log.Score - Find<RankingBoard>().OldScore;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int difference = 0; // NEED TO CHANGE  //log.Score - Find<RankingBoard>().OldScore;
             //Debug.LogError(log.score + "  " + Find<RankingBoard>().OldScore + "  " + difference);
             if (difference <= 0)
                 BounsPointsTxt.text = $"<color=red>{difference}";
@@ -128,9 +128,9 @@ namespace Nekoyume.UI
             ActionCamera.instance.SetPosition(0f, 0f);
             ActionCamera.instance.Idle();
             AudioController.instance.PlayMusic(AudioController.MusicCode.Ranking);
-            Find<RankingBoard>().waitingForLaodBlocker.SetActive(false);
+            //Find<RankingBoard>().waitingForLaodBlocker.SetActive(false);
             Close();
-            Find<RankingBoard>().gameObject.SetActive(true);
+            //Find<RankingBoard>().gameObject.SetActive(true);
             Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
             Find<HeaderMenuStatic>().Show(true);
         }

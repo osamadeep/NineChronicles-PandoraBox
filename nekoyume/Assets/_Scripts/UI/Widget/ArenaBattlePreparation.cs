@@ -657,18 +657,34 @@ namespace Nekoyume.UI
             _player.gameObject.SetActive(false);
 
             ActionRenderHandler.Instance.Pending = true;
-            ActionManager.Instance.BattleArena(
-                    _chooseAvatarState.address,
-                    _player.Costumes
-                        .Select(e => e.NonFungibleId)
-                        .ToList(),
-                    _player.Equipments
-                        .Select(e => e.NonFungibleId)
-                        .ToList(),
-                    _championshipId,
-                    _round,
-                    _ticketCountToUse)
-                .Subscribe();
+
+
+            var blockIndex = Game.Game.instance.Agent.BlockIndex;
+            var currentRound =
+                TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
+            var ticketCount = RxProps.PlayersArenaParticipant.HasValue
+                ? RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo.GetTicketCount(
+                    Game.Game.instance.Agent.BlockIndex,
+                    currentRound.StartBlockIndex,
+                    States.Instance.GameConfigState.DailyArenaInterval)
+                : 0;
+
+            for (int i = 0; i < ticketCount; i++)
+            {
+                ActionManager.Instance.BattleArena(
+                        _chooseAvatarState.address,
+                        _player.Costumes
+                            .Select(e => e.NonFungibleId)
+                            .ToList(),
+                        _player.Equipments
+                            .Select(e => e.NonFungibleId)
+                            .ToList(),
+                        _championshipId,
+                        _round,
+                        _ticketCountToUse)
+                    .Subscribe();
+            }
+
         }
 
         public void OnRenderBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)

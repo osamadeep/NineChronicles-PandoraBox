@@ -99,7 +99,8 @@ namespace Nekoyume.UI
         public void ExitToMenu()
         {
             Game.Game.instance.Stage.objectPool.ReleaseAll();
-            Game.Game.instance.Stage.IsInStage = false;
+            Game.Game.instance.IsInWorld = false;
+            //Game.Game.instance.Stage.IsInStage = false;
             Game.Event.OnRoomEnter.Invoke(false);
             MainCanvas.instance.InitWidgetInMain();
             Close();

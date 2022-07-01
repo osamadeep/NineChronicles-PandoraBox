@@ -1062,7 +1062,7 @@ namespace Nekoyume.UI
         public void FastArenaEnter()
         {
             Close(true);
-            Find<RankingBoard>().gameObject.SetActive(true);
+            //Find<RankingBoard>().gameObject.SetActive(true);
             AudioController.instance.PlayMusic(AudioController.MusicCode.PVPBattle);
             AudioController.PlayClick();
         }
