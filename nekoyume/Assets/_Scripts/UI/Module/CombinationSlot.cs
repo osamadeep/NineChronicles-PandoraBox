@@ -371,6 +371,8 @@ namespace Nekoyume.UI.Module
                     //UI.NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
                     //    L10nManager.Localize("UI_COMBINATION_NOTIFY_IDENTIFYING"),
                     //    NotificationCell.NotificationType.Information);
+
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     try
                     {
                         Widget.Find<CombinationSlotPopup>().Show(state, slotIndex, currentBlockIndex);
@@ -378,7 +380,7 @@ namespace Nekoyume.UI.Module
                     catch
                     {
                     }
-
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     break;
             }
         }
