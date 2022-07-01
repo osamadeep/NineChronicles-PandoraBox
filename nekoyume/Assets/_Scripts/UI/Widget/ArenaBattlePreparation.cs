@@ -26,12 +26,21 @@ using Inventory = Nekoyume.UI.Module.Inventory;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
     using UniRx;
 
     public class ArenaBattlePreparation : Widget
     {
         private static readonly Vector3 PlayerPosition = new Vector3(1999.8f, 1999.3f, 3f);
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button maxTriesBtn = null;
+        [SerializeField] private TextMeshProUGUI currentTicketsText = null;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         [SerializeField]
         private Inventory inventory;
@@ -155,6 +164,13 @@ namespace Nekoyume.UI
                 Find<ArenaBoard>().Show();
             });
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            maxTriesBtn.onClick.AddListener(() =>
+            {
+                SendMultipleBattleArenaAction();
+            });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             CloseWidget = () => Close(true);
 
             startButton.OnSubmitSubject
@@ -172,6 +188,20 @@ namespace Nekoyume.UI
             AvatarState chooseAvatarState,
             bool ignoreShowAnimation = false)
         {
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            var blockIndex = Game.Game.instance.Agent.BlockIndex;
+            var currentRound =
+                TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
+            var ticketCount = RxProps.PlayersArenaParticipant.HasValue
+                ? RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo.GetTicketCount(
+                    Game.Game.instance.Agent.BlockIndex,
+                    currentRound.StartBlockIndex,
+                    States.Instance.GameConfigState.DailyArenaInterval)
+                : 0;
+            currentTicketsText.text = ticketCount.ToString();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _championshipId = championshipId;
             _round = round;
             _chooseAvatarState = chooseAvatarState;
@@ -641,8 +671,25 @@ namespace Nekoyume.UI
             }
         }
 
-        private void SendBattleArenaAction()
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void SendMultipleBattleArenaAction()
         {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: This is Premium Feature!",
+                    NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            var game = Game.Game.instance;
+            if (game.IsInWorld)
+            {
+                return;
+            }
+            game.IsInWorld = true;
+            game.Stage.IsShowHud = true;
+
             startButton.gameObject.SetActive(false);
             var playerAvatar = RxProps.PlayersArenaParticipant.Value.AvatarState;
             Find<ArenaBattleLoadingScreen>().Show(
@@ -685,6 +732,37 @@ namespace Nekoyume.UI
                     .Subscribe();
             }
 
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+        private void SendBattleArenaAction()
+        {
+            startButton.gameObject.SetActive(false);
+            var playerAvatar = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            Find<ArenaBattleLoadingScreen>().Show(
+                playerAvatar.NameWithHash,
+                playerAvatar.level,
+                playerAvatar.inventory.GetEquippedFullCostumeOrArmorId(),
+                _chooseAvatarState.NameWithHash,
+                _chooseAvatarState.level,
+                _chooseAvatarState.inventory.GetEquippedFullCostumeOrArmorId());
+
+            _player.StopRun();
+            _player.gameObject.SetActive(false);
+
+            ActionRenderHandler.Instance.Pending = true;
+            ActionManager.Instance.BattleArena(
+                    _chooseAvatarState.address,
+                    _player.Costumes
+                        .Select(e => e.NonFungibleId)
+                        .ToList(),
+                    _player.Equipments
+                        .Select(e => e.NonFungibleId)
+                        .ToList(),
+                    _championshipId,
+                    _round,
+                    _ticketCountToUse)
+                .Subscribe();
         }
 
         public void OnRenderBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)

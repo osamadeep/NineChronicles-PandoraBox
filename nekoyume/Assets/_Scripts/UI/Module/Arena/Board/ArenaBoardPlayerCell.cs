@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Nekoyume.Helper;
 using TMPro;
@@ -8,6 +8,8 @@ using UnityEngine.UI.Extensions;
 
 namespace Nekoyume.UI.Module.Arena.Board
 {
+    using Nekoyume.Battle;
+    using Nekoyume.State;
     using UniRx;
 
     [Serializable]
@@ -94,6 +96,27 @@ namespace Nekoyume.UI.Module.Arena.Board
             _nameText.text = _currentData.name;
             _cpText.text =
                 _currentData.cp.ToString("N0", CultureInfo.CurrentCulture);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int he, me;
+            me = CPHelper.GetCPV2(
+                States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
+                Game.Game.instance.TableSheets.CostumeStatSheet);
+            he = _currentData.cp;
+
+            Color selectedColor = new Color();
+            
+            if (he > me + 10000)
+                ColorUtility.TryParseHtmlString("#FF0000", out selectedColor);
+            else if (he <= me + 10000 && he > me)
+                ColorUtility.TryParseHtmlString("#FF4900", out selectedColor);
+            else if (he <= me && he > me - 10000)
+                ColorUtility.TryParseHtmlString("#4CA94C", out selectedColor);
+            else
+                ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
+            _cpText.color = selectedColor;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _ratingText.text =
                 _currentData.score.ToString("N0", CultureInfo.CurrentCulture);
             _plusRatingText.text =

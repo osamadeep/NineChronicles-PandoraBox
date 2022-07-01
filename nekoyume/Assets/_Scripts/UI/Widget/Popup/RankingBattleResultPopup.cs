@@ -123,6 +123,7 @@ namespace Nekoyume.UI
 
         public void BackToArena()
         {
+            return;
             Game.Game.instance.Stage.objectPool.ReleaseAll();
             Game.Game.instance.IsInWorld = false;
             ActionCamera.instance.SetPosition(0f, 0f);

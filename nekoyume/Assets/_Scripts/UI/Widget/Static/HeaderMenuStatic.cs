@@ -51,13 +51,9 @@ namespace Nekoyume.UI.Module
             public TextMeshProUGUI LockText;
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [SerializeField] private TextMeshProUGUI queueCountTxt;
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField] private List<ToggleInfo> toggles = new List<ToggleInfo>();
         [SerializeField] private GameObject ncg;
-        public ActionPoint actionPoint;
+        public ActionPoint actionPoint; //PANDORA
         [SerializeField] private Crystal crystal;
         [SerializeField] private GameObject dailyBonus;
         [SerializeField] private GameObject hourglass;
@@ -210,22 +206,9 @@ namespace Nekoyume.UI.Module
                 .AddTo(_disposablesAtOnEnable);
             ReactiveAvatarState.Inventory?.Subscribe(SubscribeInventory)
                 .AddTo(_disposablesAtOnEnable);
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            StartCoroutine(ShowQueueCount());
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        System.Collections.IEnumerator ShowQueueCount()
-        {
-            while (true)
-            {
-                queueCountTxt.text = Game.Game.instance.ActionManager.GetQueueCount().ToString();
-                yield return new WaitForSeconds(0.5f);
-            }
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
 
         protected override void OnDisable()

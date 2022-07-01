@@ -11,16 +11,19 @@ namespace Nekoyume.UI
 {
     public class VersionSystem : SystemWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI nodeText;
+        [SerializeField] private TextMeshProUGUI queueCountTxt;
+        string pandoraTextVer = "";
+        string current9cScanBlock = "";
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public TextMeshProUGUI informationText;
         private int _version;
         private long _blockIndex;
         private BlockHash _hash;
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [SerializeField] private TextMeshProUGUI nodeText;
-        string pandoraTextVer = "";
-        string current9cScanBlock = "";
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
         {
@@ -31,6 +34,7 @@ namespace Nekoyume.UI
             //    int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
             //    int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
             //    int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             pandoraTextVer = string.Format("PandoraBox v{0}.{2}",
                             int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
                             int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
@@ -38,6 +42,8 @@ namespace Nekoyume.UI
             if (PandoraBoxMaster.VersionId.Length > 6)
                 pandoraTextVer += "<color=green>A</color>";
             StartCoroutine(Get9cBlock());
+            StartCoroutine(ShowQueueCount());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void SetVersion(int version)
@@ -61,6 +67,24 @@ namespace Nekoyume.UI
         private void UpdateText()
         {
             // informationText.text = $"{pandoraTextVer} / #{_blockIndex}({current9cScanBlock})";
+        }
+
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        IEnumerator ShowQueueCount()
+        {
+            while (true)
+            {
+                try
+                {
+                    queueCountTxt.text = Game.Game.instance.ActionManager.GetQueueCount().ToString();
+                }
+                catch
+                {
+                    queueCountTxt.text = "0";
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
         }
 
         IEnumerator Get9cBlock()
@@ -112,4 +136,6 @@ namespace Nekoyume.UI
     {
         public int before;
     }
+
+    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 }

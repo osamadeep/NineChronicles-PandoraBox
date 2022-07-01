@@ -11,6 +11,7 @@ namespace Nekoyume.PandoraBox
 
         [SerializeField] TextMeshProUGUI scoreText;
         [SerializeField] Transform coinSpawner;
+        [SerializeField] Transform crystalSpawner;
 
         int scoreDistance;
         int scoreCoin;
@@ -25,6 +26,7 @@ namespace Nekoyume.PandoraBox
         void Start()
         {
             StartCoroutine(CoinSpawner());
+            StartCoroutine(CrystalSpawner());
             StartCoroutine(ScorePerMinute());
         }
 
@@ -53,6 +55,21 @@ namespace Nekoyume.PandoraBox
                     ob.transform.localScale = new Vector3(1, 1,1);
                     ob.SetActive(true);
                 }
+            }
+        }
+
+        IEnumerator CrystalSpawner()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(Random.Range(5, 15));
+                    GameObject ob = CrystalPooler.instance.GetpooledObject();
+                    ob.transform.SetParent(transform);
+                    ob.GetComponent<RectTransform>().anchoredPosition = crystalSpawner.GetComponent<RectTransform>().anchoredPosition;
+                    ob.GetComponent<RectTransform>().anchorMax = crystalSpawner.GetComponent<RectTransform>().anchorMax;
+                    ob.GetComponent<RectTransform>().anchorMin = crystalSpawner.GetComponent<RectTransform>().anchorMin;
+                    ob.transform.localScale = new Vector3(1, 1, 1);
+                    ob.SetActive(true);
             }
         }
 
