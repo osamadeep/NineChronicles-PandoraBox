@@ -566,18 +566,6 @@ namespace Nekoyume.BlockChain
                 UpdateCurrentAvatarStateAsync(eval).Forget();
                 RenderQuest(avatarAddress, avatarState.questList?.completedQuestIds);
 
-                if (eval.Action.payByCrystal)
-                {
-                    try
-                    {
-                        UpdateCrystalBalance(eval);
-                    }
-                    catch (BalanceDoesNotExistsException e)
-                    {
-                        Debug.LogError("Failed to update crystal balance : " + e);
-                    }
-                }
-
                 if (!(nextQuest is null))
                 {
                     var isRecipeMatch = nextQuest.RecipeId == eval.Action.recipeId;
@@ -713,17 +701,6 @@ namespace Nekoyume.BlockChain
                 UpdateAgentStateAsync(eval).Forget();
                 UpdateCurrentAvatarStateAsync(eval).Forget();
                 RenderQuest(avatarAddress, avatarState.questList.completedQuestIds);
-                if (result.CRYSTAL.MajorUnit > 0)
-                {
-                    try
-                    {
-                        UpdateCrystalBalance(eval);
-                    }
-                    catch (BalanceDoesNotExistsException e)
-                    {
-                        Debug.LogError("Failed to update crystal balance : " + e);
-                    }
-                }
 
                 // Notify
                 string formatKey;
@@ -1609,14 +1586,6 @@ namespace Nekoyume.BlockChain
                 NotificationCell.NotificationType.Information);
             UpdateCurrentAvatarStateAsync(eval).Forget();
             UpdateAgentStateAsync(eval).Forget();
-            try
-            {
-                UpdateCrystalBalance(eval);
-            }
-            catch (BalanceDoesNotExistsException e)
-            {
-                Debug.LogError("Failed to update crystal balance : " + e);
-            }
         }
 
         private async UniTaskVoid ResponseUnlockEquipmentRecipeAsync(
@@ -1645,14 +1614,6 @@ namespace Nekoyume.BlockChain
                     cost.MajorUnit),
                 UpdateCurrentAvatarStateAsync(eval),
                 UpdateAgentStateAsync(eval));
-            try
-            {
-                UpdateCrystalBalance(eval);
-            }
-            catch (BalanceDoesNotExistsException e)
-            {
-                Debug.LogError("Failed to update crystal balance : " + e);
-            }
 
             foreach (var id in recipeIds)
             {
@@ -1681,14 +1642,6 @@ namespace Nekoyume.BlockChain
 
             UpdateCurrentAvatarStateAsync(eval).Forget();
             UpdateAgentStateAsync(eval).Forget();
-            try
-            {
-                UpdateCrystalBalance(eval);
-            }
-            catch (BalanceDoesNotExistsException e)
-            {
-                Debug.LogError("Failed to update crystal balance : " + e);
-            }
         }
 
         private void ResponseHackAndSlashRandomBuff(ActionBase.ActionEvaluation<HackAndSlashRandomBuff> eval)
@@ -1702,14 +1655,6 @@ namespace Nekoyume.BlockChain
             UpdateCurrentAvatarStateAsync(eval).Forget();
             UpdateAgentStateAsync(eval).Forget();
             UpdateCrystalRandomSkillState(eval);
-            try
-            {
-                UpdateCrystalBalance(eval);
-            }
-            catch (BalanceDoesNotExistsException e)
-            {
-                Debug.LogError("Failed to update crystal balance : " + e);
-            }
 
             Widget.Find<BuffBonusLoadingScreen>().Close();
             Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
@@ -1868,7 +1813,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async UniTaskVoid ResponseBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)
+        private void ResponseBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)
         {
             if (!ActionManager.IsLastBattleActionId(eval.Action.Id) ||
                 eval.Action.myAvatarAddress != States.Instance.CurrentAvatarState.address)
@@ -1888,6 +1833,10 @@ namespace Nekoyume.BlockChain
 
                 return;
             }
+
+            // NOTE: Start cache some arena info which will be used after battle ends.
+            RxProps.ArenaInfoTuple.UpdateAsync().Forget();
+            RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync().Forget();
 
             _disposableForBattleEnd?.Dispose();
             _disposableForBattleEnd = Game.Game.instance.Arena.OnArenaEnd
@@ -1912,6 +1861,7 @@ namespace Nekoyume.BlockChain
             ArenaPlayerDigest? myDigest = null;
             ArenaPlayerDigest? enemyDigest = null;
             int? previousMyScore = null;
+            int? outputMyScore = null;
             if (eval.Extra is { })
             {
                 myDigest = eval.Extra.TryGetValue(
@@ -1937,6 +1887,9 @@ namespace Nekoyume.BlockChain
                         ? previousMyScoreText.ToInteger()
                         : ArenaScore.ArenaScoreDefault
                     : ArenaScore.ArenaScoreDefault;
+                
+                // TODO: Add `ExtraOutputMyScore` to `BattleArena`
+                outputMyScore = null;
             }
 
             if (!myDigest.HasValue)
@@ -1973,6 +1926,15 @@ namespace Nekoyume.BlockChain
                 ? RxProps.PlayersArenaParticipant.Value.Score
                 : ArenaScore.ArenaScoreDefault;
 
+            outputMyScore ??= eval.OutputStates.TryGetState(
+                ArenaScore.DeriveAddress(
+                    eval.Action.myAvatarAddress,
+                    eval.Action.championshipId,
+                    eval.Action.round),
+                out List outputMyScoreList)
+                ? (int)(Integer)outputMyScoreList[1]
+                : ArenaScore.ArenaScoreDefault;
+
             var random = new LocalRandom(eval.RandomSeed);
             // TODO!!!! ticket 수 만큼 돌려서 마지막 전투 결과를 띄운다.
             // eval.Action.ticket
@@ -1981,15 +1943,7 @@ namespace Nekoyume.BlockChain
                 myDigest.Value,
                 enemyDigest.Value,
                 tableSheets.GetArenaSimulatorSheets());
-
-            await UniTask.WhenAll(
-                RxProps.ArenaInfoTuple.UpdateAsync(),
-                RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync());
-            // NOTE: The `RxProps.PlayersArenaParticipant` updated when
-            //       the `RxProps.ArenaParticipantsOrderedWithScore` update.
-            log.Score = RxProps.PlayersArenaParticipant.HasValue
-                ? RxProps.PlayersArenaParticipant.Value.Score
-                : ArenaScore.ArenaScoreDefault;
+            log.Score = outputMyScore.Value;
 
             var rewards = RewardSelector.Select(
                 random,

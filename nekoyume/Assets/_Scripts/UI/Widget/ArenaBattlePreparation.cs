@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Action;
+using Nekoyume.Arena;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
@@ -22,6 +23,7 @@ using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Model.Elemental;
 using Nekoyume.State.Subjects;
+using Nekoyume.TableData;
 using Inventory = Nekoyume.UI.Module.Inventory;
 
 namespace Nekoyume.UI
@@ -93,8 +95,7 @@ namespace Nekoyume.UI
 
         private EquipmentSlot _weaponSlot;
         private EquipmentSlot _armorSlot;
-        private int _championshipId;
-        private int _round;
+        private ArenaSheet.RoundData _roundData;
         private AvatarState _chooseAvatarState;
         private Player _player;
         private GameObject _cachedCharacterTitle;
@@ -105,7 +106,7 @@ namespace Nekoyume.UI
         public override bool CanHandleInputEvent =>
             base.CanHandleInputEvent &&
             (startButton.Interactable || !EnoughToPlay);
-        
+
         private bool EnoughToPlay
         {
             get
@@ -183,12 +184,10 @@ namespace Nekoyume.UI
         }
 
         public void Show(
-            int championshipId,
-            int round,
+            ArenaSheet.RoundData roundData,
             AvatarState chooseAvatarState,
             bool ignoreShowAnimation = false)
         {
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             var blockIndex = Game.Game.instance.Agent.BlockIndex;
             var currentRound =
@@ -201,9 +200,7 @@ namespace Nekoyume.UI
                 : 0;
             currentTicketsText.text = ticketCount.ToString();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            _championshipId = championshipId;
-            _round = round;
+            _roundData = roundData;
             _chooseAvatarState = chooseAvatarState;
 
             var stage = Game.Game.instance.Stage;
@@ -212,7 +209,7 @@ namespace Nekoyume.UI
             var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
             if (!_player)
             {
-                _player = PlayerFactory.Create(avatarState).GetComponent<Player>();                
+                _player = PlayerFactory.Create(avatarState).GetComponent<Player>();
             }
 
             _player.transform.position = PlayerPosition;
@@ -443,7 +440,7 @@ namespace Nekoyume.UI
                     .Select(e => e.item)
                     .OfType<INonFungibleItem>()
                     .FirstOrDefault(e =>
-                    e.NonFungibleId == nonFungibleItem.NonFungibleId);
+                        e.NonFungibleId == nonFungibleItem.NonFungibleId);
             if (!(targetItem is IEquippableItem equippableItem))
             {
                 return;
@@ -568,56 +565,75 @@ namespace Nekoyume.UI
                 }
             }
         }
-
         private void OnClickBattle()
         {
-            var cost = startButton.ArenaTicketCost;
+            if (Game.Game.instance.IsInWorld)
+            {
+                return;
+            }
+
+            var arenaTicketCost = startButton.ArenaTicketCost;
             var hasEnoughTickets =
                 RxProps.ArenaTicketProgress.HasValue &&
-                RxProps.ArenaTicketProgress.Value.currentTicketCount >= cost;
-            if (!hasEnoughTickets)
+                RxProps.ArenaTicketProgress.Value.currentTicketCount >= arenaTicketCost;
+            if (hasEnoughTickets)
             {
-                var message =
-                    L10nManager.Localize("UI_NOT_ENOUGH_ARENA_TICKETS");
-                // TODO!!!! Use `PaymentPopup` instead of `Notification`
-                // Find<PaymentPopup>().ShowAttract(
-                //     cost,
-                //     message,
-                //     L10nManager.Localize("UI_GO_GRINDING"),
-                //     () =>
-                //     {
-                //         Close(true);
-                //         Find<Menu>().Close();
-                //         Find<WorldMap>().Close();
-                //         Find<StageInformation>().Close();
-                //         Find<BattlePreparation>().Close();
-                //         Find<Grind>().Show();
-                //     });
-                NotificationSystem.Push(
-                    MailType.System,
-                    message,
-                    NotificationCell.NotificationType.Notification);
+                StartCoroutine(CoBattleStart(CostType.ArenaTicket));
                 return;
             }
 
-            var game = Game.Game.instance;
-            if (game.IsInWorld)
+            var gold = States.Instance.GoldBalanceState.Gold;
+            var ncgCost = ArenaHelper.GetTicketPrice(
+                _roundData,
+                RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo,
+                gold.Currency);
+            var hasEnoughNCG = gold >= ncgCost;
+            if (hasEnoughNCG)
             {
+                var notEnoughTicketMsg = L10nManager.Localize(
+                    "UI_CONFIRM_PAYMENT_CURRENCY_FORMAT_FOR_BATTLE_ARENA",
+                    ncgCost.ToString());
+                Find<PaymentPopup>().ShowAttract(
+                    CostType.ArenaTicket,
+                    arenaTicketCost.ToString(),
+                    notEnoughTicketMsg,
+                    L10nManager.Localize("UI_YES"),
+                    () => StartCoroutine(
+                        CoBattleStart(CostType.NCG)));
                 return;
             }
 
-            game.IsInWorld = true;
-            game.Stage.IsShowHud = true;
-            StartCoroutine(CoBattleStart());
-            coverToBlockClick.SetActive(true);
+            var notEnoughNCGMsg =
+                L10nManager.Localize("UI_NOT_ENOUGH_NCG_WITH_SUPPLIER_INFO");
+            Find<PaymentPopup>().ShowAttract(
+                CostType.NCG,
+                ncgCost.GetQuantityString(),
+                notEnoughNCGMsg,
+                L10nManager.Localize("UI_GO_TO_MARKET"),
+                GoToMarket);
         }
 
-        private IEnumerator CoBattleStart()
+        private IEnumerator CoBattleStart(CostType costType)
         {
-            var crystalImage = Find<HeaderMenuStatic>().ArenaTickets.IconImage;
+            coverToBlockClick.SetActive(true);
+            var game = Game.Game.instance;
+            game.IsInWorld = true;
+            game.Stage.IsShowHud = true;
+
+            var headerMenuStatic = Find<HeaderMenuStatic>();
+            var currencyImage = costType switch
+            {
+                CostType.None => null,
+                CostType.NCG => headerMenuStatic.Gold.IconImage,
+                CostType.ActionPoint => headerMenuStatic.ActionPoint.IconImage,
+                CostType.Hourglass => headerMenuStatic.Hourglass.IconImage,
+                CostType.Crystal => headerMenuStatic.Crystal.IconImage,
+                CostType.ArenaTicket => headerMenuStatic.ArenaTickets.IconImage,
+                _ => throw new ArgumentOutOfRangeException(nameof(costType), costType, null)
+            };
             var itemMoveAnimation = ItemMoveAnimation.Show(
-                crystalImage.sprite,
-                crystalImage.transform.position,
+                currencyImage.sprite,
+                currencyImage.transform.position,
                 buttonStarImageTransform.position,
                 Vector2.one,
                 moveToLeft,
@@ -726,8 +742,8 @@ namespace Nekoyume.UI
                         _player.Equipments
                             .Select(e => e.NonFungibleId)
                             .ToList(),
-                        _championshipId,
-                        _round,
+                        _roundData.ChampionshipId,
+                        _roundData.Round,
                         _ticketCountToUse)
                     .Subscribe();
             }
@@ -759,8 +775,8 @@ namespace Nekoyume.UI
                     _player.Equipments
                         .Select(e => e.NonFungibleId)
                         .ToList(),
-                    _championshipId,
-                    _round,
+                    _roundData.ChampionshipId,
+                    _roundData.Round,
                     _ticketCountToUse)
                 .Subscribe();
         }
@@ -785,6 +801,14 @@ namespace Nekoyume.UI
                 Array.Empty<int>());
             startButton.gameObject.SetActive(canBattle);
             blockStartingTextObject.SetActive(!canBattle);
+        }
+
+        private void GoToMarket()
+        {
+            Close(true);
+            Find<ShopBuy>().Show();
+            Find<HeaderMenuStatic>()
+                .UpdateAssets(HeaderMenuStatic.AssetVisibleState.Shop);
         }
     }
 }
