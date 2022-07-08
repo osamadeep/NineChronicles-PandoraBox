@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +16,7 @@ using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.State
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public static partial class RxProps
@@ -361,7 +362,7 @@ namespace Nekoyume.State
                 avatarAddrAndScoresWithRank = GetBoundsWithPlayerScore(
                     avatarAddrAndScoresWithRank,
                     currentRoundData.ArenaType,
-                    playerScore);
+                    playerScore, playerTuple.rank);
             }
             catch
             {
@@ -378,7 +379,7 @@ namespace Nekoyume.State
                 avatarAddrAndScoresWithRank = GetBoundsWithPlayerScore(
                     avatarAddrAndScoresWithRank,
                     currentRoundData.ArenaType,
-                    playerScore);
+                    playerScore, 0);
             }
 
             var playerArenaInfoAddr = ArenaInformation.DeriveAddress(
@@ -528,7 +529,7 @@ namespace Nekoyume.State
         private static (Address avatarAddr, int score, int rank)[] GetBoundsWithPlayerScore(
             (Address avatarAddr, int score, int rank)[] tuples,
             ArenaType arenaType,
-            int playerScore)
+            int playerScore,int currentPlayerRank)
         {
             switch (arenaType)
             {
@@ -538,11 +539,25 @@ namespace Nekoyume.State
                 case ArenaType.Championship:
                     var bounds = ArenaHelper.ScoreLimits[arenaType];
                     bounds = (bounds.Item1 + playerScore, bounds.Item2 + playerScore);
-                    return tuples
-                        .Where(tuple =>
-                            tuple.score <= bounds.Item1 &&
-                            tuple.score >= bounds.Item2)
-                        .ToArray();
+                    //return tuples
+                    //    .Where(tuple =>
+                    //        tuple.score <= bounds.Item1 &&
+                    //        tuple.score >= bounds.Item2)
+                    //    .ToArray();
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    int upper = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper *
+                                PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                    int lower = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListLower *
+                                PandoraBoxMaster.Instance.Settings.ArenaListStep);
+                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                    {
+                        return tuples.Where(tuple => tuple.rank < 100 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
+                    }
+                    else
+                    {
+                        return tuples.Where(tuple => tuple.rank < 10 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
+                    }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 default:
                     throw new ArgumentOutOfRangeException(nameof(arenaType), arenaType, null);
             }

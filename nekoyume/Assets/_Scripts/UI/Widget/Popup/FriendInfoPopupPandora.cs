@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Nekoyume.Arena;
 using Nekoyume.Battle;
 using Nekoyume.EnumType;
 using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Helper;
+using Nekoyume.Model.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
@@ -45,9 +47,8 @@ namespace Nekoyume.UI
         //AvatarState tempAvatarState;
 
         //for simulate
-        [HideInInspector] public ArenaInfo enemyArenaInfo = null;
-        ArenaInfo currentAvatarArenaInfo = null;
-        AvatarState avatarState;
+        RxProps.ArenaParticipant enemyAP= null;
+
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -110,15 +111,15 @@ namespace Nekoyume.UI
         {
             string playerInfo =
                 "```prolog\n" +
-                "Avatar Name      : " + avatarState.NameWithHash + "\n" +
-                "Avatar Address   : " + avatarState.address + "\n" +
-                "Account Address  : " + avatarState.agentAddress + "\n" +
+                "Avatar Name      : " + enemyAP.AvatarState.NameWithHash + "\n" +
+                "Avatar Address   : " + enemyAP.AvatarState.address + "\n" +
+                "Account Address  : " + enemyAP.AvatarState.agentAddress + "\n" +
                 "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
                 "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString() + "\n" +
                 "```";
             ClipboardHelper.CopyToClipboard(playerInfo);
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" +
-                                                avatarState.NameWithHash
+                                                enemyAP.AvatarState.NameWithHash
                                                 + "</color>) Info copy to Clipboard Successfully!",
                 NotificationCell.NotificationType.Information);
         }
@@ -127,7 +128,7 @@ namespace Nekoyume.UI
         public void SetNemesis()
         {
             TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (PandoraBoxMaster.ArenaFavTargets.Contains(avatarState.address.ToString()))
+            if (PandoraBoxMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString()))
             {
                 for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
                 {
@@ -136,14 +137,14 @@ namespace Nekoyume.UI
                     //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                PandoraBoxMaster.ArenaFavTargets.Remove(avatarState.address.ToString());
+                PandoraBoxMaster.ArenaFavTargets.Remove(enemyAP.AvatarState.address.ToString());
                 for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
                 {
                     string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                     PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + avatarState.NameWithHash
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + enemyAP.AvatarState.NameWithHash
                     + " removed from your nemesis list!", NotificationCell.NotificationType.Information);
             }
             else
@@ -158,9 +159,9 @@ namespace Nekoyume.UI
                         , NotificationCell.NotificationType.Information);
                 else
                 {
-                    PandoraBoxMaster.ArenaFavTargets.Add(avatarState.address.ToString());
+                    PandoraBoxMaster.ArenaFavTargets.Add(enemyAP.AvatarState.address.ToString());
                     OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: " + avatarState.NameWithHash +
+                        "<color=green>Pandora Box</color>: " + enemyAP.AvatarState.NameWithHash +
                         " added to your nemesis list!"
                         , NotificationCell.NotificationType.Information);
                     for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
@@ -172,25 +173,22 @@ namespace Nekoyume.UI
                 }
             }
 
-            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(avatarState.address.ToString())
+            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString())
                 ? "Remove Nemesis"
                 : "Set Nemesis";
         }
 
-        public void Show(AvatarState avatarStt, ArenaInfo enemyAI, ArenaInfo currentAvatarAI,
-            bool ignoreShowAnimation = false)
+        public void Show(RxProps.ArenaParticipant APenemy, bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
-            enemyArenaInfo = enemyAI;
-            currentAvatarArenaInfo = currentAvatarAI;
-            avatarState = avatarStt;
+            enemyAP = APenemy;
 
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
             rateText.text = "Win Rate :";
 
-            InitializePlayer(avatarState);
-            UpdateSlotView(avatarState);
+            InitializePlayer(enemyAP.AvatarState);
+            UpdateSlotView(enemyAP.AvatarState);
             UpdateStatViews();
         }
 
@@ -214,11 +212,11 @@ namespace Nekoyume.UI
                     NotificationCell.NotificationType.Alert);
                 return;
             }
-            PandoraBoxMaster.CurrentArenaEnemyAddress = avatarState.address.ToString().ToLower();
+            PandoraBoxMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
             var simulator = new RankingSimulator(
                 new Cheat.DebugRandom(),
                 States.Instance.CurrentAvatarState,
-                avatarState,
+                enemyAP.AvatarState,
                 new List<System.Guid>(),
                 Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
                 999999
@@ -254,11 +252,11 @@ namespace Nekoyume.UI
                 return;
             }
 
-            StartCoroutine(GetEnemyState());
+            StartCoroutine(IEMultipleSimulate());
         }
 
 
-        IEnumerator GetEnemyState()
+        IEnumerator IEMultipleSimulate()
         {
             multipleSimulateButton.interactable = false;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
@@ -266,33 +264,25 @@ namespace Nekoyume.UI
 
             int totalSimulations = 100;
             int win = 0;
+
+
+            var tableSheets = Game.Game.instance.TableSheets;
+            ArenaPlayerDigest? myDigest = null;
+            ArenaPlayerDigest? enemyDigest = null;
+
+            myDigest = new ArenaPlayerDigest(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarState.ToArenaAvatarState());
+            enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
+
+
             for (int i = 0; i < totalSimulations; i++)
             {
-                var simulator = new RankingSimulator(
-                    new Cheat.DebugRandom(),
-                    States.Instance.CurrentAvatarState,
-                    avatarState,
-                    new List<System.Guid>(),
-                    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                    999999
-                );
+                var simulator = new ArenaSimulator(new Cheat.DebugRandom());
+                var log = simulator.Simulate(
+                    myDigest.Value,
+                    enemyDigest.Value,
+                    tableSheets.GetArenaSimulatorSheets());
 
-                //System.Random rnd = new System.Random();
-                //var simulator = new RankingSimulator(
-                //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
-                //    States.Instance.CurrentAvatarState,
-                //    avatarState,
-                //    new List<System.Guid>(),
-                //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                //    Action.RankingBattle.StageId,
-                //    currentAvatarArenaInfo,
-                //    enemyArenaInfo,
-                //    Game.Game.instance.TableSheets.CostumeStatSheet
-                //);
-                simulator.Simulate();
-                var log = simulator.Log;
-
-                if (log.result.ToString().ToUpper() == "WIN")
+                if (log.Result == Nekoyume.Model.BattleStatus.Arena.ArenaLog.ArenaResult.Win)
                     win++;
                 yield return new WaitForSeconds(0.05f);
             }
@@ -327,43 +317,12 @@ namespace Nekoyume.UI
 
         #endregion
 
-        //public void Show(AvatarState avatarState, bool ignoreShowAnimation = false)
-        //{
-        //    base.Show(ignoreShowAnimation);
-
-        //    InitializePlayer(avatarState);
-        //    UpdateSlotView(avatarState);
-        //    UpdateStatViews();
-
-        //    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        //    multipleSimulateButton.interactable = true;
-        //    multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
-        //    rateText.text = "Win Rate :";
-        //    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        //}
-
         private void InitializePlayer(AvatarState avatarState)
         {
-            _player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+            _player = Util.CreatePlayer(avatarState, NPCPosition);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             _player.avatarAddress = avatarState.address.ToString();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            var t = _player.transform;
-            t.localScale = Vector3.one;
-
-            var playerInLobby = Find<Menu>().isActiveAndEnabled;
-            if (playerInLobby)
-            {
-                t.position = NPCPosition;
-                playerRawImage.gameObject.SetActive(true);
-                playerRawImageInLobbyCamera.gameObject.SetActive(false);
-            }
-            else
-            {
-                t.position = NPCPositionInLobbyCamera;
-                playerRawImage.gameObject.SetActive(false);
-                playerRawImageInLobbyCamera.gameObject.SetActive(true);
-            }
         }
 
         private void TerminatePlayer()
@@ -431,7 +390,6 @@ namespace Nekoyume.UI
             Player _currentPlayer;
             _currentPlayer = PlayerFactory.Create(States.Instance.CurrentAvatarState).GetComponent<Player>();
             _currentPlayer.avatarAddress = States.Instance.CurrentAvatarState.address.ToString();
-            _currentPlayer.gameObject.SetActive(false);
             _tempStats = _currentPlayer.Model.Stats.Clone() as CharacterStats;
             stats = _tempStats.SetAll(_tempStats.Level, _currentPlayer.Equipments, _currentPlayer.Costumes, null,
                 equipEffectSheet, costumeSheet);
@@ -450,6 +408,7 @@ namespace Nekoyume.UI
                 else
                     currentST.valueText.text = $"<color=green>{currentST.valueText.text}</color>";
             }
+            _currentPlayer.gameObject.SetActive(false);
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }

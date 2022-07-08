@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI.Extensions;
@@ -104,6 +104,9 @@ namespace Nekoyume.UI.Module.Arena.Board
             {
                 _onSelectionChanged.OnNext(Context.selectedIndex);
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _scroller.ScrollSensitivity = 400;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }
 }

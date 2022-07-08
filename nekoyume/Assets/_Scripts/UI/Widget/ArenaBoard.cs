@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
@@ -19,6 +19,11 @@ namespace Nekoyume.UI
 
     public class ArenaBoard : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public int OldScore;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 #if UNITY_EDITOR
         [SerializeField]
         private bool _useSo;
@@ -52,6 +57,7 @@ namespace Nekoyume.UI
             _backButton.OnClickAsObservable().Subscribe(_ =>
             {
                 AudioController.PlayClick();
+                Find<FriendInfoPopupPandora>().Close(true);
                 Find<ArenaJoin>().Show();
                 Close();
             }).AddTo(gameObject);
@@ -132,6 +138,10 @@ namespace Nekoyume.UI
                 player.CurrentArenaInfo.Lose,
                 player.CP,
                 player.Score);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            OldScore = player.Score;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void InitializeScrolls()
@@ -149,7 +159,11 @@ namespace Nekoyume.UI
                     }
 #endif
                     var data = _boundedData[index];
-                    Find<FriendInfoPopup>().Show(data.AvatarState);
+                    //Find<FriendInfoPopup>().Show(data.AvatarState);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    Find<FriendInfoPopupPandora>().Close(true);
+                    Find<FriendInfoPopupPandora>().Show(data, true);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 })
                 .AddTo(gameObject);
 
@@ -165,6 +179,9 @@ namespace Nekoyume.UI
                         return;
                     }
 #endif
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    Widget.Find<FriendInfoPopupPandora>().Close(true);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     var data = _boundedData[index];
                     Close();
                     Find<ArenaBattlePreparation>().Show(

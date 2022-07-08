@@ -202,7 +202,7 @@ namespace Nekoyume.PandoraBox
         }
         public void LoadArenaUp()
         {
-            arenaUpText.text = (50 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
+            arenaUpText.text = (10 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
         }
 
         public void ChangeArenaLo()
@@ -212,7 +212,7 @@ namespace Nekoyume.PandoraBox
 
         public void LoadArenaLo()
         {
-            arenaLoText.text = (20 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
+            arenaLoText.text = (10 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
         }
     }
 }

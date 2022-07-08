@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,7 +145,7 @@ namespace Nekoyume.Game
             arenaCharacter.Animator.Win();
             arenaCharacter.ShowSpeech("PLAYER_WIN");
             Widget.Find<ArenaBattle>().Close();
-            Widget.Find<RankingBattleResultPopup>().Show(log, rewards, OnEnd);
+            Widget.Find<RankingBattleResultPopup>().Show(log, rewards, OnEnd, OnEndToMenu);
             yield return null;
         }
 
@@ -160,6 +160,19 @@ namespace Nekoyume.Game
             ActionCamera.instance.Idle();
             Widget.Find<ArenaBoard>().ShowAsync().Forget();
             _isPlaying = false;
+        }
+
+        private void OnEndToMenu()
+        {
+            container.SetActive(false);
+            me.gameObject.SetActive(false);
+            enemy.gameObject.SetActive(false);
+            objectPool.ReleaseAll();
+            Game.instance.IsInWorld = false;
+            ActionCamera.instance.SetPosition(0f, 0f);
+            ActionCamera.instance.Idle();
+            _isPlaying = false;
+            Event.OnRoomEnter.Invoke(true);
         }
 
         public IEnumerator CoSpawnCharacter(ArenaCharacter character)

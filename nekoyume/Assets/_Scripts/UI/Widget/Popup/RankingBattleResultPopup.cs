@@ -18,9 +18,7 @@ namespace Nekoyume.UI
     public class RankingBattleResultPopup : PopupWidget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private TextButton NoUpdateButton = null;
-
+        [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextButton MenuButton = null;
         [SerializeField] private TextMeshProUGUI BounsPointsTxt = null;
 
@@ -40,6 +38,7 @@ namespace Nekoyume.UI
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, .25f, 10f);
 
         private System.Action _onClose;
+        private System.Action _onCloseToMenu;
 
         protected override void Awake()
         {
@@ -47,15 +46,13 @@ namespace Nekoyume.UI
             CloseWidget = null;
             SubmitWidget = BackToRanking;
             submitButton.OnClick = BackToRanking;
-
-            NoUpdateButton.OnClick = BackToArena;
             MenuButton.OnClick = BackToMenu;
         }
 
         public void Show(
             ArenaLog log,
             IReadOnlyList<ItemBase> rewardItems,
-            System.Action onClose)
+            System.Action onClose, System.Action onCloseToMenu)
         {
             base.Show();
 
@@ -74,7 +71,7 @@ namespace Nekoyume.UI
 
             scoreText.text = $"{log.Score}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            int difference = 0; // NEED TO CHANGE  //log.Score - Find<RankingBoard>().OldScore;
+            int difference = log.Score - Find<ArenaBoard>().OldScore;
             //Debug.LogError(log.score + "  " + Find<RankingBoard>().OldScore + "  " + difference);
             if (difference <= 0)
                 BounsPointsTxt.text = $"<color=red>{difference}";
@@ -95,6 +92,7 @@ namespace Nekoyume.UI
             }
 
             _onClose = onClose;
+            _onCloseToMenu = onCloseToMenu;
         }
 
         private void BackToRanking()
@@ -106,19 +104,20 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void BackToMenu()
         {
-            //Game.Event.OnRoomEnter.Invoke(false);
-            //MainCanvas.instance.InitWidgetInMain();
-            //Close();
-
-            //Game.Game.instance.Stage.KillAllCharacters();
-            Game.Game.instance.Stage.objectPool.ReleaseAll();
-            Game.Game.instance.IsInWorld = false;
-            ActionCamera.instance.SetPosition(0f, 0f);
-            ActionCamera.instance.Idle();
-            Find<Battle>().Close();
             Close();
-            //Find<Menu>().Show(false);
-            Game.Event.OnRoomEnter.Invoke(true);
+            _onCloseToMenu?.Invoke();
+
+            ////Game.Game.instance.Stage.KillAllCharacters();
+            //Game.Game.instance.Stage.objectPool.ReleaseAll();
+            //Game.Game.instance.IsInWorld = false;
+            //ActionCamera.instance.SetPosition(0f, 0f);
+            //ActionCamera.instance.Idle();
+            //Find<ArenaJoin>().Close();
+            //Find<ArenaBoard>().Close();
+            //Find<ArenaBattle>().Close();
+            //Close();
+            ////Find<Menu>().Show(false);
+            //Game.Event.OnRoomEnter.Invoke(true);
         }
 
         public void BackToArena()

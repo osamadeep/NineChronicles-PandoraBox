@@ -40,6 +40,7 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private Button maxTriesBtn = null;
         [SerializeField] private TextMeshProUGUI currentTicketsText = null;
+        [SerializeField] private Slider maxTriesSld = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -199,6 +200,8 @@ namespace Nekoyume.UI
                     States.Instance.GameConfigState.DailyArenaInterval)
                 : 0;
             currentTicketsText.text = ticketCount.ToString();
+            maxTriesSld.value = ticketCount;
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _roundData = roundData;
             _chooseAvatarState = chooseAvatarState;
@@ -233,6 +236,13 @@ namespace Nekoyume.UI
                 .AddTo(_disposables);
             base.Show(ignoreShowAnimation);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ChangeTicketsCount()
+        {
+            currentTicketsText.text = maxTriesSld.value.ToString();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
@@ -721,18 +731,11 @@ namespace Nekoyume.UI
 
             ActionRenderHandler.Instance.Pending = true;
 
+            OneLineSystem.Push(MailType.System,
+            "<color=green>Pandora Box</color>: " + maxTriesSld.value + " Arena Fights Sent!",
+            NotificationCell.NotificationType.Notification);
 
-            var blockIndex = Game.Game.instance.Agent.BlockIndex;
-            var currentRound =
-                TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
-            var ticketCount = RxProps.PlayersArenaParticipant.HasValue
-                ? RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo.GetTicketCount(
-                    Game.Game.instance.Agent.BlockIndex,
-                    currentRound.StartBlockIndex,
-                    States.Instance.GameConfigState.DailyArenaInterval)
-                : 0;
-
-            for (int i = 0; i < ticketCount; i++)
+            for (int i = 0; i < maxTriesSld.value; i++)
             {
                 ActionManager.Instance.BattleArena(
                         _chooseAvatarState.address,

@@ -36,6 +36,13 @@ namespace Nekoyume.UI.Module.Arena.Board
     public class ArenaBoardPlayerCell
         : FancyScrollRectCell<ArenaBoardPlayerItemData, ArenaBoardPlayerScrollContext>
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private GameObject cannotAttackImg = null;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private Image _rankImage;
 
@@ -115,6 +122,9 @@ namespace Nekoyume.UI.Module.Arena.Board
             else
                 ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
             _cpText.color = selectedColor;
+
+            var player = RxProps.PlayersArenaParticipant.Value;
+            cannotAttackImg.SetActive(_currentData.score > player.Score + 100 || player.Score > _currentData.score + 100);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _ratingText.text =
