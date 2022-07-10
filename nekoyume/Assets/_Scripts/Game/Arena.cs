@@ -19,6 +19,7 @@ using ArenaCharacter = Nekoyume.Model.ArenaCharacter;
 
 namespace Nekoyume.Game
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class Arena : MonoBehaviour, IArena
@@ -30,10 +31,10 @@ namespace Nekoyume.Game
         private GameObject container;
 
         [SerializeField]
-        private Character.ArenaCharacter me;
+        public Character.ArenaCharacter me;
 
         [SerializeField]
-        private Character.ArenaCharacter enemy;
+        public Character.ArenaCharacter enemy;
 
         public readonly ISubject<Stage> OnRoomEnterEnd = new Subject<Stage>();
         public IObservable<Arena> OnArenaEnd => _onArenaEnd;
@@ -133,13 +134,19 @@ namespace Nekoyume.Game
         private IEnumerator CoEnd(ArenaLog log, IReadOnlyList<ItemBase> rewards)
         {
             IsAvatarStateUpdatedAfterBattle = false;
-            ActionRenderHandler.Instance.Pending = false;
-            _onArenaEnd.OnNext(this);
-
-            yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
-            yield return new WaitWhile(() => me.Actions.Any());
-            yield return new WaitWhile(() => enemy.Actions.Any());
-            yield return new WaitForSeconds(0.75f);
+            //ActionRenderHandler.Instance.Pending = false;
+            //_onArenaEnd.OnNext(this);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!PandoraBoxMaster.IsRankingSimulate)
+            {
+                ActionRenderHandler.Instance.Pending = false;
+                _onArenaEnd.OnNext(this);
+                yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
+                yield return new WaitWhile(() => me.Actions.Any());
+                yield return new WaitWhile(() => enemy.Actions.Any());
+                yield return new WaitForSeconds(0.75f);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var arenaCharacter = log.Result == ArenaLog.ArenaResult.Win ? me : enemy;
             arenaCharacter.Animator.Win();

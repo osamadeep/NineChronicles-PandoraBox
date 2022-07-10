@@ -67,6 +67,9 @@ namespace Nekoyume.UI.Module.Arena.Board
                 UpdateSelection(index.Value, true);
                 _scroller.JumpTo(index.Value);
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _scroller.ScrollSensitivity = 200;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void SelectCell(int index, bool invokeEvents)
@@ -79,6 +82,9 @@ namespace Nekoyume.UI.Module.Arena.Board
             }
 
             UpdateSelection(index, invokeEvents);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _scroller.ScrollSensitivity = 200;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         protected override void Initialize()
@@ -88,6 +94,9 @@ namespace Nekoyume.UI.Module.Arena.Board
             Context.onClickCharacterView = _onClickCharacterView.OnNext;
             Context.onClickChoice = _onClickChoice.OnNext;
             _scroller.OnSelectionChanged(index => UpdateSelection(index, true));
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _scroller.ScrollSensitivity = 200;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void UpdateSelection(int index, bool invokeEvents)
@@ -105,7 +114,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 _onSelectionChanged.OnNext(Context.selectedIndex);
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _scroller.ScrollSensitivity = 400;
+            _scroller.ScrollSensitivity = 200;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +17,17 @@ using Nekoyume.Model.Item;
 
 namespace Nekoyume.Game.Character
 {
+    using TMPro;
     using UniRx;
 
     public class ArenaCharacter : Character
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public TextMeshPro CharacterExtraInfo = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private CharacterAppearance appearance;
 
@@ -74,6 +81,9 @@ namespace Nekoyume.Game.Character
             _speechBubble ??= Widget.Create<SpeechBubble>();
             _arenaBattle ??= Widget.Find<ArenaBattle>();
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CharacterExtraInfo.text = "";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Animator.Idle();
             _costumes.Clear();
             _costumes.AddRange(digest.Costumes);
@@ -182,7 +192,6 @@ namespace Nekoyume.Game.Character
             {
                 return;
             }
-
             _root = new Root();
             _root.OpenBranch(
                 BT.Selector().OpenBranch(
@@ -222,6 +231,16 @@ namespace Nekoyume.Game.Character
                             }
                         }
                     }
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    if (!(_characterModel is null))
+                    {
+                        CharacterExtraInfo.text = $"<color=green>HP</color>: {info.Target.CurrentHP}" +
+                            $"\n<color=green>ATK</color>: {info.Target.ATK}" +
+                            $"\n<color=green>DEF</color>: {info.Target.DEF}" +
+                            $"\n<color=green>HIT</color>: {info.Target.HIT}" +
+                            $"\n<color=green>SPD</color>: {info.Target.SPD}";
+                    }
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
 
                 yield return new WaitForSeconds(waitSeconds);

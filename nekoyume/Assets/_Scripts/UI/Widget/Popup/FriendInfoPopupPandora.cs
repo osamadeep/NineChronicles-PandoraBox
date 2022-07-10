@@ -213,33 +213,39 @@ namespace Nekoyume.UI
                 return;
             }
             PandoraBoxMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
-            var simulator = new RankingSimulator(
-                new Cheat.DebugRandom(),
-                States.Instance.CurrentAvatarState,
-                enemyAP.AvatarState,
-                new List<System.Guid>(),
-                Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-                999999
-            );
-
-            //System.Random rnd = new System.Random();
-            //var simulator = new RankingSimulator(
-            //    new LocalRandom(rnd.Next(-1000000000, 1000000000)),
-            //    States.Instance.CurrentAvatarState,
-            //    avatarState,
-            //    new List<System.Guid>(),
-            //    Game.Game.instance.TableSheets.GetRankingSimulatorSheets(),
-            //    Action.RankingBattle.StageId,
-            //    currentAvatarArenaInfo,
-            //    enemyArenaInfo,
-            //    Game.Game.instance.TableSheets.CostumeStatSheet
-            //);
-            simulator.Simulate();
-            var log = simulator.Log;
-
-            Widget.Find<FriendInfoPopupPandora>().Close(true);
             PandoraBoxMaster.IsRankingSimulate = true;
-            //Widget.Find<RankingBoard>().GoToStage(log);
+
+            var tableSheets = Game.Game.instance.TableSheets;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarState.ToArenaAvatarState());
+            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
+
+            var simulator = new ArenaSimulator(new Cheat.DebugRandom());
+            var log = simulator.Simulate(
+                myDigest,
+                enemyDigest,
+                tableSheets.GetArenaSimulatorSheets());
+
+            Find<FriendInfoPopupPandora>().Close(true);
+            PandoraBoxMaster.IsRankingSimulate = true;
+
+
+            var rewards = RewardSelector.Select(
+                new Cheat.DebugRandom(),
+                tableSheets.WeeklyArenaRewardSheet,
+                tableSheets.MaterialItemSheet,
+                myDigest.Level,
+                maxCount: ArenaHelper.GetRewardCount(3));
+
+
+            //arenaBattlePreparation.OnRenderBattleArena(eval);
+
+            Game.Game.instance.Arena.Enter(
+                log,
+                rewards,
+                myDigest,
+                enemyDigest);
+            Find<ArenaBoard>().Close();
+
         }
 
         public void MultipleSimulate()
