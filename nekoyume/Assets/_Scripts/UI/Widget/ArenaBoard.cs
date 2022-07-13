@@ -44,9 +44,9 @@ namespace Nekoyume.UI
         [SerializeField]
         private Button _backButton;
 
-        private ArenaSheet.RoundData _roundData;
+        public ArenaSheet.RoundData _roundData;
 
-        private RxProps.ArenaParticipant[] _boundedData;
+        public RxProps.ArenaParticipant[] _boundedData;
 
         protected override void Awake()
         {
@@ -162,7 +162,7 @@ namespace Nekoyume.UI
                     //Find<FriendInfoPopup>().Show(data.AvatarState);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     Find<FriendInfoPopupPandora>().Close(true);
-                    Find<FriendInfoPopupPandora>().Show(data, true);
+                    Find<FriendInfoPopupPandora>().Show(data, RxProps.PlayersArenaParticipant.Value, true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 })
                 .AddTo(gameObject);
@@ -190,6 +190,7 @@ namespace Nekoyume.UI
                 })
                 .AddTo(gameObject);
         }
+
 
         private void UpdateScrolls()
         {

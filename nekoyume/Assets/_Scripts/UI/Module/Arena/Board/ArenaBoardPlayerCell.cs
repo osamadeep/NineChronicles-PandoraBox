@@ -9,8 +9,10 @@ using UnityEngine.UI.Extensions;
 namespace Nekoyume.UI.Module.Arena.Board
 {
     using Nekoyume.Battle;
+    using Nekoyume.Model.Arena;
     using Nekoyume.State;
     using UniRx;
+    using static Nekoyume.State.RxProps;
 
     [Serializable]
     public class ArenaBoardPlayerItemData
@@ -39,6 +41,7 @@ namespace Nekoyume.UI.Module.Arena.Board
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private GameObject cannotAttackImg = null;
+        [SerializeField] private TextMeshProUGUI winLoseText = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -105,6 +108,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 _currentData.cp.ToString("N0", CultureInfo.CurrentCulture);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            
             int he, me;
             me = CPHelper.GetCPV2(
                 States.Instance.CurrentAvatarState, Game.Game.instance.TableSheets.CharacterSheet,
@@ -125,6 +129,14 @@ namespace Nekoyume.UI.Module.Arena.Board
 
             var player = RxProps.PlayersArenaParticipant.Value;
             cannotAttackImg.SetActive(_currentData.score > player.Score + 100 || player.Score > _currentData.score + 100);
+
+            var currentAP = Widget.Find<ArenaBoard>()._boundedData[Index];
+
+            //var arenaInformationAdr = ArenaInformation.DeriveAddress(currentAP.AvatarAddr, Widget.Find<ArenaBoard>()._roundData.ChampionshipId, Widget.Find<ArenaBoard>()._roundData.Round);
+            
+            ArenaInformation cc = new ArenaInformation(currentAP.AvatarAddr, Widget.Find<ArenaBoard>()._roundData.ChampionshipId, Widget.Find<ArenaBoard>()._roundData.Round);
+            winLoseText.text = $"W: <color=green>{cc.Win}</color>\nL: <color=green>{cc.Lose}</color>";
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _ratingText.text =

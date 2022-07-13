@@ -6,6 +6,7 @@ using System.Collections;
 using UnityEngine.Networking;
 using TMPro;
 using Nekoyume.State;
+using Libplanet.Action;
 
 namespace Nekoyume.PandoraBox
 {
@@ -15,7 +16,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100241";
-        public static string VersionId = "010057";
+        public static string VersionId = "010058A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;

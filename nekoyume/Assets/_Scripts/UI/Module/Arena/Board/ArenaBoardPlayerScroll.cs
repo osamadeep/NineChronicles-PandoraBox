@@ -5,6 +5,7 @@ using UnityEngine.UI.Extensions;
 
 namespace Nekoyume.UI.Module.Arena.Board
 {
+    using Nekoyume.State;
     using UniRx;
 
     public class ArenaBoardPlayerScroll
@@ -41,6 +42,10 @@ namespace Nekoyume.UI.Module.Arena.Board
 
         public IObservable<int> OnClickChoice => _onClickChoice;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        int ScrollSensitivity = 100;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public void SetData(List<ArenaBoardPlayerItemData> data, int? index = null)
         {
             if (!initialized)
@@ -68,7 +73,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 _scroller.JumpTo(index.Value);
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _scroller.ScrollSensitivity = 200;
+            _scroller.ScrollSensitivity = ScrollSensitivity;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -83,7 +88,7 @@ namespace Nekoyume.UI.Module.Arena.Board
 
             UpdateSelection(index, invokeEvents);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _scroller.ScrollSensitivity = 200;
+            _scroller.ScrollSensitivity = ScrollSensitivity;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -95,7 +100,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             Context.onClickChoice = _onClickChoice.OnNext;
             _scroller.OnSelectionChanged(index => UpdateSelection(index, true));
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _scroller.ScrollSensitivity = 200;
+            _scroller.ScrollSensitivity = ScrollSensitivity;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -114,7 +119,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 _onSelectionChanged.OnNext(Context.selectedIndex);
             }
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _scroller.ScrollSensitivity = 200;
+            _scroller.ScrollSensitivity = ScrollSensitivity;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }

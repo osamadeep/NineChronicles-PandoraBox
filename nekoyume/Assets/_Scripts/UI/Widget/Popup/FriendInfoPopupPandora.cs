@@ -47,6 +47,7 @@ namespace Nekoyume.UI
         //AvatarState tempAvatarState;
 
         //for simulate
+        RxProps.ArenaParticipant meAP = null;
         RxProps.ArenaParticipant enemyAP= null;
 
 
@@ -178,10 +179,12 @@ namespace Nekoyume.UI
                 : "Set Nemesis";
         }
 
-        public void Show(RxProps.ArenaParticipant APenemy, bool ignoreShowAnimation = false)
+        public void Show(RxProps.ArenaParticipant APenemy, RxProps.ArenaParticipant APme, bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
             enemyAP = APenemy;
+            meAP = APme;
+            //Debug.LogError($"{enemyAP.AvatarState.name} + {enemyAP.AvatarState.ToArenaAvatarState().}");
 
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
@@ -216,8 +219,9 @@ namespace Nekoyume.UI
             PandoraBoxMaster.IsRankingSimulate = true;
 
             var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarState.ToArenaAvatarState());
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, meAP.AvatarState.ToArenaAvatarState());
             ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
+
 
             var simulator = new ArenaSimulator(new Cheat.DebugRandom());
             var log = simulator.Simulate(
@@ -276,10 +280,13 @@ namespace Nekoyume.UI
             ArenaPlayerDigest? myDigest = null;
             ArenaPlayerDigest? enemyDigest = null;
 
-            myDigest = new ArenaPlayerDigest(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarState.ToArenaAvatarState());
-            enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
-
-
+            myDigest = new ArenaPlayerDigest(meAP.AvatarState, meAP.AvatarState.ToArenaAvatarState());
+            ArenaAvatarState enmAAS = enemyAP.AvatarState.ToArenaAvatarState();
+            enmAAS.UpdateEquipment(enemyAP.AvatarState.inventory.Equipments.Where(e => e.Equipped)
+                            .Select(e => e.NonFungibleId)
+                            .ToList());
+            enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enmAAS);
+            
             for (int i = 0; i < totalSimulations; i++)
             {
                 var simulator = new ArenaSimulator(new Cheat.DebugRandom());
