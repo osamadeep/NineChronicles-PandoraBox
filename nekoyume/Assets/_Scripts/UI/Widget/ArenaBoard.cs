@@ -16,11 +16,16 @@ using UnityEngine.UI;
 namespace Nekoyume.UI
 {
     using UniRx;
+    using TMPro;
 
     public class ArenaBoard : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [SerializeField] private Button GoMyPlaceBtn = null;
+        [SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
+
         public int OldScore;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -61,7 +66,18 @@ namespace Nekoyume.UI
                 Find<ArenaJoin>().Show();
                 Close();
             }).AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            GoMyPlaceBtn.OnClickAsObservable().Subscribe(_=> GoMyPlace()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void GoMyPlace()
+        {
+            UpdateScrolls();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public async UniTaskVoid ShowAsync(bool ignoreShowAnimation = false)
         {
@@ -141,6 +157,8 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             OldScore = player.Score;
+            extraInfoText.text = $"W.L: <color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
+                $"\nLeft: {player.CurrentArenaInfo.Ticket}\nBought: {player.CurrentArenaInfo.PurchasedTicketCount}";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -162,7 +180,7 @@ namespace Nekoyume.UI
                     //Find<FriendInfoPopup>().Show(data.AvatarState);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     Find<FriendInfoPopupPandora>().Close(true);
-                    Find<FriendInfoPopupPandora>().Show(data, RxProps.PlayersArenaParticipant.Value, true);
+                    Find<FriendInfoPopupPandora>().Show(_roundData, data, RxProps.PlayersArenaParticipant.Value, true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 })
                 .AddTo(gameObject);
@@ -208,10 +226,15 @@ namespace Nekoyume.UI
                 return (_so.ArenaBoardPlayerScrollData, 0);
             }
 #endif
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            var _boundedDataPandora = _boundedData;
+            if (OnlyLowerTgl.isOn)
+                _boundedDataPandora = _boundedData.Where(y => y.AvatarState.GetCP() <= RxProps.PlayersArenaParticipant.Value.AvatarState.GetCP()).ToArray();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var currentAvatarAddr = States.Instance.CurrentAvatarState.address;
             var scrollData =
-                _boundedData.Select(e =>
+                _boundedDataPandora.Select(e =>
                 {
                     return new ArenaBoardPlayerItemData
                     {
@@ -231,9 +254,10 @@ namespace Nekoyume.UI
                         interactableChoiceButton = !e.AvatarAddr.Equals(currentAvatarAddr),
                     };
                 }).ToList();
-            for (var i = 0; i < _boundedData.Length; i++)
+            
+            for (var i = 0; i < _boundedDataPandora.Length; i++)
             {
-                var data = _boundedData[i];
+                var data = _boundedDataPandora[i];
                 if (data.AvatarAddr.Equals(currentAvatarAddr))
                 {
                     return (scrollData, i);

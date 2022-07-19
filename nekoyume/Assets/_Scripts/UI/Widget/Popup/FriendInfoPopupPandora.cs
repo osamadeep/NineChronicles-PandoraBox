@@ -15,6 +15,7 @@ using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.PandoraBox;
 using Nekoyume.State;
+using Nekoyume.TableData;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
@@ -49,6 +50,7 @@ namespace Nekoyume.UI
         //for simulate
         RxProps.ArenaParticipant meAP = null;
         RxProps.ArenaParticipant enemyAP= null;
+        private ArenaSheet.RoundData _roundData;
 
 
         [Space(50)]
@@ -179,11 +181,12 @@ namespace Nekoyume.UI
                 : "Set Nemesis";
         }
 
-        public void Show(RxProps.ArenaParticipant APenemy, RxProps.ArenaParticipant APme, bool ignoreShowAnimation = false)
+        public void Show(ArenaSheet.RoundData roundData, RxProps.ArenaParticipant APenemy, RxProps.ArenaParticipant APme, bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
             enemyAP = APenemy;
             meAP = APme;
+            _roundData = roundData;
             //Debug.LogError($"{enemyAP.AvatarState.name} + {enemyAP.AvatarState.ToArenaAvatarState().}");
 
             multipleSimulateButton.interactable = true;
@@ -219,9 +222,10 @@ namespace Nekoyume.UI
             PandoraBoxMaster.IsRankingSimulate = true;
 
             var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, meAP.AvatarState.ToArenaAvatarState());
+            var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, avatarState.ToArenaAvatarState());
             ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
-
+            
 
             var simulator = new ArenaSimulator(new Cheat.DebugRandom());
             var log = simulator.Simulate(

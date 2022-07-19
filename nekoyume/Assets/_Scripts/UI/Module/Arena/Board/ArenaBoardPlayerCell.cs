@@ -51,8 +51,13 @@ namespace Nekoyume.UI.Module.Arena.Board
         [SerializeField] private GameObject FavTarget = null;
         public GameObject BlinkSelected = null;
 
+        //arena
+        ArenaParticipant meAP = null;
+        ArenaParticipant selectedAP = null;
+
         //guild info
-        GuildPlayer enemyGuildPlayer;
+        PandoraPlayer selectedPan = null;
+        GuildPlayer enemyGuildPlayer = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -118,100 +123,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             _cpText.text =
                 _currentData.cp.ToString("N0", CultureInfo.CurrentCulture);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            var currentAP = Widget.Find<ArenaBoard>()._boundedData[Index];
-            FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(currentAP.AvatarAddr.ToString()));
 
-            PandoraPlayer enemyPan = PandoraBoxMaster.GetPandoraPlayer(currentAP.AvatarAddr.ToString());
-            enemyGuildPlayer = null;
-            enemyGuildPlayer =
-                PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(currentAP.AvatarAddr.ToString()));
-
-            if (enemyGuildPlayer is null)
-                _nameText.text = _currentData.name.Split('<')[0];
-            else
-            {
-                if (PandoraBoxMaster.CurrentGuildPlayer is null)
-                {
-                    _nameText.text =
-                        $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                }
-                else
-                {
-                    if (enemyGuildPlayer.Guild == PandoraBoxMaster.CurrentGuildPlayer.Guild)
-                        _nameText.text =
-                            $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                    else
-                        _nameText.text =
-                            $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                }
-            }
-
-
-            int he, me;
-            me = CPHelper.GetCPV2(
-                States.Instance.CurrentAvatarState, Game.instance.TableSheets.CharacterSheet,
-                Game.instance.TableSheets.CostumeStatSheet);
-            he = _currentData.cp;
-
-            Color selectedColor = new Color();
-            
-            if (he > me + 10000)
-                ColorUtility.TryParseHtmlString("#FF0000", out selectedColor);
-            else if (he <= me + 10000 && he > me)
-                ColorUtility.TryParseHtmlString("#FF4900", out selectedColor);
-            else if (he <= me && he > me - 10000)
-                ColorUtility.TryParseHtmlString("#4CA94C", out selectedColor);
-            else
-                ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
-            _cpText.color = selectedColor;
-
-            var player = RxProps.PlayersArenaParticipant.Value;
-            cannotAttackImg.SetActive(_currentData.score > player.Score + 100 || player.Score > _currentData.score + 100);
-
-            //arena banner
-
-            NFTOwner currentNFTOwner = new NFTOwner();
-            //Debug.LogError(avatarAddress);
-            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == currentAP.AvatarAddr.ToString().ToLower());
-            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
-            {
-                if (currentNFTOwner.CurrentArenaBanner != "")
-                {
-                    NFTItem arenaBanner = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
-                    if (bannerHolder.childCount > 0)
-                    {
-                        PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
-                        if (currentBanner.ItemName != arenaBanner.ItemName)
-                        {
-                            Destroy(bannerHolder.GetChild(0).gameObject);
-                            Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
-                        }
-                    }
-                    else
-                    {
-                        Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
-                    }
-                }
-                else
-                {
-                    //clear arena slot
-                    if (bannerHolder.childCount > 0)
-                        Destroy(bannerHolder.GetChild(0).gameObject);
-                }
-            }
-            else
-            {
-                if (bannerHolder.childCount > 0)
-                    Destroy(bannerHolder.GetChild(0).gameObject);
-            }
-
-
-            GetExtraData();
-
-
-
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _ratingText.text =
                 _currentData.score.ToString("N0", CultureInfo.CurrentCulture);
@@ -221,36 +133,31 @@ namespace Nekoyume.UI.Module.Arena.Board
                     CultureInfo.CurrentCulture);
             _choiceButton.Interactable = _currentData.interactableChoiceButton;
             UpdateRank();
-        }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            selectedAP = Widget.Find<ArenaBoard>()._boundedData[Index];
+            meAP = PlayersArenaParticipant.Value;
+            selectedPan = PandoraBoxMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
+            enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
 
-        async void GetExtraData()
-        {
-            var currentAP = Widget.Find<ArenaBoard>()._boundedData[Index];
 
-            var arenaSheet = TableSheets.Instance.ArenaSheet;
-            var currentBlockIndex = Game.instance.Agent.BlockIndex;
-            if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
-            {
-                // currentRoundData.ChampionshipId
-                // currentRoundData.Round
-            }
 
-            var arenaInformationAddr = ArenaInformation.DeriveAddress(currentAP.AvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
-            var agent = Game.instance.Agent;
+            FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
 
-            var sa = await agent.GetStateAsync(arenaInformationAddr);
-            if (sa is Bencodex.Types.List serializedArenaInformationList &&
-                serializedArenaInformationList.Count >= 3)
-            {
-                var win = (int)(Bencodex.Types.Integer)serializedArenaInformationList[1];
-                var lose = (int)(Bencodex.Types.Integer)serializedArenaInformationList[2];
-                var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
-                var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
-                var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
-                extraInfoText.text = $"W.L: <color=green>{win}</color>/<color=red>{lose}</color>\nLeft: {a1}\nBought: {a3}";
-            }
-            //winLoseText.text = arenaInformationAddr.ToString();
-        }
+            if (bannerHolder.childCount > 0)
+                foreach (Transform item in bannerHolder)
+                    Destroy(item.gameObject);
+
+            SetName();
+            SetCP();
+            SetBanner();
+            SetArenaInfo();
+
+
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+         }
+
+
 
         protected override void UpdatePosition(float normalizedPosition, float localPosition)
         {
@@ -283,13 +190,123 @@ namespace Nekoyume.UI.Module.Arena.Board
             }
         }
 
-
-
-        public void ShowGuildInfo()
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void GetGuildInfo()
         {
             if (enemyGuildPlayer is null)
                 return;
             Widget.Find<GuildInfo>().Show(enemyGuildPlayer.Guild);
         }
+
+        void SetName()
+        {
+            if (enemyGuildPlayer is null)
+                _nameText.text = _currentData.name.Split('<')[0];
+            else
+            {
+                if (PandoraBoxMaster.CurrentGuildPlayer is null)
+                {
+                    _nameText.text =
+                        $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+                }
+                else
+                {
+                    if (enemyGuildPlayer.Guild == PandoraBoxMaster.CurrentGuildPlayer.Guild)
+                        _nameText.text =
+                            $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+                    else
+                        _nameText.text =
+                            $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+                }
+            }
+        }
+
+        void SetCP()
+        {
+            int he, me;
+            me = CPHelper.GetCPV2(
+                meAP.AvatarState, Game.instance.TableSheets.CharacterSheet,
+                Game.instance.TableSheets.CostumeStatSheet);
+            he = _currentData.cp;
+
+            Color selectedColor = new Color();
+
+            if (he > me + 20000)
+                ColorUtility.TryParseHtmlString("#FF0000", out selectedColor);
+            else if (he <= me + 20000 && he > me)
+                ColorUtility.TryParseHtmlString("#FF4900", out selectedColor);
+            else if (he <= me && he > me - 20000)
+                ColorUtility.TryParseHtmlString("#4CA94C", out selectedColor);
+            else
+                ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
+            _cpText.color = selectedColor;
+
+            cannotAttackImg.SetActive(_currentData.score > meAP.Score + 100 || meAP.Score > _currentData.score + 100);
+        }
+
+        void SetBanner()
+        {
+            NFTOwner currentNFTOwner = new NFTOwner();
+            //Debug.LogError(avatarAddress);
+            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
+            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            {
+                if (currentNFTOwner.CurrentArenaBanner != "")
+                {
+                    NFTItem arenaBanner = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
+                    if (bannerHolder.childCount > 0)
+                    {
+                        PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
+                        if (currentBanner.ItemName != arenaBanner.ItemName)
+                        {
+                            Destroy(bannerHolder.GetChild(0).gameObject);
+                            Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                        }
+                    }
+                    else
+                    {
+                        Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                    }
+                }
+                else
+                {
+                    //clear arena slot
+                    if (bannerHolder.childCount > 0)
+                        Destroy(bannerHolder.GetChild(0).gameObject);
+                }
+            }
+            else
+            {
+                if (bannerHolder.childCount > 0)
+                    Destroy(bannerHolder.GetChild(0).gameObject);
+            }
+        }
+
+        async void SetArenaInfo()
+        {
+            var arenaSheet = TableSheets.Instance.ArenaSheet;
+            var currentBlockIndex = Game.instance.Agent.BlockIndex;
+            if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
+            {
+                var arenaInformationAddr = ArenaInformation.DeriveAddress(selectedAP.AvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
+                var agent = Game.instance.Agent;
+
+                var sa = await agent.GetStateAsync(arenaInformationAddr);
+                if (sa is Bencodex.Types.List serializedArenaInformationList &&
+                    serializedArenaInformationList.Count >= 3)
+                {
+                    var win = (int)(Bencodex.Types.Integer)serializedArenaInformationList[1];
+                    var lose = (int)(Bencodex.Types.Integer)serializedArenaInformationList[2];
+                    var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
+                    var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
+                    var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
+                    extraInfoText.text = $"W.L: <color=green>{win}</color>/<color=red>{lose}</color>\nLeft: {a1}\nBought: {a3}";
+                }
+            }
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
     }
 }
