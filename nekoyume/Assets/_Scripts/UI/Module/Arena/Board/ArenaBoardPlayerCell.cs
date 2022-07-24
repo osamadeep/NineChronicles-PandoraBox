@@ -241,7 +241,16 @@ namespace Nekoyume.UI.Module.Arena.Board
                 ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
             _cpText.color = selectedColor;
 
-            cannotAttackImg.SetActive(_currentData.score > meAP.Score + 100 || meAP.Score > _currentData.score + 100);
+
+
+            var arenaSheet = TableSheets.Instance.ArenaSheet;
+            var currentBlockIndex = Game.instance.Agent.BlockIndex;
+            if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
+            {
+                cannotAttackImg.SetActive(false); //false on offseason
+                if (currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Championship || currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Season)
+                    cannotAttackImg.SetActive(_currentData.score > meAP.Score + 100 || meAP.Score > _currentData.score + 100);
+            }
         }
 
         void SetBanner()

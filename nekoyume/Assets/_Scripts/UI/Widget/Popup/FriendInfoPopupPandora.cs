@@ -209,7 +209,7 @@ namespace Nekoyume.UI
         }
 
 
-        public void SoloSimulate()
+        public async void SoloSimulate()
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
@@ -221,11 +221,23 @@ namespace Nekoyume.UI
             PandoraBoxMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
             PandoraBoxMaster.IsRankingSimulate = true;
 
+            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
+            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
+                ? new ArenaAvatarState(serialized)
+                : null;
+
+            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enemyAP.AvatarAddr);
+            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
+                ? new ArenaAvatarState(enSerialized)
+                : null;
+
+
             var tableSheets = Game.Game.instance.TableSheets;
-            var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, avatarState.ToArenaAvatarState());
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
-            
+            //var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
+            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enArenaAvatarState);
+
+
 
             var simulator = new ArenaSimulator(new Cheat.DebugRandom());
             var log = simulator.Simulate(
@@ -281,22 +293,17 @@ namespace Nekoyume.UI
 
 
             var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest? myDigest = null;
-            ArenaPlayerDigest? enemyDigest = null;
+            var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, avatarState.ToArenaAvatarState());
+            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
 
-            myDigest = new ArenaPlayerDigest(meAP.AvatarState, meAP.AvatarState.ToArenaAvatarState());
-            ArenaAvatarState enmAAS = enemyAP.AvatarState.ToArenaAvatarState();
-            enmAAS.UpdateEquipment(enemyAP.AvatarState.inventory.Equipments.Where(e => e.Equipped)
-                            .Select(e => e.NonFungibleId)
-                            .ToList());
-            enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enmAAS);
             
             for (int i = 0; i < totalSimulations; i++)
             {
                 var simulator = new ArenaSimulator(new Cheat.DebugRandom());
                 var log = simulator.Simulate(
-                    myDigest.Value,
-                    enemyDigest.Value,
+                    myDigest,
+                    enemyDigest,
                     tableSheets.GetArenaSimulatorSheets());
 
                 if (log.Result == Nekoyume.Model.BattleStatus.Arena.ArenaLog.ArenaResult.Win)
