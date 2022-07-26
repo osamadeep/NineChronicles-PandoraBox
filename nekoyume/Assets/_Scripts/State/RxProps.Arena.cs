@@ -530,36 +530,37 @@ namespace Nekoyume.State
             ArenaType arenaType,
             int playerScore,int currentPlayerRank)
         {
-            switch (arenaType)
+            //switch (arenaType)
+            //{
+            //    case ArenaType.OffSeason:
+            //        return tuples;
+            //    case ArenaType.Season:
+            //    case ArenaType.Championship:
+            //        var bounds = ArenaHelper.ScoreLimits[arenaType];
+            //        bounds = (bounds.Item1 + playerScore, bounds.Item2 + playerScore);
+            //        return tuples
+            //            .Where(tuple =>
+            //                tuple.score <= bounds.Item1 &&
+            //                tuple.score >= bounds.Item2)
+            //            .ToArray();
+            //    default:
+            //        throw new ArgumentOutOfRangeException(nameof(arenaType), arenaType, null);
+            //}
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            int upper = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper *
+                        PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            int lower = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListLower *
+                        PandoraBoxMaster.Instance.Settings.ArenaListStep);
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
-                case ArenaType.OffSeason:
-                    return tuples;
-                case ArenaType.Season:
-                case ArenaType.Championship:
-                    var bounds = ArenaHelper.ScoreLimits[arenaType];
-                    bounds = (bounds.Item1 + playerScore, bounds.Item2 + playerScore);
-                    //return tuples
-                    //    .Where(tuple =>
-                    //        tuple.score <= bounds.Item1 &&
-                    //        tuple.score >= bounds.Item2)
-                    //    .ToArray();
-                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    int upper = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper *
-                                PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                    int lower = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListLower *
-                                PandoraBoxMaster.Instance.Settings.ArenaListStep);
-                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                    {
-                        return tuples.Where(tuple => tuple.rank < 100 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
-                    }
-                    else
-                    {
-                        return tuples.Where(tuple => tuple.rank < 10 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
-                    }
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(arenaType), arenaType, null);
+                return tuples.Where(tuple => tuple.rank < 100 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
             }
+            else
+            {
+                return tuples.Where(tuple => tuple.rank < 10 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }
 }

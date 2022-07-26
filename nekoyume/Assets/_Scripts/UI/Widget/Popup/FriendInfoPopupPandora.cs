@@ -9,6 +9,7 @@ using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Helper;
 using Nekoyume.Model.Arena;
+using Nekoyume.Model.BattleStatus.Arena;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
@@ -233,7 +234,6 @@ namespace Nekoyume.UI
 
 
             var tableSheets = Game.Game.instance.TableSheets;
-            //var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
             ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
             ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enArenaAvatarState);
 
@@ -268,7 +268,7 @@ namespace Nekoyume.UI
 
         }
 
-        public void MultipleSimulate()
+        public async void MultipleSimulate()
         {
             if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
@@ -278,11 +278,28 @@ namespace Nekoyume.UI
                 return;
             }
 
-            StartCoroutine(IEMultipleSimulate());
+            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
+            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
+                ? new ArenaAvatarState(serialized)
+                : null;
+
+            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enemyAP.AvatarAddr);
+            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
+                ? new ArenaAvatarState(enSerialized)
+                : null;
+
+
+            var tableSheets = Game.Game.instance.TableSheets;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
+            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enArenaAvatarState);
+
+
+
+            await StartCoroutine(IEMultipleSimulate(myDigest, enemyDigest));
         }
 
 
-        IEnumerator IEMultipleSimulate()
+        IEnumerator IEMultipleSimulate(ArenaPlayerDigest mD, ArenaPlayerDigest eD)
         {
             multipleSimulateButton.interactable = false;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
@@ -293,20 +310,16 @@ namespace Nekoyume.UI
 
 
             var tableSheets = Game.Game.instance.TableSheets;
-            var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, avatarState.ToArenaAvatarState());
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enemyAP.AvatarState.ToArenaAvatarState());
-
             
             for (int i = 0; i < totalSimulations; i++)
             {
                 var simulator = new ArenaSimulator(new Cheat.DebugRandom());
                 var log = simulator.Simulate(
-                    myDigest,
-                    enemyDigest,
+                    mD,
+                    eD,
                     tableSheets.GetArenaSimulatorSheets());
 
-                if (log.Result == Nekoyume.Model.BattleStatus.Arena.ArenaLog.ArenaResult.Win)
+                if (log.Result == ArenaLog.ArenaResult.Win)
                     win++;
                 yield return new WaitForSeconds(0.05f);
             }
@@ -324,7 +337,6 @@ namespace Nekoyume.UI
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
-
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

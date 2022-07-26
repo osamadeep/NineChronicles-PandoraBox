@@ -17,6 +17,7 @@ namespace Nekoyume.UI
 {
     using UniRx;
     using TMPro;
+    using Nekoyume.PandoraBox;
 
     public class ArenaBoard : Widget
     {
@@ -103,6 +104,16 @@ namespace Nekoyume.UI
             RxProps.ArenaParticipant[] arenaParticipants,
             bool ignoreShowAnimation = false)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 10; i++) //fav max count
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (PlayerPrefs.HasKey(key))
+                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _roundData = roundData;
             _boundedData = arenaParticipants;
             Find<HeaderMenuStatic>().Show(HeaderMenuStatic.AssetVisibleState.Arena);
@@ -113,6 +124,8 @@ namespace Nekoyume.UI
             //       Not use `_boundedData` here because there is the case to
             //       use the mock data from `_so`.
             _noJoinedPlayersGameObject.SetActive(_playerScroll.Data.Count == 1);
+
+
 
             base.Show(ignoreShowAnimation);
         }

@@ -8,12 +8,17 @@ using UnityEngine.UI.Extensions;
 
 namespace Nekoyume.UI.Module.Arena.Board
 {
+    using Nekoyume.Arena;
     using Nekoyume.Battle;
     using Nekoyume.BlockChain;
     using Nekoyume.Game;
     using Nekoyume.Model.Arena;
+    using Nekoyume.Model.Mail;
+    using Nekoyume.Model.State;
     using Nekoyume.PandoraBox;
     using Nekoyume.State;
+    using Nekoyume.UI.Scroller;
+    using System.Collections;
     using UniRx;
     using static Nekoyume.State.RxProps;
 
@@ -45,6 +50,7 @@ namespace Nekoyume.UI.Module.Arena.Board
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private GameObject cannotAttackImg = null;
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [SerializeField] private TextMeshProUGUI rateText = null;
 
         [SerializeField] private Transform bannerHolder = null;
         [SerializeField] private Image rarityMockupImage = null;
@@ -152,7 +158,17 @@ namespace Nekoyume.UI.Module.Arena.Board
             SetBanner();
             SetArenaInfo();
 
-
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                try
+                {
+                    WinRate();
+                }
+                catch
+                {
+                    //since they do quick navigate, it will cause error, so this to remove the error
+                }
+            }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
          }
@@ -312,6 +328,64 @@ namespace Nekoyume.UI.Module.Arena.Board
                     extraInfoText.text = $"W.L: <color=green>{win}</color>/<color=red>{lose}</color>\nLeft: {a1}\nBought: {a3}";
                 }
             }
+        }
+
+        async void WinRate()
+        {
+            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
+            var myArenaAvatarState = await Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
+                ? new ArenaAvatarState(serialized)
+                : null;
+
+            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(selectedAP.AvatarAddr);
+            var enArenaAvatarState = await Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
+                ? new ArenaAvatarState(enSerialized)
+                : null;
+
+
+            var tableSheets = Game.instance.TableSheets;
+            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
+            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(selectedAP.AvatarState, enArenaAvatarState);
+
+
+            IEMultipleSimulate(myDigest, enemyDigest);
+            
+        }
+
+
+        void IEMultipleSimulate(ArenaPlayerDigest mD, ArenaPlayerDigest eD)
+        {
+            rateText.text = "...";
+
+            int totalSimulations = 10;
+            int win = 0;
+
+
+            var tableSheets = Game.instance.TableSheets;
+
+            for (int i = 0; i < totalSimulations; i++)
+            {
+                var simulator = new ArenaSimulator(new Cheat.DebugRandom());
+                var log = simulator.Simulate(
+                    mD,
+                    eD,
+                    tableSheets.GetArenaSimulatorSheets());
+
+                if (log.Result == Nekoyume.Model.BattleStatus.Arena.ArenaLog.ArenaResult.Win)
+                    win++;
+                //yield return new WaitForSeconds(0.05f);
+            }
+
+            float finalRatio = (float)win / (float)totalSimulations;
+            float FinalValue = (int)(finalRatio * 100f);
+
+            if (finalRatio <= 0.5f)
+                rateText.text = $"<color=red>{FinalValue}</color>%";
+            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
+                rateText.text = $"<color=#FF4900>{FinalValue}</color>%";
+            else
+                rateText.text = $"<color=green>{FinalValue}</color>%";
+
         }
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
