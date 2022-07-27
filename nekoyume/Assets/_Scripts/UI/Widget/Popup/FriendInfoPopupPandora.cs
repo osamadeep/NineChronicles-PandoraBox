@@ -50,7 +50,7 @@ namespace Nekoyume.UI
 
         //for simulate
         RxProps.ArenaParticipant meAP = null;
-        RxProps.ArenaParticipant enemyAP= null;
+        public RxProps.ArenaParticipant enemyAP= null;
         private ArenaSheet.RoundData _roundData;
 
 

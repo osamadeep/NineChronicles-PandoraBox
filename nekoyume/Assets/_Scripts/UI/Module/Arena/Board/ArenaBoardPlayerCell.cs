@@ -110,7 +110,15 @@ namespace Nekoyume.UI.Module.Arena.Board
         private void Awake()
         {
             _characterView.OnClickCharacterIcon
-                .Subscribe(_ => Context.onClickCharacterView?.Invoke(Index))
+                .Subscribe(_ =>
+                {
+                    Context.onClickCharacterView?.Invoke(Index);
+                    foreach (Transform item in transform.parent)
+                    {
+                        item.GetComponent<ArenaBoardPlayerCell>().BlinkSelected.SetActive(false);
+                    }
+                    BlinkSelected.SetActive(true);
+                })
                 .AddTo(gameObject);
             
             _choiceButton.OnClickSubject
@@ -145,8 +153,11 @@ namespace Nekoyume.UI.Module.Arena.Board
             selectedPan = PandoraBoxMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
             enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
 
-
-
+            if (Widget.Find<FriendInfoPopupPandora>().enemyAP is null)
+                BlinkSelected.SetActive(false);
+            else
+                BlinkSelected.SetActive(selectedAP.AvatarAddr ==
+                                        Widget.Find<FriendInfoPopupPandora>().enemyAP.AvatarAddr);
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
 
             if (bannerHolder.childCount > 0)

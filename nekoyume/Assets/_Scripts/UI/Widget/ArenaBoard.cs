@@ -41,8 +41,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private ArenaBoardBillboard _billboard;
 
-        [SerializeField]
-        private ArenaBoardPlayerScroll _playerScroll;
+        public ArenaBoardPlayerScroll _playerScroll;
 
         [SerializeField]
         private GameObject _noJoinedPlayersGameObject;
