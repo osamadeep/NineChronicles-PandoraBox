@@ -88,14 +88,6 @@ namespace Nekoyume.UI
         private const int Timer = 10;
         private static readonly Vector3 VfxBattleWinOffset = new Vector3(-0.05f, 1.2f, 10f);
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private Button returnQuestButton = null;
-
-        [SerializeField] private Button hideButton = null;
-
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
         private CanvasGroup canvasGroup = null;
 
@@ -429,8 +421,6 @@ namespace Nekoyume.UI
             string fullFormat = string.Empty;
             closeButton.interactable = true;
             closeButton.gameObject.SetActive(true);
-            hideButton.gameObject.SetActive(false);
-            returnQuestButton.gameObject.SetActive(PandoraBoxMaster.IsHackAndSlashSimulate);
 
             if (!SharedModel.IsClear)
             {
@@ -466,12 +456,6 @@ namespace Nekoyume.UI
                 case NextState.NextStage:
                     SubmitWidget = nextButton.onClick.Invoke;
                     fullFormat = L10nManager.Localize("UI_BATTLE_RESULT_NEXT_STAGE_FORMAT");
-                    break;
-                case NextState.Raid:
-                    repeatButton.gameObject.SetActive(false);
-                    nextButton.gameObject.SetActive(false);
-                    closeButton.gameObject.SetActive(false);
-                    hideButton.gameObject.SetActive(true);
                     break;
                 default:
                     bottomText.text = string.Empty;
@@ -715,25 +699,6 @@ namespace Nekoyume.UI
             }
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void GoToQuestPreperation()
-        {
-            Find<Battle>().Close(true);
-            Close();
-            Find<Status>().Close();
-            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
-            Find<HeaderMenuStatic>().Show(true);
-            Find<WorldMap>().Show();
-            Find<StageInformation>().Show();
-            AudioController.instance.PlayMusic(AudioController.MusicCode.Main);
-            //Find<BattlePreparation>().Show();
-            Find<BattlePreparation>().Show(EnumType.StageType.HackAndSlash,
-                PandoraBoxMaster.SelectedWorldID,
-                PandoraBoxMaster.SelectedStageID,
-                $"Back {PandoraBoxMaster.SelectedStageID}",
-                true);
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         private void GoToPreparation()
         {
             Find<Battle>().Close(true);
