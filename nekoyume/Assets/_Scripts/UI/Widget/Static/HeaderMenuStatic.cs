@@ -39,6 +39,8 @@ namespace Nekoyume.UI.Module
             Shop,
             Battle,
             Arena,
+            EventDungeon,
+            WorldBoss,
         }
 
         [Serializable]
@@ -51,16 +53,40 @@ namespace Nekoyume.UI.Module
             public TextMeshProUGUI LockText;
         }
 
-        [SerializeField] private List<ToggleInfo> toggles = new List<ToggleInfo>();
-        [SerializeField] private Gold ncg;
-        public ActionPoint actionPoint; //PANDORA
-        [SerializeField] private Crystal crystal;
-        [SerializeField] private GameObject dailyBonus;
-        [SerializeField] private Hourglass hourglass;
-        [SerializeField] private ArenaTickets arenaTickets;
-        [SerializeField] private VFX inventoryVFX;
-        [SerializeField] private VFX workshopVFX;
-        [SerializeField] private ToggleDropdown menuToggleDropdown;
+        [SerializeField]
+        private List<ToggleInfo> toggles = new List<ToggleInfo>();
+
+        [SerializeField]
+        private Gold ncg;
+
+        public  ActionPoint actionPoint; //PANDORA
+
+        [SerializeField]
+        private Crystal crystal;
+
+        [SerializeField]
+        private GameObject dailyBonus;
+
+        [SerializeField]
+        private Hourglass hourglass;
+
+        [SerializeField]
+        private ArenaTickets arenaTickets;
+
+        [SerializeField]
+        private EventDungeonTickets eventDungeonTickets;
+
+        [SerializeField]
+        private WorldBossTickets worldBossTickets;
+
+        [SerializeField]
+        private VFX inventoryVFX;
+
+        [SerializeField]
+        private VFX workshopVFX;
+
+        [SerializeField]
+        private ToggleDropdown menuToggleDropdown;
 
         private readonly List<IDisposable> _disposablesAtOnEnable = new List<IDisposable>();
 
@@ -103,6 +129,8 @@ namespace Nekoyume.UI.Module
         public Hourglass Hourglass => hourglass;
 
         public ArenaTickets ArenaTickets => arenaTickets;
+        public EventDungeonTickets EventDungeonTickets => eventDungeonTickets;
+        public WorldBossTickets WorldBossTickets => worldBossTickets;
 
         public override bool CanHandleInputEvent => false;
 
@@ -275,6 +303,12 @@ namespace Nekoyume.UI.Module
                 case AssetVisibleState.Arena:
                     SetActiveAssets(isNcgActive: true, isActionPointActive: true, isArenaTicketsActive: true);
                     break;
+                case AssetVisibleState.EventDungeon:
+                    SetActiveAssets(isNcgActive: true, isActionPointActive: true, isEventDungeonTicketsActive: true);
+                    break;
+                case AssetVisibleState.WorldBoss:
+                    SetActiveAssets(isNcgActive: true, isActionPointActive: true, isEventWorldBossTicketsActive: true);
+                    break;
             }
         }
 
@@ -283,13 +317,17 @@ namespace Nekoyume.UI.Module
             bool isActionPointActive = false,
             bool isDailyBonusActive = false,
             bool isHourglassActive = false,
-            bool isArenaTicketsActive = false)
+            bool isArenaTicketsActive = false,
+            bool isEventDungeonTicketsActive = false,
+            bool isEventWorldBossTicketsActive = false)
         {
             ncg.gameObject.SetActive(isNcgActive);
             actionPoint.gameObject.SetActive(isActionPointActive);
             dailyBonus.SetActive(isDailyBonusActive);
             hourglass.gameObject.SetActive(isHourglassActive);
             arenaTickets.gameObject.SetActive(isArenaTicketsActive);
+            eventDungeonTickets.gameObject.SetActive(isEventDungeonTicketsActive);
+            worldBossTickets.gameObject.SetActive(isEventWorldBossTicketsActive);
         }
 
         private void SubscribeBlockIndex(long blockIndex)

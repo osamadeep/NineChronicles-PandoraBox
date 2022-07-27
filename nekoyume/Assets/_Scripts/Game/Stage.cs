@@ -558,7 +558,7 @@ namespace Nekoyume.Game
                     {
                         _battleResultModel.NextState = IsRepeatStage
                             ? BattleResultPopup.NextState.RepeatStage
-                            : BattleResultPopup.NextState.GoToMain;
+                            : BattleResultPopup.NextState.None;
                     }
                 }
             }
