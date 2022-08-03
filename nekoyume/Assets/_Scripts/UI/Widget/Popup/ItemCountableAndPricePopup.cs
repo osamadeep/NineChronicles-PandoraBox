@@ -17,6 +17,12 @@ namespace Nekoyume.UI
 
     public class ItemCountableAndPricePopup : ItemCountPopup<Model.ItemCountableAndPricePopup>
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private GameObject quantityArea;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private Button overrideCancelButton;
 
         [SerializeField] private TMP_InputField priceInputField = null;
@@ -228,6 +234,10 @@ namespace Nekoyume.UI
 
             priceInputField.Select();
             countInputField.Select();
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            quantityArea.SetActive(_data.Item.Value.MaxCount.Value != 1);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private bool IsValid()

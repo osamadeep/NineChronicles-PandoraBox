@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Nekoyume.Action;
@@ -32,7 +32,7 @@ namespace Nekoyume.UI
             public TextMeshProUGUI cpText;
         }
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         [Serializable]
         public class EditorStatOption
         {
@@ -49,7 +49,7 @@ namespace Nekoyume.UI
             public int totalPower;
             public int plusPower;
         }
-#endif
+//#endif
 
         [SerializeField] private GameObject _titleFailSuccessObject;
 
@@ -81,7 +81,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private RectTransform crystalIconTransform;
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         [Space(10)]
         [Header("Editor Properties For Test")]
         [Space(10)]
@@ -93,7 +93,7 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private List<EditorSkillOption> _editorSkillOptions;
-#endif
+//#endif
 
         private static readonly int AnimatorHashGreatSuccess = Animator.StringToHash("GreatSuccess");
         private static readonly int AnimatorHashSuccess = Animator.StringToHash("Success");
@@ -113,7 +113,7 @@ namespace Nekoyume.UI
             base.OnDisable();
         }
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         public void ShowWithEditorProperty()
         {
             var tableSheets = Game.Game.instance.TableSheets;
@@ -156,7 +156,7 @@ namespace Nekoyume.UI
 
             Show(_editorEnhancementResult, preEquipment, equipment);
         }
-#endif
+//#endif
 
         [Obsolete("Use `Show(ItemEnhanceMail mail)` instead.")]
         public override void Show(bool ignoreShowAnimation = false)

@@ -18,16 +18,21 @@ namespace Nekoyume.UI
     using UniRx;
     using TMPro;
     using Nekoyume.PandoraBox;
+    using Nekoyume.Helper;
 
     public class ArenaBoard : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [SerializeField] private TextMeshProUGUI lastUpdateText = null;
         [SerializeField] private Button GoMyPlaceBtn = null;
+        [SerializeField] private Button RefreshBtn = null;
         [SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
+        [SerializeField] private GameObject RefreshObj = null;
 
         public int OldScore;
+        int LastBlockUpdate;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 #if UNITY_EDITOR
@@ -69,6 +74,10 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             GoMyPlaceBtn.OnClickAsObservable().Subscribe(_=> GoMyPlace()).AddTo(gameObject);
+            RefreshBtn.OnClickAsObservable().Subscribe(_ => {
+                RefreshList().Forget();
+                StartCoroutine(RefreshCooldown());
+            }).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -77,6 +86,69 @@ namespace Nekoyume.UI
         {
             UpdateScrolls();
         }
+
+        public async UniTaskVoid RefreshList()
+        {
+            SetLastUpdate();
+            RefreshObj.SetActive(true);
+            await UniTask.WhenAll(
+            RxProps.ArenaInfoTuple.UpdateAsync(),
+            RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
+            .AsUniTask();
+
+            _boundedData = RxProps.ArenaParticipantsOrderedWithScore.Value;
+            UpdateBillboard();
+            UpdateScrolls();
+            RefreshObj.SetActive(false);
+        }
+
+        System.Collections.IEnumerator RefreshCooldown()
+        {
+            RefreshBtn.interactable = false;
+            int cooldown = 25;
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                cooldown = 10;
+            TextMeshProUGUI buttonText = RefreshBtn.GetComponentInChildren<TextMeshProUGUI>();
+
+            for (int i = 0; i < cooldown; i++)
+            {
+                buttonText.text = (cooldown - i).ToString();
+                yield return new WaitForSeconds(1);
+            }
+
+            buttonText.text = "Refresh";
+            RefreshBtn.interactable = true;
+        }
+
+        System.Collections.IEnumerator LastUpdateCounter()
+        {
+            bool redFliker=false;
+            while (true)
+            {
+                yield return new WaitForSeconds(1);
+                //Debug.LogError((int)Game.Game.instance.Agent.BlockIndex + "    " + LastBlockUpdate);
+                int differenceBlock = (int)Game.Game.instance.Agent.BlockIndex - LastBlockUpdate;
+                var time = Util.GetBlockToTime((int)differenceBlock);
+
+                if (differenceBlock < 10)
+                    lastUpdateText.text = $"Last Update: <color=green>{time}</color> ({differenceBlock})";
+                else
+                {
+                    redFliker = !redFliker;
+                    if (redFliker)
+                        lastUpdateText.text = $"Last Update: <color=red>{time}</color> ({differenceBlock})";
+                    else
+                        lastUpdateText.text = $"Last Update: {time} ({differenceBlock})";
+                }
+            }
+
+        }
+
+        public void SetLastUpdate()
+        {
+            LastBlockUpdate = (int)Game.Game.instance.Agent.BlockIndex;
+        }
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public async UniTaskVoid ShowAsync(bool ignoreShowAnimation = false)
@@ -111,6 +183,7 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
             }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _roundData = roundData;
@@ -127,6 +200,11 @@ namespace Nekoyume.UI
 
 
             base.Show(ignoreShowAnimation);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //StartCoroutine(RefreshCooldown());
+            StartCoroutine(LastUpdateCounter());
+            RefreshObj.SetActive(false);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void UpdateBillboard()

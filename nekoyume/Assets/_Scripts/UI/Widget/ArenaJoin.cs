@@ -98,6 +98,9 @@ namespace Nekoyume.UI
         {
             var loading = Find<DataLoadingScreen>();
             loading.Show();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Widget.Find<ArenaBoard>().SetLastUpdate();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             await UniTask.WhenAll(
                     RxProps.ArenaInfoTuple.UpdateAsync(),
                     RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
@@ -163,6 +166,7 @@ namespace Nekoyume.UI
 
                     Close();
                     Find<LoadingScreen>().Close();
+
                     Find<ArenaBoard>().Show(
                         _scroll.SelectedItemData.RoundData,
                         RxProps.ArenaParticipantsOrderedWithScore.Value);

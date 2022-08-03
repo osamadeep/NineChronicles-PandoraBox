@@ -108,6 +108,7 @@ namespace Nekoyume.PandoraBox
 
         public void StartRaid()
         {
+#if !UNITY_EDITOR
             if (isBusy)
             {
                 isBusy = false;
@@ -118,6 +119,7 @@ namespace Nekoyume.PandoraBox
                 //show error msg
             }
             else
+#endif
             {
                 CurrentStageID = int.Parse(StageIDText.text);
                 totalCount = int.Parse(CurrentTriesManual.text);

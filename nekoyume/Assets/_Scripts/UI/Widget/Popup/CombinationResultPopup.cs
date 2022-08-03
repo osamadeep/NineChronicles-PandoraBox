@@ -17,6 +17,8 @@ using Random = UnityEngine.Random;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
+    using Nekoyume.State;
     using UniRx;
 
     public class CombinationResultPopup : PopupWidget
@@ -30,7 +32,7 @@ namespace Nekoyume.UI
             public TextMeshProUGUI cpText;
         }
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         [Serializable]
         public enum EquipmentOrFood
         {
@@ -51,7 +53,7 @@ namespace Nekoyume.UI
             public int chance;
             public int power;
         }
-#endif
+//#endif
 
         [SerializeField] private Image _iconImage;
 
@@ -81,7 +83,7 @@ namespace Nekoyume.UI
 
         [SerializeField] private float _dueTimeOfIncreaseCPAnimation;
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         [Space(10)]
         [Header("Editor Properties For Test")]
         [Space(10)]
@@ -96,7 +98,15 @@ namespace Nekoyume.UI
 
         [SerializeField]
         private List<EditorSkillOption> _editorSkillOptions;
-#endif
+//#endif
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI tryCountTxt;
+        int tryCount = 0;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private static readonly int AnimatorHashGreatSuccess = Animator.StringToHash("GreatSuccess");
         private static readonly int AnimatorHashSuccess = Animator.StringToHash("Success");
@@ -109,6 +119,8 @@ namespace Nekoyume.UI
         private IDisposable _disposableOfCPAnimation;
         private Coroutine _coroutineOfPlayOptionAnimation;
 
+
+
         protected override void OnDisable()
         {
             _disposableOfSkip?.Dispose();
@@ -120,7 +132,7 @@ namespace Nekoyume.UI
             base.OnDisable();
         }
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         public void ShowWithEditorProperty()
         {
             var tableSheets = Game.Game.instance.TableSheets;
@@ -153,7 +165,37 @@ namespace Nekoyume.UI
                     equipment.optionCountFromCombination++;
                 }
 
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                tryCount++;
+
+                int rollChance = 100;
+                _isGreatSuccess = true;
+                for (int i = 0; i < PandoraBoxMaster.PanDatabase.DiceRoll; i++)
+                {
+                    rollChance = Random.Range(1, 100);
+                    //Debug.LogError("roll: " + PandoraBoxMaster.PanDatabase.DiceRoll + " Try: " + rollChance);
+                    if (rollChance > 40)
+                    {
+                        _isGreatSuccess = false;
+                        break;
+                    }
+                }
+
+                //ID Combination
+                string blockPart = Game.Game.instance.Agent.BlockIndex.ToString();
+                blockPart = blockPart.Substring(blockPart.Length - 4);
+
+                string addressPart = States.Instance.CurrentAvatarState.agentAddress.ToString();
+                addressPart = addressPart.Substring(addressPart.Length - 4);
+
+                string encryptedText = "ID:" + blockPart[3] + addressPart[2] + blockPart[2] + addressPart[0] + addressPart;
+
+                tryCountTxt.text = $"Try count: <color=green>{tryCount}</color>,  {encryptedText}";
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
                 Show(equipment, _isGreatSuccess ? _editorStatOptions.Count + _editorSkillOptions.Count : 4);
+                tryCountTxt.gameObject.SetActive(true);
             }
             else
             {
@@ -177,7 +219,7 @@ namespace Nekoyume.UI
                 Show(consumable);
             }
         }
-#endif
+//#endif
 
         [Obsolete("Use `Show(ItemUsable itemUsable)` instead.")]
         public override void Show(bool ignoreShowAnimation = false)
@@ -192,7 +234,9 @@ namespace Nekoyume.UI
                 Debug.LogError($"{nameof(itemUsable)} is null");
                 return;
             }
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            tryCountTxt.gameObject.SetActive(false);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _cpListForAnimationSteps.Clear();
             _resultItem.itemNameText.text = itemUsable.GetLocalizedName(false);
             _resultItem.itemView.SetData(

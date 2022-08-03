@@ -48,9 +48,8 @@ namespace Nekoyume.UI
         private const string FirstOpenMimisbrunnrKeyFormat = "Nekoyume.UI.Menu.FirstOpenMimisbrunnrKeyKey_{0}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private TextMeshProUGUI arenaRemains;
-
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI arenaRemains;
         [SerializeField] private TextMeshProUGUI arenaCount;
         [SerializeField] private TextMeshProUGUI arenaCurrentPositionText;
         [SerializeField] private Button randomButton;
@@ -619,240 +618,7 @@ namespace Nekoyume.UI
 
             DailyBonus.IsTrying = false;
         }
-        /*
-        public async void RandomArenaFight()
-        {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
 
-            if (PandoraUtil.IsBusy())
-                return;
-
-            var currentAddress = States.Instance.CurrentAvatarState?.address;
-            ArenaInfo arenaInfoTickets = null;
-            if (currentAddress.HasValue)
-            {
-                var avatarAddress2 = currentAddress.Value;
-                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress2.ToByteArray());
-                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                if (rawInfo is Dictionary dictionary)
-                {
-                    arenaInfoTickets = new ArenaInfo(dictionary);
-                }
-            }
-
-            if (arenaInfoTickets.DailyChallengeCount == 0)
-            {
-                randomButton.interactable = false;
-                return;
-            }
-
-            OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: Random Arena Fights Started Please wait...",
-                NotificationCell.NotificationType.Information);
-
-            randomButton.interactable = false;
-            randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Fighting...";
-            randomButton.transform.GetChild(0).gameObject.SetActive(true);
-            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
-
-
-            BlockHash? _cachedBlockHash = null;
-
-            WeeklyArenaState weeklyArenaState = null;
-            var agent = Game.Game.instance.Agent;
-            if (!_cachedBlockHash.Equals(agent.BlockTipHash))
-            {
-                _cachedBlockHash = agent.BlockTipHash;
-                await UniTask.Run(async () =>
-                {
-                    var gameConfigState = States.Instance.GameConfigState;
-                    var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
-                    var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
-                    weeklyArenaState =
-                        new WeeklyArenaState((Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
-                    States.Instance.SetWeeklyArenaState(weeklyArenaState);
-                    await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
-                });
-            }
-
-            //var weeklyArenaState = States.Instance.WeeklyArenaState;
-            if (weeklyArenaState is null)
-                return;
-
-            var avatarAddress = States.Instance.CurrentAvatarState?.address;
-            if (!avatarAddress.HasValue)
-                return;
-
-            if (!_weeklyCachedInfo.Any())
-            {
-                //UpdateBoard();
-                return;
-            }
-
-            ArenaInfo arenaInfo = _weeklyCachedInfo[0].arenaInfo;
-            if (!arenaInfo.Active)
-            {
-                arenaInfo.Activate();
-            }
-
-            //Debug.LogError(arenaInfo.AvatarName + " " + arenaInfo.CombatPoint);
-
-            //find myself
-            var currentArenaInfo = _weeklyCachedInfo[0];
-            for (int i = 0; i < _weeklyCachedInfo.Count; i++)
-                if (_weeklyCachedInfo[i].arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
-                {
-                    currentArenaInfo = _weeklyCachedInfo[i];
-                    break;
-                }
-
-            //find suitable enemy
-            var selectedEnemyArenaInfo = _weeklyCachedInfo[0];
-            int tryLowerCP = 0; //try to find lower rank and lower cp, after this pass value we search for anyone!
-            while
-                (tryLowerCP++ <
-                 50) //(selectedEnemyArenaInfo.arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
-            {
-                System.Random rnd = new System.Random();
-                var tmpInfo = _weeklyCachedInfo[rnd.Next(0, _weeklyCachedInfo.Count)];
-                if (tmpInfo.arenaInfo.AvatarAddress != States.Instance.CurrentAvatarState.address)
-                {
-                    if (tmpInfo.rank < currentArenaInfo.rank && tmpInfo.arenaInfo.CombatPoint <
-                        currentArenaInfo.arenaInfo.CombatPoint - 10000)
-                    {
-                        selectedEnemyArenaInfo = tmpInfo;
-                        break;
-                    }
-                }
-
-                if (tryLowerCP > 45 && tmpInfo.arenaInfo.AvatarAddress != States.Instance.CurrentAvatarState.address)
-                {
-                    selectedEnemyArenaInfo = tmpInfo;
-                    break;
-                }
-            }
-
-            //final attack
-            //Widget.Find<ArenaBattleLoadingScreen>().Show(new ArenaInfo(selectedEnemyArenaInfo.arenaInfo)); <-- for visual simulate
-
-            Game.Character.Player _player = Game.Game.instance.Stage.GetPlayer();
-            var currentAvatarInventory = States.Instance.CurrentAvatarState.inventory;
-
-            for (int i = 0; i < arenaInfoTickets.DailyChallengeCount; i++) //arenaInfoTickets.DailyChallengeCount
-            {
-                await Task.Delay(500);
-                //yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
-                Game.Game.instance.ActionManager.RankingBattle(
-                    selectedEnemyArenaInfo.arenaInfo.AvatarAddress,
-                    currentAvatarInventory.Costumes
-                        .Where(i => i.equipped)
-                        .Select(i => i.ItemId).ToList(),
-                    currentAvatarInventory.Equipments
-                        .Where(i => i.equipped)
-                        .Select(i => i.ItemId).ToList()
-                ).Subscribe();
-
-                OneLineSystem.Push(MailType.System,
-                    $"<color=green>Pandora Box</color>: Random selected (#<color=red>{selectedEnemyArenaInfo.rank}</color>, {selectedEnemyArenaInfo.arenaInfo.AvatarName}) <color=green>" +
-                    (i + 1)
-                    + "</color>/" + arenaInfoTickets.DailyChallengeCount + "!",
-                    NotificationCell.NotificationType.Information);
-            }
-        }
-
-        private async Task UpdateWeeklyCache(WeeklyArenaState state)
-        {
-            // For backward compatibility, create list based on previous week.
-            if (!_arenaInfoList.Locked)
-            {
-                var prevWeekAddress = ArenaHelper.GetPrevWeekAddress();
-                var rawWeekly = await Game.Game.instance.Agent.GetStateAsync(prevWeekAddress);
-                var prevWeekly = new WeeklyArenaState(rawWeekly);
-                var copiedState = new WeeklyArenaState(state.address);
-                copiedState.Update(prevWeekly, state.ResetIndex);
-                _arenaInfoList.Update(copiedState, true);
-            }
-
-            var rawList =
-                await Game.Game.instance.Agent.GetStateAsync(
-                    state.address.Derive("address_list"));
-            if (rawList is List list)
-            {
-                List<Address> avatarAddressList = list.ToList(Nekoyume.Model.State.StateExtensions.ToAddress);
-                List<Address> arenaInfoAddressList = new List<Address>();
-                foreach (var avatarAddress in avatarAddressList)
-                {
-                    var arenaInfoAddress = state.address.Derive(avatarAddress.ToByteArray());
-                    if (!arenaInfoAddressList.Contains(arenaInfoAddress))
-                    {
-                        arenaInfoAddressList.Add(arenaInfoAddress);
-                    }
-                }
-
-                Dictionary<Address, IValue> result =
-                    await Game.Game.instance.Agent.GetStateBulk(arenaInfoAddressList);
-                var infoList = new List<ArenaInfo>();
-                foreach (var iValue in result.Values)
-                {
-                    if (iValue is Dictionary dictionary)
-                    {
-                        var info = new ArenaInfo(dictionary);
-                        infoList.Add(info);
-                    }
-                }
-
-                _arenaInfoList.Update(infoList);
-            }
-
-
-            int upper = 10;
-            int lower = 10;
-
-            var currentAvatarAddress = States.Instance.CurrentAvatarState.address;
-
-            var infos = _arenaInfoList.GetArenaInfos(currentAvatarAddress, upper, lower);
-            // Player does not play prev & this week arena.
-            if (!infos.Any() && state.OrderedArenaInfos.Any())
-            {
-                var address = state.OrderedArenaInfos.Last().AvatarAddress;
-                infos = state.GetArenaInfos(30, 0);
-            }
-
-            infos = infos.ToImmutableHashSet().OrderBy(tuple => tuple.rank).ToList();
-
-            var addressList = infos.Select(i => i.arenaInfo.AvatarAddress).ToList();
-            var avatarStates = await Game.Game.instance.Agent.GetAvatarStates(addressList);
-
-            _weeklyCachedInfo = infos
-                .Select(tuple =>
-                {
-                    var avatarAddress = tuple.arenaInfo.AvatarAddress;
-                    if (!avatarStates.ContainsKey(avatarAddress))
-                    {
-                        return (0, null);
-                    }
-
-                    var avatarState = avatarStates[avatarAddress];
-
-                    var arenaInfo = tuple.arenaInfo;
-#pragma warning disable 618
-                    arenaInfo.Level = avatarState.level;
-                    arenaInfo.ArmorId = avatarState.GetArmorIdForPortrait();
-                    arenaInfo.CombatPoint = avatarState.GetCP();
-#pragma warning restore 618
-                    return tuple;
-                })
-                .Select(t => t)
-                .Where(tuple => tuple.rank > 0)
-                .ToList();
-        }
-        */
         public void ClearRemainingTickets()
         {
             randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X0";
@@ -878,6 +644,7 @@ namespace Nekoyume.UI
 
         public void FastCharacterSwitch()
         {
+#if !UNITY_EDITOR
             if (PandoraUtil.IsBusy())
                 return;
 
@@ -887,7 +654,7 @@ namespace Nekoyume.UI
                     L10nManager.Localize("UI_BLOCK_EXIT"), NotificationCell.NotificationType.Information);
                 return;
             }
-
+#endif 
             Game.Event.OnNestEnter.Invoke();
 
             var deletableWidgets = FindWidgets().Where(widget =>
@@ -911,156 +678,6 @@ namespace Nekoyume.UI
                 PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
             }
         }
-        /*
-        public async void ArenaCurrentPosition()
-        {
-            //remove arena lock
-            var currentAddress = States.Instance.CurrentAvatarState?.address;
-            if (currentAddress.HasValue)
-            {
-                ArenaInfo arenaInfo = null;
-                var avatarAddress = currentAddress.Value;
-                var infoAddress = States.Instance.WeeklyArenaState.address.Derive(avatarAddress.ToByteArray());
-                var rawInfo = await Game.Game.instance.Agent.GetStateAsync(infoAddress);
-                if (rawInfo is Dictionary dictionary)
-                {
-                    arenaInfo = new ArenaInfo(dictionary);
-                }
-
-                if (arenaInfo.DailyChallengeCount == 0)
-                {
-                    PandoraBoxMaster.IsRankingSimulate = false;
-                    ClearRemainingTickets();
-                }
-            }
-
-
-            arenaCurrentPositionText.text = "";
-            await Task.Delay(2000);
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                return;
-
-            while (true)
-            {
-                BlockHash? _cachedBlockHash = null;
-
-                WeeklyArenaState weeklyArenaState = null;
-                var agent = Game.Game.instance.Agent;
-                try
-                { 
-                    if (!_cachedBlockHash.Equals(agent.BlockTipHash))
-                    {
-                        _cachedBlockHash = agent.BlockTipHash;
-                        await UniTask.Run(async () =>
-                        {
-                            var gameConfigState = States.Instance.GameConfigState;
-                            var weeklyArenaIndex = (int)agent.BlockIndex / gameConfigState.WeeklyArenaInterval;
-                            var weeklyArenaAddress = WeeklyArenaState.DeriveAddress(weeklyArenaIndex);
-                            weeklyArenaState =
-                                new WeeklyArenaState(
-                                    (Bencodex.Types.Dictionary)await agent.GetStateAsync(weeklyArenaAddress));
-                            States.Instance.SetWeeklyArenaState(weeklyArenaState);
-                            await UpdateWeeklyCache(States.Instance.WeeklyArenaState);
-                        });
-                    }
-                } catch { }
-
-                //var weeklyArenaState = States.Instance.WeeklyArenaState;
-                if (weeklyArenaState is null)
-                    return;
-
-                var avatarAddress = States.Instance.CurrentAvatarState?.address;
-                if (!avatarAddress.HasValue)
-                    return;
-
-                if (!_weeklyCachedInfo.Any())
-                {
-                    //UpdateBoard();
-                    return;
-                }
-
-                ArenaInfo arenaInfo = _weeklyCachedInfo[0].arenaInfo;
-                if (!arenaInfo.Active)
-                {
-                    arenaInfo.Activate();
-                }
-
-                var currentArenaInfo = _weeklyCachedInfo[0];
-                for (int i = 0; i < _weeklyCachedInfo.Count; i++)
-                    if (_weeklyCachedInfo[i].arenaInfo.AvatarAddress == States.Instance.CurrentAvatarState.address)
-                    {
-                        currentArenaInfo = _weeklyCachedInfo[i];
-                        break;
-                    }
-
-                arenaCurrentPositionText.text = "#" + currentArenaInfo.rank + $" ({currentArenaInfo.arenaInfo.Score})";
-
-                await Task.Delay(600000); //300000 = 5 minutes
-            }
-        }
-
-        IEnumerator arenaRemainsTime()
-        {
-            arenaRemains.text = "";
-            yield return new WaitForSeconds(1);
-            var gameConfigState = States.Instance.GameConfigState;
-            while (true)
-            {
-                float maxTime = States.Instance.GameConfigState.DailyArenaInterval;
-                var weeklyArenaState = States.Instance.WeeklyArenaState;
-                long _resetIndex = weeklyArenaState.ResetIndex;
-                float value;
-
-                value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
-                var remainBlock = gameConfigState.DailyArenaInterval - value;
-                var time = Util.GetBlockToTime((int)remainBlock);
-
-
-                if (PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
-                    arenaRemains.text = time;
-                else if (PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
-                    arenaRemains.text = $"({value}/{gameConfigState.DailyArenaInterval})";
-                else
-                    arenaRemains.text = $"{time} ({remainBlock})";
-
-                yield return new WaitForSeconds(3);
-            }
-        }
-        */
-
-        //IEnumerator arenaRemainsCount()
-        //{
-        //    yield return new WaitForSeconds(2);
-        //    var gameConfigState = States.Instance.GameConfigState;
-        //    while (true)
-        //    {
-        //        while (States.Instance == null)
-        //        {
-        //            yield return new WaitForSeconds(2);
-        //        }
-
-        //        //current local player
-        //        var currentAddress = States.Instance.CurrentAvatarState?.address;
-        //        var arenaInfo = States.Instance.WeeklyArenaState.GetArenaInfo(currentAddress.Value);
-
-        //        //Debug.LogError(States.Instance.WeeklyArenaState == null);
-
-        //        rankingExclamationMark.gameObject.SetActive(
-        //            btnRanking.IsUnlocked &&
-        //            (arenaInfo == null || arenaInfo.DailyChallengeCount > 0));
-
-        //        if (arenaInfo != null)
-        //        {
-        //            if (arenaInfo.DailyChallengeCount > 0)
-        //                arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
-        //            else
-        //                arenaCount.text = $"<color=red>{arenaInfo.DailyChallengeCount}</color>/5";
-        //        }
-        //        else
-        //            arenaCount.text = "<color=red>!</color>";
-        //        yield return new WaitForSeconds(10);
-        //    }
-        //}
 
         public void ShowPandoraSettings()
         {
@@ -1072,7 +689,6 @@ namespace Nekoyume.UI
         {
             Application.OpenURL("https://discord.gg/yfcP5GzqQ7");
         }
-
 
         public void FastArenaEnter()
         {
@@ -1094,7 +710,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
         protected override void Update()
         {
             base.Update();
@@ -1111,8 +727,12 @@ namespace Nekoyume.UI
                 {
                     Find<EnhancementResultPopup>().ShowWithEditorProperty();
                 }
+                else if (Input.GetKeyDown(KeyCode.R))
+                {
+                    Find<Runner>().Show();
+                }
             }
         }
-#endif
+//#endif
     }
 }
