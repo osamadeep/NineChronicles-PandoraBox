@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Nekoyume.PandoraBox
+namespace Nekoyume.UI
 {
     public class BackgroundScroller : MonoBehaviour
     {
@@ -13,11 +13,19 @@ namespace Nekoyume.PandoraBox
         private void Start()
         {
             image = GetComponent<Image>();
+
         }
 
         void Update()
         {
-            Vector2 offset = new Vector2(Time.time * Speed, 0);
+            float levelSpeed = 1;
+            try
+            {
+                levelSpeed = Mathf.Clamp(Widget.Find<Runner>().LevelSpeed, 1, 5);
+            }
+            catch { }
+
+            Vector2 offset = new Vector2(Time.time * Speed * levelSpeed, 0);
             image.material.mainTextureOffset = offset;
         }
     }

@@ -165,7 +165,7 @@
     },
     "com.unity.nuget.newtonsoft-json": {
       "version": "3.0.2",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -244,6 +244,14 @@
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.com"
+    },
+    "io.moralis.web3-unity-sdk": {
+      "version": "file:io.moralis.web3-unity-sdk",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      }
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

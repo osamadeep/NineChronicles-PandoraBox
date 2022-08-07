@@ -1,13 +1,17 @@
 using Nekoyume.Game.Controller;
+using Nekoyume.PandoraBox;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Nekoyume.PandoraBox
+namespace Nekoyume.UI
 {
     public class CoinController : MonoBehaviour
     {
+        public Vector3 MoveAxis;
+        public float MoveSpeed;
         RectTransform Recttransform;
+
         private void Start()
         {
             Recttransform = GetComponent<RectTransform>();
@@ -35,6 +39,15 @@ namespace Nekoyume.PandoraBox
         {
             if (Recttransform.anchoredPosition.x <= -1500)
                 gameObject.SetActive(false);
+
+            float levelSpeed = 1;
+            try
+            {
+                levelSpeed = Mathf.Clamp(Widget.Find<Runner>().LevelSpeed, 1, 5);
+            }
+            catch { }
+
+            transform.Translate(MoveAxis * MoveSpeed * levelSpeed * Time.deltaTime);
         }
     }
 }

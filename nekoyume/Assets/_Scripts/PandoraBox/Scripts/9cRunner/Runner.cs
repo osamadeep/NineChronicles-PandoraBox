@@ -7,6 +7,7 @@ namespace Nekoyume.UI
 {
     public class Runner : Widget
     {
+        public float LevelSpeed = 1f;
         protected override void Awake()
         {
             base.Awake();
