@@ -2,14 +2,17 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 90220000_Material-Screen
   m_Shader: {fileID: 4800000, guid: 4e8caa36c07aacf4ab270da00784e4d9, type: 3}
-  m_ShaderKeywords: _USE8NEIGHBOURHOOD_ON
+  m_ValidKeywords:
+  - _STRAIGHT_ALPHA_INPUT
+  m_InvalidKeywords:
+  - _USE8NEIGHBOURHOOD_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -27,6 +30,7 @@ Material:
         m_Texture: {fileID: 2800000, guid: 52c8bd518c91b2d4490ff946d5b6ab0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - <noninit>: 0
     - _Cutoff: 0.1
@@ -36,7 +40,7 @@ Material:
     - _OutlineWidth: 3
     - _StencilComp: 8
     - _StencilRef: 1
-    - _StraightAlphaInput: 0
+    - _StraightAlphaInput: 1
     - _ThresholdEnd: 0.25
     - _Use8Neighbourhood: 1
     m_Colors:

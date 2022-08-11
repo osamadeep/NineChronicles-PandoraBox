@@ -19,7 +19,7 @@ public class CrystalPooler : MonoBehaviour
         pooledObjects = new List<GameObject>();
         for (int i = 0; i < pooledAmount; i++)
         {
-            GameObject obj = Instantiate(pooledObject);
+            GameObject obj = Instantiate(pooledObject, transform.parent);
             obj.SetActive(false);
             pooledObjects.Add(obj);
         }

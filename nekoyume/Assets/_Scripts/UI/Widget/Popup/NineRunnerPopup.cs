@@ -12,11 +12,16 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using PlayFab;
+using PlayFab.ClientModels;
 
 namespace Nekoyume.UI
 {
     public class NineRunnerPopup : PopupWidget
     {
+        [SerializeField] TextMeshProUGUI LeaderboardText;
+        [SerializeField] GameObject LeaderboardLoading;
+
         protected override void Awake()
         {
             base.Awake();
@@ -25,6 +30,8 @@ namespace Nekoyume.UI
 
         public void Show()
         {
+            GetLeaderboard();
+
             base.Show();
         }
 
@@ -39,5 +46,40 @@ namespace Nekoyume.UI
                 NotificationCell.NotificationType.Information);
             return;
         }
+
+        public void StartRunner()
+        {
+            Find<Runner>().Show();
+            Close();
+        }
+
+        void GetLeaderboard()
+        {
+            LeaderboardLoading.SetActive(true);
+            var request = new GetLeaderboardRequest
+            {
+                StatisticName = "Runner",
+                StartPosition = 0,
+                MaxResultsCount = 10
+            };
+            PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardSuccess, OnLeaderboardError);
+        }
+
+        void OnLeaderboardSuccess(GetLeaderboardResult result)
+        {
+            string playersList = $"\n<color=green>#</color>  Score            Name";
+            foreach (var item in result.Leaderboard)
+            {
+                playersList += $"\n{(item.Position+1)}  <color=green>{item.StatValue}</color>        {item.Profile.DisplayName}\n";
+            }
+            LeaderboardText.text = playersList;
+            LeaderboardLoading.SetActive(false);
+        }
+
+        void OnLeaderboardError(PlayFabError error)
+        {
+            Debug.LogError("Playfab Error: " + error.GenerateErrorReport());
+        }
+
     }
 }

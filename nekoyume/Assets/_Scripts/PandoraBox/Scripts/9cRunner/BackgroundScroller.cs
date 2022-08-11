@@ -25,8 +25,8 @@ namespace Nekoyume.UI
             }
             catch { }
 
-            Vector2 offset = new Vector2(Time.time * Speed * levelSpeed, 0);
-            image.material.mainTextureOffset = offset;
+            Vector2 offset = new Vector2(Time.deltaTime * Speed * levelSpeed, 0);
+            image.material.mainTextureOffset += offset;
         }
     }
 }

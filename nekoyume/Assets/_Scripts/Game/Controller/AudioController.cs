@@ -110,6 +110,10 @@ namespace Nekoyume.Game.Controller
             public const string SuccessEffectFadeIn = "sfx_successeffect_fadein";
             public const string SuccessEffectSlot = "sfx_successeffect_slot";
             public const string UpgradeNumber = "sfx_upgrade_number";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            public const string Alert = "sfx_Alert";
+            public const string Jump = "sfx_Jump";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private enum State

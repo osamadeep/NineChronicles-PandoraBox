@@ -8,8 +8,6 @@ namespace Nekoyume.UI
 {
     public class CoinController : MonoBehaviour
     {
-        public Vector3 MoveAxis;
-        public float MoveSpeed;
         RectTransform Recttransform;
 
         private void Start()
@@ -20,34 +18,27 @@ namespace Nekoyume.UI
         {
             if (collision.CompareTag("Player"))
             {
-                RunnerLevelManager.instance.UpdateScore(50, 1);
+                if (Widget.Find<IntroScreen>().IsActive())
+                    IntroRunnerLevelManager.instance.UpdateScore(50, 1);
+                else
+                    Widget.Find<Runner>().UpdateScore(50, 1);
 
                 AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem);
                 GameObject ob = PickupPooler.instance.GetpooledObject();
-                ob.transform.SetParent(RunnerLevelManager.instance.transform);
+
+                if (Widget.Find<IntroScreen>().IsActive())
+                    ob.transform.SetParent(IntroRunnerLevelManager.instance.transform);
+                else
+                    ob.transform.SetParent(Widget.Find<Runner>().transform.Find("PooledObj"));
                 RectTransform playerRecttransform = Recttransform;
                 ob.GetComponent<RectTransform>().anchoredPosition = playerRecttransform.anchoredPosition;
                 ob.GetComponent<RectTransform>().anchorMax = playerRecttransform.anchorMax;
                 ob.GetComponent<RectTransform>().anchorMin = playerRecttransform.anchorMin;
                 ob.transform.localScale = new Vector3(1, 1, 1);
+                ob.GetComponent<RunnerUnitMovements>().TimeScale = GetComponent<RunnerUnitMovements>().TimeScale;
                 ob.SetActive(true);
                 gameObject.SetActive(false);
             }
-        }
-
-        private void Update()
-        {
-            if (Recttransform.anchoredPosition.x <= -1500)
-                gameObject.SetActive(false);
-
-            float levelSpeed = 1;
-            try
-            {
-                levelSpeed = Mathf.Clamp(Widget.Find<Runner>().LevelSpeed, 1, 5);
-            }
-            catch { }
-
-            transform.Translate(MoveAxis * MoveSpeed * levelSpeed * Time.deltaTime);
         }
     }
 }

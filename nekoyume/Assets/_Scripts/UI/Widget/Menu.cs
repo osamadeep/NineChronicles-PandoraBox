@@ -35,6 +35,8 @@ namespace Nekoyume.UI
     using TMPro;
     using Scroller;
     using UniRx;
+    using PlayFab;
+    using PlayFab.ClientModels;
 
     public class Menu : Widget
     {
@@ -483,6 +485,14 @@ namespace Nekoyume.UI
                 PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
                     System.Convert.ToInt32(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium()));
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
+            //set name to playfab
+            if (string.IsNullOrEmpty(PandoraBoxMaster.PlayFabDisplayName))
+            {
+                var request = new UpdateUserTitleDisplayNameRequest {
+                    DisplayName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4),
+                };
+                PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnChangePlayFabNameSuccess, OnChangePlayFabNameError);
+            }
 
             //load favorite items
             PandoraBoxMaster.FavItems.Clear();
@@ -500,6 +510,17 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(States.Instance.StakingLevel, true);
+        }
+
+        void OnChangePlayFabNameSuccess(UpdateUserTitleDisplayNameResult result)
+        {
+            PandoraBoxMaster.PlayFabDisplayName = States.Instance.CurrentAvatarState.NameWithHash;
+            //success
+        }
+
+        void OnChangePlayFabNameError(PlayFabError error)
+        {
+            Debug.LogError(error.GenerateErrorReport());
         }
 
         protected override void OnCompleteOfShowAnimationInternal()
@@ -726,10 +747,6 @@ namespace Nekoyume.UI
                 else if (Input.GetKeyDown(KeyCode.E))
                 {
                     Find<EnhancementResultPopup>().ShowWithEditorProperty();
-                }
-                else if (Input.GetKeyDown(KeyCode.R))
-                {
-                    Find<Runner>().Show();
                 }
             }
         }

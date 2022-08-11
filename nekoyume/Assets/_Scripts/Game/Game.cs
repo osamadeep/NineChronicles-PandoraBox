@@ -35,6 +35,8 @@ namespace Nekoyume.Game
     using Nekoyume.GraphQL;
     using Nekoyume.Model.Mail;
     using Nekoyume.PandoraBox;
+    using PlayFab;
+    using PlayFab.ClientModels;
     using UniRx;
 
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]
@@ -634,7 +636,7 @@ namespace Nekoyume.Game
 
             var loginPopup = Widget.Find<LoginSystem>();
 
-            if (!PandoraBox.PandoraBoxMaster.Instance.Settings.IsMultipleLogin
+            if (!PandoraBoxMaster.Instance.Settings.IsMultipleLogin
                 && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
             {
                 loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
@@ -646,12 +648,47 @@ namespace Nekoyume.Game
                 yield return new WaitUntil(() => loginPopup.Login);
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //auth is complete
+            if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
+            {
+                /*
+                Please change the titleId below to your own titleId from PlayFab Game Manager.
+                If you have already set the value in the Editor Extensions, this can be skipped.
+                */
+                PlayFabSettings.staticSettings.TitleId = "42";
+            }
+
+            Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address;
+            //Debug.LogError(currentLoginAddress);
+            var request = new LoginWithCustomIDRequest { CustomId = currentLoginAddress.ToString(),
+                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams {GetPlayerProfile = true } };
+            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, OnPlayFabLoginFailure);
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             yield return Agent.Initialize(
                 _options,
                 loginPopup.GetPrivateKey(),
                 callback
             );
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void OnPlayFabLoginSuccess(LoginResult result)
+        {
+            if (result.InfoResultPayload.PlayerProfile != null)
+                PandoraBoxMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
+            //Debug.Log("playfab login is ok");
+        }
+
+        private void OnPlayFabLoginFailure(PlayFabError error)
+        {
+            Debug.LogWarning("Something went wrong with your first API call.  :(");
+            Debug.LogError("Here's some debug information:");
+            Debug.LogError(error.GenerateErrorReport());
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void ResetStore()
         {

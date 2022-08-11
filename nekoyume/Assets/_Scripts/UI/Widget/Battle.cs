@@ -90,9 +90,6 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //exitMenu.onClick.AddListener(() => { ExitToMenu(); });
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||

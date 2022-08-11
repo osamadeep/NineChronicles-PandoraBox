@@ -24,6 +24,9 @@ namespace Nekoyume.PandoraBox
         public static Guild CurrentGuild; //data for local player since we use it alot
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
+        //Playfab
+        public static string PlayFabDisplayName;
+
         //General
         public static string InspectedAddress = "";//"0x1a155C59a73D024a70Ca9fe280ba719359072170";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;

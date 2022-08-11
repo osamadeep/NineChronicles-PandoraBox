@@ -359,7 +359,7 @@ namespace Nekoyume.UI
                     foreach (Transform item in ProfilesHolder)
                         item.gameObject.SetActive(false);
 
-                    int NumberOfProfiles = PandoraBoxMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
+                    int NumberOfProfiles = 5; //PandoraBoxMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
                     for (int i = 0;
                          i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, NumberOfProfiles);
                          i++)

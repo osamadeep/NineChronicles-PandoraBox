@@ -55,6 +55,7 @@ namespace Nekoyume.UI.Module.Arena.Board
         [SerializeField] private Transform bannerHolder = null;
         [SerializeField] private Image rarityMockupImage = null;
         [SerializeField] private GameObject FavTarget = null;
+        [SerializeField] private GameObject bannedObj = null;
         public GameObject BlinkSelected = null;
 
         //arena
@@ -159,6 +160,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 BlinkSelected.SetActive(selectedAP.AvatarAddr ==
                                         Widget.Find<FriendInfoPopupPandora>().enemyAP.AvatarAddr);
             FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
+            bannedObj.SetActive(selectedPan.IsBanned);
 
             if (bannerHolder.childCount > 0)
                 foreach (Transform item in bannerHolder)
