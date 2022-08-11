@@ -135,6 +135,8 @@ namespace Nekoyume.UI
                         item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
                     foreach (GameObject item in GetComponent<CrystalPooler>().pooledObjects)
                         item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
+                    foreach (Transform item in enemies)
+                        item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
 
                     if ((int)(((LevelSpeed - 1) / 0.1f) + 1) == 10)
                     {

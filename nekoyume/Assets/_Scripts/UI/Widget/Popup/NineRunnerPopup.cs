@@ -60,7 +60,7 @@ namespace Nekoyume.UI
             {
                 StatisticName = "Runner",
                 StartPosition = 0,
-                MaxResultsCount = 10
+                MaxResultsCount = 13
             };
             PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardSuccess, OnLeaderboardError);
         }
@@ -70,7 +70,7 @@ namespace Nekoyume.UI
             string playersList = $"\n<color=green>#</color>  Score            Name";
             foreach (var item in result.Leaderboard)
             {
-                playersList += $"\n{(item.Position+1)}  <color=green>{item.StatValue}</color>        {item.Profile.DisplayName}\n";
+                playersList += $"\n{(item.Position+1)}  <color=green>{item.StatValue}</color>        {item.Profile.DisplayName}";
             }
             LeaderboardText.text = playersList;
             LeaderboardLoading.SetActive(false);
