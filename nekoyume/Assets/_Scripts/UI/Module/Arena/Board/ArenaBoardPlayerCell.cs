@@ -360,9 +360,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
             ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(selectedAP.AvatarState, enArenaAvatarState);
 
-
             IEMultipleSimulate(myDigest, enemyDigest);
-            
         }
 
 

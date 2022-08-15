@@ -206,7 +206,7 @@ namespace Nekoyume.Game.Character
             //HPBar.Set(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             string x = (CharacterModel.SPD).ToString();
-            HPBar.SetPandora(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP, CharacterModel.ATK, CharacterModel.DEF,
+            HPBar.SetPandora(CurrentHP, CharacterModel.Stats.BuffStats.HP, HP, CharacterModel.ATK, CharacterModel.DEF, CharacterModel.HIT,
                 x);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             HPBar.SetBuffs(CharacterModel.Buffs);

@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using TMPro;
 using Nekoyume.State;
 using Libplanet.Action;
+using PlayFab.ClientModels;
 
 namespace Nekoyume.PandoraBox
 {
@@ -16,7 +17,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100260";
-        public static string VersionId = "010061";
+        public static string VersionId = "010062";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -25,7 +26,11 @@ namespace Nekoyume.PandoraBox
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //Playfab
+        public static string PlayFabID;
         public static string PlayFabDisplayName;
+        public static string PlayFabRunnerLeaderboard = "Runner2";
+        public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
+
 
         //General
         public static string InspectedAddress = "";//"0x1a155C59a73D024a70Ca9fe280ba719359072170";

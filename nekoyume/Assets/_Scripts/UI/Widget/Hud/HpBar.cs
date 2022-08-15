@@ -62,12 +62,13 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void SetPandora(int current, int additional, int max, int ATK, int DEF, string SPD)
+        public void SetPandora(int current, int additional, int max, int ATK, int DEF, int HIT, string SPD)
         {
             SetText($"<size=80%>" +
                     $"<color=#FFFFFF>HP:</color><color=green>{current}</color>" +
                     $"<color=#FFFFFF>,ATK:</color><color=green>{ATK}</color>" +
-                    $"<color=#FFFFFF>,DEF:</color><color=green>{DEF}</color>" +
+                    $"<color=#FFFFFF>,DEF:</color><color=green>{DEF}</color>\n" +
+                    $"<color=#FFFFFF>HIT:</color><color=green>{HIT}</color>" +
                     $"<color=#FFFFFF>,SPD:</color><color=green>{SPD}</color>");
             SetValue((float)math.min(current, max - additional) / max);
 

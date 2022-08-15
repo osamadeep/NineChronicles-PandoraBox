@@ -662,8 +662,8 @@ namespace Nekoyume.Game
             Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address;
             //Debug.LogError(currentLoginAddress);
             var request = new LoginWithCustomIDRequest { CustomId = currentLoginAddress.ToString(),
-                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams {GetPlayerProfile = true } };
-            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, OnPlayFabLoginFailure);
+                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true } };
+            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, PlayFabError);
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -678,14 +678,21 @@ namespace Nekoyume.Game
         private void OnPlayFabLoginSuccess(LoginResult result)
         {
             if (result.InfoResultPayload.PlayerProfile != null)
+            {
                 PandoraBoxMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
+                PandoraBoxMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
+                PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
+            }
             //Debug.Log("playfab login is ok");
         }
 
-        private void OnPlayFabLoginFailure(PlayFabError error)
+        private void OnPlayFabInventorySuccess(GetUserInventoryResult result)
         {
-            Debug.LogWarning("Something went wrong with your first API call.  :(");
-            Debug.LogError("Here's some debug information:");
+            PandoraBoxMaster.PlayFabInventory = result;
+        }
+
+        private void PlayFabError(PlayFabError error)
+        {
             Debug.LogError(error.GenerateErrorReport());
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

@@ -14,23 +14,24 @@ namespace Nekoyume.UI
         int jumpCount;
         public float TimeScale;
         public Runner.RunnerState runner;
-
+        RectTransform rt;
 
         // Start is called before the first frame update
         void Start()
         {
             rb = GetComponent<Rigidbody2D>();
+            rt = GetComponent<RectTransform>();
         }
 
         // Update is called once per frame
         void Update()
         {
             rb.gravityScale = TimeScale;
-
-            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) && jumpCount < 1 && runner == Runner.RunnerState.Play)
+            //Debug.LogError(transform.position.y);
+            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) &&  runner == Runner.RunnerState.Play)
             {
                 AudioController.instance.PlaySfx(AudioController.SfxCode.Jump);
-                jumpCount++;
+                //jumpCount++;
                 rb.velocity = Vector2.zero;
                 rb.angularDrag = 0;
                 rb.velocity = new Vector2(0, Mathf.Sqrt(-2.0f * Physics2D.gravity.y * Jump * TimeScale));
@@ -43,14 +44,17 @@ namespace Nekoyume.UI
         {
             if (collision.CompareTag("Enemy") && runner == Runner.RunnerState.Play)
             {
-                //Debug.LogError("Hit Enemy");
+                //Debug.LogError(collision.name);
                 Widget.Find<Runner>().PlayerGotHit();
-                collision.gameObject.SetActive(false);
-                ActionCamera.instance.Shake();
+                if (collision.name == "EnemyRocket")
+                    collision.gameObject.SetActive(false);
+                else
+                    collision.transform.parent.gameObject.SetActive(false);
+                //ActionCamera.instance.Shake();
             }
             else if (collision.CompareTag("Coin") && runner == Runner.RunnerState.Play)
             {
-                Widget.Find<Runner>().CollectCoins(collision.transform);
+                Widget.Find<Runner>().CollectCoins(collision.GetComponent<RectTransform>());
             }
         }
     }

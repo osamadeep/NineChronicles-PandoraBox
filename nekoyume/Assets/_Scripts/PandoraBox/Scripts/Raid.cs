@@ -261,9 +261,9 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator Cooldown()
         {
-            int i = 45;
+            int i = 15;
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-                i = 15;
+                i = 5;
 
             RaidButton.GetComponent<Image>().color = Color.white;
             RaidButton.interactable = false;
