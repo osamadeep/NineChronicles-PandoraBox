@@ -42,6 +42,10 @@ namespace Nekoyume.UI
             _rankText.text = (playerData.Position + 1).ToString();
             _nameText.text = playerData.PlayerName;
             _scoreText.text = playerData.Score.ToString();
+
+            _gemText.gameObject.SetActive(true);
+            _coinText.gameObject.SetActive(true);
+
             if (playerData.Position == 0)
             {
                 _gemText.text = "x 20";
@@ -66,6 +70,9 @@ namespace Nekoyume.UI
             {
                 _gemText.text = "x 0";
                 _coinText.text = "x 0";
+
+                _gemText.gameObject.SetActive(false);
+                _coinText.gameObject.SetActive(false);
             }
         }
     }
