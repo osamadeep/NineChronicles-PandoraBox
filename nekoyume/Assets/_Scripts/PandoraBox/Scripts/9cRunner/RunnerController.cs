@@ -9,12 +9,15 @@ namespace Nekoyume.UI
 
     public class RunnerController : MonoBehaviour
     {
+        [SerializeField] GameObject SpeedVFX;
         public float Jump;
         Rigidbody2D rb;
         int jumpCount;
         public float TimeScale;
         public Runner.RunnerState runner;
         RectTransform rt;
+
+        bool IsSheld = false;
 
         // Start is called before the first frame update
         void Start()
@@ -42,9 +45,9 @@ namespace Nekoyume.UI
         }
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag("Enemy") && runner == Runner.RunnerState.Play)
+            if (collision.CompareTag("Enemy") && runner == Runner.RunnerState.Play && !IsSheld)
             {
-                //Debug.LogError(collision.name);
+
                 Widget.Find<Runner>().PlayerGotHit();
                 if (collision.name == "EnemyRocket")
                     collision.gameObject.SetActive(false);
@@ -56,6 +59,12 @@ namespace Nekoyume.UI
             {
                 Widget.Find<Runner>().CollectCoins(collision.GetComponent<RectTransform>());
             }
+        }
+
+        public void EnableSpeed(bool isEnable)
+        {
+            IsSheld = isEnable;
+            SpeedVFX.SetActive(isEnable);
         }
     }
 }

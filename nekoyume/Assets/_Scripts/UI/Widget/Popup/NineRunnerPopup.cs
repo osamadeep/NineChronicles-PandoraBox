@@ -46,8 +46,7 @@ namespace Nekoyume.UI
         public void Show()
         {
             //show player inventory
-            GemsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PG"];
-            CoinsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"];
+            UpdateCurrency();
             GetLeaderboard();
             base.Show();
         }
@@ -64,10 +63,21 @@ namespace Nekoyume.UI
             return;
         }
 
+        public void UpdateCurrency()
+        {
+            GemsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PG"];
+            CoinsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"];
+        }
+
         public void StartRunner()
         {
             Find<Runner>().Show();
             Close();
+        }
+
+        public void ShowPandoraShop()
+        {
+            Widget.Find<PandoraShopPopup>().Show();
         }
 
         void GetLeaderboard()
@@ -77,7 +87,7 @@ namespace Nekoyume.UI
             {
                 StatisticName = PandoraBoxMaster.PlayFabRunnerLeaderboard,
                 StartPosition = 0,
-                MaxResultsCount = 10,
+                MaxResultsCount = TotalLeaderboarCount,
             };
             PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardSuccess, OnLeaderboardError);
         }
@@ -131,6 +141,5 @@ namespace Nekoyume.UI
         {
             Debug.LogError("Playfab Error: " + error.GenerateErrorReport());
         }
-
     }
 }
