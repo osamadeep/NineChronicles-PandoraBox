@@ -11,24 +11,32 @@ using PlayFab.ClientModels;
 using Nekoyume.State;
 using Nekoyume.PandoraBox;
 using Nekoyume.UI.Scroller;
+using PlayFab.Json;
 
 namespace Nekoyume.UI
 {
     public class Runner : Widget
     {
         public enum RunnerState { Start, Play, Die, Hit, Info, Pause }
+        [SerializeField] Transform[] BgArray;
         [SerializeField] Transform[] enemiesArray;
         [SerializeField] Transform[] CoinsArray;
         [SerializeField] TextMeshProUGUI centerText = null;
         [SerializeField] TextMeshProUGUI scoreText;
         [SerializeField] TextMeshProUGUI coinText;
+        [SerializeField] TextMeshProUGUI startCounterText;
         [SerializeField] Transform healthHolder = null;
         [SerializeField] Transform coinSpawner;
         [SerializeField] Transform crystalSpawner;
         [SerializeField] RectTransform runnerPlayer;
+        [SerializeField] RectTransform runnerBoss;
         [SerializeField] RectTransform warningObj;
         [SerializeField] GameObject FinalResult;
         [SerializeField] GameObject UIElement;
+        [SerializeField] GameObject UIBoosters;
+
+        //booster
+        public BoosterSlot SelectedBooster = null;
 
         int scoreDistance;
         int scoreCoins;
@@ -37,14 +45,12 @@ namespace Nekoyume.UI
         public float LevelSpeed = 1f;
 
         //for statistics
-        int incrementAntiCheat = 0;
+        int gameSeed = 0;
         int avoidMissiles = 0;
         int livesTaken = 0;
         int speedBooster = 0;
 
-
         RunnerState currentRunnerState = RunnerState.Start;
-
 
         protected override void Awake()
         {
@@ -60,11 +66,13 @@ namespace Nekoyume.UI
         public override void Show(bool ignoreShowAnimation = false)
         {
             Time.timeScale = 1;
+
             Find<HeaderMenuStatic>().Close();
             Find<Menu>().Close();
             Find<VersionSystem>().Close();
             base.Show(ignoreShowAnimation);
-
+            LevelSpeed = 1;
+            SpeedChange();
             StopAllCoroutines();
             InitilizeGame();
         }
@@ -84,83 +92,164 @@ namespace Nekoyume.UI
             FinalResult.SetActive(false);
             UIElement.SetActive(false);
 
+            //reset boss position
+            runnerPlayer.anchoredPosition = new Vector2(-90, 150);
+            runnerBoss.anchoredPosition = new Vector2(-450, 25);
+
+            SelectedBooster = null;
+
+            StartCoroutine(PrepareGame());
+        }
+
+        IEnumerator PrepareGame()
+        {
+            //intro animation
+            float learp = 0;
+            while (learp < 1)
+            {
+                learp += Time.deltaTime / 2;
+                yield return new WaitForSeconds(0);
+                runnerPlayer.anchoredPosition += new Vector2(4.5f, 0);
+                runnerBoss.anchoredPosition += new Vector2(4.5f, 0);
+            }
+            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+
+            startCounterText.text = "";
+            UIBoosters.SetActive(true);
+            Transform boosters = UIBoosters.transform.Find("Boosters");
+            for (int i = 0; i < 2; i++) // it should be UIBoosters.childCount when all boost is available
+            {
+                boosters.GetChild(i).GetComponent<BoosterSlot>().SetItemData();
+            }
+
+            for (int i = 5; i > 0; i--)
+            {
+                startCounterText.text = i.ToString();
+                AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
+                yield return new WaitForSeconds(1);
+            }
+            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+            UIBoosters.SetActive(false);
+
+            //prepare start could function
+            object FuncParam = new { booster = "None" };
+            if (SelectedBooster!= null)
+                FuncParam = new { booster = SelectedBooster.ItemID };
+
             //Get Greenlight from Server
             var request = new ExecuteCloudScriptRequest
             {
-                FunctionName = "startGame"
+                FunctionName = "startGame",
+                FunctionParameter = FuncParam
             };
             PlayFabClientAPI.ExecuteCloudScript(request, OnStartSuccess, OnPlayFabError);
         }
 
         void OnStartSuccess(ExecuteCloudScriptResult result)
         {
-            incrementAntiCheat = int.Parse(result.FunctionResult.ToString());
-            Debug.LogError(incrementAntiCheat);
+            JsonObject jsonResult = (JsonObject)result.FunctionResult;
+            object isSuccess;
+            object seedF;
+            jsonResult.TryGetValue("success", out isSuccess);
+            jsonResult.TryGetValue("seed", out seedF);
+
+            gameSeed = int.Parse(seedF.ToString());
+            Debug.LogError(gameSeed);
 
             //core variables
-            scoreDistance = 0 + incrementAntiCheat;
-            scoreCoins = 0 + incrementAntiCheat;
-            sectionsPassed = 1 + incrementAntiCheat;
+            scoreDistance = 0 + gameSeed;
+            scoreCoins = 0 + gameSeed;
+            sectionsPassed = 1 + gameSeed;
+            life = 3 + gameSeed;
             UpdateScore(0, 0);
             UpdateScore(0, 1);
 
             //for statistics
-            avoidMissiles = 0 + incrementAntiCheat;
-            livesTaken = 0 + incrementAntiCheat;
-            speedBooster = 0 + incrementAntiCheat;
+            avoidMissiles = 0 + gameSeed;
+            livesTaken = 0 + gameSeed;
+            speedBooster = 0 + gameSeed;
 
             UIElement.SetActive(true);
+            centerText.gameObject.SetActive(false);
+            currentRunnerState = RunnerState.Play;
+            runnerPlayer.GetComponent<RunnerController>().runner = RunnerState.Play;
+            //
 
-            StartCoroutine(PrepareGame());
+
+            if (isSuccess.ToString() == "Failed")
+            {
+                //NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: No Booster Failed!", NotificationCell.NotificationType.Alert);
+            }
+            else
+            {
+                switch (SelectedBooster.ItemID)
+                {
+                    case "Boost750":
+                        StartCoroutine(SpeedUp(750));
+                        break;
+                    case "Boost1500":
+                        StartCoroutine(SpeedUp(1500));
+                        break;
+                }
+            }
+
+            StartCoroutine(FinishStartAnimation());
+        }
+
+        IEnumerator FinishStartAnimation()
+        {
+            float learp = 0;
+            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+            while (learp < 1)
+            {
+                learp += Time.deltaTime / 2;
+                yield return new WaitForSeconds(0);
+                runnerPlayer.anchoredPosition -= new Vector2(2f, 0);
+                runnerBoss.anchoredPosition -= new Vector2(4, 0);
+            }
+
             StartCoroutine(PrepareLife());
-
             StartCoroutine(ScorePerMinute());
             StartCoroutine(EnemySpawn());
             StartCoroutine(IncreaseSpeed());
             StartCoroutine(RocketSpawn());
         }
 
-
-
-        IEnumerator PrepareGame()
-        {
-            centerText.gameObject.SetActive(true);
-            centerText.text = "Prepare";
-            for (int i = 3; i > 0; i--)
-            {
-                centerText.text = i.ToString();
-                AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
-                yield return new WaitForSeconds(1);
-            }
-            centerText.text = "Start!";
-            AudioController.instance.PlaySfx(AudioController.SfxCode.OptionSpecial);
-            yield return new WaitForSeconds(1);
-
-            centerText.gameObject.SetActive(false);
-            currentRunnerState = RunnerState.Play;
-            runnerPlayer.GetComponent<RunnerController>().runner = RunnerState.Play;
-            StartCoroutine(SpeedUp(750));
-        }
-
         IEnumerator SpeedUp(int targetDistance)
         {
-            speedBooster += targetDistance;
-            int boostSpeed = 5;
-            LevelSpeed = Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
-            SpeedChange();
             runnerPlayer.GetComponent<RunnerController>().EnableSpeed(true);
+            yield return new WaitForSeconds(0.5f);
+            speedBooster += targetDistance;
 
-            while (scoreDistance < targetDistance)
+            float learp = 0;
+            int boostSpeed = 5;
+            while (learp < 1)
+            {
+                learp += Time.deltaTime / 1;
+                yield return new WaitForSeconds(0);
+                LevelSpeed = Mathf.Lerp(1, boostSpeed, learp);// Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
+                SpeedChange();
+            }
+
+
+            while (scoreDistance - gameSeed < targetDistance )
             {
                 yield return new WaitForSeconds(0.1f);
-                scoreDistance += 5;
+                scoreDistance += 7;
+            }
+
+            learp = 0;
+            while (learp < 1)
+            {
+                learp += Time.deltaTime / 1;
+                yield return new WaitForSeconds(0);
+                LevelSpeed = Mathf.Lerp(boostSpeed,1 , learp);// Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
+                SpeedChange();
             }
 
             foreach (Transform item in enemiesArray)
                 item.gameObject.SetActive(false);
 
-            LevelSpeed = Mathf.Clamp(LevelSpeed - boostSpeed, 1, boostSpeed);
-            SpeedChange();
             runnerPlayer.GetComponent<RunnerController>().EnableSpeed(false);
         }
 
@@ -179,7 +268,6 @@ namespace Nekoyume.UI
         }
         IEnumerator IncreaseSpeed()
         {
-            LevelSpeed = 1;
             while (true)
             {
                 yield return new WaitForSeconds(15f/ LevelSpeed);
@@ -270,12 +358,14 @@ namespace Nekoyume.UI
         {
             life--;
             livesTaken++;
-            SetLifeUI(life - incrementAntiCheat);
-            if (life <= incrementAntiCheat)
+            SetLifeUI(life - gameSeed);
+            if (life <= gameSeed)
             {
                 currentRunnerState = RunnerState.Die;
                 centerText.gameObject.SetActive(true);
                 centerText.text = "Game Over!";
+                LevelSpeed = 0;
+                SpeedChange();
 
                 //Check for cheating
                 var request = new ExecuteCloudScriptRequest
@@ -283,7 +373,7 @@ namespace Nekoyume.UI
                     FunctionName = "validateScore",
                     FunctionParameter = new
                     {
-                        iac = incrementAntiCheat,
+                        iac = gameSeed,
                         distance = scoreDistance,
                         sections = sectionsPassed,
                         coins = scoreCoins,
@@ -294,7 +384,7 @@ namespace Nekoyume.UI
                         speedBoosterUsed = speedBooster
                     }
                 };
-                Debug.LogError($"{incrementAntiCheat},{scoreDistance},{sectionsPassed},{scoreCoins},{livesTaken},{speedBooster}");
+                Debug.LogError($"{gameSeed},{scoreDistance},{sectionsPassed},{scoreCoins},{livesTaken},{speedBooster}");
                 PlayFabClientAPI.ExecuteCloudScript(request, OnValidateSuccess, OnPlayFabError);
 
 
@@ -385,12 +475,12 @@ namespace Nekoyume.UI
             if (typeScore == 0)
             {
                 scoreDistance += value;
-                scoreText.text = (scoreDistance - incrementAntiCheat) + "<size=25> M</size>";
+                scoreText.text = (scoreDistance - gameSeed) + "<size=25> M</size>";
             }
             else if (typeScore == 1)
             {
                 scoreCoins += value;
-                coinText.text = "x " + (scoreCoins - incrementAntiCheat);
+                coinText.text = "x " + (scoreCoins - gameSeed);
             }
         }
 
@@ -406,7 +496,9 @@ namespace Nekoyume.UI
 
         void SpeedChange()
         {
-            //speed current pooled objects
+            //speed all level objects
+            foreach (Transform item in BgArray)
+                item.GetComponent<BackgroundScroller>().TimeScale = LevelSpeed;
             foreach (GameObject item in GetComponent<PickupPooler>().pooledObjects)
                 item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
             foreach (Transform item in enemiesArray)

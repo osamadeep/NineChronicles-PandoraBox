@@ -900,13 +900,21 @@ namespace Nekoyume.UI
                 var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
-                    foodsN,
+                    costumesN,
+                    new List<Skill>(),
                     _worldId,
                     _stageId.Value,
+                    tableSheets.StageSheet[_stageId.Value],
+                    tableSheets.StageWaveSheet[_stageId.Value],
+                    States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
+                    StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
                     tableSheets.GetStageSimulatorSheets(),
-                    StageSimulator.ConstructorVersionV100080,
-                    1, true);
-                simulator.Simulate(1);
+                    tableSheets.EnemySkillSheet,
+                    tableSheets.CostumeStatSheet,
+                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
+                    PandoraBoxMaster.IsHackAndSlashSimulate
+                );
+                simulator.Simulate();
 
                 var log = simulator.Log;
 
@@ -1152,37 +1160,38 @@ namespace Nekoyume.UI
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            //var tableSheets = Game.Game.instance.TableSheets;
-            //var random = new Cheat.DebugRandom();
-            //var simulator = new StageSimulator(
-            //    random,
-            //    avatarState,
-            //    consumables,
-            //    new List<Skill>(),
-            //    worldRow.Id,
-            //    stageId,
-            //    tableSheets.StageSheet[stageId],
-            //    tableSheets.StageWaveSheet[stageId],
-            //    avatarState.worldInformation.IsStageCleared(stageId),
-            //    StageRewardExpHelper.GetExp(avatarState.level, stageId),
-            //    tableSheets.GetStageSimulatorSheets(),
-            //    tableSheets.EnemySkillSheet,
-            //    tableSheets.CostumeStatSheet,
-            //    StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[stageId], tableSheets.MaterialItemSheet)
-            //);
-            //simulator.Simulate();
-
+            var tableSheets = Game.Game.instance.TableSheets;
+            var random = new Cheat.DebugRandom();
             var simulator = new StageSimulator(
-                new Cheat.DebugRandom(),
+                random,
                 States.Instance.CurrentAvatarState,
-                foodsN,
+                costumesN,
+                new List<Skill>(),
                 _worldId,
                 _stageId.Value,
-                Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
-                StageSimulator.ConstructorVersionV100080,
-                1, PandoraBoxMaster.IsHackAndSlashSimulate);
+                tableSheets.StageSheet[_stageId.Value],
+                tableSheets.StageWaveSheet[_stageId.Value],
+                States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
+                StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
+                tableSheets.GetStageSimulatorSheets(),
+                tableSheets.EnemySkillSheet,
+                tableSheets.CostumeStatSheet,
+                StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
+                PandoraBoxMaster.IsHackAndSlashSimulate
+            );
+            simulator.Simulate();
 
-            simulator.Simulate(1);
+            //var simulator = new StageSimulator(
+            //    new Cheat.DebugRandom(),
+            //    States.Instance.CurrentAvatarState,
+            //    foodsN,
+            //    _worldId,
+            //    _stageId.Value,
+            //    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
+            //    StageSimulator.ConstructorVersionV100080,
+            //    1, PandoraBoxMaster.IsHackAndSlashSimulate);
+
+            //simulator.Simulate(1);
             GoToStage(simulator.Log);
         }
     }

@@ -37,7 +37,6 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
-        [SerializeField] private Button RelistExpireBtn = null;
         [SerializeField] private Button RelistAllBtn = null;
 
         [Space(50)]
@@ -68,46 +67,6 @@ namespace Nekoyume.UI
             text.text = PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
 
-        public void RelistExpired()
-        {
-            RelistExpireBtn.interactable = false;
-            List<ShopItem> items = new List<ShopItem>();
-            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
-            int blockToExpire = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 4000 : 0;
-            foreach (var item in view._items[EnumType.ItemSubTypeFilter.All])
-            {
-                if (!(item.ItemBase is ITradableItem tradableItem)) //get only tradable items, no need for rest
-                    break;
-                if (item.OrderDigest.ExpiredBlockIndex < currentBlock + blockToExpire) // get only near expire items
-                    items.Add(item);
-            }
-
-            StartCoroutine(StartRelistExpired(items));
-        }
-
-        private IEnumerator StartRelistExpired(List<ShopItem> items)
-        {
-            yield return new WaitForSeconds(0);
-            float cooldown = PandoraBoxMaster.CurrentPandoraPlayer.IsPremium() ? 0.5f : 4;
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
-                NotificationCell.NotificationType.Information);
-
-            int counter = 0;
-            foreach (var item in items)
-            {
-                counter++;
-                //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
-                Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
-                    item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
-                Analyzer.Instance.Track("Unity/UpdateSell");
-                OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
-                                                     $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
-                                                     $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
-                    NotificationCell.NotificationType.Information);
-                yield return new WaitForSeconds(cooldown);
-            }
-        }
-
         public void RelistAll()
         {
             List<ShopItem> items = new List<ShopItem>();
@@ -129,20 +88,20 @@ namespace Nekoyume.UI
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
                 NotificationCell.NotificationType.Information);
 
-            int counter = 0;
-            foreach (var item in items)
-            {
-                counter++;
-                //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
-                Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
-                    item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
-                Analyzer.Instance.Track("Unity/UpdateSell");
-                OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
-                                                     $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
-                                                     $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
-                    NotificationCell.NotificationType.Information);
-                yield return new WaitForSeconds(cooldown);
-            }
+            //int counter = 0;
+            //foreach (var item in items)
+            //{
+            //    counter++;
+            //    //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
+            //    Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
+            //        item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
+            //    Analyzer.Instance.Track("Unity/UpdateSell");
+            //    OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
+            //                                         $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
+            //                                         $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
+            //        NotificationCell.NotificationType.Information);
+            //    yield return new WaitForSeconds(cooldown);
+            //}
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -184,7 +143,6 @@ namespace Nekoyume.UI
             };
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            RelistExpireBtn.onClick.AddListener(() => { RelistExpired(); });
             RelistAllBtn.onClick.AddListener(() => { RelistAll(); });
             RelistAllBtn.gameObject.SetActive(Application.isEditor);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -252,7 +210,7 @@ namespace Nekoyume.UI
         public override void Show(bool ignoreShowAnimation = false)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            RelistExpireBtn.interactable = true;
+            RelistAllBtn.interactable = true;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             ShowAsync(ignoreShowAnimation);
         }
