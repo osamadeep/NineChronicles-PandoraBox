@@ -25,6 +25,7 @@ using Nekoyume.TableData;
 using Inventory = Nekoyume.UI.Module.Inventory;
 using Toggle = Nekoyume.UI.Module.Toggle;
 using Material = Nekoyume.Model.Item.Material;
+using Skill = Nekoyume.Model.Skill.Skill;
 
 namespace Nekoyume.UI
 {
@@ -187,7 +188,7 @@ namespace Nekoyume.UI
 
             sweepPopupButton.OnClickAsObservable()
                 .Where(_ => !IsFirstStage)
-                .Subscribe(_ => Find<SweepPopup>().Show(_worldId, _stageId.Value));
+                .Subscribe(_ => Find<SweepPopup>().Show(_worldId, _stageId.Value, Battle));
 
             boostPopupButton.OnClickAsObservable()
                 .Where(_ => EnoughToPlay && !Game.Game.instance.IsInWorld)
@@ -761,7 +762,7 @@ namespace Nekoyume.UI
             }
         }
 
-        private void Battle(StageType stageType, bool repeat)
+        private void Battle(StageType stageType, bool repeat, int playCount = 1)
         {
             Find<WorldMap>().Close(true);
             Find<StageInformation>().Close(true);
@@ -786,7 +787,6 @@ namespace Nekoyume.UI
             {
                 case StageType.HackAndSlash:
                     var skillState = States.Instance.CrystalRandomSkillState;
-                    var buffResult = Find<BuffBonusResultPopup>();
                     var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                     if (skillId == 0)
                     {
@@ -798,7 +798,8 @@ namespace Nekoyume.UI
                                 equipments,
                                 consumables,
                                 _worldId,
-                                _stageId.Value
+                                _stageId.Value,
+                                playCount: playCount
                             ).Subscribe();
                             break;
                         }
@@ -825,7 +826,8 @@ namespace Nekoyume.UI
                         consumables,
                         _worldId,
                         _stageId.Value,
-                        skillId
+                        skillId,
+                        playCount
                     ).Subscribe();
                     PlayerPrefs.SetInt("HackAndSlash.SelectedBonusSkillId", 0);
                     break;
@@ -1150,6 +1152,26 @@ namespace Nekoyume.UI
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
 
+            //var tableSheets = Game.Game.instance.TableSheets;
+            //var random = new Cheat.DebugRandom();
+            //var simulator = new StageSimulator(
+            //    random,
+            //    avatarState,
+            //    consumables,
+            //    new List<Skill>(),
+            //    worldRow.Id,
+            //    stageId,
+            //    tableSheets.StageSheet[stageId],
+            //    tableSheets.StageWaveSheet[stageId],
+            //    avatarState.worldInformation.IsStageCleared(stageId),
+            //    StageRewardExpHelper.GetExp(avatarState.level, stageId),
+            //    tableSheets.GetStageSimulatorSheets(),
+            //    tableSheets.EnemySkillSheet,
+            //    tableSheets.CostumeStatSheet,
+            //    StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[stageId], tableSheets.MaterialItemSheet)
+            //);
+            //simulator.Simulate();
+
             var simulator = new StageSimulator(
                 new Cheat.DebugRandom(),
                 States.Instance.CurrentAvatarState,
@@ -1163,70 +1185,5 @@ namespace Nekoyume.UI
             simulator.Simulate(1);
             GoToStage(simulator.Log);
         }
-
-        //public void SimulateBattle()
-        //{
-        //    var level = States.Instance.CurrentAvatarState.level;
-        //    if (!string.IsNullOrEmpty(levelField.text))
-        //        level = int.Parse(levelField.text);
-        //    // 레벨 범위가 넘어간 값이면 만렙으로 설정
-        //    if (!Game.Game.instance.TableSheets.CharacterLevelSheet.ContainsKey(level))
-        //    {
-        //        level = Game.Game.instance.TableSheets.CharacterLevelSheet.Keys.Last();
-        //    }
-
-        //    Find<LoadingScreen>().Show();
-
-        //    startButton.gameObject.SetActive(false);
-        //    _player.StartRun();
-        //    ActionCamera.instance.ChaseX(_player.transform);
-
-        //    var stageId = _stageId.Value;
-        //    if (!Game.Game.instance.TableSheets.WorldSheet.TryGetByStageId(stageId,
-        //            out var worldRow))
-        //        throw new KeyNotFoundException(
-        //            $"WorldSheet.TryGetByStageId() {nameof(stageId)}({stageId})");
-
-        //    var avatarState = new AvatarState(States.Instance.CurrentAvatarState) { level = level };
-        //    var consumables = consumableSlots
-        //        .Where(slot => !slot.IsLock && !slot.IsEmpty)
-        //        .Select(slot => ((Consumable)slot.Item).ItemId).ToList();
-        //    var equipments = equipmentSlots
-        //        .Where(slot => !slot.IsLock && !slot.IsEmpty)
-        //        .Select(slot => (Equipment)slot.Item).ToList();
-        //    var inventoryEquipments = avatarState.inventory.Items
-        //        .Select(i => i.item)
-        //        .OfType<Equipment>()
-        //        .Where(i => i.equipped).ToList();
-
-        //    foreach (var equipment in inventoryEquipments)
-        //    {
-        //        equipment.Unequip();
-        //    }
-
-        //    foreach (var equipment in equipments)
-        //    {
-        //        if (!avatarState.inventory.TryGetNonFungibleItem(equipment,
-        //                out ItemUsable outNonFungibleItem))
-        //        {
-        //            continue;
-        //        }
-
-        //        ((Equipment)outNonFungibleItem).Equip();
-        //    }
-
-        //    var tableSheets = Game.Game.instance.TableSheets;
-        //    var simulator = new StageSimulator(
-        //        new Cheat.DebugRandom(),
-        //        avatarState,
-        //        consumables,
-        //        worldRow.Id,
-        //        stageId,
-        //        tableSheets.GetStageSimulatorSheets(),
-        //        tableSheets.CostumeStatSheet
-        //    );
-        //    simulator.Simulate(1);
-        //    GoToStage(simulator.Log);
-        //}
     }
 }
