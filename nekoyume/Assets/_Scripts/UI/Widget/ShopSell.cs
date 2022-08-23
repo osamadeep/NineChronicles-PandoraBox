@@ -69,41 +69,15 @@ namespace Nekoyume.UI
 
         public void RelistAll()
         {
-            List<ShopItem> items = new List<ShopItem>();
-            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
-            foreach (var item in view._items[EnumType.ItemSubTypeFilter.All])
-            {
-                if (!(item.ItemBase is ITradableItem tradableItem)) //get only tradable items, no need for rest
-                    break;
-                items.Add(item);
-            }
-
-            StartCoroutine(StartRelistAll(items));
-        }
-
-        private IEnumerator StartRelistAll(List<ShopItem> items)
-        {
-            yield return new WaitForSeconds(0);
-            float cooldown = 0.2f;
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
-                NotificationCell.NotificationType.Information);
+            NotificationCell.NotificationType.Information);
 
-            //int counter = 0;
-            //foreach (var item in items)
-            //{
-            //    counter++;
-            //    //Debug.LogError(item.ItemBase.GetLocalizedName() + " " + item.OrderDigest.Price);
-            //    Game.Game.instance.ActionManager.UpdateSell(item.OrderDigest.OrderId, item.ItemBase as ITradableItem,
-            //        item.OrderDigest.ItemCount, item.OrderDigest.Price, item.ItemBase.ItemSubType).Subscribe();
-            //    Analyzer.Instance.Track("Unity/UpdateSell");
             //    OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
             //                                         $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
             //                                         $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
             //        NotificationCell.NotificationType.Information);
-            //    yield return new WaitForSeconds(cooldown);
-            //}
         }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         protected override void Awake()
         {

@@ -470,25 +470,6 @@ namespace Nekoyume.UI
             // 그런 케이스에서 이용자에게는 버그처럼 여겨지는 동작일지도.
             // FIXME: 따라서 UI에서 키 여러 개 중 뭘 쓸지 선택하는 걸 두는 게 좋을 듯.
             PrivateKey privateKey = null;
-            //foreach (var pair in keyStore.List())
-            //{
-            //    pair.Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
-            //    try
-            //    {
-            //        privateKey = ppk.Unprotect(passphrase: passphrase);
-            //    }
-            //    catch (IncorrectPassphraseException)
-            //    {
-            //        Debug.LogWarningFormat(
-            //            "The key {0} is protected with a passphrase; failed to load: {1}",
-            //            ppk.Address,
-            //            keyId
-            //        );
-            //    }
-
-            //    Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
-            //    break;
-            //}
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             keyStore.List().ElementAt(PandoraBoxMaster.LoginIndex)
@@ -496,6 +477,23 @@ namespace Nekoyume.UI
             try
             {
                 privateKey = ppk.Unprotect(passphrase: passphrase);
+            //foreach (var pair in keyStore.List())
+            //{
+            //    pair.Deconstruct(out _, out var ppk);
+            //    try
+            //    {
+            //        privateKey = ppk.Unprotect(passphrase: passphrase);
+            //    }
+            //    catch (IncorrectPassphraseException)
+            //    {
+            //        Debug.LogWarningFormat(
+            //            "The key {0} cannot unprotected with a passphrase; failed to load",
+            //            ppk.Address
+            //        );
+            //    }
+
+            //    Debug.LogFormat("The key {0} was successfully loaded", ppk.Address);
+            //    break;
             }
             catch (IncorrectPassphraseException)
             {

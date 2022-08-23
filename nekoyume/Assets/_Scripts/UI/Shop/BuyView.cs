@@ -461,8 +461,8 @@ namespace Nekoyume
                     ? models.OrderBy(x => x.OrderDigest.CombatPoint).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.CombatPoint).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Price => _isAscending.Value
-                    ? models.OrderBy(x => x.OrderDigest.Price).ToList()
-                    : models.OrderByDescending(x => x.OrderDigest.Price).ToList(),
+                    ? models.OrderBy(x => x.OrderDigest.Price.RawValue / x.OrderDigest.ItemCount).ToList()
+                    : models.OrderByDescending(x => x.OrderDigest.Price.RawValue / x.OrderDigest.ItemCount).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Class => _isAscending.Value
                     ? models.OrderBy(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
@@ -478,6 +478,10 @@ namespace Nekoyume
                     : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+            Debug.LogError(models[0].OrderDigest.Price.RawValue);
+            Debug.LogError(models[1].OrderDigest.Price.RawValue);
+            Debug.LogError(models[2].OrderDigest.Price.RawValue);
         }
 
         private bool IsLoading(ICollection models)

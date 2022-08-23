@@ -1,4 +1,7 @@
+using System;
 using System.Linq;
+using Nekoyume.EnumType;
+using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
@@ -22,27 +25,38 @@ namespace Nekoyume.UI
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
-        private TextMeshProUGUI stageText = null;
+        private TextMeshProUGUI stageText;
 
-        [SerializeField] private GuidedQuest guidedQuest = null;
+        [SerializeField]
+        private GuidedQuest guidedQuest;
 
-        [SerializeField] private BossStatus bossStatus = null;
+        [SerializeField]
+        private BossStatus bossStatus;
 
-        [SerializeField] private Toggle repeatToggle = null;
+        [SerializeField]
+        private Toggle repeatToggle;
 
-        [SerializeField] private Toggle exitToggle = null;
+        [SerializeField]
+        private Toggle exitToggle;
 
-        [SerializeField] private HelpButton helpButton = null;
+        [SerializeField]
+        private HelpButton helpButton;
 
-        [SerializeField] private BossStatus enemyPlayerStatus = null;
+        [SerializeField]
+        private BossStatus enemyPlayerStatus;
 
-        [SerializeField] private StageProgressBar stageProgressBar = null;
+        [SerializeField]
+        private StageProgressBar stageProgressBar;
 
-        [SerializeField] private ComboText comboText = null;
+        [SerializeField]
+        private ComboText comboText;
 
-        [SerializeField] private GameObject boostEffectObject = null;
+        [SerializeField]
+        private GameObject boostEffectObject;
 
         [SerializeField] private TMP_Text boostCountText;
+
+        private StageType _stageType;
 
         public BossStatus BossStatus => bossStatus;
         public BossStatus EnemyPlayerStatus => enemyPlayerStatus;
@@ -118,22 +132,15 @@ namespace Nekoyume.UI
             stageProgressBar.Close();
         }
 
-        public void ShowInArena(bool ignoreShowAnimation = false)
+        public void Show(
+            StageType stageType,
+            int stageId,
+            bool isRepeat,
+            bool isExitReserved,
+            bool isTutorial,
+            int boostCost)
         {
-            Find<HeaderMenuStatic>().Close(true);
-            stageText.gameObject.SetActive(false);
-            comboText.Close();
-            stageProgressBar.Close();
-            guidedQuest.Hide(true);
-            repeatToggle.gameObject.SetActive(false);
-            exitToggle.gameObject.SetActive(false);
-            helpButton.gameObject.SetActive(false);
-            boostEffectObject.SetActive(false);
-            base.Show(ignoreShowAnimation);
-        }
-
-        public void Show(int stageId, bool isRepeat, bool isExitReserved, bool isTutorial, int boostCost)
-        {
+            _stageType = stageType;
             if (isTutorial)
             {
                 ShowForTutorial(false, stageId);
@@ -142,10 +149,24 @@ namespace Nekoyume.UI
 
             guidedQuest.Hide(true);
             base.Show();
-            guidedQuest.Show(States.Instance.CurrentAvatarState,
-                () => { guidedQuest.SetWorldQuestToInProgress(stageId); });
+            guidedQuest.Show(States.Instance.CurrentAvatarState, () =>
+            {
+                switch (_stageType)
+                {
+                    case StageType.HackAndSlash:
+                    case StageType.Mimisbrunnr:
+                        guidedQuest.SetWorldQuestToInProgress(stageId);
+                        break;
+                    case StageType.EventDungeon:
+                        guidedQuest.SetEventDungeonStageToInProgress(stageId);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(stageType), stageType, null);
+                }
+            });
 
-            stageText.text = $"STAGE {StageInformation.GetStageIdString(stageId, true)}";
+            stageText.text =
+                $"STAGE {StageInformation.GetStageIdString(_stageType, stageId, true)}";
             stageText.gameObject.SetActive(true);
             stageProgressBar.Show();
             bossStatus.Close();
@@ -154,30 +175,67 @@ namespace Nekoyume.UI
 
             exitToggle.isOn = isExitReserved;
             //repeatToggle.isOn = isExitReserved ? false : isRepeat;
-            helpButton.gameObject.SetActive(true);
-            //repeatToggle.gameObject.SetActive(true);
-            var cost = Game.Game.instance
-                .TableSheets.StageSheet.Values.First(i => i.Id == stageId).CostAP;
+            switch (_stageType)
+            {
+                case StageType.HackAndSlash:
+                case StageType.Mimisbrunnr:
+                {
+                    var cost = TableSheets.Instance.StageSheet.OrderedList
+                        .First(i => i.Id == stageId)
+                        .CostAP;
+                    boostCountText.text = $"<sprite name=UI_main_icon_star><size=75%>{boostCost}</size>";
+                    exitToggle.isOn = boostCost > cost;
+                    break;
+                }
+                case StageType.EventDungeon:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             boostEffectObject.SetActive(false);
             exitToggle.gameObject.SetActive(true);
-            exitToggle.isOn = boostCost > cost;
-            boostCountText.text = $"<sprite name=UI_main_icon_star><size=75%>{boostCost}</size>";
+            //repeatToggle.gameObject.SetActive(true);
+            helpButton.gameObject.SetActive(true);
+
         }
 
         public void ClearStage(int stageId, System.Action<bool> onComplete)
         {
-            guidedQuest.ClearWorldQuest(stageId, cleared =>
+            switch (_stageType)
             {
-                if (!cleared)
-                {
-                    onComplete(false);
-                    return;
-                }
+                case StageType.HackAndSlash:
+                case StageType.Mimisbrunnr:
+                    guidedQuest.ClearWorldQuest(stageId, cleared =>
+                    {
+                        if (!cleared)
+                        {
+                            onComplete(false);
+                            return;
+                        }
 
-                guidedQuest.UpdateList(
-                    States.Instance.CurrentAvatarState,
-                    () => onComplete(true));
-            });
+                        guidedQuest.UpdateList(
+                            States.Instance.CurrentAvatarState,
+                            () => onComplete(true));
+                    });
+                    break;
+                case StageType.EventDungeon:
+                    guidedQuest.ClearEventDungeonStage(stageId, cleared =>
+                    {
+                        if (!cleared)
+                        {
+                            onComplete(false);
+                            return;
+                        }
+
+                        guidedQuest.UpdateList(
+                            States.Instance.CurrentAvatarState,
+                            () => onComplete(true));
+                    });
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public void ShowComboText(bool attacked)
@@ -196,7 +254,8 @@ namespace Nekoyume.UI
             }
             else
             {
-                stageText.text = $"STAGE {StageInformation.GetStageIdString(stageId, true)}";
+                stageText.text =
+                    $"STAGE {StageInformation.GetStageIdString(_stageType, stageId, true)}";
                 stageText.gameObject.SetActive(true);
                 stageProgressBar.Show();
             }

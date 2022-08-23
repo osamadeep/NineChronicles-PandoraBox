@@ -5,6 +5,7 @@ using System.Linq;
 using Nekoyume.Battle;
 using Nekoyume.BlockChain;
 using Nekoyume.EnumType;
+using Nekoyume.Extensions;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.Model.BattleStatus;
@@ -21,6 +22,7 @@ using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
 using Nekoyume.Game.Character;
 using Nekoyume.Model.Elemental;
+using Nekoyume.Model.EnumType;
 using Nekoyume.TableData;
 using Inventory = Nekoyume.UI.Module.Inventory;
 using Toggle = Nekoyume.UI.Module.Toggle;
@@ -35,7 +37,7 @@ namespace Nekoyume.UI
 
     public class BattlePreparation : Widget
     {
-        private static readonly Vector3 PlayerPosition = new Vector3(1999.8f, 1999.3f, 3f);
+        private static readonly Vector3 PlayerPosition = new(1999.8f, 1999.3f, 3f);
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
@@ -45,8 +47,7 @@ namespace Nekoyume.UI
         [SerializeField] private Button multipleSimulateButton = null;
         [SerializeField] private Button soloSimulateButton = null;
 
-        [SerializeField] private TextMeshProUGUI countText;
-        [SerializeField] private Button fillButton = null;
+        [SerializeField] private GameObject stageWinRate;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -99,32 +100,45 @@ namespace Nekoyume.UI
 
         [SerializeField] private GameObject mimisbrunnrBg;
 
-        [SerializeField] private GameObject hasBg;
+        [SerializeField]
+        private GameObject eventDungeonBg;
+
+        [SerializeField]
+        private GameObject hasBg;
 
         [SerializeField] private GameObject blockStartingTextObject;
 
-        private Stage _stage;
         private EquipmentSlot _weaponSlot;
         private EquipmentSlot _armorSlot;
         private Player _player;
         private GameObject _cachedCharacterTitle;
 
-        private StageType _stageType = StageType.None;
+        private StageType _stageType;
+        private int? _scheduleId;
         private int _worldId;
+        private int _stageId;
         private int _requiredCost;
         private bool _shouldResetPlayer = true;
 
-        private readonly IntReactiveProperty _stageId = new IntReactiveProperty();
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private readonly List<IDisposable> _disposables = new();
 
         public override bool CanHandleInputEvent =>
             base.CanHandleInputEvent &&
             (startButton.Interactable || !EnoughToPlay);
 
-        private bool EnoughToPlay =>
-            States.Instance.CurrentAvatarState.actionPoint >= _requiredCost;
+        private bool EnoughToPlay => _stageType switch
+        {
+            StageType.EventDungeon =>
+                RxProps.EventDungeonTicketProgress.Value.currentTickets >= _requiredCost,
+            _ =>
+                States.Instance.CurrentAvatarState.actionPoint >= _requiredCost,
+        };
 
-        private bool IsFirstStage => _stageId.Value == 1;
+        private bool IsFirstStage => _stageType switch
+        {
+            StageType.EventDungeon => _stageId.ToEventDungeonStageNumber() == 1,
+            _ => _stageId == 1,
+        };
 
         #region override
 
@@ -172,10 +186,9 @@ namespace Nekoyume.UI
 
             CloseWidget = () => Close(true);
 
-            _stageId.Subscribe(SubscribeStage).AddTo(gameObject);
-
-            startButton.OnSubmitSubject.Where(_ => !Game.Game.instance.IsInWorld)
-                .ThrottleFirst(TimeSpan.FromSeconds(2f))
+            startButton.OnSubmitSubject
+                .Where(_ => !Game.Game.instance.IsInWorld)
+                .ThrottleFirst(TimeSpan.FromSeconds(1f))
                 .Subscribe(_ => OnClickBattle(repeatToggle.isOn))
                 .AddTo(gameObject);
 
@@ -188,14 +201,14 @@ namespace Nekoyume.UI
 
             sweepPopupButton.OnClickAsObservable()
                 .Where(_ => !IsFirstStage)
-                .Subscribe(_ => Find<SweepPopup>().Show(_worldId, _stageId.Value, Battle));
+                .Subscribe(_ => Find<SweepPopup>().Show(_worldId, _stageId, SendBattleAction));
 
             boostPopupButton.OnClickAsObservable()
                 .Where(_ => EnoughToPlay && !Game.Game.instance.IsInWorld)
                 .Subscribe(_ => ShowBoosterPopup());
 
             boostPopupButton.OnClickAsObservable().Where(_ => !EnoughToPlay && !Game.Game.instance.IsInWorld)
-                .ThrottleFirst(TimeSpan.FromSeconds(2f))
+                .ThrottleFirst(TimeSpan.FromSeconds(1f))
                 .Subscribe(_ =>
                     OneLineSystem.Push(
                         MailType.System,
@@ -206,7 +219,8 @@ namespace Nekoyume.UI
             Game.Event.OnRoomEnter.AddListener(b => Close());
         }
 
-        public void Show(StageType stageType,
+        public void Show(
+            StageType stageType,
             int worldId,
             int stageId,
             string closeButtonName,
@@ -214,18 +228,18 @@ namespace Nekoyume.UI
         {
             Analyzer.Instance.Track("Unity/Click Stage");
 
-            _stage = Game.Game.instance.Stage;
-            _stage.IsRepeatStage = false;
+            var stage = Game.Game.instance.Stage;
+            stage.IsRepeatStage = false;
             repeatToggle.isOn = false;
             repeatToggle.interactable = true;
 
-            _player = _stage.GetPlayer(PlayerPosition);
+            _player = stage.GetPlayer(PlayerPosition);
             if (_player is null)
             {
                 throw new NotFoundComponentException<Player>();
             }
 
-            var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
+            var currentAvatarState = States.Instance.CurrentAvatarState;
             if (_shouldResetPlayer)
             {
                 _shouldResetPlayer = false;
@@ -237,14 +251,16 @@ namespace Nekoyume.UI
 
             _stageType = stageType;
             _worldId = worldId;
-            _stageId.Value = stageId;
+            _stageId = stageId;
 
             UpdateInventory(stageType is StageType.HackAndSlash or StageType.Mimisbrunnr);
-            UpdateBackground(stageType);
+            UpdateBackground();
             UpdateTitle();
             UpdateStat(currentAvatarState);
             UpdateSlot(currentAvatarState, true);
             UpdateStartButton(currentAvatarState);
+            UpdateRequiredCostByStageId();
+            UpdateRandomBuffButton();
 
             closeButtonText.text = closeButtonName;
             startButton.gameObject.SetActive(true);
@@ -252,14 +268,37 @@ namespace Nekoyume.UI
             coverToBlockClick.SetActive(false);
             costumeSlots.gameObject.SetActive(false);
             equipmentSlots.gameObject.SetActive(true);
-            ShowHelpTooltip(stageType);
-            randomBuffButton.SetData(States.Instance.CrystalRandomSkillState, stageId);
-            ReactiveAvatarState.ActionPoint.Subscribe(_ => ReadyToBattle()).AddTo(_disposables);
+            ShowHelpTooltip(_stageType);
+
+            stageWinRate.SetActive(false);//|||||||||||||| PANDORA CODE |||||||||||||||||||
+            switch (_stageType)
+            {
+                case StageType.HackAndSlash:
+                    stageWinRate.SetActive(true);//|||||||||||||| PANDORA CODE |||||||||||||||||||
+                    break;
+                case StageType.Mimisbrunnr:
+                    ReactiveAvatarState.ActionPoint
+                        .Subscribe(_ => UpdateStartButton())
+                        .AddTo(_disposables);
+                    break;
+                case StageType.EventDungeon:
+                    RxProps.EventScheduleRowForDungeon
+                        .Subscribe(value => _scheduleId = value?.Id)
+                        .AddTo(_disposables);
+                    RxProps.EventDungeonTicketProgress
+                        .Subscribe(_ => UpdateStartButton())
+                        .AddTo(_disposables);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             ReactiveAvatarState.Inventory.Subscribe(_ =>
             {
-                UpdateSlot(Game.Game.instance.States.CurrentAvatarState);
-                UpdateStartButton(Game.Game.instance.States.CurrentAvatarState);
+                UpdateSlot(States.Instance.CurrentAvatarState);
+                UpdateStartButton(States.Instance.CurrentAvatarState);
             }).AddTo(_disposables);
+
             base.Show(ignoreShowAnimation);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -275,6 +314,18 @@ namespace Nekoyume.UI
             }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        }
+
+        private void UpdateRandomBuffButton()
+        {
+            if (_stageType == StageType.EventDungeon)
+            {
+                randomBuffButton.gameObject.SetActive(false);
+                return;
+            }
+
+            randomBuffButton.SetData(States.Instance.CrystalRandomSkillState, _stageId);
+            randomBuffButton.gameObject.SetActive(true);
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -306,21 +357,27 @@ namespace Nekoyume.UI
                 useConsumable: useConsumable);
         }
 
-        private void UpdateBackground(StageType stageType)
+        private void UpdateBackground()
         {
-            switch (stageType)
+            switch (_stageType)
             {
                 case StageType.HackAndSlash:
                     hasBg.SetActive(true);
                     mimisbrunnrBg.SetActive(false);
+                    eventDungeonBg.SetActive(false);
                     break;
                 case StageType.Mimisbrunnr:
                     hasBg.SetActive(false);
                     mimisbrunnrBg.SetActive(true);
+                    eventDungeonBg.SetActive(false);
                     break;
-                case StageType.None:
+                case StageType.EventDungeon:
+                    hasBg.SetActive(false);
+                    mimisbrunnrBg.SetActive(false);
+                    eventDungeonBg.SetActive(true);
+                    break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(stageType), stageType, null);
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -361,8 +418,8 @@ namespace Nekoyume.UI
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
                 .Select(slot => (Consumable)slot.Item).ToList();
             var equipmentSetEffectSheet =
-                Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet;
-            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+                TableSheets.Instance.EquipmentItemSetEffectSheet;
+            var costumeSheet = TableSheets.Instance.CostumeStatSheet;
             var s = _player.Model.Stats.SetAll(_player.Model.Stats.Level,
                 equipments, costumes, consumables,
                 equipmentSetEffectSheet, costumeSheet);
@@ -417,7 +474,7 @@ namespace Nekoyume.UI
                 Unequip(slot, true);
             }
 
-            var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
+            var currentAvatarState = States.Instance.CurrentAvatarState;
             slot.Set(itemBase, OnClickSlot, OnDoubleClickSlot);
             LocalLayerModifier.SetItemEquip(currentAvatarState.address, slot.Item, true);
             var player = Game.Game.instance.Stage.GetPlayer();
@@ -456,7 +513,7 @@ namespace Nekoyume.UI
 
                     break;
                 }
-                case Consumable consumable:
+                case Consumable _:
                     break;
             }
 
@@ -471,7 +528,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
+            var currentAvatarState = States.Instance.CurrentAvatarState;
             var slotItem = slot.Item;
             slot.Clear();
             LocalLayerModifier.SetItemEquip(currentAvatarState.address, slotItem, false);
@@ -481,11 +538,13 @@ namespace Nekoyume.UI
                 var selectedPlayer = Game.Game.instance.Stage.GetPlayer();
                 switch (slotItem)
                 {
-                    default:
-                        return;
+                    case Consumable _:
+                        Game.Event.OnUpdatePlayerEquip.OnNext(selectedPlayer);
+                        break;
                     case Costume costume:
                         selectedPlayer.UnequipCostume(costume, true);
-                        selectedPlayer.EquipEquipmentsAndUpdateCustomize((Armor)_armorSlot.Item,
+                        selectedPlayer.EquipEquipmentsAndUpdateCustomize(
+                            (Armor)_armorSlot.Item,
                             (Weapon)_weaponSlot.Item);
                         Game.Event.OnUpdatePlayerEquip.OnNext(selectedPlayer);
 
@@ -512,6 +571,8 @@ namespace Nekoyume.UI
 
                         Game.Event.OnUpdatePlayerEquip.OnNext(selectedPlayer);
                         break;
+                    default:
+                        return;
                 }
             }
 
@@ -587,7 +648,7 @@ namespace Nekoyume.UI
                         else
                         {
                             submit = () =>
-                                Game.Game.instance.ActionManager.ChargeActionPoint(item as Material)
+                                ActionManager.Instance.ChargeActionPoint(item as Material)
                                     .Subscribe();
                         }
 
@@ -604,7 +665,7 @@ namespace Nekoyume.UI
             return (submitText, interactable, submit, blocked);
         }
 
-        private bool IsInteractableMaterial()
+        private static bool IsInteractableMaterial()
         {
             if (Find<HeaderMenuStatic>().ChargingAP) // is charging?
             {
@@ -615,8 +676,7 @@ namespace Nekoyume.UI
                    States.Instance.GameConfigState.ActionPointMax;
         }
 
-
-        private void ReadyToBattle()
+        private void UpdateStartButton()
         {
             startButton.UpdateObjects();
             foreach (var particle in particles)
@@ -632,63 +692,179 @@ namespace Nekoyume.UI
             }
         }
 
-        private void SubscribeStage(int stageId)
+        private void UpdateRequiredCostByStageId()
         {
-            var stage =
-                Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(
-                    i => i.Id == stageId);
-            if (stage is null)
-                return;
-            _requiredCost = stage.CostAP;
-            startButton.SetCost(CostType.ActionPoint, _requiredCost);
+            switch (_stageType)
+            {
+                case StageType.HackAndSlash:
+                case StageType.Mimisbrunnr:
+                {
+                    TableSheets.Instance.StageSheet.TryGetValue(
+                        _stageId, out var stage, true);
+                    _requiredCost = stage.CostAP;
+                    startButton.SetCost(CostType.ActionPoint, _requiredCost);
+                    break;
+                }
+                case StageType.EventDungeon:
+                {
+                    _requiredCost = 1;
+                    startButton.SetCost(CostType.EventDungeonTicket, _requiredCost);
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private void OnClickBattle(bool repeat)
         {
+            AudioController.PlayClick();
+
             if (Game.Game.instance.IsInWorld)
             {
                 return;
             }
 
-            if (_stageType == StageType.Mimisbrunnr && !CheckEquipmentElementalType(_stageId.Value))
+            switch (_stageType)
             {
-                NotificationSystem.Push(MailType.System,
-                    L10nManager.Localize("UI_MIMISBRUNNR_START_FAILED"),
-                    NotificationCell.NotificationType.UnlockCondition);
-                return;
+                case StageType.HackAndSlash:
+                {
+                    StartCoroutine(CoBattleStart(
+                        _stageType,
+                        CostType.ActionPoint,
+                        repeat));
+                    break;
+                }
+                case StageType.Mimisbrunnr:
+                {
+                    if (!CheckEquipmentElementalType())
+                    {
+                        NotificationSystem.Push(
+                            MailType.System,
+                            L10nManager.Localize("UI_MIMISBRUNNR_START_FAILED"),
+                            NotificationCell.NotificationType.UnlockCondition);
+                        return;
+                    }
+
+                    StartCoroutine(CoBattleStart(
+                        _stageType,
+                        CostType.ActionPoint,
+                        repeat));
+                    break;
+                }
+                case StageType.EventDungeon:
+                {
+                    if (!_scheduleId.HasValue)
+                    {
+                        NotificationSystem.Push(
+                            MailType.System,
+                            L10nManager.Localize("UI_EVENT_NOT_IN_PROGRESS"),
+                            NotificationCell.NotificationType.Information);
+
+                        return;
+                    }
+
+                    if (RxProps.EventDungeonTicketProgress.Value.currentTickets >=
+                        _requiredCost)
+                    {
+                        StartCoroutine(CoBattleStart(
+                            _stageType,
+                            CostType.EventDungeonTicket,
+                            repeat));
+                        break;
+                    }
+
+                    var ncgHas = States.Instance.GoldBalanceState.Gold;
+                    var ncgCost = RxProps.EventScheduleRowForDungeon.Value
+                        .GetDungeonTicketCost(
+                            RxProps.EventDungeonInfo.Value?.NumberOfTicketPurchases ?? 0) *
+                                  States.Instance.GoldBalanceState.Gold.Currency;
+                    if (ncgHas >= ncgCost)
+                    {
+                        // FIXME: `UI_CONFIRM_PAYMENT_CURRENCY_FORMAT_FOR_BATTLE_ARENA` key
+                        //        is temporary.
+                        var notEnoughTicketMsg = L10nManager.Localize(
+                            "UI_CONFIRM_PAYMENT_CURRENCY_FORMAT_FOR_BATTLE_ARENA",
+                            ncgCost.ToString());
+                        Find<PaymentPopup>().ShowAttract(
+                            CostType.EventDungeonTicket,
+                            _requiredCost.ToString(),
+                            notEnoughTicketMsg,
+                            L10nManager.Localize("UI_YES"),
+                            () => StartCoroutine(
+                                CoBattleStart(
+                                    StageType.EventDungeon,
+                                    CostType.NCG,
+                                    false,
+                                    true)));
+
+                        return;
+                    }
+
+                    var notEnoughNCGMsg =
+                        L10nManager.Localize("UI_NOT_ENOUGH_NCG_WITH_SUPPLIER_INFO");
+                    Find<PaymentPopup>().ShowAttract(
+                        CostType.NCG,
+                        ncgCost.GetQuantityString(),
+                        notEnoughNCGMsg,
+                        L10nManager.Localize("UI_GO_TO_MARKET"),
+                        () => GoToMarket(TradeType.Sell));
+                    return;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
-            Game.Game.instance.IsInWorld = true;
-            _stage.IsShowHud = true;
-            StartCoroutine(CoBattleStart(_stageType, repeat));
             repeatToggle.interactable = false;
             coverToBlockClick.SetActive(true);
         }
 
-        private IEnumerator CoBattleStart(StageType stageType, bool repeat)
+        private IEnumerator CoBattleStart(
+            StageType stageType,
+            CostType costType,
+            bool repeat,
+            bool buyTicketIfNeeded = false)
         {
-            var actionPointImage = Find<HeaderMenuStatic>().ActionPoint.IconImage;
-            var itemMoveAnimation = ItemMoveAnimation.Show(actionPointImage.sprite,
-                actionPointImage.transform.position,
+            var game = Game.Game.instance;
+            game.IsInWorld = true;
+            game.Stage.IsShowHud = true;
+
+            var headerMenuStatic = Find<HeaderMenuStatic>();
+            var currencyImage = costType switch
+            {
+                CostType.NCG => headerMenuStatic.Gold.IconImage,
+                CostType.ActionPoint => headerMenuStatic.ActionPoint.IconImage,
+                CostType.Hourglass => headerMenuStatic.Hourglass.IconImage,
+                CostType.Crystal => headerMenuStatic.Crystal.IconImage,
+                CostType.ArenaTicket => headerMenuStatic.ArenaTickets.IconImage,
+                CostType.WorldBossTicket => headerMenuStatic.WorldBossTickets.IconImage,
+                CostType.EventDungeonTicket => headerMenuStatic.EventDungeonTickets.IconImage,
+                _ or CostType.None => throw new ArgumentOutOfRangeException(
+                    nameof(costType), costType, null)
+            };
+            var itemMoveAnimation = ItemMoveAnimation.Show(
+                currencyImage.sprite,
+                currencyImage.transform.position,
                 buttonStarImageTransform.position,
                 Vector2.one,
                 moveToLeft,
                 true,
                 animationTime,
                 middleXGap);
-            LocalLayerModifier.ModifyAvatarActionPoint(States.Instance.CurrentAvatarState.address,
-                -_requiredCost);
             yield return new WaitWhile(() => itemMoveAnimation.IsPlaying);
 
-            Battle(stageType, repeat);
-            AudioController.PlayClick();
+            SendBattleAction(
+                stageType,
+                repeat,
+                buyTicketIfNeeded: buyTicketIfNeeded);
         }
 
         private void ShowBoosterPopup()
         {
-            if (_stageType == StageType.Mimisbrunnr && !CheckEquipmentElementalType(_stageId.Value))
+            if (_stageType == StageType.Mimisbrunnr && !CheckEquipmentElementalType())
             {
-                NotificationSystem.Push(MailType.System,
+                NotificationSystem.Push(
+                    MailType.System,
                     L10nManager.Localize("UI_MIMISBRUNNR_START_FAILED"),
                     NotificationCell.NotificationType.UnlockCondition);
                 return;
@@ -700,18 +876,25 @@ namespace Nekoyume.UI
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
                 .Select(slot => (Consumable)slot.Item).ToList();
 
-            _stage.IsExitReserved = false;
-            _stage.IsRepeatStage = false;
-            _stage.foodCount = consumables.Count;
+            var stage = Game.Game.instance.Stage;
+            stage.IsExitReserved = false;
+            stage.IsRepeatStage = false;
+            stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
 
-            Find<BoosterPopup>().Show(_stage, costumes, equipments, consumables,
-                GetBoostMaxCount(_stageId.Value), _worldId, _stageId.Value);
+            Find<BoosterPopup>().Show(
+                stage,
+                costumes,
+                equipments,
+                consumables,
+                GetBoostMaxCount(_stageId),
+                _worldId,
+                _stageId);
         }
 
         private void PostEquipOrUnequip(EquipmentSlot slot)
         {
-            UpdateStat(Game.Game.instance.States.CurrentAvatarState);
+            UpdateStat(States.Instance.CurrentAvatarState);
             AudioController.instance.PlaySfx(slot.ItemSubType == ItemSubType.Food
                 ? AudioController.SfxCode.ChainMail2
                 : AudioController.SfxCode.Equipment);
@@ -762,7 +945,11 @@ namespace Nekoyume.UI
             }
         }
 
-        private void Battle(StageType stageType, bool repeat, int playCount = 1)
+        private void SendBattleAction(
+            StageType stageType,
+            bool repeat,
+            int playCount = 1,
+            bool buyTicketIfNeeded = false)
         {
             Find<WorldMap>().Close(true);
             Find<StageInformation>().Close(true);
@@ -778,14 +965,16 @@ namespace Nekoyume.UI
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
                 .Select(slot => (Consumable)slot.Item).ToList();
 
-            _stage.IsExitReserved = false;
-            _stage.IsRepeatStage = repeat;
-            _stage.foodCount = consumables.Count;
+            var stage = Game.Game.instance.Stage;
+            stage.IsExitReserved = false;
+            stage.IsRepeatStage = repeat;
+            stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
 
             switch (stageType)
             {
                 case StageType.HackAndSlash:
+                {
                     var skillState = States.Instance.CrystalRandomSkillState;
                     var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                     if (skillId == 0)
@@ -793,12 +982,12 @@ namespace Nekoyume.UI
                         if (skillState == null ||
                             !skillState.SkillIds.Any())
                         {
-                            Game.Game.instance.ActionManager.HackAndSlash(
+                            ActionManager.Instance.HackAndSlash(
                                 costumes,
                                 equipments,
                                 consumables,
                                 _worldId,
-                                _stageId.Value,
+                                _stageId,
                                 playCount: playCount
                             ).Subscribe();
                             break;
@@ -806,42 +995,63 @@ namespace Nekoyume.UI
 
                         skillId = skillState.SkillIds
                             .Select(buffId =>
-                            {
-                                var randomBuffSheet = Game.Game.instance.TableSheets.CrystalRandomBuffSheet;
-                                if (!randomBuffSheet.TryGetValue(buffId, out var bonusBuffRow))
-                                {
-                                    return null;
-                                }
-                                return bonusBuffRow;
-                            })
+                                TableSheets.Instance.CrystalRandomBuffSheet
+                                    .TryGetValue(buffId, out var bonusBuffRow)
+                                    ? bonusBuffRow
+                                    : null)
+                            .Where(x => x != null)
                             .OrderBy(x => x.Rank)
                             .ThenBy(x => x.Id)
                             .First()
                             .Id;
                     }
 
-                    Game.Game.instance.ActionManager.HackAndSlash(
+                    ActionManager.Instance.HackAndSlash(
                         costumes,
                         equipments,
                         consumables,
                         _worldId,
-                        _stageId.Value,
+                        _stageId,
                         skillId,
                         playCount
                     ).Subscribe();
                     PlayerPrefs.SetInt("HackAndSlash.SelectedBonusSkillId", 0);
                     break;
+                }
                 case StageType.Mimisbrunnr:
-                    Game.Game.instance.ActionManager.MimisbrunnrBattle(
+                {
+                    ActionManager.Instance.MimisbrunnrBattle(
                         costumes,
                         equipments,
                         consumables,
                         _worldId,
-                        _stageId.Value,
+                        _stageId,
                         1
                     ).Subscribe();
                     break;
-                case StageType.None:
+                }
+                case StageType.EventDungeon:
+                {
+                    if (!_scheduleId.HasValue)
+                    {
+                        NotificationSystem.Push(
+                            MailType.System,
+                            L10nManager.Localize("UI_EVENT_NOT_IN_PROGRESS"),
+                            NotificationCell.NotificationType.Information);
+                        break;
+                    }
+
+                    ActionManager.Instance.EventDungeonBattle(
+                            _scheduleId.Value,
+                            _worldId,
+                            _stageId,
+                            equipments,
+                            costumes,
+                            consumables,
+                            buyTicketIfNeeded)
+                        .Subscribe();
+                    break;
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(stageType), stageType, null);
             }
@@ -903,15 +1113,15 @@ namespace Nekoyume.UI
                     foodsN,
                     new List<Skill>(),
                     _worldId,
-                    _stageId.Value,
-                    tableSheets.StageSheet[_stageId.Value],
-                    tableSheets.StageWaveSheet[_stageId.Value],
-                    States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
-                    StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
+                    _stageId,
+                    tableSheets.StageSheet[_stageId],
+                    tableSheets.StageWaveSheet[_stageId],
+                    States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId),
+                    StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId),
                     tableSheets.GetStageSimulatorSheets(),
                     tableSheets.EnemySkillSheet,
                     tableSheets.CostumeStatSheet,
-                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
+                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
                     PandoraBoxMaster.IsHackAndSlashSimulate
                 );
                 simulator.Simulate();
@@ -954,66 +1164,6 @@ namespace Nekoyume.UI
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
-
-        private void AvailableAP()
-        {
-            //sweepButton.transform.parent.Find("Slider").GetComponent<Slider>().value =
-            //    ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
-        }
-
-        private void Sweep()
-        {
-            int x = int.Parse(countText.text);
-            if (x == 0)
-                return;
-
-            Find<WorldMap>().Close(true);
-            Find<StageInformation>().Close(true);
-            Find<LoadingScreen>().Show();
-
-            startButton.gameObject.SetActive(false);
-            //sweepButton.gameObject.SetActive(false);
-
-            //var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            //if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
-            //    _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
-
-            _player.StartRun();
-            ActionCamera.instance.ChaseX(_player.transform);
-            StartCoroutine(IESweep(x));
-        }
-
-        IEnumerator IESweep(int count)
-        {
-            var equipments = _player.Equipments;
-            var costumes = _player.Costumes;
-            var consumables = consumableSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item).ToList();
-
-            _stage.IsExitReserved = true;
-            _stage.IsRepeatStage = false;
-            _stage.foodCount = consumables.Count;
-            ActionRenderHandler.Instance.Pending = true;
-
-            //var sprite1 = Resources.Load<Sprite>("Character/PlayerSpineTexture/Weapon/10151001");
-            //if (PandoraBoxMaster.CurrentPandoraPlayer.SwordSkin == 1)
-            //    _player.SpineController.UpdateWeapon(10151001, sprite1, PandoraBoxMaster.Instance.CosmicSword);
-
-            for (int i = 0; i < count; i++)
-            {
-                Game.Game.instance.ActionManager.HackAndSlash(costumes, equipments, consumables, _worldId,
-                    _stageId.Value);
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Sending Battle Fight <color=green>" + (i + 1) + "</color>/" +
-                    count, NotificationCell.NotificationType.Information);
-                yield return new WaitForSeconds(PandoraBoxMaster.ActionCooldown);
-            }
-
-            OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: <color=green>" + count + "</color> Fights Sent, Please Hold ...",
-                NotificationCell.NotificationType.Information);
-        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
@@ -1024,28 +1174,52 @@ namespace Nekoyume.UI
             Close(true);
         }
 
-        private void ShowRefillConfirmPopup(Material material)
+        private void GoToMarket(TradeType tradeType)
+        {
+            Close(true);
+            Find<WorldMap>().Close(true);
+            Find<StageInformation>().Close(true);
+            Find<HeaderMenuStatic>()
+                .UpdateAssets(HeaderMenuStatic.AssetVisibleState.Shop);
+            switch (tradeType)
+            {
+                case TradeType.Buy:
+                    Find<ShopBuy>().Show();
+                    break;
+                case TradeType.Sell:
+                    Find<ShopSell>().Show();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tradeType), tradeType, null);
+            }
+        }
+
+        private static void ShowRefillConfirmPopup(Material material)
         {
             var confirm = Find<IconAndButtonSystem>();
-            confirm.ShowWithTwoButton("UI_CONFIRM", "UI_AP_REFILL_CONFIRM_CONTENT",
-                "UI_OK", "UI_CANCEL",
-                true, IconAndButtonSystem.SystemType.Information);
+            confirm.ShowWithTwoButton(
+                "UI_CONFIRM",
+                "UI_AP_REFILL_CONFIRM_CONTENT",
+                "UI_OK",
+                "UI_CANCEL",
+                true,
+                IconAndButtonSystem.SystemType.Information);
             confirm.ConfirmCallback = () =>
-                Game.Game.instance.ActionManager.ChargeActionPoint(material).Subscribe();
+                ActionManager.Instance.ChargeActionPoint(material).Subscribe();
             confirm.CancelCallback = () => confirm.Close();
         }
 
-        private int GetBoostMaxCount(int stageId)
+        private static int GetBoostMaxCount(int stageId)
         {
-            if (!Game.Game.instance.TableSheets.GameConfigSheet.TryGetValue("action_point_max",
+            if (!TableSheets.Instance.GameConfigSheet.TryGetValue(
+                    "action_point_max",
                     out var ap))
             {
                 return 1;
             }
 
-            var stage = Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(
-                i => i.Id == stageId);
-
+            var stage = TableSheets.Instance.StageSheet.OrderedList
+                .FirstOrDefault(i => i.Id == stageId);
             if (stage is null)
             {
                 return 1;
@@ -1065,20 +1239,19 @@ namespace Nekoyume.UI
                 case StageType.Mimisbrunnr:
                     HelpTooltip.HelpMe(100020, true);
                     break;
-                case StageType.None:
+                case StageType.EventDungeon:
+                    // ignore.
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(stageType), stageType, null);
             }
         }
 
-        private bool CheckEquipmentElementalType(int stageId)
+        private bool CheckEquipmentElementalType()
         {
-            return _player.Equipments.All(x => IsExistElementalType(x.ElementalType));
-        }
-
-        private bool IsExistElementalType(ElementalType elementalType)
-        {
-            return GetElementalTypes().Exists(x => x == elementalType);
+            var elementalTypes = GetElementalTypes();
+            return _player.Equipments.All(x =>
+                elementalTypes.Contains(x.ElementalType));
         }
 
         private void UpdateStartButton(AvatarState avatarState)
@@ -1086,7 +1259,8 @@ namespace Nekoyume.UI
             _player.Set(avatarState);
             var foodIds = consumableSlots
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item).Select(food => food.Id);
+                .Select(slot => slot.Item.Id);
+
             var canBattle = Util.CanBattle(_player, foodIds);
             startButton.gameObject.SetActive(canBattle);
 
@@ -1100,6 +1274,10 @@ namespace Nekoyume.UI
                     boostPopupButton.gameObject.SetActive(canBattle);
                     sweepPopupButton.gameObject.SetActive(false);
                     break;
+                case StageType.EventDungeon:
+                    boostPopupButton.gameObject.SetActive(false);
+                    sweepPopupButton.gameObject.SetActive(false);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -1109,13 +1287,15 @@ namespace Nekoyume.UI
 
         public List<ElementalType> GetElementalTypes()
         {
-            var mimisbrunnrSheet = Game.Game.instance.TableSheets.MimisbrunnrSheet;
-            if (mimisbrunnrSheet.TryGetValue(_stageId.Value, out var mimisbrunnrSheetRow))
+            if (_stageType != StageType.Mimisbrunnr)
             {
-                return mimisbrunnrSheetRow.ElementalTypes;
+                return ElementalTypeExtension.GetAllTypes();
             }
 
-            return ElementalTypeExtension.GetAllTypes();
+            var mimisbrunnrSheet = TableSheets.Instance.MimisbrunnrSheet;
+            return mimisbrunnrSheet.TryGetValue(_stageId, out var mimisbrunnrSheetRow)
+                ? mimisbrunnrSheetRow.ElementalTypes
+                : ElementalTypeExtension.GetAllTypes();
         }
 
         public void SimulateBattlePandora()
@@ -1137,15 +1317,39 @@ namespace Nekoyume.UI
             _player.StartRun();
             ActionCamera.instance.ChaseX(_player.transform);
 
+            var level = States.Instance.CurrentAvatarState.level;
             yield return new WaitForSeconds(2);
             Find<WorldMap>().Close(true);
             Find<StageInformation>().Close(true);
 
             var costumes = _player.Costumes;
+            var stageId = _stageId;
+            if (!TableSheets.Instance.WorldSheet.TryGetByStageId(
+        stageId,
+        out var worldRow))
+            {
+                throw new KeyNotFoundException(
+                    $"WorldSheet.TryGetByStageId() {nameof(stageId)}({stageId})");
+            }
+
+            var avatarState = new AvatarState(States.Instance.CurrentAvatarState)
+            {
+                level = level
+            };
+            //var consumables = consumableSlots
+            //    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+            //    .Select(slot => ((Consumable)slot.Item).ItemId)
+            //    .ToList();
             var equipments = equipmentSlots
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
                 .Select(slot => (Equipment)slot.Item)
                 .ToList();
+
+            //var inventoryEquipments = avatarState.inventory.Items
+            //    .Select(i => i.item)
+            //    .OfType<Equipment>()
+            //    .Where(i => i.equipped)
+            //    .ToList();
 
             var consumables = consumableSlots
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
@@ -1155,28 +1359,72 @@ namespace Nekoyume.UI
             List<Guid> costumesN;
             List<Guid> equipmentsN;
             List<Guid> foodsN;
+            //foreach (var equipment in equipments)
+            //{
+            //    if (!avatarState.inventory.TryGetNonFungibleItem(
+            //            equipment,
+            //            out ItemUsable outNonFungibleItem))
+            //    {
+            //        continue;
+            //    }
 
             costumesN = costumes.Select(c => c.ItemId).ToList();
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            var tableSheets = Game.Game.instance.TableSheets;
+            var tableSheets = TableSheets.Instance;
             var random = new Cheat.DebugRandom();
+            StageSheet.Row stageRow;
+            StageWaveSheet.Row stageWaveRow;
+            switch (_stageType)
+            {
+                case StageType.HackAndSlash:
+                case StageType.Mimisbrunnr:
+                {
+                    stageRow = tableSheets.StageSheet[_stageId];
+                    stageWaveRow = tableSheets.StageWaveSheet[_stageId];
+                    break;
+                }
+                case StageType.EventDungeon:
+                {
+                    stageRow = tableSheets.EventDungeonStageSheet[_stageId];
+                    stageWaveRow = tableSheets.EventDungeonStageWaveSheet[_stageId];
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             var simulator = new StageSimulator(
                 random,
                 States.Instance.CurrentAvatarState,
                 foodsN,
                 new List<Skill>(),
-                _worldId,
-                _stageId.Value,
-                tableSheets.StageSheet[_stageId.Value],
-                tableSheets.StageWaveSheet[_stageId.Value],
-                States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
-                StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
-                tableSheets.GetStageSimulatorSheets(),
+
+                //_worldId,
+                //_stageId.Value,
+                //tableSheets.StageSheet[_stageId.Value],
+                //tableSheets.StageWaveSheet[_stageId.Value],
+                //States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
+                //StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
+                //tableSheets.GetStageSimulatorSheets(),
+                //tableSheets.EnemySkillSheet,
+                //tableSheets.CostumeStatSheet,
+                //StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
+                //PandoraBoxMaster.IsHackAndSlashSimulate
+                worldRow.Id,
+                _stageId,
+                stageRow,
+                stageWaveRow,
+                avatarState.worldInformation.IsStageCleared(_stageId),
+                StageRewardExpHelper.GetExp(avatarState.level, _stageId),
+                tableSheets.GetSimulatorSheets(),
                 tableSheets.EnemySkillSheet,
                 tableSheets.CostumeStatSheet,
-                StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
+                StageSimulator.GetWaveRewards(
+                    random,
+                    tableSheets.StageSheet[_stageId],
+                    tableSheets.MaterialItemSheet),
                 PandoraBoxMaster.IsHackAndSlashSimulate
             );
             simulator.Simulate();

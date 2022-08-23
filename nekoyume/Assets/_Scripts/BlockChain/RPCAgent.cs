@@ -525,10 +525,7 @@ namespace Nekoyume.BlockChain
         public void OnRenderBlock(byte[] oldTip, byte[] newTip)
         {
             var dict = (Bencodex.Types.Dictionary)_codec.Decode(newTip);
-            HashAlgorithmGetter hashAlgorithmGetter = Game.Game.instance.Agent.BlockPolicySource
-                .GetPolicy()
-                .GetHashAlgorithm;
-            Block<NCAction> newTipBlock = BlockMarshaler.UnmarshalBlock<NCAction>(hashAlgorithmGetter, dict);
+            Block<NCAction> newTipBlock = BlockMarshaler.UnmarshalBlock<NCAction>(dict);
             BlockIndex = newTipBlock.Index;
             BlockIndexSubject.OnNext(BlockIndex);
             BlockTipHash = new BlockHash(newTipBlock.Hash.ToByteArray());
@@ -623,10 +620,7 @@ namespace Nekoyume.BlockChain
         public void OnReorged(byte[] oldTip, byte[] newTip, byte[] branchpoint)
         {
             var dict = (Bencodex.Types.Dictionary)_codec.Decode(newTip);
-            HashAlgorithmGetter hashAlgorithmGetter = Game.Game.instance.Agent.BlockPolicySource
-                .GetPolicy()
-                .GetHashAlgorithm;
-            Block<NCAction> newTipBlock = BlockMarshaler.UnmarshalBlock<NCAction>(hashAlgorithmGetter, dict);
+            Block<NCAction> newTipBlock = BlockMarshaler.UnmarshalBlock<NCAction>(dict);
             BlockIndex = newTipBlock.Index;
             BlockIndexSubject.OnNext(BlockIndex);
             BlockTipHash = new BlockHash(newTipBlock.Hash.ToByteArray());

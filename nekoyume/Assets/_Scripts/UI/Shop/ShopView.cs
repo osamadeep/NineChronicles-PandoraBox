@@ -1,14 +1,13 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading;
 using Lib9c.Model.Order;
 using Nekoyume.EnumType;
+using Nekoyume.Game;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.State;
 using Nekoyume.TableData;
-using Nekoyume.UI.Model;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -35,18 +34,16 @@ namespace Nekoyume.UI.Module
 
         [SerializeField] private GameObject shopPrefab;
 
-        public Dictionary<ItemSubTypeFilter, List<ShopItem>> _items =
-            new Dictionary<ItemSubTypeFilter, List<ShopItem>>();
+        private readonly Dictionary<ItemSubTypeFilter, List<ShopItem>> _items = new();
+        private readonly List<ShopItem> _selectedModels = new();
+        private readonly List<ShopItemView> _itemViews = new();
+        private readonly ReactiveProperty<int> _page = new();
+        private readonly List<IDisposable> _disposables = new();
 
-        private readonly List<ShopItem> _selectedModels = new List<ShopItem>();
-        private readonly List<ShopItemView> _itemViews = new List<ShopItemView>();
-        private readonly ReactiveProperty<int> _page = new ReactiveProperty<int>();
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
-
-        private Image nextPageImage;
-        private Image previousPageImage;
-        private int _column = 0;
-        private int _row = 0;
+        private Image _nextPageImage;
+        private Image _previousPageImage;
+        private int _column;
+        private int _row;
         private int _pageCount = 1;
 
         protected Action<ShopItem, RectTransform> ClickItemAction;
@@ -64,7 +61,7 @@ namespace Nekoyume.UI.Module
             _selectedModels.Clear();
             _selectedModels.AddRange(GetSortedModels(_items));
             _pageCount = _selectedModels.Any()
-                ? (_selectedModels.Count() / (_column * _row)) + 1
+                ? _selectedModels.Count / (_column * _row) + 1
                 : 1;
             if (resetPage)
             {
@@ -74,7 +71,8 @@ namespace Nekoyume.UI.Module
             UpdateExpired(Game.Game.instance.Agent.BlockIndex);
         }
 
-        public void Show(ReactiveProperty<List<OrderDigest>> digests,
+        public void Show(
+            ReactiveProperty<List<OrderDigest>> digests,
             Action<ShopItem, RectTransform> clickItem)
         {
             Reset();
@@ -96,21 +94,27 @@ namespace Nekoyume.UI.Module
             InitInteractiveUI();
             SubscribeToSearchConditions();
 
-            nextPageImage = nextPageButton.GetComponent<Image>();
-            nextPageButton.onClick.AddListener(() => { _page.Value = math.min(_pageCount - 1, _page.Value + 1); });
+            _nextPageImage = nextPageButton.GetComponent<Image>();
+            nextPageButton.onClick.AddListener(() =>
+            {
+                _page.Value = math.min(_pageCount - 1, _page.Value + 1);
+            });
 
-            previousPageImage = previousPageButton.GetComponent<Image>();
-            previousPageButton.onClick.AddListener(() => { _page.Value = math.max(0, _page.Value - 1); });
+            _previousPageImage = previousPageButton.GetComponent<Image>();
+            previousPageButton.onClick.AddListener(() =>
+            {
+                _page.Value = math.max(0, _page.Value - 1);
+            });
 
             _page.ObserveOnMainThread().Subscribe(UpdatePage).AddTo(gameObject);
         }
 
         private void UpdatePage(int page)
         {
-            var index = page * _itemViews.Count();
+            var index = page * _itemViews.Count;
             foreach (var view in _itemViews)
             {
-                if (index < _selectedModels.Count())
+                if (index < _selectedModels.Count)
                 {
                     view.gameObject.SetActive(true);
                     view.Set(_selectedModels[index], OnClickItem);
@@ -133,12 +137,12 @@ namespace Nekoyume.UI.Module
             nextPageButton.gameObject.SetActive(_pageCount > 1);
 
             previousPageButton.interactable = _page.Value != 0;
-            previousPageImage.color = previousPageButton.interactable
+            _previousPageImage.color = previousPageButton.interactable
                 ? previousPageButton.colors.normalColor
                 : previousPageButton.colors.disabledColor;
 
             nextPageButton.interactable = _page.Value != _pageCount - 1;
-            nextPageImage.color = nextPageButton.interactable
+            _nextPageImage.color = nextPageButton.interactable
                 ? nextPageButton.colors.normalColor
                 : nextPageButton.colors.disabledColor;
         }
@@ -160,9 +164,8 @@ namespace Nekoyume.UI.Module
 
             _column = column;
             _row = row;
-            var sum = _column * _row;
-
             _itemViews.Clear();
+            var sum = _column * _row;
             for (var i = 0; i < sum; i++)
             {
                 var go = Instantiate(shopPrefab, gridLayoutGroup.transform);
@@ -196,7 +199,7 @@ namespace Nekoyume.UI.Module
                     return;
                 }
 
-                var itemSheet = Game.Game.instance.TableSheets.ItemSheet;
+                var itemSheet = TableSheets.Instance.ItemSheet;
                 foreach (var digest in digests)
                 {
                     AddItem(digest, itemSheet);
@@ -204,7 +207,9 @@ namespace Nekoyume.UI.Module
 
                 UpdateView(page: _page.Value);
             }).AddTo(_disposables);
-            Game.Game.instance.Agent.BlockIndexSubject.Subscribe(UpdateExpired).AddTo(_disposables);
+            Game.Game.instance.Agent.BlockIndexSubject
+                .Subscribe(UpdateExpired)
+                .AddTo(_disposables);
         }
 
         private void AddItem(OrderDigest digest, ItemSheet sheet)
@@ -214,19 +219,21 @@ namespace Nekoyume.UI.Module
                 return;
             }
 
-            var filter = ItemSubTypeFilterExtension.GetItemSubTypeFilter(sheet, digest.ItemId);
             var model = CreateItem(itemBase, digest, sheet);
-
-            if (!_items.ContainsKey(filter))
+            var filters = ItemSubTypeFilterExtension.GetItemSubTypeFilter(digest.ItemId);
+            foreach (var filter in filters)
             {
-                _items.Add(filter, new List<ShopItem>());
-            }
+                if (!_items.ContainsKey(filter))
+                {
+                    _items.Add(filter, new List<ShopItem>());
+                }
 
-            _items[filter].Add(model);
-            _items[ItemSubTypeFilter.All].Add(model);
+                _items[filter].Add(model);
+                _items[ItemSubTypeFilter.All].Add(model);
+            }
         }
 
-        private void DestroyChildren(Transform parent)
+        private static void DestroyChildren(Transform parent)
         {
             var children = new List<GameObject>();
             for (var i = 0; i < parent.childCount; i++)
@@ -240,11 +247,14 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        private static ShopItem CreateItem(ItemBase item, OrderDigest digest,
+        private static ShopItem CreateItem(
+            ItemBase item,
+            OrderDigest digest,
             ItemSheet sheet)
         {
             var grade = sheet[digest.ItemId].Grade;
-            var limit = item.ItemType != ItemType.Material && !Util.IsUsableItem(item);
+            var limit = item.ItemType != ItemType.Material &&
+                        !Util.IsUsableItem(item);
             return new ShopItem(item, digest, grade, limit);
         }
 
@@ -263,7 +273,10 @@ namespace Nekoyume.UI.Module
             foreach (var digest in digests)
             {
                 var item = items.Find(x => x.OrderDigest.OrderId == digest.OrderId);
-                if (item is null) continue;
+                if (item is null)
+                {
+                    continue;
+                }
 
                 item.Loading.Value = isLoading;
             }

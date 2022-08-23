@@ -409,7 +409,7 @@ namespace Nekoyume.Game
                     AddressableAssetsContainerPath);
             }
 
-            List<TextAsset> csvAssets = addressableAssetsContainer.tableCsvAssets;
+            var csvAssets = addressableAssetsContainer.tableCsvAssets;
             var csv = new Dictionary<string, string>();
             foreach (var asset in csvAssets)
             {
@@ -424,11 +424,10 @@ namespace Nekoyume.Game
         //        Show a popup with error message and quit the application.
         private async UniTask SyncTableSheetsAsync()
         {
-            var container
-                = await Resources
-                    .LoadAsync<AddressableAssetsContainer>(AddressableAssetsContainerPath)
-                    .ToUniTask();
-            if (!(container is AddressableAssetsContainer addressableAssetsContainer))
+            var container = await Resources
+                .LoadAsync<AddressableAssetsContainer>(AddressableAssetsContainerPath)
+                .ToUniTask();
+            if (container is not AddressableAssetsContainer addressableAssetsContainer)
             {
                 throw new FailedToLoadResourceException<AddressableAssetsContainer>(
                     AddressableAssetsContainerPath);
@@ -441,8 +440,11 @@ namespace Nekoyume.Game
             var dict = await Agent.GetStateBulk(map.Keys);
             var csv = dict.ToDictionary(
                 pair => map[pair.Key],
-                // NOTE: `pair.Value` is nullable when the chain not contains the `pair.Key`.
-                pair => pair.Value.ToDotnetString());
+                // NOTE: `pair.Value` is `null` when the chain not contains the `pair.Key`.
+                pair => pair.Value is null
+                    ? null
+                    : pair.Value.ToDotnetString());
+
             TableSheets = new TableSheets(csv);
         }
 
