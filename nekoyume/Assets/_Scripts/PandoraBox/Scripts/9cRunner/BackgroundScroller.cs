@@ -7,20 +7,16 @@ namespace Nekoyume.UI
 {
     public class BackgroundScroller : MonoBehaviour
     {
-        public float Speed = 0.5f;
-        public float TimeScale;
-        Image image;
-
+        float xDistance;
         private void Start()
         {
-            image = GetComponent<Image>();
-            TimeScale = 1;
+            xDistance = (transform.GetChild(0).position.x - transform.GetChild(1).position.x) * 3;
         }
-
         void Update()
         {
-            Vector2 offset = new Vector2(Time.deltaTime * Speed * TimeScale, 0);
-            image.material.mainTextureOffset += offset;
+            //Debug.LogError(transform.position.x);
+            if (transform.position.x <= -10)
+                transform.position = new Vector2(transform.position.x + xDistance, 0);
         }
     }
 }

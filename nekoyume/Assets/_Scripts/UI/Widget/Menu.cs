@@ -808,6 +808,9 @@ namespace Nekoyume.UI
 
         public void ShowMiniGame()
         {
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under Maintinance!",
+            NotificationCell.NotificationType.Information);
+            return;
             Find<NineRunnerPopup>().Show();
         }
 

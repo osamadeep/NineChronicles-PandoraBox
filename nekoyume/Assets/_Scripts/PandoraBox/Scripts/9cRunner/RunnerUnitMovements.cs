@@ -6,21 +6,15 @@ namespace Nekoyume
 {
     public class RunnerUnitMovements : MonoBehaviour
     {
-        public Vector3 MoveAxis;
+        public Vector2 MoveAxis;
         public float MoveSpeed;
-        RectTransform Recttransform;
         public float TimeScale = 1;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-            Recttransform = GetComponent<RectTransform>();
-        }
+        public float EndPosition = -3000;
 
         // Update is called once per frame
         void Update()
         {
-            if (Recttransform.anchoredPosition.x <= -3000)
+            if (transform.position.x <= EndPosition)
                 gameObject.SetActive(false);
             transform.Translate(MoveAxis * MoveSpeed * TimeScale * Time.deltaTime);
         }

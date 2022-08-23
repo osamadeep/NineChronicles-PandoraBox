@@ -609,7 +609,7 @@ namespace Nekoyume.UI
         {
             //speed all level objects
             foreach (Transform item in BgArray)
-                item.GetComponent<BackgroundScroller>().TimeScale = LevelSpeed;
+                item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
             foreach (GameObject item in GetComponent<PickupPooler>().pooledObjects)
                 item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
             foreach (Transform item in enemiesArray)

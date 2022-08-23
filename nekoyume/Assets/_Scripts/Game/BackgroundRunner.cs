@@ -94,7 +94,7 @@ namespace Nekoyume.Game
                     if (sr != null)
                     {
                         var minWidth = cameraWidth + 0.5f;
-                        if(sr.drawMode == SpriteDrawMode.Tiled)
+                        if (sr.drawMode == SpriteDrawMode.Tiled)
                         {
                             _parallaxSize = sr.size.x > minWidth ? sr.size.x : minWidth;
                         }
