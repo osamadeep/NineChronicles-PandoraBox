@@ -25,7 +25,7 @@ namespace Nekoyume.UI
         [SerializeField] TextMeshProUGUI ResetDateText;
         [SerializeField] TextMeshProUGUI BestScoreText;
         [SerializeField] GameObject LeaderboardLoading;
-        [SerializeField] RectTransform ScrollContent;
+        public RectTransform ScrollContent;
         [SerializeField] RunnerCell CurrentPlayerCell;
 
         RunnerCellContent currentPlayer;
@@ -102,9 +102,11 @@ namespace Nekoyume.UI
             for (int i = 0; i < result.Leaderboard.Count; i++)
             {
                 RunnerCellContent pContent = new RunnerCellContent()
-                { Position = result.Leaderboard[i].Position ,
-                  PlayerName = result.Leaderboard[i].DisplayName,
-                  Score = result.Leaderboard[i].StatValue
+                {
+                    PlayFabID = result.Leaderboard[i].PlayFabId,
+                    Position = result.Leaderboard[i].Position ,
+                    PlayerName = result.Leaderboard[i].DisplayName,
+                    Score = result.Leaderboard[i].StatValue
                 };
                 ScrollContent.GetChild(i).GetComponent<RunnerCell>().UpdateContent(pContent);
                 ScrollContent.GetChild(i).gameObject.SetActive(true);
@@ -125,6 +127,7 @@ namespace Nekoyume.UI
             {
                 currentPlayer = new RunnerCellContent()
                 {
+                    PlayFabID = item.PlayFabId,
                     Position = item.Position,
                     PlayerName = item.DisplayName,
                     Score = item.StatValue

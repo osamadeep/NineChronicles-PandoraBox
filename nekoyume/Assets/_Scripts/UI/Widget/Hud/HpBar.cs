@@ -62,20 +62,20 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void SetPandora(int current, int additional, int max, int ATK, int DEF, int HIT, string SPD)
+        public void SetPandora(Nekoyume.Model.CharacterBase characterBase)//int current, int additional, int max, int ATK, int DEF, int HIT, string SPD)
         {
             SetText($"<size=80%>" +
-                    $"<color=#FFFFFF>HP:</color><color=green>{current}</color>" +
-                    $"<color=#FFFFFF>,ATK:</color><color=green>{ATK}</color>" +
-                    $"<color=#FFFFFF>,DEF:</color><color=green>{DEF}</color>\n" +
-                    $"<color=#FFFFFF>HIT:</color><color=green>{HIT}</color>" +
-                    $"<color=#FFFFFF>,SPD:</color><color=green>{SPD}</color>");
-            SetValue((float)math.min(current, max - additional) / max);
+                    $"<color=#FFFFFF>HP:</color><color=green>{characterBase.CurrentHP}</color>" +
+                    $"<color=#FFFFFF>,ATK:</color><color=green>{characterBase.ATK}</color>" +
+                    $"<color=#FFFFFF>,DEF:</color><color=green>{characterBase.DEF}</color>\n" +
+                    $"<color=#FFFFFF>HIT:</color><color=green>{characterBase.HIT}</color>" +
+                    $"<color=#FFFFFF>,SPD:</color><color=green>{ StatType.SPD.ValueToString(characterBase.SPD)}</color>");
+            SetValue((float)math.min(characterBase.CurrentHP, characterBase.HP - characterBase.Stats.BuffStats.HP) / characterBase.HP);
 
-            bool isHPBoosted = additional > 0;
+            bool isHPBoosted = characterBase.Stats.BuffStats.HP > 0;
             additionalSlider.gameObject.SetActive(isHPBoosted);
             if (isHPBoosted)
-                additionalSlider.value = (float)current / max;
+                additionalSlider.value = (float)characterBase.CurrentHP / characterBase.HP;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

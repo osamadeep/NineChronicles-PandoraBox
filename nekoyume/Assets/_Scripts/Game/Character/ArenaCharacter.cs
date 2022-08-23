@@ -235,10 +235,10 @@ namespace Nekoyume.Game.Character
                     if (!(_characterModel is null))
                     {
                         CharacterExtraInfo.text = $"<color=green>HP</color>: {info.Target.CurrentHP}" +
-                            $"\n<color=green>ATK</color>: {info.Target.ATK}" +
-                            $"\n<color=green>DEF</color>: {info.Target.DEF}" +
-                            $"\n<color=green>HIT</color>: {info.Target.HIT}" +
-                            $"\n<color=green>SPD</color>: {info.Target.SPD}";
+                            $"\n<color=green>ATK</color>: {Model.Stat.StatType.ATK.ValueToString(info.Target.ATK)}" +
+                            $"\n<color=green>DEF</color>: {Model.Stat.StatType.DEF.ValueToString(info.Target.DEF)}" +
+                            $"\n<color=green>HIT</color>: {Model.Stat.StatType.HIT.ValueToString(info.Target.HIT)}" +
+                            $"\n<color=green>SPD</color>: {Model.Stat.StatType.SPD.ValueToString(info.Target.SPD)}";
                     }
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }

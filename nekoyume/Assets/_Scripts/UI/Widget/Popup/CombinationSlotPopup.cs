@@ -131,6 +131,7 @@ namespace Nekoyume.UI
 
         private void UpdateOption(CraftType type, CombinationSlotState slotState)
         {
+            
             foreach (var information in _informations)
             {
                 information.Icon.SetActive(information.Type.Equals(type));
@@ -153,6 +154,11 @@ namespace Nekoyume.UI
             }
         }
 
+        void tt()
+        {
+
+        }
+
         private static void SetCombinationOption(
             Information information,
             CombinationConsumable5.ResultModel resultModel,
@@ -163,7 +169,6 @@ namespace Nekoyume.UI
                 Debug.LogError("Failed to create ItemOptionInfo");
                 return;
             }
-
             // Consumable case
             if (!resultModel.subRecipeId.HasValue)
             {
@@ -187,6 +192,7 @@ namespace Nekoyume.UI
                 resultModel.itemUsable,
                 Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2,
                 Game.Game.instance.TableSheets.EquipmentItemOptionSheet);
+
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
                 var optionView = information.StatOptions[i];
@@ -203,18 +209,24 @@ namespace Nekoyume.UI
                     continue;
                 }
 
+
                 var statMin = optionRow.StatType.ValueToString(optionRow.StatMin);
                 var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
                 var text = $"{optionRow.StatType} ({statMin} - {statMax})";
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                try
+                text = $"{optionRow.StatType} ({optionRow.StatType.ValueToString(optionRow.StatMin)} - {optionRow.StatType.ValueToString(optionRow.StatMax)}) = ";
+                if (statOptionRows.Count == 3)
                 {
-                    text =
-                        $"{optionRow.StatType} ({optionRow.StatMin} - {optionRow.StatMax}) = <color=green><b>{itemOptionInfo.StatOptions[i].value}</b></color>";
+                    if (i == 0)
+                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)} (Sum of stat #1 and #2)</b></color>";
+                    else if (i == 1)
+                        text += "<color=red><b>Calculated!</b></color>";
+                    else if (i == 2)
+                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[1].value)}</b></color>";
                 }
-                catch
-                {
-                }
+                else
+                    text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[i].value)}</b></color>";
+
 
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 optionView.UpdateView(text, string.Empty, 1);

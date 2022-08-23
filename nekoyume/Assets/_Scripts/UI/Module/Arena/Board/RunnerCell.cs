@@ -10,6 +10,7 @@ namespace Nekoyume.UI
 {
     public class RunnerCellContent
     {
+        public string PlayFabID { set; get; }
         public int Position { set; get; }
         public string PlayerName { set; get; }
         public int Score { set; get; }
@@ -28,7 +29,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI _coinText;
 
-
+        public RunnerCellContent CurrentCellContent;
 
         private void Awake()
         {
@@ -39,6 +40,7 @@ namespace Nekoyume.UI
 
         public void UpdateContent(RunnerCellContent playerData)
         {
+            CurrentCellContent = playerData;
             _rankText.text = (playerData.Position + 1).ToString();
             _nameText.text = playerData.PlayerName;
             _scoreText.text = playerData.Score.ToString();
@@ -72,11 +74,18 @@ namespace Nekoyume.UI
                 _gemText.gameObject.SetActive(false);
                 _coinText.text = "x 1k";
             }
-            else
+            else if (playerData.Position >= 20 && playerData.Position < 50)
             {
                 _gemText.text = "x 0";
                 _gemText.gameObject.SetActive(false);
                 _coinText.text = "x 500";
+            }
+            else
+            {
+                _gemText.text = "x 0";
+                _gemText.gameObject.SetActive(false);
+                _coinText.text = "x 0";
+                _coinText.gameObject.SetActive(false);
             }
         }
     }

@@ -25,7 +25,8 @@ namespace Nekoyume.UI
         [SerializeField] TextMeshProUGUI scoreText;
         [SerializeField] TextMeshProUGUI coinText;
         [SerializeField] TextMeshProUGUI startCounterText;
-        [SerializeField] Transform healthHolder = null;
+        [SerializeField] TextMeshProUGUI DieCounterText;
+        //[SerializeField] Transform healthHolder = null;
         [SerializeField] Transform coinSpawner;
         [SerializeField] Transform crystalSpawner;
         [SerializeField] RectTransform runnerPlayer;
@@ -34,6 +35,7 @@ namespace Nekoyume.UI
         [SerializeField] GameObject FinalResult;
         [SerializeField] GameObject UIElement;
         [SerializeField] GameObject UIBoosters;
+        [SerializeField] GameObject UIBoostersDie;
 
         //booster
         public BoosterSlot SelectedBooster = null;
@@ -43,11 +45,13 @@ namespace Nekoyume.UI
         int life;
         int sectionsPassed;
         public float LevelSpeed = 1f;
+        float dieSpeed = 1;
 
         //for statistics
         int gameSeed = 0;
         int avoidMissiles = 0;
         int livesTaken = 0;
+        int livesBought = 0;
         int speedBooster = 0;
 
         RunnerState currentRunnerState = RunnerState.Start;
@@ -133,7 +137,7 @@ namespace Nekoyume.UI
 
             //prepare start could function
             object FuncParam = new { booster = "None" };
-            if (SelectedBooster!= null)
+            if (SelectedBooster != null)
                 FuncParam = new { booster = SelectedBooster.ItemID };
 
             //Get Greenlight from Server
@@ -145,27 +149,47 @@ namespace Nekoyume.UI
             PlayFabClientAPI.ExecuteCloudScript(request, OnStartSuccess, OnPlayFabError);
         }
 
+        void OnEndSuccess(ExecuteCloudScriptResult result)
+        {
+            if (result.FunctionResult.ToString() == "Success")
+            {
+                life= gameSeed + 1;
+                livesBought++;
+
+
+                int newPrice = SelectedBooster.ItemPrice + (SelectedBooster.ItemPrice * (livesBought - gameSeed));
+                PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] -= newPrice; //just UI update instead of request new call
+                StartCoroutine(GotRecover(false));
+            }
+            else
+            {
+                StartCoroutine(EndGame());
+            }
+        }
+
         void OnStartSuccess(ExecuteCloudScriptResult result)
         {
             JsonObject jsonResult = (JsonObject)result.FunctionResult;
             object isSuccess;
             object seedF;
+            //Debug.LogError(result.FunctionResult);
             jsonResult.TryGetValue("success", out isSuccess);
             jsonResult.TryGetValue("seed", out seedF);
 
             gameSeed = int.Parse(seedF.ToString());
-            Debug.LogError(gameSeed);
+            //Debug.LogError(gameSeed);
 
             //core variables
             scoreDistance = 0 + gameSeed;
             scoreCoins = 0 + gameSeed;
             sectionsPassed = 1 + gameSeed;
-            life = 3 + gameSeed;
+            life = 1 + gameSeed;
             UpdateScore(0, 0);
             UpdateScore(0, 1);
 
             //for statistics
             avoidMissiles = 0 + gameSeed;
+            livesBought = 0 + gameSeed;
             livesTaken = 0 + gameSeed;
             speedBooster = 0 + gameSeed;
 
@@ -182,6 +206,8 @@ namespace Nekoyume.UI
             }
             else
             {
+                PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] -= SelectedBooster.ItemPrice; //just UI update instead of request new call
+
                 switch (SelectedBooster.ItemID)
                 {
                     case "Boost750":
@@ -208,7 +234,7 @@ namespace Nekoyume.UI
                 runnerBoss.anchoredPosition -= new Vector2(4, 0);
             }
 
-            StartCoroutine(PrepareLife());
+            //StartCoroutine(PrepareLife());
             StartCoroutine(ScorePerMinute());
             StartCoroutine(EnemySpawn());
             StartCoroutine(IncreaseSpeed());
@@ -313,9 +339,9 @@ namespace Nekoyume.UI
         IEnumerator EnemySpawn()
         {
             bool isCoin = true;
+            yield return new WaitForSeconds(3);
             while (true)
             {
-                yield return new WaitForSeconds(Random.Range(7f, 10f) / LevelSpeed);
                 isCoin = !isCoin;
                 if (currentRunnerState == RunnerState.Play)
                 {
@@ -344,6 +370,7 @@ namespace Nekoyume.UI
                     }
 
                 }
+                yield return new WaitForSeconds(Random.Range(7f, 10f) / LevelSpeed);
             }
         }
 
@@ -351,58 +378,87 @@ namespace Nekoyume.UI
         {
             currentRunnerState = RunnerState.Hit;
             runnerPlayer.GetComponent<RunnerController>().runner = RunnerState.Hit;
-            StartCoroutine(GotRecover());
+            StartCoroutine(GotRecover(true));
         }
 
-        IEnumerator GotRecover()
+        IEnumerator GotRecover(bool DoReduce)
         {
-            life--;
-            livesTaken++;
-            SetLifeUI(life - gameSeed);
+            if (DoReduce)
+                life--;
+
+            //livesTaken++;
+            //SetLifeUI(life - gameSeed);
             if (life <= gameSeed)
             {
                 currentRunnerState = RunnerState.Die;
-                centerText.gameObject.SetActive(true);
-                centerText.text = "Game Over!";
+                runnerPlayer.GetComponent<RunnerController>().runner = RunnerState.Die;
+
+                dieSpeed = LevelSpeed;
                 LevelSpeed = 0;
                 SpeedChange();
 
-                //Check for cheating
-                var request = new ExecuteCloudScriptRequest
+                StopCoroutine(ScorePerMinute());
+                StopCoroutine(EnemySpawn());
+                StopCoroutine(IncreaseSpeed());
+                StopCoroutine(RocketSpawn());
+                
+                //clear all pooled objects
+                foreach (Transform item in enemiesArray)
+                    item.gameObject.SetActive(false);
+                foreach (Transform item in CoinsArray)
+                    item.gameObject.SetActive(false);
+
+
+                yield return new WaitForSeconds(1f);
+                SelectedBooster = null;
+
+                UIBoostersDie.SetActive(true);
+                Transform boosters = UIBoostersDie.transform.Find("Boosters");
+                for (int i = 0; i < 1; i++) // it should be UIBoosters.childCount when all boost is available
                 {
-                    FunctionName = "validateScore",
-                    FunctionParameter = new
+                    boosters.GetChild(i).GetComponent<BoosterSlot>().SetItemData();
+                }
+                int newPrice = boosters.GetChild(0).GetComponent<BoosterSlot>().ItemPrice
+                    + (boosters.GetChild(0).GetComponent<BoosterSlot>().ItemPrice * (livesBought-gameSeed));
+                boosters.GetChild(0).GetComponent<BoosterSlot>().itemPrice.text = "x " + (newPrice); ;
+
+                for (int i = 5; i > 0; i--)
+                {
+                    DieCounterText.text = i.ToString();
+                    AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
+                    yield return new WaitForSeconds(1);
+                }
+                //runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+                UIBoostersDie.SetActive(false);
+
+                //prepare start could function
+                object FuncParam = new { booster = "None" };
+                if (SelectedBooster != null)
+                {
+                    //player want to continue
+                    FuncParam = new { booster = SelectedBooster.ItemID, count = livesBought - gameSeed };
+
+                    //check if player has enough cost for end boosters
+                    var request = new ExecuteCloudScriptRequest
                     {
-                        iac = gameSeed,
-                        distance = scoreDistance,
-                        sections = sectionsPassed,
-                        coins = scoreCoins,
-                        address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-
-                        //statistics
-                        lives = livesTaken,
-                        speedBoosterUsed = speedBooster
-                    }
-                };
-                Debug.LogError($"{gameSeed},{scoreDistance},{sectionsPassed},{scoreCoins},{livesTaken},{speedBooster}");
-                PlayFabClientAPI.ExecuteCloudScript(request, OnValidateSuccess, OnPlayFabError);
-
-
-                yield return new WaitForSeconds(3f);
-                centerText.gameObject.SetActive(false);
-                UIElement.SetActive(false);
-                FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = scoreDistance + "<size=60%>M</size>";
-                FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = (scoreCoins).ToString();
-                FinalResult.SetActive(true);
+                        FunctionName = "EndBoosters",
+                        FunctionParameter = FuncParam
+                    };
+                    PlayFabClientAPI.ExecuteCloudScript(request, OnEndSuccess, OnPlayFabError);
+                }
+                else
+                {
+                    StartCoroutine(EndGame());
+                }
             }
             else
             {
                 foreach (Transform item in enemiesArray)
                     item.gameObject.SetActive(false);
-
+                warningObj.gameObject.SetActive(false);
                 //reduce speed
-                LevelSpeed = Mathf.Clamp(LevelSpeed - 1f, 1, 4);
-                SpeedChange();
+                //LevelSpeed = Mathf.Clamp(LevelSpeed - 1f, 1, 4);
+                //SpeedChange();
 
                 SkeletonGraphic playerGFX = runnerPlayer.transform.Find("GFX").GetComponent<SkeletonGraphic>();
                 bool isVisible = true;
@@ -416,9 +472,52 @@ namespace Nekoyume.UI
                     yield return new WaitForSeconds(0.1f);
                 }
                 playerGFX.color = new Color(1, 1, 1, 1);
+
                 currentRunnerState = RunnerState.Play;
                 runnerPlayer.GetComponent<RunnerController>().runner = RunnerState.Play;
+
+                LevelSpeed = dieSpeed;
+                SpeedChange();
+
+                StartCoroutine(ScorePerMinute());
+                StartCoroutine(EnemySpawn());
+                StartCoroutine(IncreaseSpeed());
+                StartCoroutine(RocketSpawn());
             }
+        }
+
+        IEnumerator EndGame()
+        {
+            centerText.gameObject.SetActive(true);
+            centerText.text = "Game Over!";
+
+            //Check for cheating
+            var request = new ExecuteCloudScriptRequest
+            {
+                FunctionName = "validateScore",
+                FunctionParameter = new
+                {
+                    iac = gameSeed,
+                    distance = scoreDistance,
+                    sections = sectionsPassed,
+                    coins = scoreCoins,
+                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+
+                    //statistics
+                    lives = livesTaken,
+                    speedBoosterUsed = speedBooster
+                }
+            };
+            //Debug.LogError($"{gameSeed},{scoreDistance},{sectionsPassed},{scoreCoins},{livesTaken},{speedBooster}");
+            PlayFabClientAPI.ExecuteCloudScript(request, OnValidateSuccess, OnPlayFabError);
+
+
+            yield return new WaitForSeconds(3f);
+            centerText.gameObject.SetActive(false);
+            UIElement.SetActive(false);
+            FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = (scoreDistance - gameSeed) + "<size=60%>M</size>";
+            FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = (scoreCoins - gameSeed).ToString();
+            FinalResult.SetActive(true);
         }
 
         void OnValidateSuccess(ExecuteCloudScriptResult result)
@@ -430,6 +529,18 @@ namespace Nekoyume.UI
             else
             {
                 PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins; //just UI update instead of request new call
+
+                if (scoreDistance - gameSeed > Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score)
+                {
+                    //send highscore notify
+                    using (dWebHook dcWeb = new dWebHook())
+                    {
+                        dcWeb.WebHook = DatabasePath.PandoraDiscordBot;
+                        dcWeb.SendMessage($"<:highScore:1009757079042539520>**[High Score]** {PandoraBoxMaster.PlayFabDisplayName} "+
+                            $" broke {Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.PlayerName}"+
+                            $" by scoring **7897m**");
+                    }
+                }
             }
         }
 
@@ -507,17 +618,17 @@ namespace Nekoyume.UI
                 item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
         }
 
-        IEnumerator PrepareLife()
-        {
-            yield return new WaitForSeconds(1.5f);
-            int lifeAnimation = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                lifeAnimation++;
-                SetLifeUI(lifeAnimation);
-                yield return new WaitForSeconds(0.5f);
-            }
-        }
+        //IEnumerator PrepareLife()
+        //{
+        //    yield return new WaitForSeconds(1.5f);
+        //    int lifeAnimation = 0;
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        lifeAnimation++;
+        //        SetLifeUI(lifeAnimation);
+        //        yield return new WaitForSeconds(0.5f);
+        //    }
+        //}
 
         protected override void OnCompleteOfShowAnimationInternal()
         {
@@ -529,15 +640,15 @@ namespace Nekoyume.UI
             base.Close(ignoreCloseAnimation);
         }
 
-        public void SetLifeUI(int lives)
-        {
-            lives = Mathf.Clamp(lives, 0, 3);
-            foreach (Transform item in healthHolder)
-                item.gameObject.SetActive(false);
+        //public void SetLifeUI(int lives)
+        //{
+        //    lives = Mathf.Clamp(lives, 0, 3);
+        //    foreach (Transform item in healthHolder)
+        //        item.gameObject.SetActive(false);
 
-            for (int i = 0; i < lives; i++)
-                healthHolder.GetChild(i).gameObject.SetActive(true);
-        }
+        //    for (int i = 0; i < lives; i++)
+        //        healthHolder.GetChild(i).gameObject.SetActive(true);
+        //}
 
         public void ExitToMenu()
         {

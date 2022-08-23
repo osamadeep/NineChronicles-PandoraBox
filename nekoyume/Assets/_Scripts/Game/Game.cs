@@ -37,6 +37,7 @@ namespace Nekoyume.Game
     using Nekoyume.PandoraBox;
     using PlayFab;
     using PlayFab.ClientModels;
+    using System.Net.Http;
     using UniRx;
 
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]
@@ -684,6 +685,17 @@ namespace Nekoyume.Game
                 PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
             }
             //Debug.Log("playfab login is ok");
+
+            //TTTEEEEST
+
+            //PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest { FunctionName = "Test", FunctionParameter = "" }
+            //, OnStartSuccess, PlayFabError);
+
+            //TTTEEEEST
+        }
+        void OnStartSuccess(ExecuteCloudScriptResult result)
+        {
+            Debug.LogError(result.FunctionResult);
         }
 
         private void OnPlayFabInventorySuccess(GetUserInventoryResult result)

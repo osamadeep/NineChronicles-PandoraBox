@@ -900,7 +900,7 @@ namespace Nekoyume.UI
                 var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
-                    costumesN,
+                    foodsN,
                     new List<Skill>(),
                     _worldId,
                     _stageId.Value,
@@ -1165,7 +1165,7 @@ namespace Nekoyume.UI
             var simulator = new StageSimulator(
                 random,
                 States.Instance.CurrentAvatarState,
-                costumesN,
+                foodsN,
                 new List<Skill>(),
                 _worldId,
                 _stageId.Value,
@@ -1180,18 +1180,6 @@ namespace Nekoyume.UI
                 PandoraBoxMaster.IsHackAndSlashSimulate
             );
             simulator.Simulate();
-
-            //var simulator = new StageSimulator(
-            //    new Cheat.DebugRandom(),
-            //    States.Instance.CurrentAvatarState,
-            //    foodsN,
-            //    _worldId,
-            //    _stageId.Value,
-            //    Game.Game.instance.TableSheets.GetStageSimulatorSheets(),
-            //    StageSimulator.ConstructorVersionV100080,
-            //    1, PandoraBoxMaster.IsHackAndSlashSimulate);
-
-            //simulator.Simulate(1);
             GoToStage(simulator.Log);
         }
     }

@@ -20,7 +20,7 @@ namespace Nekoyume
         public GameObject CheckObj;
         [SerializeField] Image itemImg;
         [SerializeField] TextMeshProUGUI itemTitle;
-        [SerializeField] TextMeshProUGUI itemPrice;
+        public TextMeshProUGUI itemPrice;
         [SerializeField] Button selectBtn;
 
         private void Awake()
