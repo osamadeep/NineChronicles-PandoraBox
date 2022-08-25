@@ -217,7 +217,7 @@ namespace Nekoyume.UI
                 if (statOptionRows.Count == 3)
                 {
                     if (i == 0)
-                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)} (Sum of stat #1 and #2)</b></color>";
+                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)}</b></color>";
                     else if (i == 1)
                         text += "<color=red><b>Calculated!</b></color>";
                     else if (i == 2)

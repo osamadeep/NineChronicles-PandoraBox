@@ -14,9 +14,9 @@ namespace Nekoyume
         // Update is called once per frame
         void Update()
         {
-            if (transform.position.x <= EndPosition)
-                gameObject.SetActive(false);
             transform.Translate(MoveAxis * MoveSpeed * TimeScale * Time.deltaTime);
+            if (transform.position.x <= -30)
+                gameObject.SetActive(false);
         }
     }
 }

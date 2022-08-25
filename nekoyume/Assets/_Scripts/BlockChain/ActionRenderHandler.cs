@@ -77,6 +77,20 @@ namespace Nekoyume.BlockChain
             {
                 Debug.Log($"[{nameof(BlockRenderHandler)}] Render actions end");
             }).AddTo(_disposables);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //_actionRenderer.EveryRender<HackAndSlash>()
+            ////.Where(ValidateEvaluationForCurrentAgent)
+            //.ObserveOnMainThread()
+            //.Subscribe(eval =>
+            //{
+            //    Debug.LogError(eval.BlockIndex);
+            //})
+            //.AddTo(_disposables);
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             _actionRenderer.ActionRenderSubject.ObserveOnMainThread().Subscribe(eval =>
             {
                 if (!(eval.Action is GameAction gameAction))

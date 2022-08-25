@@ -143,9 +143,13 @@ namespace Nekoyume.UI
 
         public void InitializeIntro()
         {
-            var intro = Widget.Create<IntroScreen>(true);
-            intro.Initialize();
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "GameRun")
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            {
+                var intro = Widget.Create<IntroScreen>(true);
+                intro.Initialize();
+            }
             UpdateLayers();
         }
 

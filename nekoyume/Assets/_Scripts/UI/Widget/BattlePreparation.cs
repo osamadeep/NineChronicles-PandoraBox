@@ -1083,20 +1083,55 @@ namespace Nekoyume.UI
                 item.text = "?";
             }
 
+            //buffskill
+            List<Skill> buffSkills = new List<Skill>();
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                var skillState = States.Instance.CrystalRandomSkillState;
+                var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
+                bool isAvailable = false;
+                if (skillId == 0)
+                {
+                    if (skillState == null || !skillState.SkillIds.Any())
+                    {
+
+                    }
+                    else
+                    {
+                        isAvailable = true;
+                        skillId = skillState.SkillIds
+                        .Select(buffId =>
+                            TableSheets.Instance.CrystalRandomBuffSheet
+                                .TryGetValue(buffId, out var bonusBuffRow)
+                                ? bonusBuffRow
+                                : null)
+                        .Where(x => x != null)
+                        .OrderBy(x => x.Rank)
+                        .ThenBy(x => x.Id)
+                        .First()
+                        .Id;
+                    }
+                }
+                if (isAvailable)
+                {
+                    var skill = CrystalRandomSkillState.GetSkill(
+                    skillId,
+                    TableSheets.Instance.CrystalRandomBuffSheet,
+                    TableSheets.Instance.SkillSheet);
+                    buffSkills.Add(skill);
+                }
+            }
+
             int totalSimulations = 100;
             int[] winStars = { 0,0,0};
             for (int i = 0; i < totalSimulations; i++)
             {
+                var equipments = _player.Equipments;
                 var costumes = _player.Costumes;
-                var equipments = equipmentSlots
-                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                    .Select(slot => (Equipment)slot.Item)
-                    .ToList();
-
                 var consumables = consumableSlots
                     .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                    .Select(slot => (Consumable)slot.Item)
-                    .ToList();
+                    .Select(slot => (Consumable)slot.Item).ToList();
+
 
                 List<Guid> costumesN;
                 List<Guid> equipmentsN;
@@ -1106,12 +1141,13 @@ namespace Nekoyume.UI
                 equipmentsN = equipments.Select(e => e.ItemId).ToList();
                 foodsN = consumables.Select(f => f.ItemId).ToList();
 
+                PandoraBoxMaster.IsHackAndSlashSimulate = true;
                 var tableSheets = Game.Game.instance.TableSheets;
                 var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
                     States.Instance.CurrentAvatarState,
                     foodsN,
-                    new List<Skill>(),
+                    buffSkills,
                     _worldId,
                     _stageId,
                     tableSheets.StageSheet[_stageId],
@@ -1127,6 +1163,7 @@ namespace Nekoyume.UI
                 simulator.Simulate();
 
                 var log = simulator.Log;
+                PandoraBoxMaster.IsHackAndSlashSimulate = false;
 
                 if (log.clearedWaveNumber == 3)
                 {
@@ -1300,7 +1337,7 @@ namespace Nekoyume.UI
 
         public void SimulateBattlePandora()
         {
-            PandoraBoxMaster.IsHackAndSlashSimulate = true;
+
             StartCoroutine(SimulatorIE());
         }
 
@@ -1322,7 +1359,6 @@ namespace Nekoyume.UI
             Find<WorldMap>().Close(true);
             Find<StageInformation>().Close(true);
 
-            var costumes = _player.Costumes;
             var stageId = _stageId;
             if (!TableSheets.Instance.WorldSheet.TryGetByStageId(
         stageId,
@@ -1336,41 +1372,49 @@ namespace Nekoyume.UI
             {
                 level = level
             };
-            //var consumables = consumableSlots
-            //    .Where(slot => !slot.IsLock && !slot.IsEmpty)
-            //    .Select(slot => ((Consumable)slot.Item).ItemId)
-            //    .ToList();
-            var equipments = equipmentSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Equipment)slot.Item)
-                .ToList();
 
-            //var inventoryEquipments = avatarState.inventory.Items
-            //    .Select(i => i.item)
-            //    .OfType<Equipment>()
-            //    .Where(i => i.equipped)
-            //    .ToList();
-
+            var equipments = _player.Equipments;
+            var costumes = _player.Costumes;
             var consumables = consumableSlots
                 .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item)
-                .ToList();
+                .Select(slot => (Consumable)slot.Item).ToList();
 
             List<Guid> costumesN;
             List<Guid> equipmentsN;
             List<Guid> foodsN;
-            //foreach (var equipment in equipments)
-            //{
-            //    if (!avatarState.inventory.TryGetNonFungibleItem(
-            //            equipment,
-            //            out ItemUsable outNonFungibleItem))
-            //    {
-            //        continue;
-            //    }
 
             costumesN = costumes.Select(c => c.ItemId).ToList();
             equipmentsN = equipments.Select(e => e.ItemId).ToList();
             foodsN = consumables.Select(f => f.ItemId).ToList();
+
+            //buffskill
+            List<Skill> buffSkills = new List<Skill>();
+            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                var skillState = States.Instance.CrystalRandomSkillState;
+                var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
+                if (skillId == 0)
+                {
+                    skillId = skillState.SkillIds
+                        .Select(buffId =>
+                            TableSheets.Instance.CrystalRandomBuffSheet
+                                .TryGetValue(buffId, out var bonusBuffRow)
+                                ? bonusBuffRow
+                                : null)
+                        .Where(x => x != null)
+                        .OrderBy(x => x.Rank)
+                        .ThenBy(x => x.Id)
+                        .First()
+                        .Id;
+                }
+                var skill = CrystalRandomSkillState.GetSkill(
+                skillId,
+                TableSheets.Instance.CrystalRandomBuffSheet,
+                TableSheets.Instance.SkillSheet);
+                buffSkills.Add(skill);
+            }
+
+
 
             var tableSheets = TableSheets.Instance;
             var random = new Cheat.DebugRandom();
@@ -1395,23 +1439,12 @@ namespace Nekoyume.UI
                     throw new ArgumentOutOfRangeException();
             }
 
+            PandoraBoxMaster.IsHackAndSlashSimulate = true;
             var simulator = new StageSimulator(
                 random,
                 States.Instance.CurrentAvatarState,
                 foodsN,
-                new List<Skill>(),
-
-                //_worldId,
-                //_stageId.Value,
-                //tableSheets.StageSheet[_stageId.Value],
-                //tableSheets.StageWaveSheet[_stageId.Value],
-                //States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId.Value),
-                //StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId.Value),
-                //tableSheets.GetStageSimulatorSheets(),
-                //tableSheets.EnemySkillSheet,
-                //tableSheets.CostumeStatSheet,
-                //StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[_stageId.Value], tableSheets.MaterialItemSheet),
-                //PandoraBoxMaster.IsHackAndSlashSimulate
+                buffSkills,
                 worldRow.Id,
                 _stageId,
                 stageRow,
@@ -1429,6 +1462,7 @@ namespace Nekoyume.UI
             );
             simulator.Simulate();
             GoToStage(simulator.Log);
+            PandoraBoxMaster.IsHackAndSlashSimulate = false;
         }
     }
 }

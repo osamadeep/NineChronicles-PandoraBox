@@ -36,6 +36,7 @@ namespace Nekoyume.UI
         [SerializeField] GameObject UIElement;
         [SerializeField] GameObject UIBoosters;
         [SerializeField] GameObject UIBoostersDie;
+        public Sprite[] Sprites;
 
         //booster
         public BoosterSlot SelectedBooster = null;
@@ -56,10 +57,12 @@ namespace Nekoyume.UI
 
         RunnerState currentRunnerState = RunnerState.Start;
 
+        public static Runner instance;
         protected override void Awake()
         {
             base.Awake();
             //ActionCamera.instance.Shake();
+            instance = this;
         }
 
         protected override void Update()

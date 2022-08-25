@@ -43,7 +43,7 @@ namespace Nekoyume.BlockChain
     public class RPCAgent : MonoBehaviour, IAgent, IActionEvaluationHubReceiver
     {
         private const int RpcConnectionRetryCount = 10;
-        private const float TxProcessInterval = 1.0f;
+        private const float TxProcessInterval = 1f;
         private readonly ConcurrentQueue<NCAction> _queuedActions = new ConcurrentQueue<NCAction>();
 
         private readonly TransactionMap _transactions = new TransactionMap(20);
@@ -444,7 +444,18 @@ namespace Nekoyume.BlockChain
         {
             while (true)
             {
-                yield return new WaitForSeconds(TxProcessInterval);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                bool IsPremium = false;
+                try
+                {
+                    IsPremium = PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium();
+                }catch { }
+
+                if (IsPremium)
+                    yield return new WaitForSeconds(TxProcessInterval / 2f);
+                else
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    yield return new WaitForSeconds(TxProcessInterval);
 
                 if (!_queuedActions.TryDequeue(out NCAction action))
                 {

@@ -25,12 +25,12 @@ namespace Nekoyume.UI
     public abstract class ItemTooltip : NewVerticalTooltipWidget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private TextMeshProUGUI OwnerName;
-
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI OwnerName;
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
         [SerializeField] protected Button CloseButton;
+        [SerializeField] private GameObject ExtraInfo;
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
 
@@ -255,10 +255,11 @@ namespace Nekoyume.UI
             MarketPriceText.text = PandoraBoxMaster.MarketPriceValue;
             MarketPriceText.gameObject.SetActive(true);
             panel.GetComponent<Image>().enabled = false;
-            panel.Find("ItemMoreOption").gameObject.SetActive(false);
+            ExtraInfo.SetActive(false);
             panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(false);
             panel.Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/ItemDescriptionText")
                 .GetComponent<TextMeshProUGUI>().text = "";
+
             panel.sizeDelta = new Vector2(380, 415);
             if (panel.anchoredPosition.y < -180) //fix when block # cover the helper tool 
                 panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -180);
@@ -269,11 +270,14 @@ namespace Nekoyume.UI
         {
             MarketPriceText.gameObject.SetActive(false);
             panel.GetComponent<Image>().enabled = true;
-            panel.Find("ItemMoreOption").gameObject.SetActive(true);
+            ExtraInfo.SetActive(true);
             panel.Find("ViewGroup_Item/Group/Footer").gameObject.SetActive(true);
+            panel.sizeDelta = new Vector2(380, 600);
+            panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, -10);
             //panel.Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/ItemDescriptionText").GetComponent<TextMeshProUGUI>().text ="";
             //panel.sizeDelta = new Vector2(380, 600);
             DiscordHolder.gameObject.SetActive(false);
+            UpdatePosition(panel);
         }
 
         string GetItemMainStats()

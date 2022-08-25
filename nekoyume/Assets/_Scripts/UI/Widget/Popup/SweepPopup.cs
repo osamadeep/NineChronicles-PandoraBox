@@ -19,11 +19,20 @@ using Toggle = Nekoyume.UI.Module.Toggle;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.BlockChain;
     using Nekoyume.PandoraBox;
     using UniRx;
 
     public class SweepPopup : PopupWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private UnityEngine.UI.Toggle extendSlider;
+        [SerializeField] private Button multiRepeatBtn;
+        Nekoyume.Model.Item.Material apStonePandora = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private SweepSlider apSlider;
 
@@ -106,6 +115,25 @@ namespace Nekoyume.UI
             _cp.Subscribe(v => UpdateCpView()).AddTo(gameObject);
             pageToggle.onValueChanged.AddListener(UpdateByToggle);
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            extendSlider.onValueChanged.AddListener(_ =>
+            {
+                if (extendSlider.isOn)
+                {
+                    apStoneSlider.Set(Math.Min(haveApStoneCount, 100), 0,100, 1,x => _apStoneCount.Value = x);
+                }
+                else
+                {
+                    apStoneSlider.Set(Math.Min(haveApStoneCount, HackAndSlashSweep.UsableApStoneCount),
+                    0,HackAndSlashSweep.UsableApStoneCount, 1,x => _apStoneCount.Value = x);
+                }
+            });
+
+            multiRepeatBtn.onClick.AddListener(() => StartCoroutine(RepeatMultiple()));
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            pageToggle.onValueChanged.AddListener(UpdateByToggle);
+
             startButton.OnSubmitSubject
                 .Subscribe(_ =>
                 {
@@ -145,6 +173,11 @@ namespace Nekoyume.UI
 
             SubscribeInventory();
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            extendSlider.isOn = false;
+            RepeatMultipleIsOn = false;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _worldId = worldId;
             _stageRow = stageRow;
             _apStoneCount.SetValueAndForceNotify(0);
@@ -169,6 +202,7 @@ namespace Nekoyume.UI
             UpdateView();
         }
 
+        int haveApStoneCount = 0; //|||||||||||||| PANDORA CODE ||||||||||||||||||| just make it public
         private void SubscribeInventory()
         {
             _disposables.DisposeAllAndClear();
@@ -179,7 +213,7 @@ namespace Nekoyume.UI
                     return;
                 }
 
-                var haveApStoneCount = 0;
+
                 _costumes.Clear();
                 _equipments.Clear();
 
@@ -225,16 +259,21 @@ namespace Nekoyume.UI
                                 }
 
                                 haveApStoneCount += item.count;
+                                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                                apStonePandora = item.item as Nekoyume.Model.Item.Material;
+                                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                             }
                             else
                             {
                                 haveApStoneCount += item.count;
+                                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                                apStonePandora = item.item as Nekoyume.Model.Item.Material; 
+                                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                             }
 
                             break;
                     }
                 }
-
                 var haveApCount = States.Instance.CurrentAvatarState.actionPoint;
 
                 haveApText.text = haveApCount.ToString();
@@ -252,6 +291,70 @@ namespace Nekoyume.UI
                 _cp.Value = States.Instance.CurrentAvatarState.GetCP();
             }).AddTo(_disposables);
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        bool RepeatMultipleIsOn = false;
+        public System.Collections.IEnumerator RepeatMultiple()
+        {
+            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            {
+                OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: This is Premium Feature!",
+                    NotificationCell.NotificationType.Alert);
+                yield break;
+            }
+
+            if (apStonePandora == null)
+            {
+                OneLineSystem.Push(MailType.System,
+                "<color=green>Pandora Box</color>: Failed to find any AP stones!",
+                NotificationCell.NotificationType.Alert);
+                yield break;
+            }
+
+            if (RepeatMultipleIsOn)
+            {
+                OneLineSystem.Push(MailType.System,
+                "<color=green>Pandora Box</color>: Multi Repeat in progress, please wait!",
+                NotificationCell.NotificationType.Alert);
+                yield break;
+            }
+
+            RepeatMultipleIsOn = true;
+
+            //do the ap bar first
+            if (_ap.Value >= _stageRow.CostAP)
+            {
+                _repeatBattleAction(
+                StageType.HackAndSlash,
+                false,
+                _ap.Value / _stageRow.CostAP,
+                false);
+            }
+
+            //repeat the stones
+            int iteration = (int)(apStoneSlider.slider.value ); //* HackAndSlashSweep.UsableApStoneCount
+            //int apCount = apStonePandora
+
+            for (int i = 0; i < iteration; i++)
+            {
+                yield return new WaitForSeconds(2);
+                ActionManager.Instance.ChargeActionPoint(apStonePandora)
+                .Subscribe();
+                yield return new WaitForSeconds(2);
+                OneLineSystem.Push(MailType.System,
+                $"<color=green>Pandora Box</color>: Sending Repeat {i+1}/{iteration}",
+                NotificationCell.NotificationType.Information);
+                _repeatBattleAction(
+                StageType.HackAndSlash,
+                false,
+                120 / _stageRow.CostAP,
+                false);
+            }
+
+            Close();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateCpView()
         {

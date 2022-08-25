@@ -269,6 +269,9 @@ namespace Nekoyume.UI
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var agentAddress = States.Instance.AgentState.address;
             var order = await Util.GetOrder(orderSellerMail.OrderId);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Debug.LogError(order.);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var taxedPrice = order.Price - order.GetTax();
             LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, taxedPrice).Forget();
             LocalLayerModifier.RemoveNewMail(avatarAddress, orderSellerMail.id);

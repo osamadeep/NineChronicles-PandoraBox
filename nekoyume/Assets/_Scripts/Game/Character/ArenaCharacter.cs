@@ -238,7 +238,8 @@ namespace Nekoyume.Game.Character
                             $"\n<color=green>ATK</color>: {Model.Stat.StatType.ATK.ValueToString(info.Target.ATK)}" +
                             $"\n<color=green>DEF</color>: {Model.Stat.StatType.DEF.ValueToString(info.Target.DEF)}" +
                             $"\n<color=green>HIT</color>: {Model.Stat.StatType.HIT.ValueToString(info.Target.HIT)}" +
-                            $"\n<color=green>SPD</color>: {Model.Stat.StatType.SPD.ValueToString(info.Target.SPD)}";
+                            $"\n<color=green>SPD</color>: {Model.Stat.StatType.SPD.ValueToString(info.Target.SPD)}" +
+                            $"\n<color=green>CRI</color>: {Model.Stat.StatType.CRI.ValueToString(info.Target.CRI)}%";
                     }
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }

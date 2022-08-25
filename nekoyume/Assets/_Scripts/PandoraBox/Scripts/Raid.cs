@@ -175,14 +175,16 @@ namespace Nekoyume.PandoraBox
             int worldID = 0;
             if (stage.Id < 51)
                 worldID = 1;
-            else if (stage.Id > 50 && stage.Id < 101)
+            else if (stage.Id > 50 && stage.Id <= 100)
                 worldID = 2;
-            else if (stage.Id > 100 && stage.Id < 151)
+            else if (stage.Id > 100 && stage.Id <= 150)
                 worldID = 3;
-            else if (stage.Id > 150 && stage.Id < 201)
+            else if (stage.Id > 150 && stage.Id <= 200)
                 worldID = 4;
-            else if (stage.Id > 200 && stage.Id < 251)
+            else if (stage.Id > 200 && stage.Id <= 250)
                 worldID = 5;
+            else if (stage.Id > 250 && stage.Id <= 300)
+                worldID = 6;
 
             int _requiredCost = stage.CostAP;
 
@@ -219,6 +221,10 @@ namespace Nekoyume.PandoraBox
                 count *5,
                 worldID,
                 stage.Id);
+
+#if UNITY_EDITOR
+                Debug.LogError("Raid Done! " + States.Instance.CurrentAvatarState.name);
+#endif
 
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: Sending Farming Raids for Stage <color=red>" + stage.Id

@@ -19,6 +19,12 @@ namespace Nekoyume.UI.Module
 
     public class RecipeCell : MonoBehaviour
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private GameObject ExtraLocked;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField] private Animator animator = null;
         [SerializeField] private RecipeViewData recipeViewData = null;
         [SerializeField] private RecipeView equipmentView = null;
@@ -51,9 +57,6 @@ namespace Nekoyume.UI.Module
 
         private void Awake()
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            IsLocked = false;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             if (selectable)
             {
                 button.onClick.AddListener(() =>
@@ -97,9 +100,6 @@ namespace Nekoyume.UI.Module
         public void Show(SheetRow<int> recipeRow, bool checkLocked = true)
         {
             _recipeRow = recipeRow;
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            checkLocked = false;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var tableSheets = Game.Game.instance.TableSheets;
 
@@ -176,6 +176,10 @@ namespace Nekoyume.UI.Module
 
             var unlockStage = equipmentRow.UnlockStage;
             var clearedStage = worldInformation.TryGetLastClearedStageId(out var stageId) ? stageId : 0;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            ExtraLocked.SetActive(unlockStage - clearedStage > 0);
+            clearedStage = 30000;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var diff = unlockStage - clearedStage;
 
             var sharedModel = Craft.SharedModel;
@@ -225,16 +229,25 @@ namespace Nekoyume.UI.Module
                     sharedModel.UnlockableRecipes.Value.Contains(equipmentRow.Id) &&
                     sharedModel.UnlockableRecipesOpenCost <=
                     States.Instance.CrystalBalance.MajorUnit;
-                lockVFXObject.SetActive(unlockable);
-                equipmentView.Hide();
-                unlockObject.SetActive(true);
-                unlockPriceText.text = equipmentRow.CRYSTAL.ToString();
-                unlockPriceText.color = unlockable
-                    ? Palette.GetColor(ColorType.ButtonEnabled)
-                    : Palette.GetColor(ColorType.ButtonDisabled);
-                IsLocked = true;
-                _unlockable = true;
-                return;
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (ExtraLocked.activeInHierarchy)
+                {
+
+                }
+                else
+                {
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    lockVFXObject.SetActive(unlockable);
+                    equipmentView.Hide();
+                    unlockObject.SetActive(true);
+                    unlockPriceText.text = equipmentRow.CRYSTAL.ToString();
+                    unlockPriceText.color = unlockable
+                        ? Palette.GetColor(ColorType.ButtonEnabled)
+                        : Palette.GetColor(ColorType.ButtonDisabled);
+                    IsLocked = true;
+                    _unlockable = true;
+                    return;
+                }
             }
 
             SetEquipmentView(equipmentRow);

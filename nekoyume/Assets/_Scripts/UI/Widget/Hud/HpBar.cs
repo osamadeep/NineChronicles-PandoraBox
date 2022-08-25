@@ -69,7 +69,8 @@ namespace Nekoyume.UI
                     $"<color=#FFFFFF>,ATK:</color><color=green>{characterBase.ATK}</color>" +
                     $"<color=#FFFFFF>,DEF:</color><color=green>{characterBase.DEF}</color>\n" +
                     $"<color=#FFFFFF>HIT:</color><color=green>{characterBase.HIT}</color>" +
-                    $"<color=#FFFFFF>,SPD:</color><color=green>{ StatType.SPD.ValueToString(characterBase.SPD)}</color>");
+                    $"<color=#FFFFFF>,SPD:</color><color=green>{ StatType.SPD.ValueToString(characterBase.SPD)}</color>" +
+                    $"<color=#FFFFFF>,CRI:</color><color=green>{ StatType.CRI.ValueToString(characterBase.CRI)}%</color>");
             SetValue((float)math.min(characterBase.CurrentHP, characterBase.HP - characterBase.Stats.BuffStats.HP) / characterBase.HP);
 
             bool isHPBoosted = characterBase.Stats.BuffStats.HP > 0;

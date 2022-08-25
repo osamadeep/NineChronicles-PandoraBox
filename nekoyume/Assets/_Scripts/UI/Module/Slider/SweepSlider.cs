@@ -8,7 +8,7 @@ namespace Nekoyume
     public class SweepSlider : MonoBehaviour
     {
         [SerializeField]
-        private Slider slider;
+        public Slider slider;
 
         [SerializeField]
         private TextMeshProUGUI maxText;
