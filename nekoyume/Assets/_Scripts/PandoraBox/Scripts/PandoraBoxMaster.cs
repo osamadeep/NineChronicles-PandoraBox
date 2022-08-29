@@ -8,6 +8,7 @@ using TMPro;
 using Nekoyume.State;
 using Libplanet.Action;
 using PlayFab.ClientModels;
+using Nekoyume.Model.BattleStatus;
 
 namespace Nekoyume.PandoraBox
 {
@@ -17,7 +18,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100281";
-        public static string VersionId = "010065";
+        public static string VersionId = "010066A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -45,6 +46,7 @@ namespace Nekoyume.PandoraBox
         public static List<string> FavItems = new List<string>();
         public static bool IsRankingSimulate; //simulate ranking battle
         public static bool IsHackAndSlashSimulate; //simulate h&s
+        public static BattleLog CurrentBattleLog; //current stage log
         public static int SelectedWorldID; // pve simulate
         public static int SelectedStageID; // pve simulate
         public static string CurrentArenaEnemyAddress;

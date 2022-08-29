@@ -193,7 +193,7 @@ namespace Nekoyume.UI
             {
                 if (worldInfo.TryGetWorldByStageId(stageId, out var innerWorld))
                 {
-                    isSubmittable = innerWorld.IsPlayable(stageId);
+                    isSubmittable = true;// innerWorld.IsPlayable(stageId);
                 }
                 else
                 {
@@ -263,6 +263,7 @@ namespace Nekoyume.UI
             }
         }
 
+
         private void UpdateStageInfoRewards(List<MaterialItemSheet.Row> rewardItemRows)
         {
             var rewardItemCount = rewardItemRows.Count;
@@ -291,17 +292,77 @@ namespace Nekoyume.UI
                 stageWaveRow.StageId,
                 true);
             titleText.text = $"Stage {stageText}";
+
             UpdateStageInfoMonsters(stageWaveRow.TotalMonsterIds);
 
             var stageSheet = TableSheets.Instance.StageSheet;
             stageSheet.TryGetValue(stageId, out var stageRow, true);
             UpdateStageInfoRewards(stageRow.GetRewardItemRows());
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            EnemyCounter(stageWaveRow);
+            RewardsChance(stageRow);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var exp = StageRewardExpHelper.GetExp(characterLevel, stageId);
             expText.text = $"EXP +{exp}";
 
             buttonNotification.SetActive(stageId == Find<WorldMap>().StageIdToNotify);
         }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        class enemyId { public int ID { set; get; } public int Count { set; get; } }
+        void EnemyCounter(StageWaveSheet.Row row)
+        {
+            List<enemyId> enemies = new List<enemyId>();
+            foreach (var item in row.Waves)
+            {
+                //total += item.Monsters.Count;
+                foreach (StageWaveSheet.MonsterData monster in item.Monsters)
+                {
+                    for (var i = 0; i < monster.Count; i++)
+                    {
+                        try
+                        {
+                            enemies.Find(x => x.ID == monster.CharacterId).Count += 1;
+                        }
+                        catch
+                        {
+                            enemies.Add(new enemyId() { ID = monster.CharacterId, Count = 1 });
+                        }
+                    }
+                }
+            }
+
+            var monsterCount = row.TotalMonsterIds.Count;
+            for (var i = 0; i < monstersAreaCharacterViews.Count; i++)
+            {
+                var characterView = monstersAreaCharacterViews[i];
+                if (i < monsterCount)
+                {
+                    characterView.transform.GetComponentInChildren<TextMeshProUGUI>().text = "x" + enemies[i].Count;
+                    continue;
+                }
+            }
+        }
+
+        void RewardsChance(StageSheet.Row row)
+        {
+            foreach (var item in row.Rewards)
+            {
+
+            }
+            var rewardItemCount = row.Rewards.Count;
+            for (var i = 0; i < rewardsAreaItemViews.Count; i++)
+            {
+                var itemView = rewardsAreaItemViews[i];
+                if (i < rewardItemCount)
+                {
+                    itemView.transform.Find("ChanceTxt").GetComponent<TextMeshProUGUI>().text = (int)(row.Rewards[i].Ratio * 100) + "%";
+                    itemView.transform.Find("MaxTxt").GetComponent<TextMeshProUGUI>().text = "x"+ (row.Rewards[i].Max) + "<sup>*</sup>";
+                    continue;
+                }
+            }
+        }
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void UpdateStageInformationForEventDungeon(int eventDungeonStageId)
         {

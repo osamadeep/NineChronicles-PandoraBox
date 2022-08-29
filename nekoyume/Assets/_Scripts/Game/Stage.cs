@@ -90,6 +90,10 @@ namespace Nekoyume.Game
         public AvatarState AvatarState { get; set; }
         public bool IsShowHud { get; set; }
         public bool IsExitReserved { get; set; }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public bool IsSkip { get; set; }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public bool IsRepeatStage { get; set; }
         public bool IsAvatarStateUpdatedAfterBattle { get; set; }
         public int PlayCount { get; set; }
@@ -326,6 +330,10 @@ namespace Nekoyume.Game
             foreach (var e in log)
             {
                 yield return StartCoroutine(e.CoExecute(this));
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (IsSkip)
+                    break;
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 
             yield return StartCoroutine(CoStageEnd(log));
@@ -373,6 +381,11 @@ namespace Nekoyume.Game
             stageId = log.stageId;
             waveCount = log.waveCount;
             newlyClearedStage = log.newlyCleared;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraBoxMaster.CurrentBattleLog = log;
+            IsSkip = false;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             string bgmName = null;
             switch (StageType)
@@ -431,7 +444,7 @@ namespace Nekoyume.Game
             IsShowHud = true;
         }
 
-        private IEnumerator CoStageEnd(BattleLog log)
+        public IEnumerator CoStageEnd(BattleLog log)
         {
 #if TEST_LOG
             Debug.Log($"[{nameof(Stage)}] {nameof(CoStageEnd)}() enter");
@@ -445,6 +458,7 @@ namespace Nekoyume.Game
                 _onEnterToStageEnd.OnNext(this);
                 yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
             }
+            PandoraBoxMaster.IsHackAndSlashSimulate = false;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var avatarState = States.Instance.CurrentAvatarState;

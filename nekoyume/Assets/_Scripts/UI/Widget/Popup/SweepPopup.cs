@@ -29,7 +29,8 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private UnityEngine.UI.Toggle extendSlider;
         [SerializeField] private Button multiRepeatBtn;
-        Nekoyume.Model.Item.Material apStonePandora = null;
+        [SerializeField] private TMP_InputField stageIDText;
+        Nekoyume.Model.Item.Inventory.Item apStonePandora = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -148,6 +149,11 @@ namespace Nekoyume.UI
                             false,
                             _ap.Value / _stageRow.CostAP,
                             false);
+
+                        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                        //save last stage id
+                        PlayerPrefs.SetInt("_PandoraBox_PVE_LastRaidStage_" + States.Instance.CurrentAvatarState.address, _stageRow.Id);
+                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                         Close();
                     }
                 })
@@ -176,6 +182,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             extendSlider.isOn = false;
             RepeatMultipleIsOn = false;
+            stageIDText.text = stageId.ToString();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _worldId = worldId;
@@ -216,6 +223,9 @@ namespace Nekoyume.UI
 
                 _costumes.Clear();
                 _equipments.Clear();
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                haveApStoneCount = 0;
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 foreach (var item in inventory.Items)
                 {
@@ -260,14 +270,14 @@ namespace Nekoyume.UI
 
                                 haveApStoneCount += item.count;
                                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                                apStonePandora = item.item as Nekoyume.Model.Item.Material;
+                                apStonePandora = item;
                                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                             }
                             else
                             {
                                 haveApStoneCount += item.count;
                                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                                apStonePandora = item.item as Nekoyume.Model.Item.Material; 
+                                apStonePandora = item; 
                                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                             }
 
@@ -288,11 +298,19 @@ namespace Nekoyume.UI
                     HackAndSlashSweep.UsableApStoneCount, 1,
                     x => _apStoneCount.Value = x);
 
+                //Debug.LogError(apStonePandora.count);
+
                 _cp.Value = States.Instance.CurrentAvatarState.GetCP();
             }).AddTo(_disposables);
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void GetApStoneCount()
+        {
+
+        }
+
+
         bool RepeatMultipleIsOn = false;
         public System.Collections.IEnumerator RepeatMultiple()
         {
@@ -330,7 +348,11 @@ namespace Nekoyume.UI
                 false,
                 _ap.Value / _stageRow.CostAP,
                 false);
+                OneLineSystem.Push(MailType.System,
+                "<color=green>Pandora Box</color>: Sending repeat by AP bar!",
+                NotificationCell.NotificationType.Information);
             }
+
 
             //repeat the stones
             int iteration = (int)(apStoneSlider.slider.value ); //* HackAndSlashSweep.UsableApStoneCount
@@ -338,18 +360,18 @@ namespace Nekoyume.UI
 
             for (int i = 0; i < iteration; i++)
             {
-                yield return new WaitForSeconds(2);
-                ActionManager.Instance.ChargeActionPoint(apStonePandora)
+                ActionManager.Instance.ChargeActionPoint(apStonePandora.item as Nekoyume.Model.Item.Material)
                 .Subscribe();
                 yield return new WaitForSeconds(2);
                 OneLineSystem.Push(MailType.System,
-                $"<color=green>Pandora Box</color>: Sending Repeat {i+1}/{iteration}",
+                $"<color=green>Pandora Box</color>: Sending Repeat using AP Stone {i+1}/{iteration}",
                 NotificationCell.NotificationType.Information);
                 _repeatBattleAction(
                 StageType.HackAndSlash,
                 false,
                 120 / _stageRow.CostAP,
                 false);
+                yield return new WaitForSeconds(2);
             }
 
             Close();
@@ -407,10 +429,15 @@ namespace Nekoyume.UI
             else
             {
                 information.SetActive(false);
-                totalApText.text = (_useSweep ? totalPlayCount : apPlayCount).ToString();
-                apStoneText.text = apStonePlayCount > 0 && _useSweep
-                    ? $"(+{apStonePlayCount})"
-                    : string.Empty;
+                //totalApText.text = (_useSweep ? totalPlayCount : apPlayCount).ToString();
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                totalApText.text = (totalPlayCount).ToString();
+                apStoneText.text = $"(+{apStonePlayCount})";
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+                //apStoneText.text = apStonePlayCount > 0 && _useSweep
+                //    ? $"(+{apStonePlayCount})"
+                //    : string.Empty;
             }
 
             UpdateStartButton();
@@ -553,6 +580,12 @@ namespace Nekoyume.UI
                 ["apStoneCount"] = apStoneCount,
                 ["playCount"] = totalPlayCount,
             });
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //save last stage id
+            PlayerPrefs.SetInt("_PandoraBox_PVE_LastRaidStage_" + States.Instance.CurrentAvatarState.address, stageRow.Id);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
             Close();
 

@@ -55,6 +55,12 @@ namespace Nekoyume.UI.Module
             }
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private GameObject futureImage;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public float bossScale = 1f;
 
         [SerializeField]
@@ -150,6 +156,9 @@ namespace Nekoyume.UI.Module
                 return;
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            futureImage.SetActive(false);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             switch (value)
             {
                 case State.Normal:
@@ -163,6 +172,10 @@ namespace Nekoyume.UI.Module
                     gameObject.SetActive(true);
                     normalImage.enabled = false;
                     disabledImage.enabled = true;
+                    selectedImage.enabled = false;
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    futureImage.SetActive(true);
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     selectedImage.enabled = false;
                     buttonText.color = ColorHelper.HexToColorRGB("666666");
                     break;

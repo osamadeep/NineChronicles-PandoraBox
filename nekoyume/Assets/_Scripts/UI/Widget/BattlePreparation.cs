@@ -49,6 +49,8 @@ namespace Nekoyume.UI
 
         [SerializeField] private GameObject stageWinRate;
 
+        [SerializeField] private Button maxDungeonBtn = null;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -197,6 +199,7 @@ namespace Nekoyume.UI
             //fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
             soloSimulateButton.OnClickAsObservable().Subscribe(_ => SimulateBattlePandora()).AddTo(gameObject);
             multipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
+            maxDungeonBtn.OnClickAsObservable().Subscribe(_ => StartCoroutine(MaxDungeon())).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             sweepPopupButton.OnClickAsObservable()
@@ -270,7 +273,12 @@ namespace Nekoyume.UI
             equipmentSlots.gameObject.SetActive(true);
             ShowHelpTooltip(_stageType);
 
-            stageWinRate.SetActive(false);//|||||||||||||| PANDORA CODE |||||||||||||||||||
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            stageWinRate.SetActive(false);
+            maxDungeonBtn.gameObject.SetActive(_stageType == StageType.EventDungeon);
+            maxDungeonBtn.GetComponentInChildren<TextMeshProUGUI>().text = $"Max ({RxProps.EventDungeonTicketProgress.Value.currentTickets})";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             switch (_stageType)
             {
                 case StageType.HackAndSlash:
@@ -314,6 +322,34 @@ namespace Nekoyume.UI
             }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        }
+
+        IEnumerator MaxDungeon()
+        {
+            var equipments = _player.Equipments;
+            var costumes = _player.Costumes;
+            var consumables = consumableSlots
+                .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                .Select(slot => (Consumable)slot.Item).ToList();
+
+            int count = RxProps.EventDungeonTicketProgress.Value.currentTickets;
+            for (int i = 0; i < count; i++)
+            {
+                ActionManager.Instance.EventDungeonBattle(
+                _scheduleId.Value,
+                _worldId,
+                _stageId,
+                equipments,
+                costumes,
+                consumables,
+                false).Subscribe();
+
+                OneLineSystem.Push(MailType.System,
+                "<color=green>Pandora Box</color>: Sending Dungeon <color=red>" + _stageId
+                + "</color> <color=green>" + (i + 1) + "</color>/" + count + "...",
+                NotificationCell.NotificationType.Information);
+                yield return new WaitForSeconds(1);
+            }
         }
 
         private void UpdateRandomBuffButton()
@@ -1084,9 +1120,46 @@ namespace Nekoyume.UI
             }
 
             //buffskill
+            //List<Skill> buffSkills = new List<Skill>();
+            //if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            //{
+            //    var skillState = States.Instance.CrystalRandomSkillState;
+            //    var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
+            //    if (skillId == 0)
+            //    {
+            //        if (skillState == null || !skillState.SkillIds.Any())
+            //        {
+
+            //        }
+            //        else
+            //        {
+            //            skillId = skillState.SkillIds
+            //            .Select(buffId =>
+            //                TableSheets.Instance.CrystalRandomBuffSheet
+            //                    .TryGetValue(buffId, out var bonusBuffRow)
+            //                    ? bonusBuffRow
+            //                    : null)
+            //            .Where(x => x != null)
+            //            .OrderBy(x => x.Rank)
+            //            .ThenBy(x => x.Id)
+            //            .First()
+            //            .Id;
+
+            //            var skill = CrystalRandomSkillState.GetSkill(
+            //            skillId,
+            //            TableSheets.Instance.CrystalRandomBuffSheet,
+            //            TableSheets.Instance.SkillSheet);
+            //            buffSkills.Add(skill);
+            //        }
+            //    }
+
+            //}
+
+
             List<Skill> buffSkills = new List<Skill>();
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
+
                 var skillState = States.Instance.CrystalRandomSkillState;
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                 bool isAvailable = false;
@@ -1121,6 +1194,8 @@ namespace Nekoyume.UI
                     buffSkills.Add(skill);
                 }
             }
+            Debug.LogError(buffSkills.Count);
+
 
             int totalSimulations = 100;
             int[] winStars = { 0,0,0};
@@ -1395,7 +1470,13 @@ namespace Nekoyume.UI
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                 if (skillId == 0)
                 {
-                    skillId = skillState.SkillIds
+                    if (skillState == null || !skillState.SkillIds.Any())
+                    {
+
+                    }
+                    else
+                    {
+                        skillId = skillState.SkillIds
                         .Select(buffId =>
                             TableSheets.Instance.CrystalRandomBuffSheet
                                 .TryGetValue(buffId, out var bonusBuffRow)
@@ -1406,12 +1487,14 @@ namespace Nekoyume.UI
                         .ThenBy(x => x.Id)
                         .First()
                         .Id;
+
+                        var skill = CrystalRandomSkillState.GetSkill(
+                        skillId,
+                        TableSheets.Instance.CrystalRandomBuffSheet,
+                        TableSheets.Instance.SkillSheet);
+                        buffSkills.Add(skill);
+                    }
                 }
-                var skill = CrystalRandomSkillState.GetSkill(
-                skillId,
-                TableSheets.Instance.CrystalRandomBuffSheet,
-                TableSheets.Instance.SkillSheet);
-                buffSkills.Add(skill);
             }
 
 
@@ -1462,7 +1545,6 @@ namespace Nekoyume.UI
             );
             simulator.Simulate();
             GoToStage(simulator.Log);
-            PandoraBoxMaster.IsHackAndSlashSimulate = false;
         }
     }
 }

@@ -6,6 +6,7 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
@@ -20,7 +21,7 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
         private UnityEngine.UI.Button exitMenu = null;
 
-        public GameObject simulateText = null;
+        public GameObject SimulateText = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -104,17 +105,25 @@ namespace Nekoyume.UI
                 VFXController.instance.CreateAndChase<DropItemInventoryVFX>(target, Vector3.zero);
             });
             CloseWidget = null;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            exitMenu.onClick.AddListener(() =>
+            {
+                Game.Game.instance.Stage.IsSkip = true;
+                //StartCoroutine(Game.Game.instance.Stage.CoStageEnd(PandoraBoxMaster.CurrentBattleLog));
+                //Close();
+            });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ExitToMenu()
         {
-            Game.Game.instance.Stage.objectPool.ReleaseAll();
-            Game.Game.instance.IsInWorld = false;
-            //Game.Game.instance.Stage.IsInStage = false;
-            Game.Event.OnRoomEnter.Invoke(false);
-            MainCanvas.instance.InitWidgetInMain();
-            Close();
+            //Game.Game.instance.Stage.objectPool.ReleaseAll();
+            //Game.Game.instance.IsInWorld = false;
+            ////Game.Game.instance.Stage.IsInStage = false;
+            //Game.Event.OnRoomEnter.Invoke(false);
+            //MainCanvas.instance.InitWidgetInMain();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -197,7 +206,9 @@ namespace Nekoyume.UI
             exitToggle.gameObject.SetActive(true);
             //repeatToggle.gameObject.SetActive(true);
             helpButton.gameObject.SetActive(true);
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            SimulateText.SetActive(PandoraBoxMaster.IsHackAndSlashSimulate);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void ClearStage(int stageId, System.Action<bool> onComplete)

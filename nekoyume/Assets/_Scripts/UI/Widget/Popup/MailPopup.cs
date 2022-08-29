@@ -32,6 +32,12 @@ namespace Nekoyume.UI
             System
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button readAllButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private MailTabState tabState = default;
 
         [SerializeField] private CategoryTabButton allButton = null;
@@ -72,7 +78,39 @@ namespace Nekoyume.UI
                 Close();
                 AudioController.PlayClick();
             });
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+            readAllButton.onClick.AddListener(() =>
+            {
+                StartCoroutine(ReadAll());
+            });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        System.Collections.IEnumerator ReadAll()
+        {
+            var blockIndex = Game.Game.instance.Agent.BlockIndex;
+            var list = GetAvailableMailList(blockIndex, tabState)?.ToList();
+            foreach (var item in list)
+            {
+                if (item.New)
+                    item.Read(this);
+                yield return new WaitForSeconds(0.2f);
+                if (Widget.Find<BuyItemInformationPopup>().IsActive())
+                    Widget.Find<BuyItemInformationPopup>().submitButton.onClick.Invoke();
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+
+        public async void UpdateAvatar()
+        {
+            await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
+        }
+        private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>
+        States.Instance.AddOrReplaceAvatarStateAsync(avatarState, index);
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Initialize()
         {

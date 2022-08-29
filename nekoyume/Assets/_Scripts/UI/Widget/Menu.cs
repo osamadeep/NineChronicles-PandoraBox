@@ -779,6 +779,16 @@ namespace Nekoyume.UI
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public async void UpdateAvatar()
+        {
+            await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
+        }
+
+        private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>
+        States.Instance.AddOrReplaceAvatarStateAsync(avatarState, index);
+
+
         protected override void OnEnable()
         {
             base.OnEnable();

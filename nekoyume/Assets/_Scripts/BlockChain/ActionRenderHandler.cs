@@ -1205,6 +1205,7 @@ namespace Nekoyume.BlockChain
                     UpdateCurrentAvatarStateAsync(eval).Forget();
 
 
+
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
             }
