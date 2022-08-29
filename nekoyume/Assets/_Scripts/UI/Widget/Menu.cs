@@ -782,6 +782,7 @@ namespace Nekoyume.UI
 
         public async void UpdateAvatar()
         {
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
             await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
         }
 

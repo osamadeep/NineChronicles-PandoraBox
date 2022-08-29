@@ -213,20 +213,22 @@ namespace Nekoyume.UI
                 var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
                 var text = $"{optionRow.StatType} ({statMin} - {statMax})";
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                text = $"{optionRow.StatType} ({optionRow.StatType.ValueToString(optionRow.StatMin)} - {optionRow.StatType.ValueToString(optionRow.StatMax)}) = ";
-                if (statOptionRows.Count == 3)
+                try
                 {
-                    if (i == 0)
-                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)}</b></color>";
-                    else if (i == 1)
-                        text += "<color=red><b>Calculated!</b></color>";
-                    else if (i == 2)
-                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[1].value)}</b></color>";
+                    text = $"{optionRow.StatType} ({optionRow.StatType.ValueToString(optionRow.StatMin)} - {optionRow.StatType.ValueToString(optionRow.StatMax)}) = ";
+                    if (statOptionRows.Count == 3)
+                    {
+                        if (i == 0)
+                            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)}</b></color>";
+                        else if (i == 1)
+                            text += "<color=red><b>Calculated!</b></color>";
+                        else if (i == 2)
+                            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[1].value)}</b></color>";
+                    }
+                    else
+                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[i].value)}</b></color>";
                 }
-                else
-                    text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[i].value)}</b></color>";
-
-
+                catch { }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 optionView.UpdateView(text, string.Empty, 1);
                 optionView.Show();

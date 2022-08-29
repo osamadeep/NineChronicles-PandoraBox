@@ -1159,7 +1159,7 @@ namespace Nekoyume.UI
             List<Skill> buffSkills = new List<Skill>();
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
-
+                PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                 bool isAvailable = false;
@@ -1466,6 +1466,7 @@ namespace Nekoyume.UI
             List<Skill> buffSkills = new List<Skill>();
             if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
             {
+                PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
                 if (skillId == 0)
