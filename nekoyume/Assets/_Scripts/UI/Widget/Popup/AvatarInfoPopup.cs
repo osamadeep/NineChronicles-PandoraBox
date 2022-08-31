@@ -76,8 +76,8 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void EnableMarketHelper(TextMeshProUGUI text)
         {
-            PandoraBox.PandoraBoxMaster.MarketPriceHelper = !PandoraBox.PandoraBoxMaster.MarketPriceHelper;
-            text.text = PandoraBox.PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+            PandoraBox.PandoraMaster.MarketPriceHelper = !PandoraBox.PandoraMaster.MarketPriceHelper;
+            text.text = PandoraBox.PandoraMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -450,7 +450,7 @@ namespace Nekoyume.UI
         private void ShowItemTooltip(InventoryItem model, RectTransform target)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            PandoraBox.PandoraMaster.MarketPriceValue = PriceText.text;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);

@@ -46,12 +46,12 @@ namespace Nekoyume.UI.Module
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             AvatarAddress = avatarState.address.ToString().ToLower();
             NFTOwner currentNFTOwner = new NFTOwner();
-            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
+            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
                 if (!string.IsNullOrEmpty(currentNFTOwner.CurrentPortrait))
                 {
-                    NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
+                    NFTItem portrait = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
                     var image = Resources.Load<Sprite>(portrait.PrefabLocation);
                     SetIcon(image);
                     return;
@@ -68,12 +68,12 @@ namespace Nekoyume.UI.Module
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             AvatarAddress = player.avatarAddress.ToLower();
             NFTOwner currentNFTOwner = new NFTOwner();
-            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
+            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == AvatarAddress);
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
                 if (!string.IsNullOrEmpty(currentNFTOwner.CurrentPortrait))
                 {
-                    NFTItem portrait = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
+                    NFTItem portrait = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentPortrait);
                     var image = Resources.Load<Sprite>(portrait.PrefabLocation);
                     SetIcon(image);
                     return;

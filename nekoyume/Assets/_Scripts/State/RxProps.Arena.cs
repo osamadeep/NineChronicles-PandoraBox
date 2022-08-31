@@ -517,11 +517,11 @@ namespace Nekoyume.State
             //    .ToArray();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            int upper = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListUpper *
-                        PandoraBoxMaster.Instance.Settings.ArenaListStep);
-            int lower = 10 + (PandoraBoxMaster.Instance.Settings.ArenaListLower *
-                        PandoraBoxMaster.Instance.Settings.ArenaListStep);
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            int upper = 10 + (PandoraMaster.Instance.Settings.ArenaListUpper *
+                        PandoraMaster.Instance.Settings.ArenaListStep);
+            int lower = 10 + (PandoraMaster.Instance.Settings.ArenaListLower *
+                        PandoraMaster.Instance.Settings.ArenaListStep);
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 return tuples.Where(tuple => tuple.rank < 100 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
             }

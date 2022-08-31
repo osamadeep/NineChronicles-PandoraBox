@@ -66,7 +66,7 @@ namespace Nekoyume.PandoraBox
             AudioController.PlayPopup();
             //SetGuildInfo(new Guild());
 
-            selectedGuild = PandoraBoxMaster.PanDatabase.Guilds.Find(x => x.Tag == clanShort);
+            selectedGuild = PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == clanShort);
             SetGuildInfo();
         }
 
@@ -79,7 +79,7 @@ namespace Nekoyume.PandoraBox
             DescTxt.text = selectedGuild.Desc;
             LevelTxt.text = selectedGuild.MinLevel;
             LanguageTxt.text = selectedGuild.Language;
-            if (PandoraBoxMaster.CurrentGuildPlayer is null)
+            if (PandoraMaster.CurrentGuildPlayer is null)
             {
                 if (selectedGuild.Type == 1)
                 {
@@ -96,7 +96,7 @@ namespace Nekoyume.PandoraBox
             }
             else
             {
-                if (selectedGuild.Tag == PandoraBoxMaster.CurrentGuildPlayer.Guild)
+                if (selectedGuild.Tag == PandoraMaster.CurrentGuildPlayer.Guild)
                 {
                     JoinButton.interactable = false;
                     JoinButton.GetComponentInChildren<TextMeshProUGUI>().text = "JOINED";
@@ -121,7 +121,7 @@ namespace Nekoyume.PandoraBox
 
             //Members related
             List<GuildPlayer> selectedGuildPlayers =
-                PandoraBoxMaster.PanDatabase.GuildPlayers.FindAll(x => x.Guild == selectedGuild.Tag);
+                PandoraMaster.PanDatabase.GuildPlayers.FindAll(x => x.Guild == selectedGuild.Tag);
             string maxCount = selectedGuildPlayers.Count > 20
                 ? $"<color=green>{selectedGuildPlayers.Count}</color>"
                 : "20";
@@ -131,7 +131,7 @@ namespace Nekoyume.PandoraBox
             List<PandoraPlayer> selectedGuildPlayersPandoraProfile = new List<PandoraPlayer>();
             foreach (GuildPlayer selectedGuildPlayer in selectedGuildPlayers)
             {
-                PandoraPlayer tmp = PandoraBoxMaster.PanDatabase.Players.Find(y =>
+                PandoraPlayer tmp = PandoraMaster.PanDatabase.Players.Find(y =>
                     y.Address.ToLower() == selectedGuildPlayer.Address.ToLower());
                 if (tmp is null)
                     continue;

@@ -48,11 +48,11 @@ namespace Nekoyume.UI.Module
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //Guild items
 
-            GuildPlayer guildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x =>
+            GuildPlayer guildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x =>
                 x.Address.ToString() == model.OrderDigest.SellerAgentAddress.ToString());
-            if (!(guildPlayer is null) && !(PandoraBoxMaster.CurrentGuild is null))
+            if (!(guildPlayer is null) && !(PandoraMaster.CurrentGuild is null))
             {
-                if (PandoraBoxMaster.CurrentGuild.Tag == guildPlayer.Guild && model.OrderDigest.SellerAgentAddress !=
+                if (PandoraMaster.CurrentGuild.Tag == guildPlayer.Guild && model.OrderDigest.SellerAgentAddress !=
                     States.Instance.CurrentAvatarState.address)
                 {
                     baseItemView.GuildObj.SetActive(true);

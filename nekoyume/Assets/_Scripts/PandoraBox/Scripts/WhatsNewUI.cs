@@ -7,7 +7,7 @@ public class WhatsNewUI : MonoBehaviour
 {
     public void NewShown()
     {
-        PandoraBoxMaster.Instance.Settings.WhatsNewShown = true;
+        PandoraMaster.Instance.Settings.WhatsNewShown = true;
         PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 1);
         gameObject.SetActive(false);
     }    

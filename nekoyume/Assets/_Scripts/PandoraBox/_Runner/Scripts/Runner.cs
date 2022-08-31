@@ -161,7 +161,7 @@ namespace Nekoyume.UI
 
 
                 int newPrice = SelectedBooster.ItemPrice + (SelectedBooster.ItemPrice * (livesBought - gameSeed));
-                PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] -= newPrice; //just UI update instead of request new call
+                PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] -= newPrice; //just UI update instead of request new call
                 StartCoroutine(GotRecover(false));
             }
             else
@@ -209,7 +209,7 @@ namespace Nekoyume.UI
             }
             else
             {
-                PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] -= SelectedBooster.ItemPrice; //just UI update instead of request new call
+                PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] -= SelectedBooster.ItemPrice; //just UI update instead of request new call
 
                 switch (SelectedBooster.ItemID)
                 {
@@ -531,7 +531,7 @@ namespace Nekoyume.UI
             }
             else
             {
-                PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins; //just UI update instead of request new call
+                PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins; //just UI update instead of request new call
 
                 if (scoreDistance - gameSeed > Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score)
                 {
@@ -539,7 +539,7 @@ namespace Nekoyume.UI
                     using (dWebHook dcWeb = new dWebHook())
                     {
                         dcWeb.WebHook = DatabasePath.PandoraDiscordBot;
-                        dcWeb.SendMessage($"<:highScore:1009757079042539520>**[High Score]** {PandoraBoxMaster.PlayFabDisplayName} "+
+                        dcWeb.SendMessage($"<:highScore:1009757079042539520>**[High Score]** {PandoraMaster.PlayFabDisplayName} "+
                             $" broke {Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.PlayerName}"+
                             $" by scoring **7897m**");
                     }

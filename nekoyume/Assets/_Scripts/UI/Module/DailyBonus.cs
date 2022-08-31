@@ -134,7 +134,7 @@ namespace Nekoyume.UI.Module
         private void OnSliderChange()
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            switch (PandoraBoxMaster.Instance.Settings.BlockShowType)
+            switch (PandoraMaster.Instance.Settings.BlockShowType)
             {
                 case 0:
                     {

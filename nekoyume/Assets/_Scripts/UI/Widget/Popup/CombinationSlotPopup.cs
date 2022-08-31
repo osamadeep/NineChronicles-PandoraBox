@@ -373,12 +373,12 @@ namespace Nekoyume.UI
             //requiredBlockIndexText.text = $"{diff}.";
             //timeText.text = string.Format(L10nManager.Localize("UI_REMAINING_TIME"), Util.GetBlockToTime((int)diff));
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+            if (PandoraBox.PandoraMaster.Instance.Settings.BlockShowType == 0)
             {
                 var timeR = Util.GetBlockToTime((int)diff);
                 requiredBlockIndexText.text = timeR;
             }
-            else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+            else if (PandoraBox.PandoraMaster.Instance.Settings.BlockShowType == 1)
             {
                 requiredBlockIndexText.text = $"{diff}";
             }

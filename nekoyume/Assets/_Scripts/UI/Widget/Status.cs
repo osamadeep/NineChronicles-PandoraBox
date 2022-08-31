@@ -52,9 +52,9 @@ namespace Nekoyume.UI
 
         public void ShowGuild()
         {
-            if (PandoraBoxMaster.CurrentGuildPlayer is null)
+            if (PandoraMaster.CurrentGuildPlayer is null)
                 return;
-            Find<GuildInfo>().Show(PandoraBoxMaster.CurrentGuildPlayer.Guild);
+            Find<GuildInfo>().Show(PandoraMaster.CurrentGuildPlayer.Guild);
         }
 
         #region Mono
@@ -175,12 +175,12 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         IEnumerator UpdataPandoraStatus()
         {
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
-                var timeR = Util.GetBlockToTime(PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
+                var timeR = Util.GetBlockToTime(PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
                 //PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
                 PandoraStatus.gameObject.SetActive(true);
-                PandoraStatus.text = $"{timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+                PandoraStatus.text = $"{timeR} ({PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
             }
             else
             {
@@ -191,10 +191,10 @@ namespace Nekoyume.UI
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
 
-            if (!(PandoraBoxMaster.CurrentGuildPlayer is null)
-                && (PandoraBoxMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
+            if (!(PandoraMaster.CurrentGuildPlayer is null)
+                && (PandoraMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
             {
-                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraBoxMaster.CurrentGuildPlayer.Guild}</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
+                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
             }
             yield return new WaitForSeconds(10);
         }

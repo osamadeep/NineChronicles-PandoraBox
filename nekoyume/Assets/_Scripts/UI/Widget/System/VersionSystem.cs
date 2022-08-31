@@ -36,10 +36,10 @@ namespace Nekoyume.UI
             //    int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             pandoraTextVer = string.Format("PandoraBox v{0}.{2}",
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(0, 2)),
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(2, 2)),
-                            int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
-            if (PandoraBoxMaster.VersionId.Length > 6)
+                            int.Parse(PandoraMaster.VersionId.Substring(0, 2)),
+                            int.Parse(PandoraMaster.VersionId.Substring(2, 2)),
+                            int.Parse(PandoraMaster.VersionId.Substring(4, 2)));
+            if (PandoraMaster.VersionId.Length > 6)
                 pandoraTextVer += "<color=green>A</color>";
             StartCoroutine(Get9cBlock());
             StartCoroutine(ShowQueueCount());

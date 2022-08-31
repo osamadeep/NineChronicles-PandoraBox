@@ -1098,7 +1098,7 @@ namespace Nekoyume.UI
 
         public void MultipleSimulate()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
@@ -1157,7 +1157,7 @@ namespace Nekoyume.UI
 
 
             List<Skill> buffSkills = new List<Skill>();
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
@@ -1216,7 +1216,7 @@ namespace Nekoyume.UI
                 equipmentsN = equipments.Select(e => e.ItemId).ToList();
                 foodsN = consumables.Select(f => f.ItemId).ToList();
 
-                PandoraBoxMaster.IsHackAndSlashSimulate = true;
+                PandoraMaster.IsHackAndSlashSimulate = true;
                 var tableSheets = Game.Game.instance.TableSheets;
                 var simulator = new StageSimulator(
                     new Cheat.DebugRandom(),
@@ -1233,12 +1233,12 @@ namespace Nekoyume.UI
                     tableSheets.EnemySkillSheet,
                     tableSheets.CostumeStatSheet,
                     StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
-                    PandoraBoxMaster.IsHackAndSlashSimulate
+                    PandoraMaster.IsHackAndSlashSimulate
                 );
                 simulator.Simulate();
 
                 var log = simulator.Log;
-                PandoraBoxMaster.IsHackAndSlashSimulate = false;
+                PandoraMaster.IsHackAndSlashSimulate = false;
 
                 if (log.clearedWaveNumber == 3)
                 {
@@ -1464,7 +1464,7 @@ namespace Nekoyume.UI
 
             //buffskill
             List<Skill> buffSkills = new List<Skill>();
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
@@ -1523,7 +1523,7 @@ namespace Nekoyume.UI
                     throw new ArgumentOutOfRangeException();
             }
 
-            PandoraBoxMaster.IsHackAndSlashSimulate = true;
+            PandoraMaster.IsHackAndSlashSimulate = true;
             var simulator = new StageSimulator(
                 random,
                 States.Instance.CurrentAvatarState,
@@ -1542,7 +1542,7 @@ namespace Nekoyume.UI
                     random,
                     tableSheets.StageSheet[_stageId],
                     tableSheets.MaterialItemSheet),
-                PandoraBoxMaster.IsHackAndSlashSimulate
+                PandoraMaster.IsHackAndSlashSimulate
             );
             simulator.Simulate();
             GoToStage(simulator.Log);

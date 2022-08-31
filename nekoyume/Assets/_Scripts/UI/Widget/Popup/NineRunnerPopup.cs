@@ -65,8 +65,8 @@ namespace Nekoyume.UI
 
         public void UpdateCurrency()
         {
-            GemsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PG"];
-            CoinsText.text = "x" + PandoraBoxMaster.PlayFabInventory.VirtualCurrency["PC"];
+            GemsText.text = "x" + PandoraMaster.PlayFabInventory.VirtualCurrency["PG"];
+            CoinsText.text = "x" + PandoraMaster.PlayFabInventory.VirtualCurrency["PC"];
         }
 
         public void StartRunner()
@@ -85,7 +85,7 @@ namespace Nekoyume.UI
             LeaderboardLoading.SetActive(true);
             var request = new GetLeaderboardRequest
             {
-                StatisticName = PandoraBoxMaster.PlayFabRunnerLeaderboard,
+                StatisticName = PandoraMaster.PlayFabRunnerLeaderboard,
                 StartPosition = 0,
                 MaxResultsCount = TotalLeaderboarCount,
             };
@@ -117,7 +117,7 @@ namespace Nekoyume.UI
             ResetDateText.text = "Reset Date: <color=red>" + remains;
             LeaderboardLoading.SetActive(false);
 
-            var request = new GetLeaderboardAroundPlayerRequest { StatisticName = PandoraBoxMaster.PlayFabRunnerLeaderboard, MaxResultsCount = 1 };
+            var request = new GetLeaderboardAroundPlayerRequest { StatisticName = PandoraMaster.PlayFabRunnerLeaderboard, MaxResultsCount = 1 };
             PlayFabClientAPI.GetLeaderboardAroundPlayer(request, OnLeaderboardAroundPlayerSuccess, OnLeaderboardError);
         }
 

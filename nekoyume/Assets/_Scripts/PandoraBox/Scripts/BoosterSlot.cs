@@ -35,7 +35,7 @@ namespace Nekoyume
             itemTitle.text = ItemTitle;
             itemPrice.text = "x " + ItemPrice;
             CheckObj.SetActive(false);
-            selectBtn.interactable = PandoraBoxMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] >= ItemPrice;
+            selectBtn.interactable = PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] >= ItemPrice;
 
             //disable PG boosters
             if (CurrencySTR == "PG")
@@ -45,7 +45,7 @@ namespace Nekoyume
         public void SelectBoosterItem(string buyID)
         {
             //check client-side if cost is enough
-            if (PandoraBoxMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
+            if (PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: No Enough Currency!", NotificationCell.NotificationType.Alert);
                 return;

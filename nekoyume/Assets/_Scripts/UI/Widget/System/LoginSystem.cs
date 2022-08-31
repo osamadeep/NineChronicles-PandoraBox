@@ -337,7 +337,7 @@ namespace Nekoyume.UI
             _privateKeyString = privateKeyString;
             //Auto login for miner, seed, launcher
             if ((!string.IsNullOrEmpty(_privateKeyString) || (Application.isBatchMode)) &&
-                !PandoraBoxMaster.Instance.Settings.IsMultipleLogin)
+                !PandoraMaster.Instance.Settings.IsMultipleLogin)
             {
                 CreatePrivateKey();
                 Login = true;
@@ -371,7 +371,7 @@ namespace Nekoyume.UI
                     }
 
 
-                    SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
+                    SetImage(KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 }
 
@@ -419,12 +419,12 @@ namespace Nekoyume.UI
 
         public void SetProfileIndex(int value)
         {
-            PandoraBoxMaster.LoginIndex = value;
+            PandoraMaster.LoginIndex = value;
             AudioController.instance.PlaySfx(AudioController.SfxCode.Click);
-            SetImage(KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address);
+            SetImage(KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address);
 
             //VFX
-            int NumberOfProfiles = PandoraBoxMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
+            int NumberOfProfiles = PandoraMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
             for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, NumberOfProfiles); i++)
             {
                 Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);
@@ -472,7 +472,7 @@ namespace Nekoyume.UI
             PrivateKey privateKey = null;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            keyStore.List().ElementAt(PandoraBoxMaster.LoginIndex)
+            keyStore.List().ElementAt(PandoraMaster.LoginIndex)
                 .Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
             try
             {

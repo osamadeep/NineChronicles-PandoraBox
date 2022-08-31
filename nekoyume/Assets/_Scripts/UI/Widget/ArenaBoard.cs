@@ -106,7 +106,7 @@ namespace Nekoyume.UI
         {
             RefreshBtn.interactable = false;
             int cooldown = 25;
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 cooldown = 10;
             TextMeshProUGUI buttonText = RefreshBtn.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -176,12 +176,12 @@ namespace Nekoyume.UI
             bool ignoreShowAnimation = false)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.ArenaFavTargets.Clear();
+            PandoraMaster.ArenaFavTargets.Clear();
             for (int i = 0; i < 10; i++) //fav max count
             {
                 string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 if (PlayerPrefs.HasKey(key))
-                    PandoraBoxMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+                    PandoraMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
             }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

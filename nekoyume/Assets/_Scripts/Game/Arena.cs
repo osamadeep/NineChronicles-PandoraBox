@@ -137,7 +137,7 @@ namespace Nekoyume.Game
             //ActionRenderHandler.Instance.Pending = false;
             //_onArenaEnd.OnNext(this);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!PandoraBoxMaster.IsRankingSimulate)
+            if (!PandoraMaster.IsRankingSimulate)
             {
                 ActionRenderHandler.Instance.Pending = false;
                 _onArenaEnd.OnNext(this);

@@ -1159,7 +1159,7 @@ namespace Nekoyume.BlockChain
                 }
 
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
+                else if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
                 {
                     BattleResultPopup.Model _battleResultModel = new BattleResultPopup.Model();
                     Widget.Find<BattleResultPopup>().StageProgressBar.Initialize(false);
@@ -1227,7 +1227,7 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -1236,7 +1236,7 @@ namespace Nekoyume.BlockChain
             if (eval.Exception is null)
             {
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
+                if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
                 {
                     Widget.Find<SweepResultPopup>().ShowPandora(eval.Action.worldId, eval.Action.actionPoint, eval.Action.apStoneCount,0);
                     //Widget.Find<SweepResultPopup>().OnBattleFinish();
@@ -1267,7 +1267,7 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -1496,7 +1496,7 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

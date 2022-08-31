@@ -23,6 +23,12 @@ namespace Nekoyume.UI
 {
     public class ShopBuy : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public Button RefreshButton;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private Button sellButton;
 
@@ -59,6 +65,10 @@ namespace Nekoyume.UI
             };
 
             view.SetAction(ShowBuyPopup);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            RefreshButton.onClick.AddListener(() => { Refresh();});
+            Game.Game.instance.Agent.BlockIndexSubject.Subscribe(PandoraBox.Prime.GGETSETH).AddTo(gameObject); //Debug.. Delete
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Initialize()
@@ -139,6 +149,14 @@ namespace Nekoyume.UI
 
             view.IsDoneLoadItem = true;
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void Refresh()
+        {
+            RefreshButton.interactable = false;
+            PandoraBox.Premium.ShopRefresh(view, ShowItemTooltip, _cancellationTokenSource);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void Open()
         {

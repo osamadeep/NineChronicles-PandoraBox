@@ -167,14 +167,14 @@ namespace Nekoyume.Game.Character
             {
                 NFTOwner currentNFTOwner = new NFTOwner();
                 //Debug.LogError(avatarAddress);
-                currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == avatarAddress.ToLower());
+                currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == avatarAddress.ToLower());
                 if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
                 {
                     if (!string.IsNullOrEmpty(currentNFTOwner.CurrentFullCostume))
                     {
                         EquipCostumes(model.Costumes);
                         //EquipEquipmentsAndUpdateCustomize(model.armor, model.weapon);
-                        NFTItem fullCostume = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentFullCostume);
+                        NFTItem fullCostume = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentFullCostume);
 
                         ChangeSpineObject(fullCostume.PrefabLocation, true);
                     }

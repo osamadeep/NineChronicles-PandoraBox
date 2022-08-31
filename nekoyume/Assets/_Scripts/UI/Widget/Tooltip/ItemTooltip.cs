@@ -107,7 +107,7 @@ namespace Nekoyume.UI
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 {
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: This is Premium Feature!",
@@ -158,7 +158,7 @@ namespace Nekoyume.UI
             else
             {
                 currentSellerAvatar = avatarState;
-                currentSeller = PandoraBoxMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
+                currentSeller = PandoraMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
 
                 if (currentSeller.IsPremium())
                 {
@@ -169,7 +169,7 @@ namespace Nekoyume.UI
                 }
                 else
                 {
-                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                    if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                     {
                         OwnerName.text = "<size=120%>" + avatarState.NameWithHash;
                     }
@@ -191,10 +191,10 @@ namespace Nekoyume.UI
 
             string itemString = "===== Pandora Item Information =====";
 
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 PandoraPlayer currentPandoraPlayer =
-                    PandoraBoxMaster.GetPandoraPlayer(ownerAvatarState.agentAddress.ToString());
+                    PandoraMaster.GetPandoraPlayer(ownerAvatarState.agentAddress.ToString());
                 if (currentPandoraPlayer.IsProtected)
                 {
                     itemString += "\nOwner Avatar Name    : PRIVATE";
@@ -216,6 +216,7 @@ namespace Nekoyume.UI
             }
 
             itemString += "\nItem Localized Name  : " + currentItemBase.GetLocalizedName(false);
+            itemString += "\nItem ID              : " + currentItemBase.Id;
             try
             {
                 itemString += "\nItem Main Stats      : " + GetItemMainStats();
@@ -238,11 +239,14 @@ namespace Nekoyume.UI
                 {
                     itemString += "\nItem Unique ID       : " + nonFungibleItem.NonFungibleId;
                 }
-
-                itemString += "\nItem Shop ID         : " + currentShopItem.OrderDigest.OrderId;
-                itemString += "\nItem Price           : " + currentShopItem.OrderDigest.Price;
-                if (currentShopItem.OrderDigest.ItemCount > 1)
-                    itemString += "\nItem Count           : " + currentShopItem.OrderDigest.ItemCount;
+                try
+                {
+                    itemString += "\nItem Shop ID         : " + currentShopItem.OrderDigest.OrderId;
+                    itemString += "\nItem Price           : " + currentShopItem.OrderDigest.Price;
+                    if (currentShopItem.OrderDigest.ItemCount > 1)
+                        itemString += "\nItem Count           : " + currentShopItem.OrderDigest.ItemCount;
+                }
+                catch { }
             }
 
             itemString += "\nCurrent Time (Utc)   : " + DateTime.UtcNow;
@@ -252,7 +256,7 @@ namespace Nekoyume.UI
 
         void EnableShopTool()
         {
-            MarketPriceText.text = PandoraBoxMaster.MarketPriceValue;
+            MarketPriceText.text = PandoraMaster.MarketPriceValue;
             MarketPriceText.gameObject.SetActive(true);
             panel.GetComponent<Image>().enabled = false;
             ExtraInfo.SetActive(false);
@@ -368,9 +372,9 @@ namespace Nekoyume.UI
             {
                 var nonFungibleId = nonFungibleItem.NonFungibleId;
 
-                if (PandoraBoxMaster.FavItems.Contains(nonFungibleId.ToString()))
+                if (PandoraMaster.FavItems.Contains(nonFungibleId.ToString()))
                 {
-                    for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                    for (int i = 0; i < PandoraMaster.FavItems.Count; i++)
                     {
                         string key = "_PandoraBox_General_FavItems0" + i + "_" +
                                      States.Instance.CurrentAvatarState.address;
@@ -379,14 +383,14 @@ namespace Nekoyume.UI
                         PlayerPrefs.DeleteKey(key);
                     }
 
-                    PandoraBoxMaster.FavItems.Remove(nonFungibleId.ToString());
-                    for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                    PandoraMaster.FavItems.Remove(nonFungibleId.ToString());
+                    for (int i = 0; i < PandoraMaster.FavItems.Count; i++)
                     {
                         string key = "_PandoraBox_General_FavItems0" + i + "_" +
                                      States.Instance.CurrentAvatarState.address;
                         if (i > 9)
                             key = "_PandoraBox_General_FavItems" + i + "_" + States.Instance.CurrentAvatarState.address;
-                        PlayerPrefs.SetString(key, PandoraBoxMaster.FavItems[i]);
+                        PlayerPrefs.SetString(key, PandoraMaster.FavItems[i]);
                     }
 
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " +
@@ -397,28 +401,28 @@ namespace Nekoyume.UI
                 else
                 {
                     int maxCount = 2;
-                    if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                    if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                         maxCount = 15;
 
-                    if (PandoraBoxMaster.FavItems.Count > maxCount)
+                    if (PandoraMaster.FavItems.Count > maxCount)
                         OneLineSystem.Push(MailType.System,
                             "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of Favorite, please remove some!"
                             , NotificationCell.NotificationType.Information);
                     else
                     {
-                        PandoraBoxMaster.FavItems.Add(nonFungibleId.ToString());
+                        PandoraMaster.FavItems.Add(nonFungibleId.ToString());
                         OneLineSystem.Push(MailType.System,
                             "<color=green>Pandora Box</color>: " + currentItemBase.GetLocalizedName() +
                             " added to your Favorite list!"
                             , NotificationCell.NotificationType.Information);
-                        for (int i = 0; i < PandoraBoxMaster.FavItems.Count; i++)
+                        for (int i = 0; i < PandoraMaster.FavItems.Count; i++)
                         {
                             string key = "_PandoraBox_General_FavItems0" + i + "_" +
                                          States.Instance.CurrentAvatarState.address;
                             if (i > 9)
                                 key = "_PandoraBox_General_FavItems" + i + "_" +
                                       States.Instance.CurrentAvatarState.address;
-                            PlayerPrefs.SetString(key, PandoraBoxMaster.FavItems[i]);
+                            PlayerPrefs.SetString(key, PandoraMaster.FavItems[i]);
                         }
                     }
                 }
@@ -509,7 +513,7 @@ namespace Nekoyume.UI
             base.Show();
             StartCoroutine(CoUpdate(submitButton.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
                 DisableShopTool();
@@ -553,7 +557,7 @@ namespace Nekoyume.UI
             base.Show();
             StartCoroutine(CoUpdate(submitButton.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
                 DisableShopTool();
@@ -605,7 +609,7 @@ namespace Nekoyume.UI
             base.Show();
             StartCoroutine(CoUpdate(sell.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
                 DisableShopTool();
@@ -650,7 +654,7 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(buy.gameObject));
 
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (PandoraBoxMaster.MarketPriceHelper)
+            if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
                 DisableShopTool();

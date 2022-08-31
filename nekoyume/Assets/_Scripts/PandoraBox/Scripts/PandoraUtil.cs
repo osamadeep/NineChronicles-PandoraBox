@@ -13,7 +13,7 @@ namespace Nekoyume.PandoraBox
 
         public static bool IsBusy()
         {
-            switch (PandoraBoxMaster.CurrentAction)
+            switch (PandoraMaster.CurrentAction)
             {
                 case ActionType.Idle:
                     return false;

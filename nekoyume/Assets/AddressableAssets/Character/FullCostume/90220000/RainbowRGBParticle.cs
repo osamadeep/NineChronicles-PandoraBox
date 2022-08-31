@@ -18,7 +18,7 @@ namespace Nekoyume.PandoraBox
         // Update is called once per frame
         void FixedUpdate()
         {
-            Color.RGBToHSV(PandoraBoxMaster.StickManOutlineColor, out h, out s, out v);
+            Color.RGBToHSV(PandoraMaster.StickManOutlineColor, out h, out s, out v);
             h += speed / 10000;
             if (h > 1)
             {
@@ -27,8 +27,8 @@ namespace Nekoyume.PandoraBox
             s = 1;
             v = 1;
 
-            PandoraBoxMaster.StickManOutlineColor = Color.HSVToRGB(h, s, v);
-            currentPS.startColor = PandoraBoxMaster.StickManOutlineColor;
+            PandoraMaster.StickManOutlineColor = Color.HSVToRGB(h, s, v);
+            currentPS.startColor = PandoraMaster.StickManOutlineColor;
         }
     }
 }

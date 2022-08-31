@@ -31,7 +31,7 @@ namespace Nekoyume.Game.Factory
             var objectPool = Game.instance.Stage.objectPool;
             var enemy = objectPool.Get<Character.EnemyPlayer>(position);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            enemy.avatarAddress = PandoraBox.PandoraBoxMaster.CurrentArenaEnemyAddress;
+            enemy.avatarAddress = PandoraBox.PandoraMaster.CurrentArenaEnemyAddress;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             if (!enemy)
                 throw new NotFoundComponentException<Character.EnemyPlayer>();

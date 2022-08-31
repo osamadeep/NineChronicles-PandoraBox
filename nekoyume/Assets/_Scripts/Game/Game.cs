@@ -639,7 +639,7 @@ namespace Nekoyume.Game
 
             var loginPopup = Widget.Find<LoginSystem>();
 
-            if (!PandoraBoxMaster.Instance.Settings.IsMultipleLogin
+            if (!PandoraMaster.Instance.Settings.IsMultipleLogin
                 && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
             {
                 loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
@@ -662,7 +662,7 @@ namespace Nekoyume.Game
                 PlayFabSettings.staticSettings.TitleId = "42";
             }
 
-            Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraBoxMaster.LoginIndex).Item2.Address;
+            Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address;
             //Debug.LogError(currentLoginAddress);
             var request = new LoginWithCustomIDRequest { CustomId = currentLoginAddress.ToString(),
                 CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true } };
@@ -682,8 +682,8 @@ namespace Nekoyume.Game
         {
             if (result.InfoResultPayload.PlayerProfile != null)
             {
-                PandoraBoxMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
-                PandoraBoxMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
+                PandoraMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
+                PandoraMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
                 PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
             }
             //Debug.Log("playfab login is ok");
@@ -702,7 +702,7 @@ namespace Nekoyume.Game
 
         private void OnPlayFabInventorySuccess(GetUserInventoryResult result)
         {
-            PandoraBoxMaster.PlayFabInventory = result;
+            PandoraMaster.PlayFabInventory = result;
         }
 
         private void PlayFabError(PlayFabError error)

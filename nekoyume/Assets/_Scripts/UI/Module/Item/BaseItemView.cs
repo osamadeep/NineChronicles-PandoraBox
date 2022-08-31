@@ -153,13 +153,13 @@ namespace Nekoyume
                 //Debug.LogError(nonFungibleId);
                 FeatureObj.SetActive(false);
                 FeatureItem currentFeatureItem =
-                    PandoraBoxMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
+                    PandoraMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
 
                 if (!(currentFeatureItem is null) && currentFeatureItem.IsValid())
                     FeatureObj.SetActive(true);
 
                 //if (nonFungibleId.ToString() == "8208c642-6848-4fba-81b3-494f36178e19" || nonFungibleId.ToString() == "4e8f40e9-00a2-4e0e-89fe-1d686da22702")
-                FavoriteObj.SetActive(PandoraBoxMaster.FavItems.Contains(nonFungibleId.ToString()));
+                FavoriteObj.SetActive(PandoraMaster.FavItems.Contains(nonFungibleId.ToString()));
             }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

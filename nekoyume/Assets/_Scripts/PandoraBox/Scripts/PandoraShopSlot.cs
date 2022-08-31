@@ -44,7 +44,7 @@ namespace Nekoyume.UI
         {
 
             //check client-side if cost is enough
-            if (PandoraBoxMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
+            if (PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
             {
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: No Enough Currency!" , NotificationCell.NotificationType.Alert);
                 return;
@@ -90,7 +90,7 @@ namespace Nekoyume.UI
             if (result.FunctionResult.ToString() == "Success")
             {
                 //adding score success
-                PandoraBoxMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
+                PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
                 NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=green>Success!</color>", NotificationCell.NotificationType.Information);
                 Widget.Find<PandoraShopPopup>().UpdateCurrency();
                 Widget.Find<NineRunnerPopup>().UpdateCurrency();

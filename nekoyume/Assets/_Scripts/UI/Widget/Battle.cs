@@ -207,7 +207,7 @@ namespace Nekoyume.UI
             //repeatToggle.gameObject.SetActive(true);
             helpButton.gameObject.SetActive(true);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            SimulateText.SetActive(PandoraBoxMaster.IsHackAndSlashSimulate);
+            SimulateText.SetActive(PandoraMaster.IsHackAndSlashSimulate);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

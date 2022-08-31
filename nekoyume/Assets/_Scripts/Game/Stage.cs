@@ -383,7 +383,7 @@ namespace Nekoyume.Game
             newlyClearedStage = log.newlyCleared;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.CurrentBattleLog = log;
+            PandoraMaster.CurrentBattleLog = log;
             IsSkip = false;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -452,13 +452,13 @@ namespace Nekoyume.Game
             IsAvatarStateUpdatedAfterBattle = false;
             // NOTE ActionRenderHandler.Instance.Pending should be false before _onEnterToStageEnd.OnNext() invoked.
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!PandoraBoxMaster.IsHackAndSlashSimulate)
+            if (!PandoraMaster.IsHackAndSlashSimulate)
             {
                 ActionRenderHandler.Instance.Pending = false;
                 _onEnterToStageEnd.OnNext(this);
                 yield return new WaitUntil(() => IsAvatarStateUpdatedAfterBattle);
             }
-            PandoraBoxMaster.IsHackAndSlashSimulate = false;
+            PandoraMaster.IsHackAndSlashSimulate = false;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var avatarState = States.Instance.CurrentAvatarState;

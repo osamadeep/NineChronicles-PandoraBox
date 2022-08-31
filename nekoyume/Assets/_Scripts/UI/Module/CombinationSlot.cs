@@ -293,12 +293,12 @@ namespace Nekoyume.UI.Module
             progressBar.value = diff;
             //requiredBlockIndexText.text = $"{diff}.";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 0)
+            if (PandoraBox.PandoraMaster.Instance.Settings.BlockShowType == 0)
             {
                 var timeR = Util.GetBlockToTime((int)diff);
                 requiredBlockIndexText.text = timeR;
             }
-            else if (PandoraBox.PandoraBoxMaster.Instance.Settings.BlockShowType == 1)
+            else if (PandoraBox.PandoraMaster.Instance.Settings.BlockShowType == 1)
             {
                 requiredBlockIndexText.text = $"{diff}";
             }

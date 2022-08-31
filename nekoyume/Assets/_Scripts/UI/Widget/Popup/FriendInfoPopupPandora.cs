@@ -98,13 +98,13 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ResetAllNemesis()
         {
-            for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+            for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
             {
                 string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 PlayerPrefs.DeleteKey(key);
             }
 
-            PandoraBoxMaster.ArenaFavTargets.Clear();
+            PandoraMaster.ArenaFavTargets.Clear();
 
             OneLineSystem.Push(MailType.System,
                 "<color=green>Pandora Box</color>: <color=red>Nemesis</color> list is clear Successfully!"
@@ -132,20 +132,20 @@ namespace Nekoyume.UI
         public void SetNemesis()
         {
             TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (PandoraBoxMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString()))
+            if (PandoraMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString()))
             {
-                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
                 {
                     string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                     PlayerPrefs.DeleteKey(key);
                     //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                PandoraBoxMaster.ArenaFavTargets.Remove(enemyAP.AvatarState.address.ToString());
-                for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                PandoraMaster.ArenaFavTargets.Remove(enemyAP.AvatarState.address.ToString());
+                for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
                 {
                     string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
-                    PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                    PlayerPrefs.SetString(key, PandoraMaster.ArenaFavTargets[i]);
                 }
 
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + enemyAP.AvatarState.NameWithHash
@@ -154,30 +154,30 @@ namespace Nekoyume.UI
             else
             {
                 int maxCount = 2;
-                if (PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                if (PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                     maxCount = 9;
 
-                if (PandoraBoxMaster.ArenaFavTargets.Count > maxCount)
+                if (PandoraMaster.ArenaFavTargets.Count > maxCount)
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: You reach <color=red>Maximum</color> number of nemesis, please remove some!"
                         , NotificationCell.NotificationType.Information);
                 else
                 {
-                    PandoraBoxMaster.ArenaFavTargets.Add(enemyAP.AvatarState.address.ToString());
+                    PandoraMaster.ArenaFavTargets.Add(enemyAP.AvatarState.address.ToString());
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: " + enemyAP.AvatarState.NameWithHash +
                         " added to your nemesis list!"
                         , NotificationCell.NotificationType.Information);
-                    for (int i = 0; i < PandoraBoxMaster.ArenaFavTargets.Count; i++)
+                    for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
                     {
                         string key = "_PandoraBox_PVP_FavTarget0" + i + "_" +
                                      States.Instance.CurrentAvatarState.address;
-                        PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
+                        PlayerPrefs.SetString(key, PandoraMaster.ArenaFavTargets[i]);
                     }
                 }
             }
 
-            text.text = PandoraBoxMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString())
+            text.text = PandoraMaster.ArenaFavTargets.Contains(enemyAP.AvatarState.address.ToString())
                 ? "Remove Nemesis"
                 : "Set Nemesis";
         }
@@ -212,15 +212,15 @@ namespace Nekoyume.UI
 
         public async void SoloSimulate()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
                     NotificationCell.NotificationType.Alert);
                 return;
             }
-            PandoraBoxMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
-            PandoraBoxMaster.IsRankingSimulate = true;
+            PandoraMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
+            PandoraMaster.IsRankingSimulate = true;
 
             var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
             var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
@@ -246,7 +246,7 @@ namespace Nekoyume.UI
                 tableSheets.GetArenaSimulatorSheets());
 
             Find<FriendInfoPopupPandora>().Close(true);
-            PandoraBoxMaster.IsRankingSimulate = true;
+            PandoraMaster.IsRankingSimulate = true;
 
 
             var rewards = RewardSelector.Select(
@@ -270,7 +270,7 @@ namespace Nekoyume.UI
 
         public async void MultipleSimulate()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",

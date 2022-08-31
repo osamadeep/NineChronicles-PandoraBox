@@ -18,18 +18,18 @@ namespace Nekoyume.PandoraBox
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                PandoraBoxMaster.Instance.ShowError(404,
+                PandoraMaster.Instance.ShowError(404,
                     "Cannot connect to Pandora Server, please visit us for more information!");
             }
             else
             {
                 try
                 {
-                    PandoraBoxMaster.PanDatabase = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text);
+                    PandoraMaster.PanDatabase = JsonUtility.FromJson<PanDatabase>(www.downloadHandler.text);
                 } // Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
                 catch
                 {
-                    PandoraBoxMaster.Instance.ShowError(16, "Something wrong, please visit us for more information!");
+                    PandoraMaster.Instance.ShowError(16, "Something wrong, please visit us for more information!");
                 }
             }
         }
@@ -80,7 +80,7 @@ namespace Nekoyume.PandoraBox
             bool result = false;
             if (PremiumEndBlock >= currentBlock)
                 result = true;
-            if (PandoraBoxMaster.PanDatabase.TrialPremium > currentBlock)
+            if (PandoraMaster.PanDatabase.TrialPremium > currentBlock)
                 result = true;
             return result;
         }

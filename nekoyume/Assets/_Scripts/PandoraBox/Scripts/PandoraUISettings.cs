@@ -72,22 +72,22 @@ namespace Nekoyume.PandoraBox
 
         void OnEnable()
         {
-            if (PandoraBoxMaster.Instance == null)
+            if (PandoraMaster.Instance == null)
                 return;
 
             try
             { nodeText.text = "Connected Node: <color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }catch { }
 
             //Load settings
-            blockShowType = PandoraBoxMaster.Instance.Settings.BlockShowType;
+            blockShowType = PandoraMaster.Instance.Settings.BlockShowType;
             LoadTimeScale();
-            menuSpeedSlider.value = PandoraBoxMaster.Instance.Settings.MenuSpeed;
+            menuSpeedSlider.value = PandoraMaster.Instance.Settings.MenuSpeed;
             LoadMenuSpeed();
-            fightSpeedSlider.value = PandoraBoxMaster.Instance.Settings.FightSpeed;
+            fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
             LoadFightSpeed();
-            arenaUpSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListUpper;
+            arenaUpSlider.value = PandoraMaster.Instance.Settings.ArenaListUpper;
             LoadArenaUp();
-            arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
+            arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadRaidMethod();
             LoadMultipleLogin();
@@ -96,19 +96,19 @@ namespace Nekoyume.PandoraBox
 
         public void ResetDefault()
         {
-            PandoraBoxMaster.Instance.Settings = new PandoraSettings();
-            PandoraBoxMaster.Instance.Settings.Save();
+            PandoraMaster.Instance.Settings = new PandoraSettings();
+            PandoraMaster.Instance.Settings.Save();
 
             //Load settings
-            blockShowType = PandoraBoxMaster.Instance.Settings.BlockShowType;
+            blockShowType = PandoraMaster.Instance.Settings.BlockShowType;
             LoadTimeScale();
-            menuSpeedSlider.value = PandoraBoxMaster.Instance.Settings.MenuSpeed;
+            menuSpeedSlider.value = PandoraMaster.Instance.Settings.MenuSpeed;
             LoadMenuSpeed();
-            fightSpeedSlider.value = PandoraBoxMaster.Instance.Settings.FightSpeed;
+            fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
             LoadFightSpeed();
-            arenaUpSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListUpper;
+            arenaUpSlider.value = PandoraMaster.Instance.Settings.ArenaListUpper;
             LoadArenaUp();
-            arenaLoSlider.value = PandoraBoxMaster.Instance.Settings.ArenaListLower;
+            arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadRaidMethod();
             LoadMultipleLogin();
@@ -117,13 +117,13 @@ namespace Nekoyume.PandoraBox
 
         public void SaveSettings()
         {
-            PandoraBoxMaster.Instance.Settings.BlockShowType = blockShowType;
-            PandoraBoxMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
-            PandoraBoxMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
-            PandoraBoxMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
-            PandoraBoxMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
+            PandoraMaster.Instance.Settings.BlockShowType = blockShowType;
+            PandoraMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
+            PandoraMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
+            PandoraMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
+            PandoraMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
 
-            PandoraBoxMaster.Instance.Settings.Save();
+            PandoraMaster.Instance.Settings.Save();
             gameObject.SetActive(false);
         }
 
@@ -142,38 +142,38 @@ namespace Nekoyume.PandoraBox
 
         public void ChangeRaidMethod(bool value)
         {
-            PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress = value;
+            PandoraMaster.Instance.Settings.RaidMethodIsProgress = value;
             LoadRaidMethod();
         }
 
         void LoadRaidMethod()
         {
-            progressImage.color = PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            farmImage.color = !PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            progressImage.color = PandoraMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            farmImage.color = !PandoraMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMultipleLogin(bool value)
         {
-            PandoraBoxMaster.Instance.Settings.IsMultipleLogin = value;
+            PandoraMaster.Instance.Settings.IsMultipleLogin = value;
             LoadMultipleLogin();
         }
 
         void LoadMultipleLogin()
         {
-            multiLogOnImage.color = PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            multiLogOffImage.color = !PandoraBoxMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            multiLogOnImage.color = PandoraMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            multiLogOffImage.color = !PandoraMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeIntroStory(bool value)
         {
-            PandoraBoxMaster.Instance.Settings.IsStory = value;
+            PandoraMaster.Instance.Settings.IsStory = value;
             LoadIntroStory();
         }
 
         void LoadIntroStory()
         {
-            introStoryOnImage.color = PandoraBoxMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            introStoryOffImage.color = !PandoraBoxMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            introStoryOnImage.color = PandoraMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            introStoryOffImage.color = !PandoraMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMenuSpeed()
@@ -202,7 +202,7 @@ namespace Nekoyume.PandoraBox
         }
         public void LoadArenaUp()
         {
-            arenaUpText.text = (10 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
+            arenaUpText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaUpSlider.value)).ToString();
         }
 
         public void ChangeArenaLo()
@@ -212,7 +212,7 @@ namespace Nekoyume.PandoraBox
 
         public void LoadArenaLo()
         {
-            arenaLoText.text = (10 + (PandoraBoxMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
+            arenaLoText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
         }
     }
 }

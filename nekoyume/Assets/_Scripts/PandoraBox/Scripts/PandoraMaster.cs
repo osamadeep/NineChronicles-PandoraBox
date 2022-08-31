@@ -12,13 +12,13 @@ using Nekoyume.Model.BattleStatus;
 
 namespace Nekoyume.PandoraBox
 {
-    public class PandoraBoxMaster : MonoBehaviour
+    public class PandoraMaster : MonoBehaviour
     {
-        public static PandoraBoxMaster Instance;
+        public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100282";
-        public static string VersionId = "010066";
+        public static string VersionId = "010067A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -180,7 +180,7 @@ namespace Nekoyume.PandoraBox
         public void Save()
         {
             //General
-            PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
+            PlayerPrefs.SetString("_PandoraBox_Ver", PandoraMaster.VersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
             PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
@@ -216,11 +216,11 @@ namespace Nekoyume.PandoraBox
             }
 
             //check difference
-            if (int.Parse(PandoraBoxMaster.VersionId.Substring(0, 5)) >
+            if (int.Parse(PandoraMaster.VersionId.Substring(0, 5)) >
                 int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver").Substring(0, 5)))
             {
                 WhatsNewShown = false;
-                PlayerPrefs.SetString("_PandoraBox_Ver", PandoraBoxMaster.VersionId);
+                PlayerPrefs.SetString("_PandoraBox_Ver", PandoraMaster.VersionId);
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
                 PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(true));

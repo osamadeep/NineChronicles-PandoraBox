@@ -389,7 +389,7 @@ namespace Nekoyume
             ClearSelectedItems();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             ItemElementType.value = 5; //all elements
-            if (PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraBox.PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Time);
             }

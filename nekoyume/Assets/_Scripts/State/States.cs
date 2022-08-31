@@ -259,7 +259,7 @@ namespace Nekoyume.State
             //        $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (AgentState is null || (!AgentState.avatarAddresses.ContainsValue(state.address) && PandoraBox.PandoraBoxMaster.InspectedAddress == ""))
+            if (AgentState is null || (!AgentState.avatarAddresses.ContainsValue(state.address) && PandoraBox.PandoraMaster.InspectedAddress == ""))
                 throw new Exception(
                     $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -322,11 +322,11 @@ namespace Nekoyume.State
             CurrentAvatarKey = index;
             var avatarState = _avatarStates[CurrentAvatarKey];
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBox.PandoraBoxMaster.InspectedAddress != "")
+            if (PandoraBox.PandoraMaster.InspectedAddress != "")
             {
                 var (exist, state) = await States.TryGetAvatarStateAsync(
-                    new Address(PandoraBox.PandoraBoxMaster.InspectedAddress.Substring(2)));
-                Debug.LogError(PandoraBox.PandoraBoxMaster.InspectedAddress.Substring(2));
+                    new Address(PandoraBox.PandoraMaster.InspectedAddress.Substring(2)));
+                Debug.LogError(PandoraBox.PandoraMaster.InspectedAddress.Substring(2));
                 avatarState = state;
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -388,7 +388,7 @@ namespace Nekoyume.State
             UpdateCurrentAvatarState(null);
         }
 
-        private async UniTask SetCombinationSlotStatesAsync(AvatarState avatarState)
+        public async UniTask SetCombinationSlotStatesAsync(AvatarState avatarState)
         {
             if (avatarState is null)
             {

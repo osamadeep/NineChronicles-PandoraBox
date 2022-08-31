@@ -48,10 +48,10 @@ namespace Nekoyume.UI
                                    blockPart[1] + addressPart[3] + blockPart[3];
 
             int extraRate = 0;
-            if (PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
             {
                 idText.text = encryptedText;
-                int totalBlocks = PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock -
+                int totalBlocks = PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock -
                                   (int)Game.Game.instance.Agent.BlockIndex;
                 extraRate = Mathf.Clamp((int)(totalBlocks / 73000), 0, 3);
             }
@@ -62,7 +62,7 @@ namespace Nekoyume.UI
 
 
             int rollChance = 100;
-            for (int i = 0; i < PandoraBoxMaster.PanDatabase.DiceRoll; i++)
+            for (int i = 0; i < PandoraMaster.PanDatabase.DiceRoll; i++)
             {
                 rollChance = Random.Range(1, 100);
                 //Debug.LogError("roll: " + PandoraBoxMaster.PanDatabase.DiceRoll + " Try: " + rollChance);

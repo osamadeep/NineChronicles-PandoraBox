@@ -314,7 +314,7 @@ namespace Nekoyume.UI
         bool RepeatMultipleIsOn = false;
         public System.Collections.IEnumerator RepeatMultiple()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: This is Premium Feature!",
@@ -540,7 +540,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (apStoneCount > 10)
             {
-                if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 {
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: This is Premium Feature!",

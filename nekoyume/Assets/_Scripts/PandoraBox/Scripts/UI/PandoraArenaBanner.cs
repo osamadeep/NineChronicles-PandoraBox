@@ -25,7 +25,7 @@ namespace Nekoyume.PandoraBox
 
         void SetData()
         {
-            item = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == ItemName);
+            item = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == ItemName);
             arenaBanner = PandoraUtil.GetPandoraItem(ItemName);
             GradeText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(arenaBanner.Color)}>{arenaBanner.Grade}</color>";
             //Debug.LogError(ColorUtility.ToHtmlStringRGB(arenaBanner.Color) + "   " + arenaBanner.Color);

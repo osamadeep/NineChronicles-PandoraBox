@@ -605,17 +605,17 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.SetCurrentPandoraPlayer(
-                PandoraBoxMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
-            string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraBoxMaster.LoginIndex + "_Name";
+            PandoraMaster.SetCurrentPandoraPlayer(
+                PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+            string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraMaster.LoginIndex + "_Name";
 
             //set max login count
             if (PlayerPrefs.GetInt("_PandoraBox_General_IsPremiumLogin") != 1)
                 PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
-                    System.Convert.ToInt32(PandoraBoxMaster.CurrentPandoraPlayer.IsPremium()));
+                    System.Convert.ToInt32(PandoraMaster.CurrentPandoraPlayer.IsPremium()));
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
             //set name to playfab
-            if (string.IsNullOrEmpty(PandoraBoxMaster.PlayFabDisplayName))
+            if (string.IsNullOrEmpty(PandoraMaster.PlayFabDisplayName))
             {
                 var request = new UpdateUserTitleDisplayNameRequest {
                     DisplayName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4),
@@ -624,15 +624,15 @@ namespace Nekoyume.UI
             }
 
             //load favorite items
-            PandoraBoxMaster.FavItems.Clear();
-            for (int i = 0; i < PandoraBoxMaster.FavItemsMaxCount; i++) //fav max count
+            PandoraMaster.FavItems.Clear();
+            for (int i = 0; i < PandoraMaster.FavItemsMaxCount; i++) //fav max count
             {
                 string key = "_PandoraBox_General_FavItems0" + i + "_" + States.Instance.CurrentAvatarState.address;
                 if (i > 9)
                     key = "_PandoraBox_General_FavItems" + i + "_" + States.Instance.CurrentAvatarState.address;
 
                 if (PlayerPrefs.HasKey(key))
-                    PandoraBoxMaster.FavItems.Add(PlayerPrefs.GetString(key));
+                    PandoraMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
 
             //ArenaCurrentPosition();
@@ -643,7 +643,7 @@ namespace Nekoyume.UI
 
         void OnChangePlayFabNameSuccess(UpdateUserTitleDisplayNameResult result)
         {
-            PandoraBoxMaster.PlayFabDisplayName = States.Instance.CurrentAvatarState.NameWithHash;
+            PandoraMaster.PlayFabDisplayName = States.Instance.CurrentAvatarState.NameWithHash;
             //success
         }
 
@@ -784,6 +784,7 @@ namespace Nekoyume.UI
         {
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
             await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
+            await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>
@@ -855,17 +856,17 @@ namespace Nekoyume.UI
         IEnumerator ShowWhatsNew()
         {
             yield return new WaitForSeconds(2);
-            if (!PandoraBoxMaster.Instance.Settings.WhatsNewShown)
+            if (!PandoraMaster.Instance.Settings.WhatsNewShown)
             {
                 AudioController.instance.PlaySfx("sfx_bgm_great_success");
-                PandoraBoxMaster.Instance.UIWhatsNew.SetActive(true);
+                PandoraMaster.Instance.UIWhatsNew.SetActive(true);
             }
         }
 
         public void ShowPandoraSettings()
         {
             AudioController.PlayClick();
-            PandoraBoxMaster.Instance.UISettings.SetActive(true);
+            PandoraMaster.Instance.UISettings.SetActive(true);
         }
 
         public void ShowNFT()

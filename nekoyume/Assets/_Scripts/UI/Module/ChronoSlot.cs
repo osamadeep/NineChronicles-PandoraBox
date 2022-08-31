@@ -52,7 +52,7 @@ namespace Nekoyume.UI.Module
 
         public void CollectAP()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: This is Premium Feature!",

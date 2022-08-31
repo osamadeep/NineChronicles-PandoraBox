@@ -448,7 +448,7 @@ namespace Nekoyume.BlockChain
                 bool IsPremium = false;
                 try
                 {
-                    IsPremium = PandoraBox.PandoraBoxMaster.CurrentPandoraPlayer.IsPremium();
+                    IsPremium = PandoraBox.PandoraMaster.CurrentPandoraPlayer.IsPremium();
                 }catch { }
 
                 if (IsPremium)

@@ -170,7 +170,7 @@ namespace Nekoyume.UI
 
                 int rollChance = 100;
                 _isGreatSuccess = true;
-                for (int i = 0; i < PandoraBoxMaster.PanDatabase.DiceRoll; i++)
+                for (int i = 0; i < PandoraMaster.PanDatabase.DiceRoll; i++)
                 {
                     rollChance = Random.Range(1, 100);
                     //Debug.LogError("roll: " + PandoraBoxMaster.PanDatabase.DiceRoll + " Try: " + rollChance);

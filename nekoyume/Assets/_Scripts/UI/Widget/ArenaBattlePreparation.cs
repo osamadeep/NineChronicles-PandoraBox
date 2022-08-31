@@ -727,7 +727,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private void SendMultipleBattleArenaAction()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: This is Premium Feature!",

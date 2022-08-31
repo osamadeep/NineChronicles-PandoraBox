@@ -41,15 +41,15 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         IEnumerator CheckVersion()
         {
-            while (PandoraBoxMaster.PanDatabase == null)
+            while (PandoraMaster.PanDatabase == null)
             {
                 yield return new WaitForSeconds(0.5f);
             }
 
             bool isAllowedVer = false;
-            foreach (string item in PandoraBoxMaster.PanDatabase.AllowedVersions)
+            foreach (string item in PandoraMaster.PanDatabase.AllowedVersions)
             {
-                if (item == PandoraBoxMaster.VersionId)
+                if (item == PandoraMaster.VersionId)
                     isAllowedVer = true;
             }
 
@@ -60,7 +60,7 @@ namespace Nekoyume.UI
                 yield break;
             }
 
-            PandoraBoxMaster.Instance.ShowError(5, "This version is obsolete, please visit us for more information!");
+            PandoraMaster.Instance.ShowError(5, "This version is obsolete, please visit us for more information!");
 
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

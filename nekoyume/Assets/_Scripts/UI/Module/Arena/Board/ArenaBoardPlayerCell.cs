@@ -151,15 +151,15 @@ namespace Nekoyume.UI.Module.Arena.Board
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             selectedAP = Widget.Find<ArenaBoard>()._boundedData[Index];
             meAP = PlayersArenaParticipant.Value;
-            selectedPan = PandoraBoxMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
-            enemyGuildPlayer = PandoraBoxMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
+            selectedPan = PandoraMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
+            enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
 
             if (Widget.Find<FriendInfoPopupPandora>().enemyAP is null)
                 BlinkSelected.SetActive(false);
             else
                 BlinkSelected.SetActive(selectedAP.AvatarAddr ==
                                         Widget.Find<FriendInfoPopupPandora>().enemyAP.AvatarAddr);
-            FavTarget.SetActive(PandoraBoxMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
+            FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
             bannedObj.SetActive(selectedPan.IsBanned);
 
             if (bannerHolder.childCount > 0)
@@ -171,7 +171,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             SetBanner();
             SetArenaInfo();
 
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 try
                 {
@@ -233,14 +233,14 @@ namespace Nekoyume.UI.Module.Arena.Board
                 _nameText.text = _currentData.name.Split('<')[0];
             else
             {
-                if (PandoraBoxMaster.CurrentGuildPlayer is null)
+                if (PandoraMaster.CurrentGuildPlayer is null)
                 {
                     _nameText.text =
                         $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
                 }
                 else
                 {
-                    if (enemyGuildPlayer.Guild == PandoraBoxMaster.CurrentGuildPlayer.Guild)
+                    if (enemyGuildPlayer.Guild == PandoraMaster.CurrentGuildPlayer.Guild)
                         _nameText.text =
                             $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
                     else
@@ -286,12 +286,12 @@ namespace Nekoyume.UI.Module.Arena.Board
         {
             NFTOwner currentNFTOwner = new NFTOwner();
             //Debug.LogError(avatarAddress);
-            currentNFTOwner = PandoraBoxMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
+            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
                 if (currentNFTOwner.CurrentArenaBanner != "")
                 {
-                    NFTItem arenaBanner = PandoraBoxMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
+                    NFTItem arenaBanner = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
                     if (bannerHolder.childCount > 0)
                     {
                         PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();

@@ -63,13 +63,13 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void EnableMarketHelper(TextMeshProUGUI text)
         {
-            PandoraBoxMaster.MarketPriceHelper = !PandoraBoxMaster.MarketPriceHelper;
-            text.text = PandoraBoxMaster.MarketPriceHelper ? "Disable" : "Enable";
+            PandoraMaster.MarketPriceHelper = !PandoraMaster.MarketPriceHelper;
+            text.text = PandoraMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
 
         public void RelistAll()
         {
-            if (!PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
                 OneLineSystem.Push(MailType.System,
                     "<color=green>Pandora Box</color>: This is Premium Feature!",
@@ -203,7 +203,7 @@ namespace Nekoyume.UI
         private void ShowItemTooltip(InventoryItem model, RectTransform target)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBox.PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            PandoraBox.PandoraMaster.MarketPriceValue = PriceText.text;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);
@@ -217,10 +217,12 @@ namespace Nekoyume.UI
                 target);
         }
 
+
+
         private void ShowSellTooltip(ShopItem model, RectTransform target)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraBoxMaster.MarketPriceValue = PriceText.text;
+            PandoraMaster.MarketPriceValue = PriceText.text;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);

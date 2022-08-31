@@ -134,7 +134,7 @@ namespace Nekoyume.PandoraBox
 
                 int tries = ((int)(States.Instance.CurrentAvatarState.actionPoint / 5));
 
-                if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+                if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 {
                     StartCoroutine(StartRaid(totalCount));
                 }
@@ -156,7 +156,7 @@ namespace Nekoyume.PandoraBox
         IEnumerator StartRaid(int count)
         {
             isBusy = true;
-            PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
             RotateShape.SetActive(true);
             StageIDText.interactable = false;
             RaidButton.GetComponent<Image>().color = Color.red;
@@ -166,7 +166,7 @@ namespace Nekoyume.PandoraBox
             //yield return new WaitForSeconds(AllowedCooldown);
             yield return new WaitForSeconds(AllowedCooldown);
 
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 AllowedCooldown = 0.5f;
             _player = Game.Game.instance.Stage.GetPlayer();
             var stage = Game.Game.instance.TableSheets.StageSheet.Values.FirstOrDefault(i =>
@@ -190,11 +190,11 @@ namespace Nekoyume.PandoraBox
 
 
             //bool RaidMethodIsSweep = Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsSweep", 0));
-            bool RaidMethodIsProgress = PandoraBoxMaster.Instance.Settings.RaidMethodIsProgress;
+            bool RaidMethodIsProgress = PandoraMaster.Instance.Settings.RaidMethodIsProgress;
 
             if (!isBusy)
             {
-                PandoraBoxMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+                PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
                 yield break;
             }
 
@@ -268,7 +268,7 @@ namespace Nekoyume.PandoraBox
         IEnumerator Cooldown()
         {
             int i = 15;
-            if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
+            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
                 i = 5;
 
             RaidButton.GetComponent<Image>().color = Color.white;
