@@ -1159,19 +1159,10 @@ namespace Nekoyume.UI
             List<Skill> buffSkills = new List<Skill>();
             if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
-                PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-                bool isAvailable = false;
-                if (skillId == 0)
+                if (skillId != 0)
                 {
-                    if (skillState == null || !skillState.SkillIds.Any())
-                    {
-
-                    }
-                    else
-                    {
-                        isAvailable = true;
                         skillId = skillState.SkillIds
                         .Select(buffId =>
                             TableSheets.Instance.CrystalRandomBuffSheet
@@ -1183,18 +1174,15 @@ namespace Nekoyume.UI
                         .ThenBy(x => x.Id)
                         .First()
                         .Id;
-                    }
-                }
-                if (isAvailable)
-                {
+
                     var skill = CrystalRandomSkillState.GetSkill(
-                    skillId,
-                    TableSheets.Instance.CrystalRandomBuffSheet,
-                    TableSheets.Instance.SkillSheet);
+                        skillId,
+                        TableSheets.Instance.CrystalRandomBuffSheet,
+                        TableSheets.Instance.SkillSheet);
                     buffSkills.Add(skill);
                 }
             }
-            Debug.LogError(buffSkills.Count);
+            //Debug.LogError(buffSkills.Count);
 
 
             int totalSimulations = 100;
@@ -1466,39 +1454,29 @@ namespace Nekoyume.UI
             List<Skill> buffSkills = new List<Skill>();
             if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
-                PlayerPrefs.DeleteKey("HackAndSlash.SelectedBonusSkillId");
                 var skillState = States.Instance.CrystalRandomSkillState;
                 var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-                if (skillId == 0)
+                if (skillId != 0)
                 {
-                    if (skillState == null || !skillState.SkillIds.Any())
-                    {
+                    skillId = skillState.SkillIds
+                    .Select(buffId =>
+                        TableSheets.Instance.CrystalRandomBuffSheet
+                            .TryGetValue(buffId, out var bonusBuffRow)
+                            ? bonusBuffRow
+                            : null)
+                    .Where(x => x != null)
+                    .OrderBy(x => x.Rank)
+                    .ThenBy(x => x.Id)
+                    .First()
+                    .Id;
 
-                    }
-                    else
-                    {
-                        skillId = skillState.SkillIds
-                        .Select(buffId =>
-                            TableSheets.Instance.CrystalRandomBuffSheet
-                                .TryGetValue(buffId, out var bonusBuffRow)
-                                ? bonusBuffRow
-                                : null)
-                        .Where(x => x != null)
-                        .OrderBy(x => x.Rank)
-                        .ThenBy(x => x.Id)
-                        .First()
-                        .Id;
-
-                        var skill = CrystalRandomSkillState.GetSkill(
+                    var skill = CrystalRandomSkillState.GetSkill(
                         skillId,
                         TableSheets.Instance.CrystalRandomBuffSheet,
                         TableSheets.Instance.SkillSheet);
-                        buffSkills.Add(skill);
-                    }
+                    buffSkills.Add(skill);
                 }
             }
-
-
 
             var tableSheets = TableSheets.Instance;
             var random = new Cheat.DebugRandom();

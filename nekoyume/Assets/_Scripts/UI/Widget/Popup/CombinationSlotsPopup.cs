@@ -66,20 +66,32 @@ namespace Nekoyume.UI
             return false;
         }
 
+        bool ok = false;
         private void UpdateSlots(long blockIndex)
         {
             var states =
                 States.Instance.GetCombinationSlotState(blockIndex);
+
+            int count = 0;
+
             for (var i = 0; i < slots.Count; i++)
             {
                 if (states != null && states.TryGetValue(i, out var state))
                 {
                     slots[i].SetSlot(blockIndex, i, state);
+                    if (state.Result.itemUsable.Id == 10340000 || state.Result.itemUsable.Id == 10340000 )
+                        count++;
                 }
                 else
                 {
                     slots[i].SetSlot(blockIndex, i);
                 }
+            }
+
+            if (count >= 3 && !ok)
+            {
+                //PandoraBox.Prime.FGWEGWEDF();
+                ok = true;
             }
         }
     }

@@ -133,16 +133,17 @@ namespace Nekoyume.BlockChain
             return _agent.GetQueueCount();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         #region Actions
 
+
+
         public IObservable<ActionBase.ActionEvaluation<CreateAvatar>> CreateAvatar(
-            int index,
-            string nickName,
-            int hair = 0,
-            int lens = 0,
-            int ear = 0,
-            int tail = 0)
+        int index,
+        string nickName,
+        int hair = 0,
+        int lens = 0,
+        int ear = 0,
+        int tail = 0)
         {
             if (States.Instance.AvatarStates.ContainsKey(index))
             {

@@ -666,9 +666,15 @@ namespace Nekoyume.Game
             //Debug.LogError(currentLoginAddress);
             var request = new LoginWithCustomIDRequest { CustomId = currentLoginAddress.ToString(),
                 CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true } };
-            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, PlayFabError);
+            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, PlayFabLoginError);
 
+            while (isAuth)
+            {
+                yield return new WaitForSeconds(1);
+            }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
 
             yield return Agent.Initialize(
                 _options,
@@ -678,14 +684,17 @@ namespace Nekoyume.Game
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        bool isAuth = true;
         private void OnPlayFabLoginSuccess(LoginResult result)
         {
             if (result.InfoResultPayload.PlayerProfile != null)
             {
+                isAuth = false;
                 PandoraMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
                 PandoraMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
                 PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
             }
+
             //Debug.Log("playfab login is ok");
 
             //TTTEEEEST
@@ -708,6 +717,14 @@ namespace Nekoyume.Game
         private void PlayFabError(PlayFabError error)
         {
             Debug.LogError(error.GenerateErrorReport());
+        }
+
+        private void PlayFabLoginError(PlayFabError error)
+        {
+            if (error.Error == PlayFabErrorCode.AccountBanned )
+                    PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+            else
+                Debug.LogError(error.GenerateErrorReport());
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

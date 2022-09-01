@@ -18,7 +18,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100282";
-        public static string VersionId = "010067A";
+        public static string VersionId = "010067";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -34,7 +34,7 @@ namespace Nekoyume.PandoraBox
 
 
         //General
-        public static string InspectedAddress = "";//"0x1a155C59a73D024a70Ca9fe280ba719359072170";
+        public static string InspectedAddress = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
@@ -110,8 +110,8 @@ namespace Nekoyume.PandoraBox
             CurrentPandoraPlayer = player;
 
             //Check for all Errors
-            if (CurrentPandoraPlayer.IsBanned)
-                Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+            //if (CurrentPandoraPlayer.IsBanned)
+            //    Instance.ShowError(101, "This address is Banned, please visit us for more information!");
 
 
             CurrentGuildPlayer = null;
