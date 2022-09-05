@@ -9,7 +9,7 @@ namespace Nekoyume.PandoraBox
 {
     public static class PandoraUtil
     {
-        public enum ActionType { Idle,HackAndSlash,Ranking}
+        public enum ActionType { Idle,HackAndSlash,Ranking,Event}
 
         public static bool IsBusy()
         {
@@ -22,6 +22,9 @@ namespace Nekoyume.PandoraBox
                     return true;
                 case ActionType.HackAndSlash:
                     OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fight in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                    return true;
+                case ActionType.Event:
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Event fight in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
                     return true;
                 default:
                     return false;

@@ -309,9 +309,12 @@ namespace Nekoyume.UI.Module
             if (usableItems.Any())
             {
                 var bestItem = usableItems
-                    .OrderByDescending(x => CPHelper.GetCP(x.ItemBase as Equipment)).First();
-                usableItems = usableItems.OrderByDescending(x => x.Equals(bestItem))
-                    .ToList();
+                .OrderByDescending(x => CPHelper.GetCP(x.ItemBase as Equipment)).First();
+                usableItems = usableItems.
+                    //OrderByDescending(x => x.Equals(bestItem)).ToList();
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    OrderByDescending(x => (x.ItemBase as Equipment).level).ToList();
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 
             usableItems.AddRange(unusableItems);

@@ -694,15 +694,6 @@ namespace Nekoyume.Game
                 PandoraMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
                 PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
             }
-
-            //Debug.Log("playfab login is ok");
-
-            //TTTEEEEST
-
-            //PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest { FunctionName = "Test", FunctionParameter = "" }
-            //, OnStartSuccess, PlayFabError);
-
-            //TTTEEEEST
         }
         void OnStartSuccess(ExecuteCloudScriptResult result)
         {

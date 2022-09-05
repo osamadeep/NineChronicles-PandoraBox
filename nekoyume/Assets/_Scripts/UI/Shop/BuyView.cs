@@ -428,7 +428,7 @@ namespace Nekoyume
                 switch (IsLessDrop.value)
                 {
                     case 0:
-                        models = models.Where(x => x.OrderDigest.Price.MajorUnit < int.Parse(priceValueTxt.text))
+                        models = models.Where(x => x.OrderDigest.Price.MajorUnit <= int.Parse(priceValueTxt.text))
                             .ToList();
                         break;
                     case 1:
@@ -436,7 +436,7 @@ namespace Nekoyume
                             .ToList();
                         break;
                     case 2:
-                        models = models.Where(x => x.OrderDigest.Price.MajorUnit > int.Parse(priceValueTxt.text))
+                        models = models.Where(x => x.OrderDigest.Price.MajorUnit >= int.Parse(priceValueTxt.text))
                             .ToList();
                         break;
                 }

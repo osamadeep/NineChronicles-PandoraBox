@@ -276,6 +276,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             stageWinRate.SetActive(false);
             maxDungeonBtn.gameObject.SetActive(_stageType == StageType.EventDungeon);
+            maxDungeonBtn.interactable = (_stageType == StageType.EventDungeon);
             maxDungeonBtn.GetComponentInChildren<TextMeshProUGUI>().text = $"Max ({RxProps.EventDungeonTicketProgress.Value.currentTickets})";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -326,6 +327,7 @@ namespace Nekoyume.UI
 
         IEnumerator MaxDungeon()
         {
+            maxDungeonBtn.interactable = false;
             var equipments = _player.Equipments;
             var costumes = _player.Costumes;
             var consumables = consumableSlots

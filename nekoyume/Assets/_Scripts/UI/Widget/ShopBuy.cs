@@ -67,7 +67,6 @@ namespace Nekoyume.UI
             view.SetAction(ShowBuyPopup);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             RefreshButton.onClick.AddListener(() => { Refresh();});
-            //Game.Game.instance.Agent.BlockIndexSubject.Subscribe(PandoraBox.Prime.GGETSETH).AddTo(gameObject); //Debug.. Delete
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

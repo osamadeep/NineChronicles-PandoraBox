@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Battle;
@@ -381,6 +381,9 @@ namespace Nekoyume.UI.Module
                 .OrderByDescending(x => bestItems.Exists(y => y.Equals(x)))
                 .ThenBy(x => x.ItemBase.ItemSubType)
                 .ThenByDescending(x => Util.IsUsableItem(x.ItemBase))
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                .ThenByDescending(x => (x.ItemBase as Equipment).level)
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 .ThenByDescending(x => CPHelper.GetCP(x.ItemBase as Equipment))
                 .ToList();
 

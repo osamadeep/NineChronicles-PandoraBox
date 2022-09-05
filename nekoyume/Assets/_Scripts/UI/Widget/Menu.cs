@@ -634,8 +634,6 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
-
-            //ArenaCurrentPosition();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(States.Instance.StakingLevel, true);
@@ -785,6 +783,7 @@ namespace Nekoyume.UI
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
             await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
             await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
+            await ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(States.Instance.CurrentAvatarState);
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>

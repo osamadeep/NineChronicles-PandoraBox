@@ -238,7 +238,9 @@ namespace Nekoyume.BlockChain
             int? stageBuffId = null,
             int playCount = 1)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Analyzer.Instance.Track("Unity/HackAndSlash", new Value
             {
                 ["WorldId"] = worldId,
@@ -308,6 +310,9 @@ namespace Nekoyume.BlockChain
         {
             var numberOfTicketPurchases =
                 RxProps.EventDungeonInfo.Value?.NumberOfTicketPurchases ?? 0;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Event;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Analyzer.Instance.Track("Unity/EventDungeonBattle", new Value
             {
                 ["EventScheduleId"] = eventScheduleId,
@@ -495,6 +500,10 @@ namespace Nekoyume.BlockChain
             int worldId,
             int stageId)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var action = new HackAndSlashSweep
             {
@@ -737,8 +746,9 @@ namespace Nekoyume.BlockChain
             {
                 throw new NullReferenceException(nameof(weeklyArenaAddress));
             }
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Analyzer.Instance.Track("Unity/Ranking Battle");
             var action = new RankingBattle
             {

@@ -1157,57 +1157,19 @@ namespace Nekoyume.BlockChain
                 {
                     Widget.Find<BattleResultPopup>().NextStage(log);
                 }
-
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 else if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
                 {
-                    BattleResultPopup.Model _battleResultModel = new BattleResultPopup.Model();
-                    Widget.Find<BattleResultPopup>().StageProgressBar.Initialize(false);
-
-                    _battleResultModel.ClearedWaveNumber = log.clearedWaveNumber;
-
-                    var avatarState = States.Instance.CurrentAvatarState;
-                    var isClear = log.IsClear;
-
-                    _battleResultModel.ActionPoint = avatarState.actionPoint;
-                    _battleResultModel.State = log.result;
-                    Game.Game.instance.TableSheets.WorldSheet.TryGetValue(log.worldId, out var world);
-                    _battleResultModel.WorldName = world?.GetLocalizedName();
-                    _battleResultModel.WorldID = log.worldId;
-                    _battleResultModel.StageID = log.stageId;
-                    avatarState.worldInformation.TryGetLastClearedStageId(out var lasStageId);
-                    _battleResultModel.LastClearedStageId = lasStageId;
-                    _battleResultModel.IsClear = log.IsClear;
-                    var succeedToGetWorldRow =
-                        Game.Game.instance.TableSheets.WorldSheet.TryGetValue(log.worldId, out var worldRow);
-                    if (succeedToGetWorldRow)
-                    {
-                        _battleResultModel.IsEndStage = log.stageId == worldRow.StageEnd;
-                    }
-
-                    if (log.FirstOrDefault(e => e is GetReward) is GetReward getReward)
-                    {
-                        var rewards = getReward.Rewards;
-                        foreach (var item in rewards)
-                        {
-                            var countableItem = new UI.Model.CountableItem(item, 1);
-                            _battleResultModel.AddReward(countableItem);
-                        }
-                    }
-
-                    _battleResultModel.NextState = BattleResultPopup.NextState.Raid;
-                    Widget.Find<BattleResultPopup>().Show(_battleResultModel, false); //eval.Action.playCount ???
-
                     ActionRenderHandler.Instance.Pending = false;
-                    //UpdateCurrentAvatarStateAsync(eval);
-                    //UpdateWeeklyArenaState(eval);
                     UpdateAgentStateAsync(eval).Forget();
                     UpdateCurrentAvatarStateAsync(eval).Forget();
 
-
-
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Hack And Slash Fights " +
+                        "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                        , NotificationCell.NotificationType.Information);
                 }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else
             {
@@ -1238,9 +1200,13 @@ namespace Nekoyume.BlockChain
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.HackAndSlash)
                 {
-                    Widget.Find<SweepResultPopup>().ShowPandora(eval.Action.worldId, eval.Action.actionPoint, eval.Action.apStoneCount,0);
-                    //Widget.Find<SweepResultPopup>().OnBattleFinish();
+                    //Widget.Find<SweepResultPopup>().ShowPandora(eval.Action.worldId, eval.Action.actionPoint, eval.Action.apStoneCount,0);
                     ActionRenderHandler.Instance.Pending = false;
+
+                    OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: Sweep Hack And Slash Fights " +
+                    "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                    , NotificationCell.NotificationType.Information);
                 }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -1257,18 +1223,16 @@ namespace Nekoyume.BlockChain
                 }
 
                 UpdateCurrentAvatarStateAsync().Forget();
-
-
             }
             else
             {
                 Widget.Find<SweepResultPopup>().Close();
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
             }
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         }
 
         private void ResponseMimisbrunnr(ActionBase.ActionEvaluation<MimisbrunnrBattle> eval)
@@ -1360,138 +1324,6 @@ namespace Nekoyume.BlockChain
                     showLoadingScreen = true;
                     Widget.Find<BattleResultPopup>().Close();
                 }
-
-        ////        Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
-        ////    }
-        ////}
-
-        ////private void ResponseRankingBattle(ActionBase.ActionEvaluation<RankingBattle> eval)
-        ////{
-        ////    if (eval.Exception is null)
-        ////    {
-        ////        if (!ActionManager.IsLastBattleActionId(eval.Action.Id))
-        ////        {
-        ////            return;
-        ////        }
-
-        ////        _disposableForBattleEnd?.Dispose();
-        ////        _disposableForBattleEnd =
-        ////            Game.Game.instance.Stage.onEnterToStageEnd
-        ////                .First()
-        ////                .Subscribe(_ =>
-        ////                {
-        ////                    var task = UniTask.Run(() =>
-        ////                    {
-        ////                        UpdateAgentStateAsync(eval).Forget();
-        ////                        UpdateCurrentAvatarStateAsync().Forget();
-        ////                        UpdateWeeklyArenaState(eval);
-        ////                        _disposableForBattleEnd = null;
-        ////                        Game.Game.instance.Stage.IsAvatarStateUpdatedAfterBattle = true;
-        ////                    });
-        ////                    task.ToObservable()
-        ////                        .First()
-        ////                        // ReSharper disable once ConvertClosureToMethodGroup
-        ////                        .DoOnError(e => Debug.LogException(e));
-        ////                });
-
-        ////        var tableSheets = Game.Game.instance.TableSheets;
-        ////        ArenaInfo previousArenaInfo;
-        ////        ArenaInfo previousEnemyArenaInfo;
-        ////        EnemyPlayerDigest previousEnemyPlayerDigest;
-        ////        if (eval.Extra is { })
-        ////        {
-        ////            var aid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousArenaInfo)];
-        ////            previousArenaInfo = new ArenaInfo(aid);
-        ////            var eid = (Dictionary)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyArenaInfo)];
-        ////            previousEnemyArenaInfo = new ArenaInfo(eid);
-        ////            var epd = (List)eval.Extra[nameof(Action.RankingBattle.PreviousEnemyPlayerDigest)];
-        ////            previousEnemyPlayerDigest = new EnemyPlayerDigest(epd);
-        ////        }
-        ////        else
-        ////        {
-        ////            var previousAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.avatarAddress);
-        ////            var tuple = eval.PreviousStates.GetArenaInfo(
-        ////                eval.Action.weeklyArenaAddress,
-        ////                previousAvatarState,
-        ////                tableSheets.CharacterSheet,
-        ////                tableSheets.CostumeStatSheet);
-        ////            previousArenaInfo = tuple.arenaInfo;
-        ////            var previousEnemyAvatarState = eval.PreviousStates.GetAvatarStateV2(eval.Action.enemyAddress);
-        ////            var enemyTuple = eval.PreviousStates.GetArenaInfo(
-        ////                eval.Action.weeklyArenaAddress,
-        ////                previousEnemyAvatarState,
-        ////                tableSheets.CharacterSheet,
-        ////                tableSheets.CostumeStatSheet);
-        ////            previousEnemyArenaInfo = enemyTuple.arenaInfo;
-        ////            previousEnemyPlayerDigest = new EnemyPlayerDigest(previousEnemyAvatarState);
-        ////        }
-
-        ////        var rankingSimulatorSheets = tableSheets.GetRankingSimulatorSheets();
-        ////        var player = new Player(States.Instance.CurrentAvatarState, rankingSimulatorSheets);
-        ////        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        ////        PandoraBoxMaster.CurrentArenaEnemyAddress = previousEnemyArenaInfo.AvatarAddress.ToString().ToLower();
-        ////        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        ////        var simulator = new RankingSimulator(
-        ////            new LocalRandom(eval.RandomSeed),
-        ////            player,
-        ////            previousEnemyPlayerDigest,
-        ////            new List<Guid>(),
-        ////            rankingSimulatorSheets,
-        ////            Action.RankingBattle.StageId,
-        ////            tableSheets.CostumeStatSheet
-        ////        );
-        ////        simulator.Simulate();
-        ////        var challengerScoreDelta = previousArenaInfo.Update(
-        ////            previousEnemyArenaInfo,
-        ////            simulator.Result,
-        ////            ArenaScoreHelper.GetScore);
-        ////        var rewards = RewardSelector.Select(
-        ////            simulator.Random,
-        ////            tableSheets.WeeklyArenaRewardSheet,
-        ////            tableSheets.MaterialItemSheet,
-        ////            player.Level,
-        ////            previousArenaInfo.GetRewardCount());
-        ////        simulator.PostSimulate(rewards, challengerScoreDelta, previousArenaInfo.Score);
-
-        ////        //give option to know that battle is done
-        ////        OneLineSystem.Push(MailType.System,
-        ////            "<color=green>Pandora Box</color>: Arena Random Fight " +
-        ////            "<color=green><b>Successfully</b></color> committed on the blockchain!"
-        ////            , NotificationCell.NotificationType.Information);
-
-
-        ////        if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
-        ////        {
-        ////            Widget.Find<RankingBoard>().GoToStage(simulator.Log);
-        ////        }
-
-        ////        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        ////        else if (PandoraBoxMaster.CurrentAction == PandoraUtil.ActionType.Ranking)
-        ////        {
-        ////            ActionRenderHandler.Instance.Pending = false;
-        ////            UpdateAgentStateAsync(eval);
-        ////            UpdateCurrentAvatarStateAsync(eval);
-        ////            UpdateWeeklyArenaState(eval);
-        ////        }
-
-        ////        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        ////        Widget.Find<Menu>().ClearRemainingTickets();
-        ////    }
-        ////    else
-        ////    {
-        ////        var showLoadingScreen = false;
-        ////        if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
-        ////        {
-        ////            Widget.Find<ArenaBattleLoadingScreen>().Close();
-        ////        }
-
-        ////        if (Widget.Find<RankingBattleResultPopup>().IsActive())
-        ////        {
-        ////            showLoadingScreen = true;
-        ////            Widget.Find<RankingBattleResultPopup>().Close();
-        ////        }
-
-        ////        Game.Game.BackToMain(showLoadingScreen, eval.Exception.InnerException).Forget();
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, showLoadingScreen).Forget();
             }
 
@@ -1509,6 +1341,17 @@ namespace Nekoyume.BlockChain
 
             if (eval.Exception is not null)
             {
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.Event)
+                {
+                    ActionRenderHandler.Instance.Pending = false;
+                    OneLineSystem.Push(MailType.System,
+                    "<color=green>Pandora Box</color>: Event Fights " +
+                    "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                    , NotificationCell.NotificationType.Information);
+                }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                 var showLoadingScreen = false;
                 if (Widget.Find<StageLoadingEffect>().IsActive())
                 {
@@ -1592,6 +1435,15 @@ namespace Nekoyume.BlockChain
             {
                 Widget.Find<BattleResultPopup>().NextStage(log);
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            else if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.Event)
+            {
+                UpdateCurrentAvatarStateAsync(eval).Forget();
+                RxProps.EventDungeonInfo.UpdateAsync().Forget();
+                PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+            }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         }
 
         private void ResponseRedeemCode(ActionBase.ActionEvaluation<Action.RedeemCode> eval)

@@ -9,6 +9,7 @@ using Nekoyume.State;
 using Libplanet.Action;
 using PlayFab.ClientModels;
 using Nekoyume.Model.BattleStatus;
+using UniRx;
 
 namespace Nekoyume.PandoraBox
 {
@@ -18,7 +19,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100282";
-        public static string VersionId = "010067";
+        public static string VersionId = "010068A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -76,6 +77,8 @@ namespace Nekoyume.PandoraBox
                 Settings = new PandoraSettings();
                 Settings.Load();
                 StartCoroutine(PandoraDB.GetDatabase());
+                //Prime.BWJHTRHYTR(true);
+                //Game.Game.instance.Agent.BlockIndexSubject.Subscribe(Prime.GGETSETH).AddTo(gameObject); //Debug.. Delete
             }
         }
 

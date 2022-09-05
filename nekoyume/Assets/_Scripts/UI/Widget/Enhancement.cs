@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Nekoyume.L10n;
@@ -25,7 +25,7 @@ namespace Nekoyume.UI
     public class Enhancement : Widget
     {
         [SerializeField]
-        private EnhancementInventory enhancementInventory;
+        public EnhancementInventory enhancementInventory;
 
         [SerializeField]
         private ConditionalCostButton upgradeButton;

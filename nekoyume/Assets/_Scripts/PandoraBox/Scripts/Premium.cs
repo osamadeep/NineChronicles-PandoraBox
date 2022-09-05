@@ -81,15 +81,13 @@ namespace Nekoyume.PandoraBox
 
             view.IsDoneLoadItem = true;
 
+            cooldown = 5;
             if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
             {
-                //Some Premium Code
+                //premium code
                 cooldown = 0;
             }
-            else
-            {
-                cooldown = 5;
-            }
+
 
             Button refreshButton = Widget.Find<ShopBuy>().RefreshButton;
             for (int i = cooldown; i > 0; i--)
