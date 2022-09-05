@@ -40,7 +40,6 @@ namespace Nekoyume.UI
         public class Model
         {
             private readonly List<CountableItem> _rewards = new();
-            public int[] ClearedWaves = new int[4];
 
             public StageType StageType;
             public NextState NextState;
@@ -55,6 +54,14 @@ namespace Nekoyume.UI
             public bool ActionPointNotEnough;
             public bool IsClear;
             public bool IsEndStage;
+
+            /// <summary>
+            /// [0]: The number of times a `BattleLog.clearedWaveNumber` is 0.
+            /// [1]: The number of times a `BattleLog.clearedWaveNumber` is 1.
+            /// [2]: The number of times a `BattleLog.clearedWaveNumber` is 2.
+            /// [3]: The number of times a `BattleLog.clearedWaveNumber` is 3.
+            /// </summary>
+            public int[] ClearedCountForEachWaves = new int[4];
 
             public IReadOnlyList<CountableItem> Rewards => _rewards;
 
@@ -77,6 +84,7 @@ namespace Nekoyume.UI
         {
             public GameObject root;
             public BattleReward[] rewards;
+            public BattleReward rewardForMulti;
         }
 
         [Serializable]
@@ -287,7 +295,7 @@ namespace Nekoyume.UI
         {
             canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
-            if (isBoosted && model.WorldID < GameConfig.MimisbrunnrWorldId)
+            if (isBoosted && model.StageType == StageType.HackAndSlash)
             {
                 model = new Model
                 {
@@ -303,7 +311,7 @@ namespace Nekoyume.UI
                     ActionPointNotEnough = model.ActionPointNotEnough,
                     IsClear = model.IsClear,
                     IsEndStage = model.IsEndStage,
-                    ClearedWaves = ModelForMultiHackAndSlash.ClearedWaves,
+                    ClearedCountForEachWaves = ModelForMultiHackAndSlash.ClearedCountForEachWaves,
                 };
                 foreach (var item in ModelForMultiHackAndSlash.Rewards)
                 {
@@ -327,6 +335,7 @@ namespace Nekoyume.UI
             {
                 reward.gameObject.SetActive(false);
             }
+            rewardsArea.rewardForMulti.gameObject.SetActive(false);
 
             base.Show();
             closeButton.gameObject.SetActive(
@@ -456,11 +465,25 @@ namespace Nekoyume.UI
         private IEnumerator CoUpdateRewards()
         {
             rewardsArea.root.SetActive(true);
+            var isNotClearedInMulti = SharedModel.ClearedCountForEachWaves[3] <= 0 &&
+                                      SharedModel.ClearedCountForEachWaves.Sum() > 1;
             for (var i = 0; i < rewardsArea.rewards.Length; i++)
             {
-                var view = rewardsArea.rewards[i];
+                var view =
+                    i == 2 &&
+                    isNotClearedInMulti
+                        ? rewardsArea.rewardForMulti
+                        : rewardsArea.rewards[i];
+
                 view.StartShowAnimation();
-                var cleared = SharedModel.ClearedWaveNumber > i;
+
+                var sum = 0;
+                for (var j = i; j < 3; j++)
+                {
+                    sum += SharedModel.ClearedCountForEachWaves[j + 1];
+                }
+
+                var cleared = sum > 0;
                 switch (i)
                 {
                     case 0:
@@ -470,14 +493,31 @@ namespace Nekoyume.UI
                         view.Set(SharedModel.Rewards, Game.Game.instance.Stage.stageId, cleared);
                         break;
                     case 2:
-                        view.Set(SharedModel.State == BattleLog.Result.Win && cleared);
+                        if (isNotClearedInMulti)
+                        {
+                            Game.Game.instance.TableSheets.CrystalStageBuffGachaSheet.TryGetValue(
+                                SharedModel.StageID, out var row);
+                            var starCount = States.Instance.CrystalRandomSkillState?.StarCount ?? 0;
+                            var maxStarCount = row?.MaxStar ?? 0;
+
+                            view.Set(SharedModel.ClearedCountForEachWaves, starCount, maxStarCount);
+                        }
+                        else
+                        {
+                            view.Set(cleared);
+                        }
+
                         break;
                 }
 
                 yield return new WaitForSeconds(0.5f);
 
                 view.gameObject.SetActive(true);
-                view.EnableStar(cleared);
+                if (i < 2 || !isNotClearedInMulti)
+                {
+                    view.EnableStar(cleared);
+                }
+
                 yield return null;
                 AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem);
             }
@@ -489,6 +529,9 @@ namespace Nekoyume.UI
                 reward.StopShowAnimation();
                 reward.StartScaleTween();
             }
+
+            rewardsArea.rewardForMulti.StopShowAnimation();
+            rewardsArea.rewardForMulti.StartScaleTween();
         }
 
         private IEnumerator CoUpdateBottom(int limitSeconds)
@@ -611,7 +654,6 @@ namespace Nekoyume.UI
             StopCoUpdateBottomText();
             StartCoroutine(CoFadeOut());
             var stage = Game.Game.instance.Stage;
-            stage.IsRepeatStage = false;
             stage.IsExitReserved = false;
             var stageLoadingScreen = Find<StageLoadingEffect>();
             stageLoadingScreen.Show(

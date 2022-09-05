@@ -13,7 +13,6 @@ using Random = UnityEngine.Random;
 using mixpanel;
 using Nekoyume.EnumType;
 using Nekoyume.Extensions;
-using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Mail;
@@ -112,6 +111,9 @@ namespace Nekoyume.UI
         [SerializeField]
         private Button playerButton;
 
+        [SerializeField]
+        private StakeIconDataScriptableObject stakeIconData;
+
         private Coroutine _coLazyClose;
 
         private readonly List<IDisposable> _disposablesAtShow = new();
@@ -151,12 +153,10 @@ namespace Nekoyume.UI
                 buttonList.ForEach(button => button.interactable = stateType == AnimationStateType.Shown);
             }).AddTo(gameObject);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //randomButton.OnClickAsObservable().Subscribe(_ => RandomArenaFight()).AddTo(gameObject);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            MonsterCollectionStateSubject.Level.Subscribe(level =>
-                stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(level, true)).AddTo(gameObject);
+            MonsterCollectionStateSubject.Level
+                .Subscribe(level =>
+                    stakingLevelIcon.sprite = stakeIconData.GetIcon(level, IconType.Bubble))
+                .AddTo(gameObject);
         }
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
@@ -191,7 +191,6 @@ namespace Nekoyume.UI
 
             var stage = Game.Game.instance.Stage;
             stage.IsExitReserved = false;
-            stage.IsRepeatStage = false;
             var player = stage.GetPlayer();
             player.StartRun();
             ActionCamera.instance.ChaseX(player.transform);
@@ -274,7 +273,6 @@ namespace Nekoyume.UI
 
                 var stage = Game.Game.instance.Stage;
                 stage.IsExitReserved = false;
-                stage.IsRepeatStage = false;
                 var player = stage.GetPlayer();
                 player.StartRun();
                 ActionCamera.instance.ChaseX(player.transform);
@@ -573,14 +571,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            if (States.Instance.StakingLevel < 1)
-            {
-                Find<StakingPopupNone>().Show();
-            }
-            else
-            {
-                Find<StakingPopup>().Show();
-            }
+            Find<StakingPopup>().Show();
         }
 
         public void UpdateGuideQuest(AvatarState avatarState)
@@ -635,8 +626,8 @@ namespace Nekoyume.UI
                     PandoraMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-            stakingLevelIcon.sprite = SpriteHelper.GetStakingIcon(States.Instance.StakingLevel, true);
+            stakingLevelIcon.sprite =
+                stakeIconData.GetIcon(States.Instance.StakingLevel, IconType.Bubble);
         }
 
         void OnChangePlayFabNameSuccess(UpdateUserTitleDisplayNameResult result)

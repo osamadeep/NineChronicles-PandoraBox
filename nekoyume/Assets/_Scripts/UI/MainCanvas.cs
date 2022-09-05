@@ -356,8 +356,6 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<StakingPopup>());
             yield return null;
-            secondWidgets.Add(Widget.Create<StakingPopupNone>());
-            yield return null;
             secondWidgets.Add(Widget.Create<BuffBonusResultPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<SuperCraftPopup>());

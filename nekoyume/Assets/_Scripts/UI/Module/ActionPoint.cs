@@ -143,6 +143,7 @@ namespace Nekoyume.UI.Module
             text.text = $"{current}/{max}";
         }
 
+        // Call at Event Trigger Component
         public void ShowTooltip()
         {
             Widget.Find<VanilaTooltip>()

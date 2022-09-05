@@ -206,6 +206,7 @@ namespace Nekoyume.UI.Module
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
+        // Call at Event Trigger Component
         public void ShowTooltip()
         {
             Widget.Find<VanilaTooltip>()

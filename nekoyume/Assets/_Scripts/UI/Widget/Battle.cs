@@ -69,16 +69,6 @@ namespace Nekoyume.UI
         {
             base.Awake();
 
-            repeatToggle.onValueChanged.AddListener(value =>
-            {
-                var stage = Game.Game.instance.Stage;
-                stage.IsRepeatStage = value;
-                if (value)
-                {
-                    stage.IsExitReserved = false;
-                }
-            });
-
             exitToggle.onValueChanged.AddListener(value =>
             {
                 var stage = Game.Game.instance.Stage;
@@ -89,7 +79,6 @@ namespace Nekoyume.UI
                         MailType.System,
                         L10nManager.Localize("UI_BATTLE_EXIT_RESERVATION_TITLE"),
                         NotificationCell.NotificationType.Information);
-                    stage.IsRepeatStage = false;
                 }
             });
 
@@ -144,7 +133,6 @@ namespace Nekoyume.UI
         public void Show(
             StageType stageType,
             int stageId,
-            bool isRepeat,
             bool isExitReserved,
             bool isTutorial,
             int boostCost)
@@ -183,7 +171,6 @@ namespace Nekoyume.UI
             comboText.Close();
 
             exitToggle.isOn = isExitReserved;
-            //repeatToggle.isOn = isExitReserved ? false : isRepeat;
             switch (_stageType)
             {
                 case StageType.HackAndSlash:
@@ -193,7 +180,6 @@ namespace Nekoyume.UI
                         .First(i => i.Id == stageId)
                         .CostAP;
                     boostCountText.text = $"<sprite name=UI_main_icon_star><size=75%>{boostCost}</size>";
-                    exitToggle.isOn = boostCost > cost;
                     break;
                 }
                 case StageType.EventDungeon:
@@ -204,7 +190,6 @@ namespace Nekoyume.UI
 
             boostEffectObject.SetActive(false);
             exitToggle.gameObject.SetActive(true);
-            //repeatToggle.gameObject.SetActive(true);
             helpButton.gameObject.SetActive(true);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             SimulateText.SetActive(PandoraMaster.IsHackAndSlashSimulate);
