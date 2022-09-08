@@ -692,7 +692,7 @@ namespace Nekoyume.Game
                 isAuth = false;
                 PandoraMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
                 PandoraMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
-                Premium.CheckMultiLogin();
+                Premium.CFHGKFITREER();
                 PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
             }
         }

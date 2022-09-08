@@ -59,6 +59,12 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI arenaCurrentPositionText;
         [SerializeField] private Button randomButton;
 
+        //Extra UI Buttons
+        [SerializeField] private Button fastSwitchButton;
+        [SerializeField] private Button fastRefreshButton;
+        [SerializeField] private Button fastRaidButton;
+        [SerializeField] private Button fastEventButton;
+
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
         private ArenaInfoList _arenaInfoList = new ArenaInfoList();
 
@@ -157,6 +163,13 @@ namespace Nekoyume.UI
                 .Subscribe(level =>
                     stakingLevelIcon.sprite = stakeIconData.GetIcon(level, IconType.Bubble))
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
+            fastRefreshButton.onClick.AddListener(() => { UpdateAvatar(); });
+            fastRaidButton.onClick.AddListener(() => { ShowMiniGame(); });
+            fastEventButton.onClick.AddListener(() => { FastShowEvent(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         // TODO: QuestPreparation.Quest(bool repeat) 와 로직이 흡사하기 때문에 정리할 여지가 있습니다.
@@ -774,10 +787,12 @@ namespace Nekoyume.UI
 
         public async void UpdateAvatar()
         {
+            fastRefreshButton.interactable = false;
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
             await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
             await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
             await ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(States.Instance.CurrentAvatarState);
+            fastRefreshButton.interactable = true;
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>

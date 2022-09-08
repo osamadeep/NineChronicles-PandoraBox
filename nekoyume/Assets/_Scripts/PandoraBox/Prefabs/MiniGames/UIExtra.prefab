@@ -501,6 +501,7 @@ GameObject:
   - component: {fileID: 7685444108347864999}
   - component: {fileID: 6877941432763912972}
   - component: {fileID: 7396011999993734790}
+  - component: {fileID: 8936386191919288564}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -526,7 +527,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 40, y: 40}
+  m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6877941432763912972
 CanvasRenderer:
@@ -566,6 +567,44 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8936386191919288564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2580538577117908831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b4fbd2209483804ca210c6ddea38ed6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playAtStart: 1
+  startDelay: 0
+  duration: 1
+  tweenType: 4
+  ease: 29
+  completeMethod: 
+  componentIndex: 0
+  target: {fileID: 0}
+  completeDelay: 0
+  useCustomEaseCurve: 0
+  customEaseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  multiplier: 1.3
 --- !u!1 &3050260480921854889
 GameObject:
   m_ObjectHideFlags: 0
@@ -819,7 +858,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 7751612309969599520}
+  m_TargetGraphic: {fileID: 885146554519299375}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -955,7 +994,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 3675917225056472164}
+  m_TargetGraphic: {fileID: 6839682928563036811}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -2035,13 +2074,13 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 7376811267774403622}
+  m_TargetGraphic: {fileID: 5081296794814384386}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Nekoyume.UI.Menu, Nekoyume
-        m_MethodName: FastCharacterSwitch
+        m_MethodName: FastShowEvent
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2172,13 +2211,13 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 8505834967391962804}
+  m_TargetGraphic: {fileID: 1777299456692172231}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Nekoyume.UI.Menu, Nekoyume
-        m_MethodName: FastCharacterSwitch
+        m_MethodName: ShowMiniGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
