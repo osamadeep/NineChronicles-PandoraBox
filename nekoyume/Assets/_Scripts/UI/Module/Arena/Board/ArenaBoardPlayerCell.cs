@@ -170,21 +170,14 @@ namespace Nekoyume.UI.Module.Arena.Board
             SetCP();
             SetBanner();
             SetArenaInfo();
+            SetWinRate();
+            
 
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                try
-                {
-                    WinRate();
-                }
-                catch
-                {
-                    //since they do quick navigate, it will cause error, so this to remove the error
-                }
-            }
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
          }
+
+
 
 
 
@@ -220,6 +213,12 @@ namespace Nekoyume.UI.Module.Arena.Board
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        async void SetWinRate()
+        {
+            rateText.text = "..."; //prevent old value
+            rateText.text = await Premium.WinRatePVP(meAP.AvatarAddr, selectedAP.AvatarAddr, meAP.AvatarState, selectedAP.AvatarState,10);
+        }
+
         public void GetGuildInfo()
         {
             if (enemyGuildPlayer is null)
@@ -343,61 +342,6 @@ namespace Nekoyume.UI.Module.Arena.Board
             }
         }
 
-        async void WinRate()
-        {
-            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
-            var myArenaAvatarState = await Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                ? new ArenaAvatarState(serialized)
-                : null;
-
-            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(selectedAP.AvatarAddr);
-            var enArenaAvatarState = await Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
-                ? new ArenaAvatarState(enSerialized)
-                : null;
-
-
-            var tableSheets = Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(selectedAP.AvatarState, enArenaAvatarState);
-
-            IEMultipleSimulate(myDigest, enemyDigest);
-        }
-
-
-        void IEMultipleSimulate(ArenaPlayerDigest mD, ArenaPlayerDigest eD)
-        {
-            rateText.text = "...";
-
-            int totalSimulations = 10;
-            int win = 0;
-
-
-            var tableSheets = Game.instance.TableSheets;
-
-            for (int i = 0; i < totalSimulations; i++)
-            {
-                var simulator = new ArenaSimulator(new Cheat.DebugRandom());
-                var log = simulator.Simulate(
-                    mD,
-                    eD,
-                    tableSheets.GetArenaSimulatorSheets());
-
-                if (log.Result == Nekoyume.Model.BattleStatus.Arena.ArenaLog.ArenaResult.Win)
-                    win++;
-                //yield return new WaitForSeconds(0.05f);
-            }
-
-            float finalRatio = (float)win / (float)totalSimulations;
-            float FinalValue = (int)(finalRatio * 100f);
-
-            if (finalRatio <= 0.5f)
-                rateText.text = $"<color=red>{FinalValue}</color>%";
-            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
-                rateText.text = $"<color=#FF4900>{FinalValue}</color>%";
-            else
-                rateText.text = $"<color=green>{FinalValue}</color>%";
-
-        }
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

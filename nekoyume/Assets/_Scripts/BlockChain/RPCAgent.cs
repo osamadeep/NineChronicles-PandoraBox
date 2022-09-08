@@ -445,17 +445,23 @@ namespace Nekoyume.BlockChain
             while (true)
             {
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                float TxProcessIntervalNew = TxProcessInterval;
+#if UNITY_EDITOR
+                TxProcessIntervalNew = 0.1f;
+#endif
                 bool IsPremium = false;
                 try
                 {
-                    IsPremium = PandoraBox.PandoraMaster.CurrentPandoraPlayer.IsPremium();
+                    IsPremium = PandoraBox.Premium.IsPremium;
                 }catch { }
 
                 if (IsPremium)
-                    yield return new WaitForSeconds(TxProcessInterval / 2f);
+                    yield return new WaitForSeconds(TxProcessIntervalNew / 2f); // TxProcessInterval
                 else
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                    yield return new WaitForSeconds(TxProcessInterval);
+                    yield return new WaitForSeconds(TxProcessIntervalNew); //TxProcessInterval
+
+
 
                 if (!_queuedActions.TryDequeue(out NCAction action))
                 {

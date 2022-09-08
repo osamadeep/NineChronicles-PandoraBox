@@ -34,8 +34,8 @@ namespace Nekoyume.UI
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
 
-        AvatarState currentSellerAvatar;
-        PandoraPlayer currentSeller;
+        public AvatarState currentSellerAvatar;
+        public PandoraPlayer currentSeller;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -144,44 +144,9 @@ namespace Nekoyume.UI
             }
         }
 
-        public async void SetSellerName(Guid guid)
+        public async void SetItemOwner(Guid guid)
         {
-            var order = await Util.GetOrder(guid);
-
-
-            var (exist, avatarState) = await States.TryGetAvatarStateAsync(order.SellerAvatarAddress);
-            if (!exist)
-            {
-                Debug.LogError("NOT EXIST!");
-                OwnerName.text = "";
-            }
-            else
-            {
-                currentSellerAvatar = avatarState;
-                currentSeller = PandoraMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
-
-                if (currentSeller.IsPremium())
-                {
-                    if (currentSeller.IsProtected)
-                        OwnerName.text = "<size=120%><color=green>PRIVATE!</color>";
-                    else
-                        OwnerName.text = "<size=120%><color=green>[P] </color>" + avatarState.NameWithHash;
-                }
-                else
-                {
-                    if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
-                    {
-                        OwnerName.text = "<size=120%>" + avatarState.NameWithHash;
-                    }
-                    else
-                    {
-                        OwnerName.text = "<size=120%><color=green>PREMIUM FEATURE!</color>";
-                    }
-                }
-#if UNITY_EDITOR
-                Debug.LogError(avatarState.agentAddress + "  |  " + order.OrderId + "  |  " + $"{avatarState.name} <color=#A68F7E>#{avatarState.address.ToHex().Substring(0, 4)}</color>");
-#endif
-            }
+            OwnerName.text = await Premium.GetItemOwnerName(guid);
         }
 
         string GetItemInfo()
@@ -645,7 +610,7 @@ namespace Nekoyume.UI
             currentShopItem = item;
             OwnerName.text = "";
             currentItemBase = item.ItemBase;
-            SetSellerName(item.OrderDigest.OrderId);
+            SetItemOwner(item.OrderDigest.OrderId);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             scrollbar.value = 1f;

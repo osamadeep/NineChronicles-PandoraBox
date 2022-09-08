@@ -50,26 +50,26 @@ namespace Nekoyume.UI.Module
             currentAvatarState = avatarState;
         }
 
-        public void CollectAP()
-        {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: This is Premium Feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
+        //public void CollectAP()
+        //{
+        //    if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
+        //    {
+        //        OneLineSystem.Push(MailType.System,
+        //            "<color=green>Pandora Box</color>: This is Premium Feature!",
+        //            NotificationCell.NotificationType.Alert);
+        //        return;
+        //    }
 
-            Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
+        //    Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
 
-            var address = currentAvatarState.address;
-            if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
-            {
-                GameConfigStateSubject.ActionPointState.Remove(address);
-            }
+        //    var address = currentAvatarState.address;
+        //    if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
+        //    {
+        //        GameConfigStateSubject.ActionPointState.Remove(address);
+        //    }
 
-            GameConfigStateSubject.ActionPointState.Add(address, true);
-        }
+        //    GameConfigStateSubject.ActionPointState.Add(address, true);
+        //}
 
         public void SetSlot(long currentBlockIndex, int slotIndex, AvatarState state = null)
         {

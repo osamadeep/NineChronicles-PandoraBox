@@ -175,7 +175,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         IEnumerator UpdataPandoraStatus()
         {
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
+            if (Premium.IsPremium)
             {
                 var timeR = Util.GetBlockToTime(PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
                 //PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";

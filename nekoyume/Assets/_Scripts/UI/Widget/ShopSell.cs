@@ -20,6 +20,7 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI
 {
+    using Cysharp.Threading.Tasks;
     using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
     using System.Collections;
@@ -38,6 +39,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
         [SerializeField] private Button RelistAllBtn = null;
+        [SerializeField] private Button ReturnAllBtn = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -67,65 +69,14 @@ namespace Nekoyume.UI
             text.text = PandoraMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
 
+        void ReturnAll()
+        {
+            Premium.CancellAllShopItems(view);
+        }
+
         public void RelistAll()
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: This is Premium Feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
-
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
-            NotificationCell.NotificationType.Information);
-
-            //    OneLineSystem.Push(MailType.Auction, $"<color=green>{counter}</color>/<color=red>" +
-            //                                         $"{items.Count}</color>: {item.ItemBase.GetLocalizedName()}" +
-            //                                         $" Listed for <color=green>{item.OrderDigest.Price}</color>!",
-            //        NotificationCell.NotificationType.Information);
-
-            var digests = ReactiveShopState.SellDigest.Value;
-            var orderDigests = digests.ToList();
-
-            if (!orderDigests.Any())
-            {
-                OneLineSystem.Push(
-                    MailType.System,
-                    L10nManager.Localize("UI_SHOP_NONEUPDATESELLALL"),
-                    NotificationCell.NotificationType.Alert);
-
-                return;
-            }
-            view.SetLoading(orderDigests);
-
-            var updateSellInfos = new List<UpdateSellInfo>();
-            var oneLineSystemInfos = new List<(string name, int count)>();
-            foreach (var orderDigest in orderDigests)
-            {
-                if (!ReactiveShopState.TryGetShopItem(orderDigest, out var itemBase))
-                {
-                    return;
-                }
-
-                var updateSellInfo = new UpdateSellInfo(
-                    orderDigest.OrderId,
-                    Guid.NewGuid(),
-                    orderDigest.TradableId,
-                    itemBase.ItemSubType,
-                    orderDigest.Price,
-                    orderDigest.ItemCount
-                );
-
-                updateSellInfos.Add(updateSellInfo);
-                oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
-            }
-
-            Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
-            Analyzer.Instance.Track("Unity/UpdateSellAll", new Value
-            {
-                ["Quantity"] = updateSellInfos.Count
-            });
+            Premium.RelistAllShopItems(view);
         }
 
 
@@ -168,6 +119,7 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             RelistAllBtn.onClick.AddListener(() => { RelistAll(); });
+            ReturnAllBtn.onClick.AddListener(() => { ReturnAll(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

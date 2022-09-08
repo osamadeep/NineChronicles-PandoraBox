@@ -424,7 +424,7 @@ namespace Nekoyume.UI
             SetImage(KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address);
 
             //VFX
-            int NumberOfProfiles = PandoraMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
+            int NumberOfProfiles = 5;
             for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, NumberOfProfiles); i++)
             {
                 Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);

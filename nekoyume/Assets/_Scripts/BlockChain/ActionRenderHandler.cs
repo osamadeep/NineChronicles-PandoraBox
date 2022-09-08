@@ -2033,7 +2033,16 @@ namespace Nekoyume.BlockChain
                 }
             }
 
-            if (arenaBattlePreparation && arenaBattlePreparation.IsActive())
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (Premium.ArenaBattleInProgress)
+            {
+                UpdateAgentStateAsync(eval).Forget();
+                UpdateCurrentAvatarStateAsync().Forget();
+                _disposableForBattleEnd = null;
+                Premium.OnArenaEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            else if (arenaBattlePreparation && arenaBattlePreparation.IsActive())
             {
                 arenaBattlePreparation.OnRenderBattleArena(eval);
                 Game.Game.instance.Arena.Enter(

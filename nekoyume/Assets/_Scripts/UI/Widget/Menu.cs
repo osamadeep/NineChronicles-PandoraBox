@@ -596,14 +596,9 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraMaster.SetCurrentPandoraPlayer(
-                PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+            PandoraMaster.SetCurrentPandoraPlayer(PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
             string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraMaster.LoginIndex + "_Name";
 
-            //set max login count
-            if (PlayerPrefs.GetInt("_PandoraBox_General_IsPremiumLogin") != 1)
-                PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin",
-                    System.Convert.ToInt32(PandoraMaster.CurrentPandoraPlayer.IsPremium()));
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
             //set name to playfab
             if (string.IsNullOrEmpty(PandoraMaster.PlayFabDisplayName))
@@ -768,6 +763,14 @@ namespace Nekoyume.UI
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public void FastShowEvent()
+        {
+            var worldMap = Find<WorldMap>();
+            worldMap.Show(States.Instance.CurrentAvatarState.worldInformation, true);
+            worldMap.ShowEventDungeonStage(RxProps.EventDungeonRow, false);
+            AudioController.PlayClick();
+        }
 
         public async void UpdateAvatar()
         {

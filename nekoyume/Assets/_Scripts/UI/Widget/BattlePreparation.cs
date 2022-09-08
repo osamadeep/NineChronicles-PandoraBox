@@ -41,10 +41,8 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI[] winStarTexts = null;
-        //[SerializeField] private TextMeshProUGUI win2Text = null;
-        //[SerializeField] private TextMeshProUGUI win3Text = null;
-        [SerializeField] private Button multipleSimulateButton = null;
+        public TextMeshProUGUI[] winStarTexts = null;
+        public Button MultipleSimulateButton = null;
         [SerializeField] private Button soloSimulateButton = null;
 
         [SerializeField] private GameObject stageWinRate;
@@ -202,7 +200,7 @@ namespace Nekoyume.UI
             //sweepButton.OnClickAsObservable().Subscribe(_ => Sweep()).AddTo(gameObject);
             //fillButton.OnClickAsObservable().Subscribe(_ => AvailableAP()).AddTo(gameObject);
             soloSimulateButton.OnClickAsObservable().Subscribe(_ => SimulateBattlePandora()).AddTo(gameObject);
-            multipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
+            MultipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
             maxDungeonBtn.OnClickAsObservable().Subscribe(_ => StartCoroutine(MaxDungeon())).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -515,7 +513,6 @@ namespace Nekoyume.UI
 
             if (!slot.IsEmpty)
             {
-                Debug.LogError("?");
                 Unequip(slot, true);
             }
 
@@ -1109,171 +1106,22 @@ namespace Nekoyume.UI
 
         public void MultipleSimulate()
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
-
-            StartCoroutine(IEMultipleSimulate());
-        }
+            var equipments = _player.Equipments;
+            var costumes = _player.Costumes;
+            var consumables = consumableSlots
+                .Where(slot => !slot.IsLock && !slot.IsEmpty)
+                .Select(slot => (Consumable)slot.Item).ToList();
 
 
-        IEnumerator IEMultipleSimulate()
-        {
-            multipleSimulateButton.interactable = false;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
-            foreach (var item in winStarTexts)
-            {
-                item.text = "?";
-            }
+            List<Guid> costumesN;
+            List<Guid> equipmentsN;
+            List<Guid> foodsN;
 
-            //buffskill
-            //List<Skill> buffSkills = new List<Skill>();
-            //if (PandoraBoxMaster.CurrentPandoraPlayer.IsPremium())
-            //{
-            //    var skillState = States.Instance.CrystalRandomSkillState;
-            //    var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-            //    if (skillId == 0)
-            //    {
-            //        if (skillState == null || !skillState.SkillIds.Any())
-            //        {
+            costumesN = costumes.Select(c => c.ItemId).ToList();
+            equipmentsN = equipments.Select(e => e.ItemId).ToList();
+            foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            //        }
-            //        else
-            //        {
-            //            skillId = skillState.SkillIds
-            //            .Select(buffId =>
-            //                TableSheets.Instance.CrystalRandomBuffSheet
-            //                    .TryGetValue(buffId, out var bonusBuffRow)
-            //                    ? bonusBuffRow
-            //                    : null)
-            //            .Where(x => x != null)
-            //            .OrderBy(x => x.Rank)
-            //            .ThenBy(x => x.Id)
-            //            .First()
-            //            .Id;
-
-            //            var skill = CrystalRandomSkillState.GetSkill(
-            //            skillId,
-            //            TableSheets.Instance.CrystalRandomBuffSheet,
-            //            TableSheets.Instance.SkillSheet);
-            //            buffSkills.Add(skill);
-            //        }
-            //    }
-
-            //}
-
-
-            List<Skill> buffSkills = new List<Skill>();
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                var skillState = States.Instance.CrystalRandomSkillState;
-                var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-                if (skillId != 0)
-                {
-                        skillId = skillState.SkillIds
-                        .Select(buffId =>
-                            TableSheets.Instance.CrystalRandomBuffSheet
-                                .TryGetValue(buffId, out var bonusBuffRow)
-                                ? bonusBuffRow
-                                : null)
-                        .Where(x => x != null)
-                        .OrderBy(x => x.Rank)
-                        .ThenBy(x => x.Id)
-                        .First()
-                        .Id;
-
-                    var skill = CrystalRandomSkillState.GetSkill(
-                        skillId,
-                        TableSheets.Instance.CrystalRandomBuffSheet,
-                        TableSheets.Instance.SkillSheet);
-                    buffSkills.Add(skill);
-                }
-            }
-            //Debug.LogError(buffSkills.Count);
-
-
-            int totalSimulations = 100;
-            int[] winStars = { 0,0,0};
-            for (int i = 0; i < totalSimulations; i++)
-            {
-                var equipments = _player.Equipments;
-                var costumes = _player.Costumes;
-                var consumables = consumableSlots
-                    .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                    .Select(slot => (Consumable)slot.Item).ToList();
-
-
-                List<Guid> costumesN;
-                List<Guid> equipmentsN;
-                List<Guid> foodsN;
-
-                costumesN = costumes.Select(c => c.ItemId).ToList();
-                equipmentsN = equipments.Select(e => e.ItemId).ToList();
-                foodsN = consumables.Select(f => f.ItemId).ToList();
-
-                PandoraMaster.IsHackAndSlashSimulate = true;
-                var tableSheets = Game.Game.instance.TableSheets;
-                var simulator = new StageSimulator(
-                    new Cheat.DebugRandom(),
-                    States.Instance.CurrentAvatarState,
-                    foodsN,
-                    buffSkills,
-                    _worldId,
-                    _stageId,
-                    tableSheets.StageSheet[_stageId],
-                    tableSheets.StageWaveSheet[_stageId],
-                    States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId),
-                    StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId),
-                    tableSheets.GetStageSimulatorSheets(),
-                    tableSheets.EnemySkillSheet,
-                    tableSheets.CostumeStatSheet,
-                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
-                    PandoraMaster.IsHackAndSlashSimulate
-                );
-                simulator.Simulate();
-
-                var log = simulator.Log;
-                PandoraMaster.IsHackAndSlashSimulate = false;
-
-                if (log.clearedWaveNumber == 3)
-                {
-                    winStars[2]++;
-                    winStars[1]++;
-                    winStars[0]++;
-                }
-                else if (log.clearedWaveNumber == 2)
-                {
-                    winStars[1]++;
-                    winStars[0]++;
-                }
-                else if (log.clearedWaveNumber == 1)
-                {
-                    winStars[0]++;
-                }
-                //Debug.LogError(simulator.Log.diffScore + " " + simulator.Log.clearedWaveNumber + " " + simulator.Log.result + " " + simulator.Log.score + " " + simulator.Log.waveCount);
-                yield return new WaitForSeconds(0.05f);
-            }
-            //Debug.LogError(winStar1 + " " + winStar2 + " " + winStar3);
-
-            for (int i = 0; i < 3; i++)
-            {
-                float finalRatio = (float)winStars[i] / (float)totalSimulations;
-                float FinalValue = (int)(finalRatio * 100f);
-
-                if (finalRatio <= 0.5f)
-                    winStarTexts[i].text = $"<color=red>{FinalValue}</color>%";
-                else if (finalRatio > 0.5f && finalRatio <= 0.75f)
-                    winStarTexts[i].text = $"<color=#FF4900>{FinalValue}</color>%";
-                else
-                    winStarTexts[i].text = $"<color=green>{FinalValue}</color>%";
-            }
-
-            multipleSimulateButton.interactable = true;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+            Premium.WinRatePVE(costumesN, equipmentsN, foodsN, _worldId, _stageId);          
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -1463,30 +1311,28 @@ namespace Nekoyume.UI
 
             //buffskill
             List<Skill> buffSkills = new List<Skill>();
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                var skillState = States.Instance.CrystalRandomSkillState;
-                var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-                if (skillId != 0)
-                {
-                    skillId = skillState.SkillIds
-                    .Select(buffId =>
-                        TableSheets.Instance.CrystalRandomBuffSheet
-                            .TryGetValue(buffId, out var bonusBuffRow)
-                            ? bonusBuffRow
-                            : null)
-                    .Where(x => x != null)
-                    .OrderBy(x => x.Rank)
-                    .ThenBy(x => x.Id)
-                    .First()
-                    .Id;
 
-                    var skill = CrystalRandomSkillState.GetSkill(
-                        skillId,
-                        TableSheets.Instance.CrystalRandomBuffSheet,
-                        TableSheets.Instance.SkillSheet);
-                    buffSkills.Add(skill);
-                }
+            var skillState = States.Instance.CrystalRandomSkillState;
+            var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
+            if (skillId != 0)
+            {
+                skillId = skillState.SkillIds
+                .Select(buffId =>
+                    TableSheets.Instance.CrystalRandomBuffSheet
+                        .TryGetValue(buffId, out var bonusBuffRow)
+                        ? bonusBuffRow
+                        : null)
+                .Where(x => x != null)
+                .OrderBy(x => x.Rank)
+                .ThenBy(x => x.Id)
+                .First()
+                .Id;
+
+                var skill = CrystalRandomSkillState.GetSkill(
+                    skillId,
+                    TableSheets.Instance.CrystalRandomBuffSheet,
+                    TableSheets.Instance.SkillSheet);
+                buffSkills.Add(skill);
             }
 
             var tableSheets = TableSheets.Instance;

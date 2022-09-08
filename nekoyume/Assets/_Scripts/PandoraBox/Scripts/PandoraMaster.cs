@@ -18,8 +18,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100282";
-        public static string VersionId = "010068A";
+        public static string OriginalVersionId = "v100290";
+        public static string VersionId = "010068";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -77,7 +77,7 @@ namespace Nekoyume.PandoraBox
                 Settings = new PandoraSettings();
                 Settings.Load();
                 StartCoroutine(PandoraDB.GetDatabase());
-                //Prime.BWJHTRHYTR(true);
+                //Prime.BWJHTRHYTR(true); //Debug.. Delete
                 //Game.Game.instance.Agent.BlockIndexSubject.Subscribe(Prime.GGETSETH).AddTo(gameObject); //Debug.. Delete
             }
         }
@@ -111,6 +111,7 @@ namespace Nekoyume.PandoraBox
         {
             //Initilize Current player for all Pandora information
             CurrentPandoraPlayer = player;
+            Premium.Initialize(player);
 
             //Check for all Errors
             //if (CurrentPandoraPlayer.IsBanned)
@@ -144,7 +145,6 @@ namespace Nekoyume.PandoraBox
     {
         //General
         [HideInInspector] public bool WhatsNewShown { get; set; } = false;
-        [HideInInspector] public bool IsPremiumLogin { get; set; }
         [HideInInspector] public bool IsStory { get; set; } = true;
         [HideInInspector] public bool IsMultipleLogin { get; set; } = true;
 
@@ -187,7 +187,6 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
             PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
-            PlayerPrefs.SetInt("_PandoraBox_General_IsPremiumLogin", System.Convert.ToInt32(IsPremiumLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
             //PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
@@ -233,8 +232,6 @@ namespace Nekoyume.PandoraBox
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
             WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown",
                 System.Convert.ToInt32(WhatsNewShown)));
-            IsPremiumLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsPremiumLogin",
-                System.Convert.ToInt32(IsPremiumLogin)));
             IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory",
                 System.Convert.ToInt32(IsStory)));
             IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin",

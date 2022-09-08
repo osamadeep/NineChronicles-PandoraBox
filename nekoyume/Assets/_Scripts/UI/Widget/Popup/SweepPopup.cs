@@ -133,7 +133,7 @@ namespace Nekoyume.UI
                 }
             });
 
-            multiRepeatBtn.onClick.AddListener(() => StartCoroutine(RepeatMultiple()));
+            multiRepeatBtn.onClick.AddListener(() => RepeatMultiple());
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             pageToggle.onValueChanged.AddListener(UpdateByToggle);
@@ -183,7 +183,6 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             extendSlider.isOn = false;
-            RepeatMultipleIsOn = false;
             stageIDText.text = stageId.ToString();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -319,70 +318,11 @@ namespace Nekoyume.UI
         }
 
 
-        bool RepeatMultipleIsOn = false;
-        public System.Collections.IEnumerator RepeatMultiple()
+        //bool RepeatMultipleIsOn = false;
+        public void RepeatMultiple()
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: This is Premium Feature!",
-                    NotificationCell.NotificationType.Alert);
-                yield break;
-            }
-
-            if (apStonePandora == null)
-            {
-                OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: Failed to find any AP stones!",
-                NotificationCell.NotificationType.Alert);
-                yield break;
-            }
-
-            if (RepeatMultipleIsOn)
-            {
-                OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: Multi Repeat in progress, please wait!",
-                NotificationCell.NotificationType.Alert);
-                yield break;
-            }
-
-            RepeatMultipleIsOn = true;
-
-            //do the ap bar first
-            if (_ap.Value >= _stageRow.CostAP)
-            {
-                _repeatBattleAction(
-                StageType.HackAndSlash,
-                false,
-                _ap.Value / _stageRow.CostAP,
-                false);
-                OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: Sending repeat by AP bar!",
-                NotificationCell.NotificationType.Information);
-            }
-
-
-            //repeat the stones
-            int iteration = (int)(apStoneSlider.slider.value ); //* HackAndSlashSweep.UsableApStoneCount
-            //int apCount = apStonePandora
-
-            for (int i = 0; i < iteration; i++)
-            {
-                ActionManager.Instance.ChargeActionPoint(apStonePandora.item as Nekoyume.Model.Item.Material)
-                .Subscribe();
-                yield return new WaitForSeconds(2);
-                OneLineSystem.Push(MailType.System,
-                $"<color=green>Pandora Box</color>: Sending Repeat using AP Stone {i+1}/{iteration}",
-                NotificationCell.NotificationType.Information);
-                _repeatBattleAction(
-                StageType.HackAndSlash,
-                false,
-                120 / _stageRow.CostAP,
-                false);
-                yield return new WaitForSeconds(2);
-            }
-
-            Close();
+            Premium.RepeatMultiple(_repeatBattleAction, _ap, _stageRow, _costAp,
+                (int)(apStoneSlider.slider.value), apStonePandora.item as Nekoyume.Model.Item.Material);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -559,31 +499,8 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (apStoneCount > 10)
-            {
-                if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-                {
-                    OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: This is Premium Feature!",
-                        NotificationCell.NotificationType.Alert);
+                if (!Premium.SweepMoreStone(apStoneCount, _costumes, _equipments, worldId, stageRow.Id))
                     return;
-                }
-
-                int extraApStoneCount = Mathf.FloorToInt(apStoneCount / 10f);
-                apStoneCount -= extraApStoneCount * 10;
-
-                for (int i = 0; i < extraApStoneCount; i++)
-                {
-                    Game.Game.instance.ActionManager.HackAndSlashSweep(
-                    _costumes,
-                    _equipments,
-                    10,
-                    0,
-                    worldId,
-                    stageRow.Id);
-
-                }
-            }
-
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Game.Game.instance.ActionManager.HackAndSlashSweep(

@@ -389,14 +389,7 @@ namespace Nekoyume
             ClearSelectedItems();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             ItemElementType.value = 5; //all elements
-            if (PandoraBox.PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Time);
-            }
-            else
-            {
-                _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
-            }
+            PandoraBox.Premium.FirstSortShop(_selectedSortFilter);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -470,18 +463,12 @@ namespace Nekoyume
                     : models.OrderByDescending(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
                         .ToList(),
-                Nekoyume.EnumType.ShopSortFilter.Time => _isAscending.Value
-                    ? models.OrderBy(x => x.OrderDigest.StartedBlockIndex).ToList()
-                    : models.OrderByDescending(x => x.OrderDigest.StartedBlockIndex).ToList(),
+                Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SortShopbyTime(_isAscending, models),            
                 Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Level).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),
                 _ => throw new ArgumentOutOfRangeException()
             };
-
-            Debug.LogError(models[0].OrderDigest.Price.RawValue);
-            Debug.LogError(models[1].OrderDigest.Price.RawValue);
-            Debug.LogError(models[2].OrderDigest.Price.RawValue);
         }
 
         private bool IsLoading(ICollection models)

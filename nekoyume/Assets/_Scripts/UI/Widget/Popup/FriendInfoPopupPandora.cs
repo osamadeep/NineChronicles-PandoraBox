@@ -209,142 +209,19 @@ namespace Nekoyume.UI
             public int Seed => throw new System.NotImplementedException();
         }
 
-
-        public async void SoloSimulate()
+        void SoloSimulate()
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
-            PandoraMaster.CurrentArenaEnemyAddress = enemyAP.AvatarState.address.ToString().ToLower();
-            PandoraMaster.IsRankingSimulate = true;
-
-            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
-            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                ? new ArenaAvatarState(serialized)
-                : null;
-
-            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enemyAP.AvatarAddr);
-            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
-                ? new ArenaAvatarState(enSerialized)
-                : null;
-
-
-            var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enArenaAvatarState);
-
-
-
-            var simulator = new ArenaSimulator(new Cheat.DebugRandom());
-            var log = simulator.Simulate(
-                myDigest,
-                enemyDigest,
-                tableSheets.GetArenaSimulatorSheets());
-
-            Find<FriendInfoPopupPandora>().Close(true);
-            PandoraMaster.IsRankingSimulate = true;
-
-
-            var rewards = RewardSelector.Select(
-                new Cheat.DebugRandom(),
-                tableSheets.WeeklyArenaRewardSheet,
-                tableSheets.MaterialItemSheet,
-                myDigest.Level,
-                maxCount: ArenaHelper.GetRewardCount(3));
-
-
-            //arenaBattlePreparation.OnRenderBattleArena(eval);
-
-            Game.Game.instance.Arena.Enter(
-                log,
-                rewards,
-                myDigest,
-                enemyDigest);
-            Find<ArenaBoard>().Close();
-
+            Premium.SoloSimulate(meAP.AvatarAddr, enemyAP.AvatarAddr, meAP.AvatarState, enemyAP.AvatarState);
         }
 
-        public async void MultipleSimulate()
+        async void MultipleSimulate()
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: this is <color=green>PREMIUM</color> feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
-
-            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(meAP.AvatarAddr);
-            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                ? new ArenaAvatarState(serialized)
-                : null;
-
-            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enemyAP.AvatarAddr);
-            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
-                ? new ArenaAvatarState(enSerialized)
-                : null;
-
-
-            var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(meAP.AvatarState, myArenaAvatarState);
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enemyAP.AvatarState, enArenaAvatarState);
-
-
-
-            await StartCoroutine(IEMultipleSimulate(myDigest, enemyDigest));
-        }
-
-
-        IEnumerator IEMultipleSimulate(ArenaPlayerDigest mD, ArenaPlayerDigest eD)
-        {
-            multipleSimulateButton.interactable = false;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "Simulating...";
-            rateText.text = "Win Rate :";
-
-            int totalSimulations = 100;
-            int win = 0;
-
-
-            var tableSheets = Game.Game.instance.TableSheets;
-            
-            for (int i = 0; i < totalSimulations; i++)
-            {
-                var simulator = new ArenaSimulator(new Cheat.DebugRandom());
-                var log = simulator.Simulate(
-                    mD,
-                    eD,
-                    tableSheets.GetArenaSimulatorSheets());
-
-                if (log.Result == ArenaLog.ArenaResult.Win)
-                    win++;
-                yield return new WaitForSeconds(0.05f);
-            }
-
-            float finalRatio = (float)win / (float)totalSimulations;
-            float FinalValue = (int)(finalRatio * 100f);
-
-            if (finalRatio <= 0.5f)
-                rateText.text = $"Win Rate : <color=red>{FinalValue}</color>%";
-            else if (finalRatio > 0.5f && finalRatio <= 0.75f)
-                rateText.text = $"Win Rate : <color=#FF4900>{FinalValue}</color>%";
-            else
-                rateText.text = $"Win Rate : <color=green>{FinalValue}</color>%";
-
+            rateText.text = "Win Rate :" + "..."; //prevent old value
+            Premium.CheckPremium();
+            rateText.text = "Win Rate :" + await Premium.WinRatePVP(meAP.AvatarAddr, enemyAP.AvatarAddr, meAP.AvatarState, enemyAP.AvatarState,100);
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
-
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-        //public override void Show(bool ignoreShowAnimation = false)
-        //{
-        //    var currentAvatarState = Game.Game.instance.States.CurrentAvatarState;
-        //    Show(currentAvatarState, ignoreShowAnimation);
-        //}
 
         protected override void OnCompleteOfCloseAnimationInternal()
         {

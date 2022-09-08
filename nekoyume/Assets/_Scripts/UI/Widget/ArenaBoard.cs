@@ -26,10 +26,15 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI lastUpdateText = null;
+        public TextMeshProUGUI ExpectedTicketsText = null;
+        public TextMeshProUGUI LastFightText = null;
+        public Button ExpectedTicketsBtn = null;
         [SerializeField] private Button GoMyPlaceBtn = null;
         [SerializeField] private Button RefreshBtn = null;
+        [SerializeField] private Button CancelMultiBtn = null;
         [SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
         [SerializeField] private GameObject RefreshObj = null;
+        public Slider MultipleSlider = null;
 
         public int OldScore;
         int LastBlockUpdate;
@@ -78,6 +83,8 @@ namespace Nekoyume.UI
                 RefreshList().Forget();
                 StartCoroutine(RefreshCooldown());
             }).AddTo(gameObject);
+            CancelMultiBtn.OnClickAsObservable().Subscribe(_ => CancelMultiArena()).AddTo(gameObject);
+            ExpectedTicketsBtn.OnClickAsObservable().Subscribe(_ => ExpectedTicketsToReach()).AddTo(gameObject);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -106,7 +113,7 @@ namespace Nekoyume.UI
         {
             RefreshBtn.interactable = false;
             int cooldown = 25;
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
+            if (Premium.IsPremium)
                 cooldown = 10;
             TextMeshProUGUI buttonText = RefreshBtn.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -149,6 +156,30 @@ namespace Nekoyume.UI
             LastBlockUpdate = (int)Game.Game.instance.Agent.BlockIndex;
         }
 
+
+        //avoid loading screen
+        public async UniTaskVoid ShowAsyncPandora(bool ignoreShowAnimation = false)
+        {
+            MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
+            SetLastUpdate();
+            RefreshObj.SetActive(true);
+
+            await UniTask.WaitWhile(() =>
+                RxProps.ArenaParticipantsOrderedWithScore.IsUpdating);
+            Show(
+                RxProps.ArenaParticipantsOrderedWithScore.Value,
+                ignoreShowAnimation);
+        }
+
+        public void ExpectedTicketsToReach()
+        {
+            ExpectedTicketsText.text = Premium.ExpectedTicketsToReach();
+        }
+
+        public void CancelMultiArena()
+        {
+            Premium.CancelMultiArena();
+        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public async UniTaskVoid ShowAsync(bool ignoreShowAnimation = false)
@@ -183,7 +214,8 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
             }
-
+            MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
+            RefreshObj.SetActive(false);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _roundData = roundData;
@@ -204,6 +236,7 @@ namespace Nekoyume.UI
             //StartCoroutine(RefreshCooldown());
             StartCoroutine(LastUpdateCounter());
             RefreshObj.SetActive(false);
+            Premium.CheckForArenaQueue();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -247,7 +280,7 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             OldScore = player.Score;
-            extraInfoText.text = $"W.L: <color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
+            extraInfoText.text = $"Win/Lose: <color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
                 $"\nLeft: {player.CurrentArenaInfo.Ticket}\nBought: {player.CurrentArenaInfo.PurchasedTicketCount}";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }

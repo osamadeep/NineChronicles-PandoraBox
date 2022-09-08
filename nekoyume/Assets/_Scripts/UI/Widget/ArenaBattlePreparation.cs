@@ -29,6 +29,7 @@ namespace Nekoyume.UI
 {
     using PandoraBox;
     using Scroller;
+    using System.Threading.Tasks;
     using UniRx;
 
     public class ArenaBattlePreparation : Widget
@@ -38,8 +39,13 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private Button maxTriesBtn = null;
-        [SerializeField] private TextMeshProUGUI currentTicketsText = null;
+        public TextMeshProUGUI CurrentTicketsText = null;
+        public TextMeshProUGUI ExpectedCostText = null;
+        public TextMeshProUGUI ExpectedBlockText = null;
         [SerializeField] private Slider maxTriesSld = null;
+
+        public int MaxTickets = 0;
+        public int RemainsBattle = 0;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -173,6 +179,7 @@ namespace Nekoyume.UI
             bool ignoreShowAnimation = false)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            maxTriesBtn.interactable = true;
             var blockIndex = Game.Game.instance.Agent.BlockIndex;
             var currentRound =
                 TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
@@ -182,7 +189,7 @@ namespace Nekoyume.UI
                     currentRound.StartBlockIndex,
                     States.Instance.GameConfigState.DailyArenaInterval)
                 : 0;
-            currentTicketsText.text = ticketCount.ToString();
+            CurrentTicketsText.text = ticketCount.ToString();
             maxTriesSld.value = ticketCount;
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -221,7 +228,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChangeTicketsCount()
         {
-            currentTicketsText.text = maxTriesSld.value.ToString();
+            Premium.ChangeTicketsCount(maxTriesSld.value, _roundData);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -722,59 +729,21 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        private void SendMultipleBattleArenaAction()
+
+        public void ExtraTicket(UnityEngine.UI.Toggle extra)
         {
-            if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
-            {
-                OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: This is Premium Feature!",
-                    NotificationCell.NotificationType.Alert);
-                return;
-            }
+            maxTriesSld.maxValue = extra.isOn ? 20 : 8;
+        }
 
-            var game = Game.Game.instance;
-            if (game.IsInWorld)
-            {
-                return;
-            }
-            game.IsInWorld = true;
-            game.Stage.IsShowHud = true;
 
-            startButton.gameObject.SetActive(false);
-            var playerAvatar = RxProps.PlayersArenaParticipant.Value.AvatarState;
-            Find<ArenaBattleLoadingScreen>().Show(
-                playerAvatar.NameWithHash,
-                playerAvatar.level,
-                playerAvatar.inventory.GetEquippedFullCostumeOrArmorId(),
-                _chooseAvatarState.NameWithHash,
-                _chooseAvatarState.level,
-                _chooseAvatarState.inventory.GetEquippedFullCostumeOrArmorId());
+        void SendMultipleBattleArenaAction()
+        {
 
-            _player.StopRun();
-            _player.gameObject.SetActive(false);
-
-            ActionRenderHandler.Instance.Pending = true;
-
-            OneLineSystem.Push(MailType.System,
-            "<color=green>Pandora Box</color>: " + maxTriesSld.value + " Arena Fights Sent!",
-            NotificationCell.NotificationType.Notification);
-
-            for (int i = 0; i < maxTriesSld.value; i++)
-            {
-                ActionManager.Instance.BattleArena(
-                        _chooseAvatarState.address,
-                        _player.Costumes
-                            .Select(e => e.NonFungibleId)
-                            .ToList(),
-                        _player.Equipments
-                            .Select(e => e.NonFungibleId)
-                            .ToList(),
-                        _roundData.ChampionshipId,
-                        _roundData.Round,
-                        _ticketCountToUse)
-                    .Subscribe();
-            }
-
+            if (Premium.SendMultipleBattleArenaAction(maxTriesSld.value, _chooseAvatarState.address,
+                _player.Costumes.Select(e => e.NonFungibleId).ToList(),
+                _player.Equipments.Select(e => e.NonFungibleId).ToList(),
+                _roundData.ChampionshipId, _roundData.Round, _ticketCountToUse))
+                Widget.Find<ArenaBoard>().ShowAsync().Forget();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

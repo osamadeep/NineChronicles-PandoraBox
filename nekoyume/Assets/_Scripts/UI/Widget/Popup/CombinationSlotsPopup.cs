@@ -90,7 +90,7 @@ namespace Nekoyume.UI
 
             if (count >= 3 && !ok)
             {
-                //PandoraBox.Prime.FGWEGWEDF();
+                PandoraBox.Premium.CheckFarmer();
                 ok = true;
             }
         }
