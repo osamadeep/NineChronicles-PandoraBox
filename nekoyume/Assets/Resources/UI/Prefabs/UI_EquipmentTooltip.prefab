@@ -2659,10 +2659,38 @@ MonoBehaviour:
   panel: {fileID: 4395017125806338240}
   verticalLayoutGroup: {fileID: 9151630244854150912}
   OwnerName: {fileID: 3378838157854866654}
+  CrystalValueTxt: {fileID: 7772618915032569049}
   MarketPriceText: {fileID: 8495809151477280943}
   DiscordHolder: {fileID: 7334773477609154818}
   CloseButton: {fileID: 2242426292375489814}
   ExtraInfo: {fileID: 715612457393794986}
+  currentSellerAvatar:
+    name: 
+    characterId: 0
+    level: 0
+    exp: 0
+    updatedAt: 0
+    questList:
+      completedQuestIds: 
+    blockIndex: 0
+    dailyRewardReceivedIndex: 0
+    actionPoint: 0
+    hair: 0
+    lens: 0
+    ear: 0
+    tail: 0
+    combinationSlotAddresses: []
+  currentSeller:
+    Address: 
+    IsBanned: 0
+    IsProtected: 0
+    IsIgnoringMessage: 0
+    DiscordID: 
+    PremiumEndBlock: 0
+    ArenaBanner: 0
+    ArenaIcon: 0
+    SwordSkin: 0
+    FriendViewSkin: 0
   detail: {fileID: 2480818816333153785}
   submitButton: {fileID: 7805589099538327171}
   buy: {fileID: 5936384642912397909}
@@ -2743,6 +2771,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 5265654984816919096}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7772618915032569049 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2508152012759668449, guid: 208eab8c17f4afb41a89eedbfe42f722,
+    type: 3}
+  m_PrefabInstance: {fileID: 5265654984816919096}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7805589099538327171 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2684242828495922363, guid: 208eab8c17f4afb41a89eedbfe42f722,

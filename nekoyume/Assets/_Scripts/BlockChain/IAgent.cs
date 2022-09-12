@@ -69,6 +69,9 @@ namespace Nekoyume.BlockChain
 
         Task<Dictionary<Address, IValue>> GetStateBulk(IEnumerable<Address> addressList);
 
+        //||||||||||||| PANDORA START CODE |||||||||||||||||||
         public int GetQueueCount();
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
     }
 }

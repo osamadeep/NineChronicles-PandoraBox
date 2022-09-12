@@ -27,6 +27,7 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI lastUpdateText = null;
         public TextMeshProUGUI ExpectedTicketsText = null;
+        public TextMeshProUGUI ExpectedRankText = null;
         public TextMeshProUGUI LastFightText = null;
         public Button ExpectedTicketsBtn = null;
         [SerializeField] private Button GoMyPlaceBtn = null;
@@ -173,7 +174,7 @@ namespace Nekoyume.UI
 
         public void ExpectedTicketsToReach()
         {
-            ExpectedTicketsText.text = Premium.ExpectedTicketsToReach();
+            Premium.ExpectedTicketsToReach(ExpectedTicketsText,ExpectedRankText);
         }
 
         public void CancelMultiArena()

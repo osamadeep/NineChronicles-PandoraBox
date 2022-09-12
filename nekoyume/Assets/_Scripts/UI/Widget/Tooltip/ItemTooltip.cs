@@ -12,6 +12,7 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Game;
     using Nekoyume.Model.Mail;
     using Nekoyume.Model.State;
     using Nekoyume.PandoraBox;
@@ -27,6 +28,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI OwnerName;
+        [SerializeField] private TextMeshProUGUI CrystalValueTxt;
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
         [SerializeField] protected Button CloseButton;
@@ -393,6 +395,23 @@ namespace Nekoyume.UI
                 }
             }
         }
+
+        void CheckCrystal(ItemBase item)
+        {
+            CrystalValueTxt.gameObject.SetActive(item.ItemType == ItemType.Equipment);
+            if (item.ItemType == ItemType.Equipment)
+            {
+                List<Equipment> grindList = new List<Equipment>();
+                grindList.Add(item as Equipment);
+                CrystalValueTxt.text = "<color=green>+" + CrystalCalculator.CalculateCrystal(grindList,
+                    false,
+                    TableSheets.Instance.CrystalEquipmentGrindingSheet,
+                    TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
+                    States.Instance.StakingLevel).MajorUnit + "</color>";
+            }
+        }
+
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
@@ -469,6 +488,7 @@ namespace Nekoyume.UI
             _onBlocked = onBlocked;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CheckCrystal(item);
             currentSellerAvatar = null;
             OwnerName.text = "";
             currentItemBase = item;
@@ -512,6 +532,7 @@ namespace Nekoyume.UI
             _onBlocked = onBlocked;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CheckCrystal(item.ItemBase);
             currentSellerAvatar = null;
             OwnerName.text = "";
             currentItemBase = item.ItemBase;
@@ -559,6 +580,7 @@ namespace Nekoyume.UI
 
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CheckCrystal(item.ItemBase);
             currentShopItem = item;
             currentItemBase = item.ItemBase;
             var order = Util.GetOrder(item.OrderDigest.OrderId);
@@ -607,6 +629,7 @@ namespace Nekoyume.UI
             _onClose = onClose;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CheckCrystal(item.ItemBase);
             currentShopItem = item;
             OwnerName.text = "";
             currentItemBase = item.ItemBase;
@@ -652,6 +675,7 @@ namespace Nekoyume.UI
             _onBlocked = onBlocked;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CheckCrystal(item.ItemBase);
             OwnerName.text = "";
             currentSellerAvatar = null;
             currentItemBase = item.ItemBase;

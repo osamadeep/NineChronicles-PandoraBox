@@ -18,6 +18,7 @@ using Libplanet.Crypto;
 using Libplanet.Tx;
 using MagicOnion.Client;
 using MessagePack;
+using mixpanel;
 using Nekoyume.Action;
 using Nekoyume.BlockChain.Policy;
 using Nekoyume.Extensions;
@@ -43,7 +44,7 @@ namespace Nekoyume.BlockChain
     public class RPCAgent : MonoBehaviour, IAgent, IActionEvaluationHubReceiver
     {
         private const int RpcConnectionRetryCount = 10;
-        private const float TxProcessInterval = 1f;
+        private const float TxProcessInterval = 1.0f;
         private readonly ConcurrentQueue<NCAction> _queuedActions = new ConcurrentQueue<NCAction>();
 
         private readonly TransactionMap _transactions = new TransactionMap(20);
@@ -96,7 +97,7 @@ namespace Nekoyume.BlockChain
         public BlockHash BlockTipHash { get; private set; }
 
         private readonly Subject<(NCTx tx, List<NCAction> actions)> _onMakeTransactionSubject =
-            new Subject<(NCTx tx, List<NCAction> actions)>();
+                new Subject<(NCTx tx, List<NCAction> actions)>();
 
         public IObservable<(NCTx tx, List<NCAction> actions)> OnMakeTransaction => _onMakeTransactionSubject;
 
@@ -130,8 +131,7 @@ namespace Nekoyume.BlockChain
             yield return null;
             var task = Task.Run(async () =>
             {
-                _genesis = await BlockManager.ImportBlockAsync(options.GenesisBlockPath ??
-                                                               BlockManager.GenesisBlockPath);
+                _genesis = await BlockManager.ImportBlockAsync(options.GenesisBlockPath ?? BlockManager.GenesisBlockPath);
             });
             yield return new WaitUntil(() => task.IsCompleted);
             var appProtocolVersion = options.AppProtocolVersion is null
@@ -159,19 +159,16 @@ namespace Nekoyume.BlockChain
                 await Task.CompletedTask;
                 return value;
             }
-
             byte[] raw = await _service.GetState(address.ToByteArray(), BlockTipHash.ToByteArray());
             IValue result = _codec.Decode(raw);
             if (Game.Game.instance.CachedAddresses.ContainsKey(address))
             {
                 Game.Game.instance.CachedAddresses[address] = true;
             }
-
             if (Game.Game.instance.CachedStates.ContainsKey(address))
             {
                 Game.Game.instance.CachedStates.AddOrUpdate(address, result);
             }
-
             return result;
         }
 
@@ -199,7 +196,6 @@ namespace Nekoyume.BlockChain
                 await Task.CompletedTask;
                 return value;
             }
-
             // FIXME: `CurrencyExtension.Serialize()` should be changed to `Currency.Serialize()`.
             byte[] raw = await _service.GetBalance(
                 address.ToByteArray(),
@@ -228,7 +224,6 @@ namespace Nekoyume.BlockChain
             {
                 result[new Address(kv.Key)] = new AvatarState((Dictionary)_codec.Decode(kv.Value));
             }
-
             return result;
         }
 
@@ -242,7 +237,6 @@ namespace Nekoyume.BlockChain
             {
                 result[new Address(kv.Key)] = _codec.Decode(kv.Value);
             }
-
             return result;
         }
 
@@ -257,34 +251,42 @@ namespace Nekoyume.BlockChain
 
         #region Mono
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public int GetQueueCount()
-        {
-            return _queuedActions.Count;
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         private void Awake()
         {
             OnDisconnected
                 .ObserveOnMainThread()
-                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Disconnected"))
+                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Disconnected", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                }))
                 .AddTo(_disposables);
             OnRetryStarted
                 .ObserveOnMainThread()
-                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Started"))
+                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Started", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                }))
                 .AddTo(_disposables);
             OnRetryEnded
                 .ObserveOnMainThread()
-                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Ended"))
+                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Retry Connect Ended", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                }))
                 .AddTo(_disposables);
             OnPreloadStarted
                 .ObserveOnMainThread()
-                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Started"))
+                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Started", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                }))
                 .AddTo(_disposables);
             OnPreloadEnded
                 .ObserveOnMainThread()
-                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Ended"))
+                .Subscribe(_ => Analyzer.Instance.Track("Unity/RPC Preload Ended", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                }))
                 .AddTo(_disposables);
             OnRetryAttempt
                 .ObserveOnMainThread()
@@ -293,8 +295,8 @@ namespace Nekoyume.BlockChain
                     Debug.Log($"Retry rpc connection. (count: {tuple.retryCount})");
                     var message =
                         L10nManager.Localize("UI_RETRYING_RPC_CONNECTION_FORMAT",
-                            RpcConnectionRetryCount - tuple.retryCount + 1,
-                            RpcConnectionRetryCount);
+                        RpcConnectionRetryCount - tuple.retryCount + 1,
+                        RpcConnectionRetryCount);
                     Widget.Find<DimmedLoadingScreen>()?.Show(message, true);
                 })
                 .AddTo(_disposables);
@@ -315,7 +317,6 @@ namespace Nekoyume.BlockChain
             {
                 await _hub.DisposeAsync();
             }
-
             if (!(_channel is null))
             {
                 await _channel?.ShutdownAsync();
@@ -326,7 +327,10 @@ namespace Nekoyume.BlockChain
 
         private IEnumerator CoJoin(Action<bool> callback)
         {
-            Task t = Task.Run(async () => { await Join(); });
+            Task t = Task.Run(async () =>
+            {
+                await Join();
+            });
 
             yield return new WaitUntil(() => t.IsCompleted);
 
@@ -421,6 +425,7 @@ namespace Nekoyume.BlockChain
                 }
 
                 ActionRenderHandler.Instance.GoldCurrency = goldCurrency;
+
             });
 
             yield return new WaitUntil(() => currencyTask.IsCompleted);
@@ -444,31 +449,37 @@ namespace Nekoyume.BlockChain
         {
             while (true)
             {
+                //yield return new WaitForSeconds(TxProcessInterval);
+
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 float TxProcessIntervalNew = TxProcessInterval;
+
 #if UNITY_EDITOR
-                TxProcessIntervalNew = 0.1f;
+                TxProcessIntervalNew = 0.2f;
+
 #endif
                 bool IsPremium = false;
                 try
                 {
                     IsPremium = PandoraBox.Premium.IsPremium;
-                }catch { }
+                }
+                catch { }
 
                 if (IsPremium)
                     yield return new WaitForSeconds(TxProcessIntervalNew / 2f); // TxProcessInterval
                 else
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     yield return new WaitForSeconds(TxProcessIntervalNew); //TxProcessInterval
-
-
 
                 if (!_queuedActions.TryDequeue(out NCAction action))
                 {
                     continue;
                 }
 
-                Task task = Task.Run(async () => { await MakeTransaction(new List<NCAction> { action }); });
+                Task task = Task.Run(async () =>
+                {
+                    await MakeTransaction(new List<NCAction> { action });
+                });
                 yield return new WaitUntil(() => task.IsCompleted);
 
                 if (task.IsFaulted)
@@ -575,14 +586,12 @@ namespace Nekoyume.BlockChain
                 await Task.Delay(5000);
                 try
                 {
-                    _hub = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(_channel,
-                        this);
+                    _hub = StreamingHubClient.Connect<IActionEvaluationHub, IActionEvaluationHubReceiver>(_channel, this);
                 }
                 catch (ObjectDisposedException)
                 {
                     break;
                 }
-
                 try
                 {
                     Debug.Log($"Trying to join hub...");
@@ -630,7 +639,6 @@ namespace Nekoyume.BlockChain
             {
                 await _hub.JoinAsync(Address.ToHex());
             }
-
             await _service.AddClient(Address.ToByteArray());
         }
 
@@ -684,6 +692,7 @@ namespace Nekoyume.BlockChain
                         errorMsg, L10nManager.Localize("UI_OK"), false);
                     popup.SetCancelCallbackToExit();
                 });
+
         }
 
         public void OnPreloadStart()
@@ -734,5 +743,12 @@ namespace Nekoyume.BlockChain
 
         public async UniTask<bool> IsTxStagedAsync(TxId txId) =>
             await _service.IsTransactionStaged(txId.ToByteArray()).ResponseAsync.AsUniTask();
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public int GetQueueCount()
+        {
+            return _queuedActions.Count;
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }
