@@ -140,11 +140,13 @@ namespace Nekoyume.UI
             switch (slotState.Result)
             {
                 case CombinationConsumable5.ResultModel cc5:
-                    SetCombinationOption(GetInformation(type), cc5, slotState.RequiredBlockIndex);
+                    SetCombinationOption(GetInformation(type), cc5);
                     break;
-                case ItemEnhancement7.ResultModel _:
-                case ItemEnhancement.ResultModel _:
-                    SetEnhancementOption(GetInformation(type), slotState.Result);
+                case ItemEnhancement7.ResultModel ie7:
+                    SetEnhancementOption(GetInformation(type), ie7);
+                    break;
+                case ItemEnhancement.ResultModel ie:
+                    SetEnhancementOption(GetInformation(type), ie);
                     break;
                 default:
                     Debug.LogError(
@@ -153,15 +155,9 @@ namespace Nekoyume.UI
             }
         }
 
-        void tt()
-        {
-
-        }
-
         private static void SetCombinationOption(
             Information information,
-            CombinationConsumable5.ResultModel resultModel,
-            long requiredBlockIndex)
+            CombinationConsumable5.ResultModel resultModel)
         {
             if (!resultModel.itemUsable.TryGetOptionInfo(out var itemOptionInfo))
             {
@@ -180,57 +176,40 @@ namespace Nekoyume.UI
             }
 
             var statType = itemOptionInfo.MainStat.type;
-            var statValueString = statType.ValueToString(itemOptionInfo.MainStat.baseValue);
-
-            information.MainStatView.UpdateView(
-                $"{statType} {statValueString}",
-                string.Empty);
-
-            var statOptionRows = ItemOptionHelper.GetStatOptionRows(
-                resultModel.subRecipeId.Value,
-                resultModel.itemUsable,
-                Game.Game.instance.TableSheets.EquipmentItemSubRecipeSheetV2,
-                Game.Game.instance.TableSheets.EquipmentItemOptionSheet);
+            var statValueString = statType.ValueToString(itemOptionInfo.MainStat.totalValue);
+            information.MainStatView.UpdateView($"{statType} {statValueString}", string.Empty);
 
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
                 var optionView = information.StatOptions[i];
-                if (i >= statOptionRows.Count)
+                if (i >= itemOptionInfo.StatOptions.Count)
                 {
                     optionView.Hide();
                     continue;
                 }
 
-                var optionRow = statOptionRows[i];
-                if (optionRow is null)
-                {
-                    optionView.Hide();
-                    continue;
-                }
+                var (type, value, count) = itemOptionInfo.StatOptions[i];
 
+                ////|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //try
+                //{
+                //    text = $"{optionRow.StatType} ({optionRow.StatType.ValueToString(optionRow.StatMin)} - {optionRow.StatType.ValueToString(optionRow.StatMax)}) = ";
+                //    if (statOptionRows.Count == 3)
+                //    {
+                //        if (i == 0)
+                //            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)}</b></color>";
+                //        else if (i == 1)
+                //            text += "<color=red><b>Calculated!</b></color>";
+                //        else if (i == 2)
+                //            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[1].value)}</b></color>";
+                //    }
+                //    else
+                //        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[i].value)}</b></color>";
+                //}
+                //catch { }
+                ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-                var statMin = optionRow.StatType.ValueToString(optionRow.StatMin);
-                var statMax = optionRow.StatType.ValueToString(optionRow.StatMax);
-                var text = $"{optionRow.StatType} ({statMin} - {statMax})";
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                try
-                {
-                    text = $"{optionRow.StatType} ({optionRow.StatType.ValueToString(optionRow.StatMin)} - {optionRow.StatType.ValueToString(optionRow.StatMax)}) = ";
-                    if (statOptionRows.Count == 3)
-                    {
-                        if (i == 0)
-                            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[0].value)}</b></color>";
-                        else if (i == 1)
-                            text += "<color=red><b>Calculated!</b></color>";
-                        else if (i == 2)
-                            text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[1].value)}</b></color>";
-                    }
-                    else
-                        text += $"<color=green><b>" + $"{optionRow.StatType.ValueToString(itemOptionInfo.StatOptions[i].value)}</b></color>";
-                }
-                catch { }
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                optionView.UpdateView(text, string.Empty, 1);
+                optionView.UpdateView($"{type} +{type.ValueToString(value)}", string.Empty, count);
                 optionView.Show();
             }
 
@@ -243,27 +222,23 @@ namespace Nekoyume.UI
                     continue;
                 }
 
-                var optionRow = statOptionRows[i];
-                if (optionRow is null)
-                {
-                    optionView.Hide();
-                    continue;
-                }
-
-                //var (skillRow, _, _) = itemOptionInfo.SkillOptions[i];
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                string tmp = itemOptionInfo.SkillOptions[i].skillRow.GetLocalizedName();
-                tmp +=
-                    $" = <color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                optionView.UpdateView(tmp, string.Empty);
+                var (skillRow, power, chance) = itemOptionInfo.SkillOptions[i];
+                ////|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //string tmp = itemOptionInfo.SkillOptions[i].skillRow.GetLocalizedName();
+                //tmp +=
+                //    $" = <color=green><b>{itemOptionInfo.SkillOptions[i].power}</b></color> , [<color=green><b>{itemOptionInfo.SkillOptions[i].chance}%</b></color>]";
+                ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                optionView.UpdateView($"{skillRow.GetLocalizedName()} {power} / {chance}%",
+                    string.Empty);
                 optionView.Show();
             }
         }
 
-        private static void SetEnhancementOption(Information information, AttachmentActionResult resultModel)
+        private static void SetEnhancementOption(
+            Information information,
+            ItemEnhancement7.ResultModel resultModel)
         {
-            if (!(resultModel.itemUsable is Equipment equipment))
+            if (resultModel.itemUsable is not Equipment equipment)
             {
                 Debug.LogError("resultModel.itemUsable is not Equipment");
                 return;
@@ -365,6 +340,84 @@ namespace Nekoyume.UI
             }
         }
 
+        private static void SetEnhancementOption(
+            Information information,
+            ItemEnhancement.ResultModel resultModel)
+        {
+            if (resultModel.itemUsable is not Equipment equipment)
+            {
+                Debug.LogError("resultModel.itemUsable is not Equipment");
+                return;
+            }
+
+            if (resultModel.preItemUsable is not Equipment preEquipment)
+            {
+                Debug.LogError("resultModel.preItemUsable is not Equipment");
+                return;
+            }
+
+            var itemOptionInfoPre = new ItemOptionInfo(preEquipment);
+            var itemOptionInfo = new ItemOptionInfo(equipment);
+
+            information.ItemLevel.text = $"+{equipment.level}";
+
+            var statType = itemOptionInfo.MainStat.type;
+            var statValueString = statType.ValueToString(itemOptionInfo.MainStat.totalValue);
+            var statRate = RateOfChange(
+                itemOptionInfoPre.MainStat.totalValue,
+                itemOptionInfo.MainStat.totalValue);
+            var statRateString = statRate > 0 ? $" (+{statRate}%)" : string.Empty;
+
+            information.MainStatView.UpdateView(
+                $"{statType} {statValueString}{statRateString}",
+                string.Empty);
+            information.MainStatView.Show();
+
+            for (var i = 0; i < information.StatOptions.Count; i++)
+            {
+                var optionView = information.StatOptions[i];
+                if (i >= itemOptionInfo.StatOptions.Count &&
+                    i >= itemOptionInfoPre.StatOptions.Count)
+                {
+                    optionView.Hide();
+                    continue;
+                }
+
+                var (type, value, count) = itemOptionInfo.StatOptions[i];
+                var (_, preValue, _) = itemOptionInfoPre.StatOptions[i];
+                var rate = RateOfChange(preValue, value);
+                var rateString = rate > 0 ? $" (+{rate}%)" : string.Empty;
+
+                optionView.UpdateView(
+                    $"{type} +{type.ValueToString(value)}{rateString}",
+                    string.Empty, count);
+                optionView.Show();
+            }
+
+            for (var i = 0; i < information.SkillOptions.Count; i++)
+            {
+                var optionView = information.SkillOptions[i];
+                if (i >= itemOptionInfo.SkillOptions.Count &&
+                    i >= itemOptionInfoPre.SkillOptions.Count)
+                {
+                    optionView.Hide();
+                    continue;
+                }
+
+                var (skillRow, power, chance) = itemOptionInfo.SkillOptions[i];
+                var (_, prePower, preChance) = itemOptionInfoPre.SkillOptions[i];
+                var powerRate = RateOfChange(prePower, power);
+                var chancePlus = chance - preChance;
+                var powerRateString = powerRate > 0 ? $" (+{powerRate}%)" : string.Empty;
+                var chanceRateString = chancePlus > 0 ? $" (+{chancePlus}%p)" : string.Empty;
+
+                optionView.UpdateView(
+                    $"{skillRow.GetLocalizedName()} {power}{powerRateString} / {chance}%{chanceRateString}",
+                    string.Empty);
+                optionView.Show();
+            }
+        }
+
         private void UpdateRequiredBlockInformation(CombinationSlotState state, long currentBlockIndex)
         {
             progressBar.maxValue = Math.Max(state.RequiredBlockIndex, 1);
@@ -426,6 +479,11 @@ namespace Nekoyume.UI
         private Information GetInformation(CraftType type)
         {
             return _informations.FirstOrDefault(x => x.Type.Equals(type));
+        }
+
+        private static int RateOfChange(float prevent, float current)
+        {
+            return Mathf.RoundToInt((current - prevent) / prevent * 100);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private Slider slider = null;
         [SerializeField]
-        private Image[] activatedStarImages = null;
+        private GameObject[] activatedObjects = null;
         [SerializeField]
         private RectTransform vfxClamper = null;
         [SerializeField]
@@ -96,11 +96,7 @@ namespace Nekoyume.UI
                 UpdateSliderValue(sliderValue);
                 for (int i = 0; i < star; ++i)
                 {
-                    try
-                    {
-                        activatedStarImages[i].enabled = true;
-                    }
-                    catch { }
+                    activatedObjects[i].SetActive(true);
                 }
             }
         }
@@ -194,23 +190,19 @@ namespace Nekoyume.UI
         {
             for (int i = 0; i < star; ++i)
             {
-                try
-                {
-                    var starVFX = starVFXList[i];
-                    var emissionVFX = starEmissionVFXList[i];
-                    var isStarEnabled = activatedStarImages[i].enabled;
+                var starVFX = starVFXList[i];
+                var emissionVFX = starEmissionVFXList[i];
+                var isStarEnabled = activatedObjects[i].activeSelf;
 
-                    if (!isStarEnabled)
+                if (!isStarEnabled)
+                {
+                    if (_vfxEnabled)
                     {
-                        if (_vfxEnabled)
-                        {
-                            starVFX.Play();
-                            emissionVFX.Play();
-                        }
-                        activatedStarImages[i].enabled = true;
+                        starVFX.Play();
+                        emissionVFX.Play();
                     }
+                    activatedObjects[i].SetActive(true);
                 }
-                catch { }
             }
         }
 
@@ -218,9 +210,9 @@ namespace Nekoyume.UI
         {
             _currentStar.Value = 0;
             slider.value = 0.0f;
-            foreach (var image in activatedStarImages)
+            foreach (var activated in activatedObjects)
             {
-                image.enabled = false;
+                activated.SetActive(false);
             }
             foreach (var vfx in starVFXList)
             {

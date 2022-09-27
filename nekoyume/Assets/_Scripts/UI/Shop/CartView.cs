@@ -113,7 +113,6 @@ namespace Nekoyume.UI.Module
                 }
             }
 
-
             if (States.Instance.GoldBalanceState.Gold < price)
             {
                 buyButton.Interactable = false;

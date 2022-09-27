@@ -1,3 +1,4 @@
+using System;
 using Nekoyume.Game.Character;
 using Nekoyume.State;
 using Nekoyume.UI.Module;
@@ -9,6 +10,7 @@ using UniRx;
 using Nekoyume.Helper;
 using Nekoyume.PandoraBox;
 using System.Collections;
+using ObservableExtensions = UniRx.ObservableExtensions;
 
 namespace Nekoyume.UI
 {
@@ -64,10 +66,9 @@ namespace Nekoyume.UI
             base.Awake();
 
             Game.Event.OnRoomEnter.AddListener(b => Show());
-            Game.Event.OnUpdatePlayerEquip
-                .Subscribe(characterView.SetByPlayer)
+            ObservableExtensions.Subscribe(Game.Event.OnUpdatePlayerEquip, characterView.SetByPlayer)
                 .AddTo(gameObject);
-            Game.Event.OnUpdatePlayerStatus.Subscribe(SubscribeOnUpdatePlayerStatus)
+            ObservableExtensions.Subscribe(Game.Event.OnUpdatePlayerStatus, SubscribeOnUpdatePlayerStatus)
                 .AddTo(gameObject);
 
             CloseWidget = null;

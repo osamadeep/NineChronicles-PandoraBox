@@ -349,7 +349,8 @@ namespace Nekoyume.UI
             Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
             Analyzer.Instance.Track("Unity/UpdateSellAll", new Value
             {
-                ["Quantity"] = updateSellInfos.Count
+                ["Quantity"] = updateSellInfos.Count,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
 
             string message;
@@ -436,7 +437,10 @@ namespace Nekoyume.UI
             lastItemSoldSubItem = itemSubType;
             LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedNonColoredName() + " " + totalPrice.MajorUnit;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            Analyzer.Instance.Track("Unity/Sell");
+            Analyzer.Instance.Track("Unity/Sell", new Value
+            {
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+            });
             ResponseSell();
         }
 
@@ -482,9 +486,12 @@ namespace Nekoyume.UI
                 totalPrice,
                 count
             );
-            
+
             Game.Game.instance.ActionManager.UpdateSell(new List<UpdateSellInfo> {updateSellInfo}).Subscribe();
-            Analyzer.Instance.Track("Unity/UpdateSell");
+            Analyzer.Instance.Track("Unity/UpdateSell", new Value
+            {
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+            });
             ResponseSell();
         }
 
@@ -582,7 +589,10 @@ namespace Nekoyume.UI
                 ReactiveShopState.GetSellDigest(tradableId, requiredBlockIndex, price, count);
             if (digest != null)
             {
-                Analyzer.Instance.Track("Unity/Sell Cancellation");
+                Analyzer.Instance.Track("Unity/Sell Cancellation", new Value
+                {
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                });
                 Game.Game.instance.ActionManager.SellCancellation(
                     avatarAddress,
                     digest.OrderId,

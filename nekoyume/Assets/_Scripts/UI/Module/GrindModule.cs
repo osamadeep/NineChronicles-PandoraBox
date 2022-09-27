@@ -459,6 +459,7 @@ namespace Nekoyume.UI.Module
             {
                 ["EquipmentCount"] = equipments.Count,
                 ["GainedCrystal"] = (long) _cachedGrindingRewardCrystal.MajorUnit,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (equipments.Count < 11)

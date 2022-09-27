@@ -2,21 +2,28 @@ using System.Linq;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.L10n;
+using Nekoyume.Model.Mail;
+using Nekoyume.State;
+using Nekoyume.UI.Module.WorldBoss;
 using UnityEngine;
 using UniRx;
 using Nekoyume.UI.Scroller;
-using Nekoyume.Model.Mail;
-using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {
     public class QuitSystem : SystemWidget
     {
-        [SerializeField] private EventSubject characterSelectEventSubject = null;
+        [SerializeField]
+        private EventSubject characterSelectEventSubject = null;
 
-        [SerializeField] private EventSubject quitEventSubject = null;
+        [SerializeField]
+        private EventSubject quitEventSubject = null;
 
-        [SerializeField] private EventSubject closeEventSubject = null;
+        [SerializeField]
+        private EventSubject closeEventSubject = null;
+
+        [SerializeField]
+        private UIBackground background;
 
         protected override void Awake()
         {
@@ -24,16 +31,20 @@ namespace Nekoyume.UI
             characterSelectEventSubject.GetEvent("Click")
                 .Subscribe(_ =>
                 {
-                    if (PandoraUtil.IsBusy())
+                    var address = States.Instance.CurrentAvatarState.address;
+                    if (WorldBossStates.IsReceivingGradeRewards(address) ||
+                        WorldBossStates.IsReceivingSeasonRewards(address))
                     {
-                        //show error message
+                        OneLineSystem.Push(
+                            MailType.System,
+                            L10nManager.Localize("UI_CAN_NOT_CHANGE_CHARACTER"),
+                            NotificationCell.NotificationType.Alert);
+                        return;
                     }
-                    else
-                    {
-                        Game.Game.instance.BackToNest();
-                        Close();
-                        AudioController.PlayClick();
-                    }
+
+                    Game.Game.instance.BackToNest();
+                    Close();
+                    AudioController.PlayClick();
                 })
                 .AddTo(gameObject);
             quitEventSubject.GetEvent("Click")
@@ -52,6 +63,8 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             CloseWidget = () => { Close(); };
+
+            background.OnClick = CloseWidget;
         }
 
         public void Show(float blurRadius = 2, bool ignoreShowAnimation = false)

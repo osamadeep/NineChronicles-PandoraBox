@@ -47,6 +47,9 @@ namespace Nekoyume.Game.Controller
             public const string PVPBattle = "bgm_pvp_battle";
             public const string PVPWin = "bgm_pvp_win";
             public const string PVPLose = "bgm_pvp_lose";
+            public const string WorldBossBattle01 = "bgm_worldboss_battle_01";
+            public const string WorldBossBattleResult = "bgm_worldboss_battle_result";
+            public const string WorldBossTitle = "bgm_worldboss_title";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             public const string Runner1 = "bgm_Runner1";
             public const string Runner2 = "bgm_Runner2";

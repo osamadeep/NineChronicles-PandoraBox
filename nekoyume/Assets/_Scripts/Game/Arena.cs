@@ -218,6 +218,17 @@ namespace Nekoyume.Game
             yield return null;
         }
 
+        public IEnumerator CoBuffRemovalAttack(
+            ArenaCharacter caster,
+            IEnumerable<ArenaSkill.ArenaSkillInfo> skillInfos,
+            IEnumerable<ArenaSkill.ArenaSkillInfo> buffInfos)
+        {
+            var target = caster.Id == me.Id ? me : enemy;
+            var actionParams = new ArenaActionParams(target, skillInfos, buffInfos, target.CoBlowAttack);
+            target.Actions.Add(actionParams);
+            yield return null;
+        }
+
         public IEnumerator CoDoubleAttack(
             ArenaCharacter caster,
             IEnumerable<ArenaSkill.ArenaSkillInfo> skillInfos,

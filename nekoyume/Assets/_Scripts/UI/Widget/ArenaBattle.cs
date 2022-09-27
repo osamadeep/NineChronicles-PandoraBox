@@ -4,7 +4,7 @@ using Nekoyume.Battle;
 using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.Helper;
-using Nekoyume.Model.Arena;
+using Nekoyume.Model;
 using Nekoyume.Model.Item;
 using Nekoyume.UI.Module;
 using UnityEngine;

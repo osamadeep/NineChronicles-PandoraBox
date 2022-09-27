@@ -17,6 +17,7 @@ using Nekoyume.UI.Module;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using mixpanel;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.Mail;
@@ -123,6 +124,7 @@ namespace Nekoyume.UI
         private int _stageId;
         private int _requiredCost;
         private bool _shouldResetPlayer = true;
+        private bool _trackGuideQuest;
 
         private readonly List<IDisposable> _disposables = new();
 
@@ -229,9 +231,14 @@ namespace Nekoyume.UI
             int worldId,
             int stageId,
             string closeButtonName,
-            bool ignoreShowAnimation = false)
+            bool ignoreShowAnimation = false,
+            bool showByGuideQuest = false)
         {
-            Analyzer.Instance.Track("Unity/Click Stage");
+            _trackGuideQuest = showByGuideQuest;
+            Analyzer.Instance.Track("Unity/Click Stage", new Value
+            {
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+            });
 
             var stage = Game.Game.instance.Stage;
             repeatToggle.isOn = false;
@@ -1032,7 +1039,8 @@ namespace Nekoyume.UI
                                 consumables,
                                 _worldId,
                                 _stageId,
-                                playCount: playCount
+                                playCount: playCount,
+                                trackGuideQuest: _trackGuideQuest
                             ).Subscribe();
                             break;
                         }
@@ -1057,7 +1065,8 @@ namespace Nekoyume.UI
                         _worldId,
                         _stageId,
                         skillId,
-                        playCount
+                        playCount,
+                        _trackGuideQuest
                     ).Subscribe();
                     PlayerPrefs.SetInt("HackAndSlash.SelectedBonusSkillId", 0);
                     break;
@@ -1092,7 +1101,8 @@ namespace Nekoyume.UI
                             equipments,
                             costumes,
                             consumables,
-                            buyTicketIfNeeded)
+                            buyTicketIfNeeded,
+                            _trackGuideQuest)
                         .Subscribe();
                     break;
                 }

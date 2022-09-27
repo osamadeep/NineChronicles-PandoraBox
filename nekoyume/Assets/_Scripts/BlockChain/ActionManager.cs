@@ -242,18 +242,26 @@ namespace Nekoyume.BlockChain
             int worldId,
             int stageId,
             int? stageBuffId = null,
-            int playCount = 1)
+            int playCount = 1,
+            bool trackGuideQuest = false)
         {
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            if (trackGuideQuest)
+            {
+                Analyzer.Instance.Track("Unity/Click Guided Quest Enter Dungeon", new Value
+                {
+                    ["StageID"] = stageId,
+                });
+            }
             Analyzer.Instance.Track("Unity/HackAndSlash", new Value
             {
                 ["WorldId"] = worldId,
                 ["StageId"] = stageId,
                 ["PlayCount"] = playCount,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             costumes ??= new List<Costume>();
             equipments ??= new List<Equipment>();
@@ -312,8 +320,19 @@ namespace Nekoyume.BlockChain
             List<Equipment> equipments,
             List<Costume> costumes,
             List<Consumable> foods,
-            bool buyTicketIfNeeded)
+            bool buyTicketIfNeeded,
+            bool trackGuideQuest = false)
         {
+            if (trackGuideQuest)
+            {
+                Analyzer.Instance.Track("Unity/Click Guided Quest Enter Event Dungeon", new Value
+                {
+                    ["EventScheduleID"] = eventScheduleId,
+                    ["EventDungeonID"] = eventDungeonId,
+                    ["EventDungeonStageID"] = eventDungeonStageId,
+                });
+            }
+
             var numberOfTicketPurchases =
                 RxProps.EventDungeonInfo.Value?.NumberOfTicketPurchases ?? 0;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -411,6 +430,7 @@ namespace Nekoyume.BlockChain
             Analyzer.Instance.Track("Unity/Create CombinationConsumable", new Value
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
 
             var action = new CombinationConsumable
@@ -718,7 +738,10 @@ namespace Nekoyume.BlockChain
             LocalLayerModifier.SetItemEquip(avatarAddress, baseEquipment.NonFungibleId, false);
             LocalLayerModifier.SetItemEquip(avatarAddress, materialEquipment.NonFungibleId, false);
 
-            Analyzer.Instance.Track("Unity/Item Enhancement");
+            Analyzer.Instance.Track("Unity/Item Enhancement", new Value
+            {
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+            });
 
             var action = new ItemEnhancement
             {
@@ -752,10 +775,14 @@ namespace Nekoyume.BlockChain
             {
                 throw new NullReferenceException(nameof(weeklyArenaAddress));
             }
+            Analyzer.Instance.Track("Unity/Ranking Battle", new Value
+            {
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+            });
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.Ranking;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            Analyzer.Instance.Track("Unity/Ranking Battle");
             var action = new RankingBattle
             {
                 avatarAddress = States.Instance.CurrentAvatarState.address,
@@ -882,6 +909,7 @@ namespace Nekoyume.BlockChain
             Analyzer.Instance.Track("Unity/Create CombinationEquipment", new Value
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
 
             var agentAddress = States.Instance.AgentState.address;
@@ -892,7 +920,10 @@ namespace Nekoyume.BlockChain
             LocalLayerModifier.ModifyAvatarActionPoint(agentAddress, -recipeInfo.CostAP);
             if (useHammerPoint)
             {
-                RxProps.HammerPointStates[recipeInfo.RecipeId].ResetHammerPoint();
+                var recipeId = recipeInfo.RecipeId;
+                var originHammerPointState = States.Instance.HammerPointStates[recipeId];
+                States.Instance.UpdateHammerPointStates(
+                    recipeId, new HammerPointState(originHammerPointState.Address, recipeId));
             }
 
             foreach (var pair in recipeInfo.Materials)
@@ -949,6 +980,7 @@ namespace Nekoyume.BlockChain
             Analyzer.Instance.Track("Unity/Rapid Combination", new Value
             {
                 ["HourglassCount"] = cost,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             });
 
             var action = new RapidCombination
@@ -1125,6 +1157,53 @@ namespace Nekoyume.BlockChain
                 .First()
                 .ObserveOnMainThread()
                 .DoOnError(e => HandleException(action.Id, e));
+        }
+
+        public IObservable<ActionBase.ActionEvaluation<Raid>> Raid(
+            List<Guid> costumes,
+            List<Guid> equipments,
+            List<Guid> foods,
+            bool payNcg)
+        {
+            var action = new Raid
+            {
+                AvatarAddress = States.Instance.CurrentAvatarState.address,
+                EquipmentIds = costumes,
+                CostumeIds = equipments,
+                FoodIds = foods,
+                PayNcg = payNcg,
+            };
+            action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+            LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            ProcessAction(action);
+            _lastBattleActionId = action.Id;
+            return _agent.ActionRenderer.EveryRender<Raid>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e =>
+                {
+                    Game.Game.BackToMainAsync(HandleException(action.Id, e)).Forget();
+                });
+        }
+
+        public IObservable<ActionBase.ActionEvaluation<ClaimRaidReward>> ClaimRaidReward()
+        {
+            var action = new ClaimRaidReward(States.Instance.CurrentAvatarState.address);
+            action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+            LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            ProcessAction(action);
+            _lastBattleActionId = action.Id;
+            return _agent.ActionRenderer.EveryRender<ClaimRaidReward>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e =>
+                {
+                    Game.Game.BackToMainAsync(HandleException(action.Id, e)).Forget();
+                });
         }
 
 #if LIB9C_DEV_EXTENSIONS || UNITY_EDITOR

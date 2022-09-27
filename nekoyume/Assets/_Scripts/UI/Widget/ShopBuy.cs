@@ -236,6 +236,7 @@ namespace Nekoyume.UI
                 var props = new Value
                 {
                     ["Count"] = models.Count,
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
                 };
                 Analyzer.Instance.Track("Unity/Number of Purchased Items", props);
             }
@@ -245,6 +246,7 @@ namespace Nekoyume.UI
                 var props = new Value
                 {
                     ["Price"] = model.OrderDigest.Price.GetQuantityString(),
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
                 };
                 Analyzer.Instance.Track("Unity/Buy", props);
 

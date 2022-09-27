@@ -7,6 +7,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using mixpanel;
+using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.BlockChain;
 using Nekoyume.EnumType;
@@ -627,7 +628,8 @@ namespace Nekoyume.Game
                 ["StageId"] = log.stageId,
                 ["ClearedWave"] = log.clearedWaveNumber,
                 ["CP"] = cp,
-                ["FoodCount"] = foodCount
+                ["FoodCount"] = foodCount,
+                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
             };
             Analyzer.Instance.Track("Unity/Stage End", props);
         }
@@ -757,6 +759,7 @@ namespace Nekoyume.Game
 
         public IEnumerator CoNormalAttack(
             CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -771,6 +774,22 @@ namespace Nekoyume.Game
 
         public IEnumerator CoBlowAttack(
             CharacterBase caster,
+            int skillId,
+            IEnumerable<Skill.SkillInfo> skillInfos,
+            IEnumerable<Skill.SkillInfo> buffInfos)
+        {
+            var character = GetCharacter(caster);
+            if (character)
+            {
+                var actionParams = new ActionParams(character, skillInfos, buffInfos, character.CoBlowAttack);
+                character.actions.Add(actionParams);
+                yield return null;
+            }
+        }
+
+        public IEnumerator CoBuffRemovalAttack(
+            CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -785,6 +804,7 @@ namespace Nekoyume.Game
 
         public IEnumerator CoDoubleAttack(
             CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -800,6 +820,7 @@ namespace Nekoyume.Game
 
         public IEnumerator CoAreaAttack(
             CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -815,6 +836,7 @@ namespace Nekoyume.Game
 
         public IEnumerator CoHeal(
             CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -827,8 +849,21 @@ namespace Nekoyume.Game
             }
         }
 
+        public IEnumerator CoTickDamage(CharacterBase affectedCharacter,
+            int skillId,
+            IEnumerable<Skill.SkillInfo> skillInfos)
+        {
+            var character = GetCharacter(affectedCharacter);
+
+            foreach (var info in skillInfos)
+            {
+                yield return StartCoroutine(character.CoProcessDamage(info, true, true));
+            }
+        }
+
         public IEnumerator CoBuff(
             CharacterBase caster,
+            int skillId,
             IEnumerable<Skill.SkillInfo> skillInfos,
             IEnumerable<Skill.SkillInfo> buffInfos)
         {
@@ -1011,14 +1046,9 @@ namespace Nekoyume.Game
                 yield return new WaitForSeconds(2.0f);
                 var boss = enemies.Last();
                 Boss = boss;
-                var sprite = SpriteHelper.GetCharacterIcon(boss.RowData.Id);
                 var battle = Widget.Find<UI.Battle>();
                 battle.BossStatus.Show();
-                battle.BossStatus.SetHp(boss.HP, boss.HP);
-                battle.BossStatus.SetProfile(
-                    boss.Level,
-                    L10nManager.LocalizeCharacterName(boss.RowData.Id),
-                    sprite);
+                battle.BossStatus.SetProfile(boss);
                 playerCharacter.ShowSpeech("PLAYER_BOSS_ENCOUNTER");
             }
 
@@ -1207,6 +1237,11 @@ namespace Nekoyume.Game
             if (stageId == GameConfig.RequireClearedStageLevel.UIMainMenuMimisbrunnr)
             {
                 menuNames.Add("Mimisbrunnr");
+            }
+
+            if (stageId == GameConfig.RequireClearedStageLevel.ActionsInRaid)
+            {
+                menuNames.Add(nameof(Raid));
             }
 
             var celebratesPopup = Widget.Find<CelebratesPopup>();
