@@ -40,7 +40,11 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
         [SerializeField] private Button RelistAllBtn = null;
         [SerializeField] private Button ReturnAllBtn = null;
+        [SerializeField] private Button CancelLastBtn = null;
+        [SerializeField] private TextMeshProUGUI LastSoldTxt = null;
 
+        Lib9c.Model.Order.OrderDigest lastItemSold = null;
+        ItemSubType lastItemSoldSubItem = ItemSubType.Armor;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -72,6 +76,11 @@ namespace Nekoyume.UI
         void ReturnAll()
         {
             Premium.CancellAllShopItems(view);
+        }
+
+        void ReturnLast()
+        {
+            Premium.CancellLastShopItem(lastItemSold, lastItemSoldSubItem);
         }
 
         public void RelistAll()
@@ -194,6 +203,9 @@ namespace Nekoyume.UI
 
         private async void ShowAsync(bool ignoreShowAnimation = false)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            LastSoldTxt.text = "";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             base.Show(ignoreShowAnimation);
             AudioController.instance.PlayMusic(AudioController.MusicCode.Shop);
             UpdateSpeechBubble();
@@ -420,6 +432,10 @@ namespace Nekoyume.UI
             var itemSubType = data.Item.Value.ItemBase.Value.ItemSubType;
             Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
                 .Subscribe();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            lastItemSoldSubItem = itemSubType;
+            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedNonColoredName() + " " + totalPrice.MajorUnit;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Analyzer.Instance.Track("Unity/Sell");
             ResponseSell();
         }

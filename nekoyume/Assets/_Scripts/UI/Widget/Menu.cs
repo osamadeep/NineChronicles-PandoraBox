@@ -777,6 +777,11 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
+        public void PandoraShop()
+        {
+            Widget.Find<PandoraShopPopup>().Show();
+        }
+
         public void FastShowEvent()
         {
             var worldMap = Find<WorldMap>();
@@ -793,6 +798,7 @@ namespace Nekoyume.UI
             await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
             await ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(States.Instance.CurrentAvatarState);
             fastRefreshButton.interactable = true;
+            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>

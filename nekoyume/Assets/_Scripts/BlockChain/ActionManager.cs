@@ -113,14 +113,20 @@ namespace Nekoyume.BlockChain
         {
             var actionType = gameAction.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
-            if (!isOriginal)
+            if (actionType.TypeIdentifier == "sell10")
+                Debug.LogError("sell id?" + (gameAction as Sell).orderId );
+
+            try
             {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
-                return;
+                bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
+                if (!isOriginal)
+                {
+                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
+                    return;
+                }
             }
+            catch { } 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _agent.EnqueueAction(gameAction);
@@ -620,7 +626,7 @@ namespace Nekoyume.BlockChain
                 .ObserveOnMainThread()
                 .DoOnError(e => throw HandleException(action.Id, e));
         }
-
+            
         public IObservable<ActionBase.ActionEvaluation<Buy>> Buy(List<PurchaseInfo> purchaseInfos)
         {
             var buyerAgentAddress = States.Instance.AgentState.address;

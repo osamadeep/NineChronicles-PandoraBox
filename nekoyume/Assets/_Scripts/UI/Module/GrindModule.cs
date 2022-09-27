@@ -91,7 +91,7 @@ namespace Nekoyume.UI.Module
                     (ItemType.Costume, _ => true),
                 };
 
-        private const int LimitGrindingCount = 10;
+        private const int LimitGrindingCount = 20;
         private static readonly BigInteger MaximumCrystal = 100_000;
         private static readonly BigInteger MiddleCrystal = 1_000;
 
@@ -222,6 +222,13 @@ namespace Nekoyume.UI.Module
                 .AddTo(_disposables);
             _selectedItemsForGrind.ObserveCountChanged().Subscribe(count =>
             {
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (count <11)
+                    grindButton.SetCost(CostType.ActionPoint, 5);
+                else
+                    grindButton.SetCost(CostType.ActionPoint, 10);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                 grindButton.Interactable = CanGrind;
                 UpdateCrystalReward();
             }).AddTo(_disposables);
@@ -245,7 +252,7 @@ namespace Nekoyume.UI.Module
             var isEquipment = model.ItemBase.ItemType == ItemType.Equipment;
             var isEquipped = model.Equipped.Value;
             var interactable =
-                _selectedItemsForGrind.Count < 10 && isEquipment
+                _selectedItemsForGrind.Count < LimitGrindingCount && isEquipment
                 || !isRegister;
 
             void OnSubmit()
@@ -453,8 +460,29 @@ namespace Nekoyume.UI.Module
                 ["EquipmentCount"] = equipments.Count,
                 ["GainedCrystal"] = (long) _cachedGrindingRewardCrystal.MajorUnit,
             });
-            ActionManager.Instance
-                .Grinding(equipments, chargeAp)
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (equipments.Count < 11)
+            {
+                ActionManager.Instance
+                    .Grinding(equipments, chargeAp)
+                    .Subscribe(eval =>
+                    {
+                        Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+                        if (eval.Exception != null)
+                        {
+                            Debug.LogException(eval.Exception.InnerException);
+                            OneLineSystem.Push(
+                                MailType.Grinding,
+                                L10nManager.Localize("ERROR_UNKNOWN"),
+                                NotificationCell.NotificationType.Alert);
+                        }
+                    });
+            }
+            else
+            {
+                var firstPatch = equipments.Take(10).ToList();
+                ActionManager.Instance
+                .Grinding(firstPatch, chargeAp)
                 .Subscribe(eval =>
                 {
                     Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
@@ -467,6 +495,37 @@ namespace Nekoyume.UI.Module
                             NotificationCell.NotificationType.Alert);
                     }
                 });
+                var secondPatch = equipments.Skip(10).Take(equipments.Count -10).ToList();
+                ActionManager.Instance
+                .Grinding(secondPatch, false) //we already charge it on prevoius patch
+                .Subscribe(eval =>
+                {
+                    Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+                    if (eval.Exception != null)
+                    {
+                        Debug.LogException(eval.Exception.InnerException);
+                        OneLineSystem.Push(
+                            MailType.Grinding,
+                            L10nManager.Localize("ERROR_UNKNOWN"),
+                            NotificationCell.NotificationType.Alert);
+                    }
+                });
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            //ActionManager.Instance
+            //    .Grinding(equipments, chargeAp)
+            //    .Subscribe(eval =>
+            //    {
+            //        Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+            //        if (eval.Exception != null)
+            //        {
+            //            Debug.LogException(eval.Exception.InnerException);
+            //            OneLineSystem.Push(
+            //                MailType.Grinding,
+            //                L10nManager.Localize("ERROR_UNKNOWN"),
+            //                NotificationCell.NotificationType.Alert);
+            //        }
+            //    });
             _selectedItemsForGrind.Clear();
             if (animator)
             {

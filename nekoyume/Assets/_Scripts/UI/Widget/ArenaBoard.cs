@@ -159,14 +159,15 @@ namespace Nekoyume.UI
 
 
         //avoid loading screen
-        public async UniTaskVoid ShowAsyncPandora(bool ignoreShowAnimation = false)
+        public void ShowAsyncPandora(bool ignoreShowAnimation = false)
         {
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             SetLastUpdate();
-            RefreshObj.SetActive(true);
+            //RefreshObj.SetActive(true);
 
-            await UniTask.WaitWhile(() =>
-                RxProps.ArenaParticipantsOrderedWithScore.IsUpdating);
+            //await UniTask.WaitWhile(() =>
+            //    RxProps.ArenaParticipantsOrderedWithScore.IsUpdating);
+
             Show(
                 RxProps.ArenaParticipantsOrderedWithScore.Value,
                 ignoreShowAnimation);
@@ -322,7 +323,7 @@ namespace Nekoyume.UI
                     }
 #endif
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    Widget.Find<FriendInfoPopupPandora>().Close(true);
+                    Find<FriendInfoPopupPandora>().Close(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     var data = _boundedData[index];
                     Close();

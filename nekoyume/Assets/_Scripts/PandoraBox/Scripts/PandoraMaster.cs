@@ -77,8 +77,6 @@ namespace Nekoyume.PandoraBox
                 Settings = new PandoraSettings();
                 Settings.Load();
                 StartCoroutine(PandoraDB.GetDatabase());
-                //Prime.BWJHTRHYTR(true); //Debug.. Delete
-                //Game.Game.instance.Agent.BlockIndexSubject.Subscribe(Prime.GGETSETH).AddTo(gameObject); //Debug.. Delete
             }
         }
 
@@ -179,6 +177,7 @@ namespace Nekoyume.PandoraBox
         [HideInInspector] public int ArenaListLower { get; set; } = 0;
 
         [HideInInspector] public int ArenaListStep { get; set; } = 90;
+        [HideInInspector] public bool ArenaPush { get; set; } //push means send every 3 whatever its confirm or not 
 
         public void Save()
         {
@@ -204,6 +203,7 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_ArenaPush", System.Convert.ToInt32(ArenaPush));
 
             //apply ingame changes
             DOTween.timeScale = MenuSpeed;
@@ -254,7 +254,7 @@ namespace Nekoyume.PandoraBox
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
             ArenaListLower = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
             ArenaListStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
-
+            ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_ArenaPush",System.Convert.ToInt32(ArenaPush)));
 
             //Load ingame changes
             DOTween.timeScale = MenuSpeed;

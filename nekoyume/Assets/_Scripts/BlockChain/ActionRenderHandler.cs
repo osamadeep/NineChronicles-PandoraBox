@@ -1588,6 +1588,11 @@ namespace Nekoyume.BlockChain
                 OneLineSystem.Push(MailType.System,
                     L10nManager.Localize("UI_TRANSFERASSET_NOTIFICATION_SENDER", amount, recipientAddress),
                     NotificationCell.NotificationType.Notification);
+
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                Debug.LogError("RESPONSE: " + eval.Action.Memo);
+                //Debug.LogError("RESPONSE1: " + eval.);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else if (recipientAddress == currentAgentAddress)
             {
@@ -1606,6 +1611,10 @@ namespace Nekoyume.BlockChain
                 }
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (eval.Action.Amount.MajorUnit > 100000) //maybe its crytal?
+                UpdateCrystalBalance(eval);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             UpdateAgentStateAsync(eval).Forget();
         }
 

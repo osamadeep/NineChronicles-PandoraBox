@@ -207,29 +207,6 @@ namespace Nekoyume.Game
             StartCoroutine(CoUpdate());
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public IEnumerator ReStart(Libplanet.Crypto.PrivateKey key)
-        {
-            // Initialize Agent
-            var agentInitialized = false;
-            var agentInitializeSucceed = false;
-            yield return StartCoroutine(
-                CoReLogin(
-                    succeed =>
-                    {
-                        Debug.Log($"Agent Re-initialized. {succeed}");
-                        agentInitialized = true;
-                        agentInitializeSucceed = succeed;
-                    }
-                , key)
-            );
-            yield return new WaitUntil(() => agentInitialized);
-            //ActionManager = new ActionManager(Agent);
-            RxProps.Start(Agent, States, TableSheets);
-            RankPopup.UpdateSharedModel();
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         protected override void OnDestroy()
         {
             ActionManager?.Dispose();
@@ -709,16 +686,6 @@ namespace Nekoyume.Game
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        private IEnumerator CoReLogin(Action<bool> callback, Libplanet.Crypto.PrivateKey key)
-        {
-            yield return Agent.Initialize(
-                _options,
-                key,
-                callback
-            );
-        }
-
-
         bool isAuth = true;
         private void OnPlayFabLoginSuccess(LoginResult result)
         {
