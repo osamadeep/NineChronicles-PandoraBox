@@ -175,6 +175,9 @@ namespace Nekoyume.UI
                 Widget.Create<BlockFailTitleOneButtonSystem>(),
                 Widget.Create<LoginSystem>(),
                 Widget.Create<TitleOneButtonSystem>(),
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                Widget.Create<PandoraError>(),
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 // 시스템 정보 영역.
                 Widget.Create<OneButtonSystem>(),

@@ -59,13 +59,12 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI arenaRemains;
         [SerializeField] private TextMeshProUGUI arenaCount;
         [SerializeField] private TextMeshProUGUI arenaCurrentPositionText;
-        [SerializeField] private Button randomButton;
 
         //Extra UI Buttons
         [SerializeField] private Button fastSwitchButton;
-        [SerializeField] private Button fastRefreshButton;
-        [SerializeField] private Button fastRaidButton;
-        [SerializeField] private Button fastEventButton;
+        [SerializeField] private Button updateAvatarButton;
+        [SerializeField] private Button runnerButton;
+        [SerializeField] private Button eventButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
         private ArenaInfoList _arenaInfoList = new ArenaInfoList();
@@ -172,9 +171,9 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
-            fastRefreshButton.onClick.AddListener(() => { UpdateAvatar(); });
-            fastRaidButton.onClick.AddListener(() => { ShowMiniGame(); });
-            fastEventButton.onClick.AddListener(() => { FastShowEvent(); });
+            updateAvatarButton.onClick.AddListener(() => { UpdateAvatar(); });
+            runnerButton.onClick.AddListener(() => { ShowRunner(); });
+            eventButton.onClick.AddListener(() => { FastShowEvent(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -740,12 +739,12 @@ namespace Nekoyume.UI
 
         public async void UpdateAvatar()
         {
-            fastRefreshButton.interactable = false;
+            updateAvatarButton.interactable = false;
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
             await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
             await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
             await ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(States.Instance.CurrentAvatarState);
-            fastRefreshButton.interactable = true;
+            updateAvatarButton.interactable = true;
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
         }
 
@@ -762,25 +761,7 @@ namespace Nekoyume.UI
             DailyBonus.IsTrying = false;
         }
 
-        public void ClearRemainingTickets()
-        {
-            randomButton.GetComponentInChildren<TextMeshProUGUI>().text = "Random X0";
-            arenaCount.text = $"<color=red>{0}</color>/5";
-            randomButton.transform.GetChild(0).gameObject.SetActive(false);
-        }
-
-        public void ForceShowMenu()
-        {
-            Widget.Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Main);
-            Find<HeaderMenuStatic>().Show();
-        }
-
-        public void ShowChronoTool()
-        {
-            Find<ChronoSlotsPopup>().Show();
-        }
-
-        public void ShowMiniGame()
+        public void ShowRunner()
         {
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under maintenance!",
             NotificationCell.NotificationType.Information);

@@ -10,6 +10,7 @@ using Libplanet.Action;
 using PlayFab.ClientModels;
 using Nekoyume.Model.BattleStatus;
 using UniRx;
+using Nekoyume.UI;
 
 namespace Nekoyume.PandoraBox
 {
@@ -18,8 +19,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100291";
-        public static string VersionId = "010069A";
+        public static string OriginalVersionId = "v100301";
+        public static string VersionId = "010069";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -132,10 +133,7 @@ namespace Nekoyume.PandoraBox
             //16 cannot cast the link content
             //5 old version
             //101 player banned
-            UIErrorWindow.transform.Find("TitleTxt").GetComponent<TextMeshProUGUI>().text =
-                $"Error <color=red>{errorNumber}</color>!";
-            UIErrorWindow.transform.Find("MessageTxt").GetComponent<TextMeshProUGUI>().text = text;
-            UIErrorWindow.SetActive(true);
+            Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!", text);
         }
     }
 
