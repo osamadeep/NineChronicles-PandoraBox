@@ -1623,8 +1623,21 @@ namespace Nekoyume.BlockChain
                     NotificationCell.NotificationType.Notification);
 
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                Debug.LogError("RESPONSE: " + eval.Action.Memo);
-                //Debug.LogError("RESPONSE1: " + eval.);
+                try
+                {
+                    if (eval.Action.Memo.Substring(0, 15) == "Pandora Crystal")
+                    {
+                        OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Crystal Request Sent <color=green><b>Successfully</b></color>!"
+                        , NotificationCell.NotificationType.Information);
+                        Widget.Find<PandoraShopPopup>().Close();
+
+                        //Debug.LogError("RESPONSE: " + eval.Action.Memo);
+                        Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo);
+                    }
+                }
+                catch { }
+
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else if (recipientAddress == currentAgentAddress)
@@ -2108,6 +2121,16 @@ namespace Nekoyume.BlockChain
 
             var worldBoss = Widget.Find<WorldBoss>();
             var avatarAddress = Game.Game.instance.States.CurrentAvatarState.address;
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            var preRaiderStateEarly = WorldBossStates.GetRaiderState(avatarAddress);
+            OneLineSystem.Push(MailType.System,
+            "<color=green>Pandora Box</color>: Raid " +
+            $"<color=green><b>Successfully</b></color> committed on the blockchain, Your High is <color=green><b>{preRaiderStateEarly.HighScore}</b></color>"
+            , NotificationCell.NotificationType.Information);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             if (Widget.Find<RaidPreparation>().IsSkipRender)
             {
                 Widget.Find<LoadingScreen>().Close();
@@ -2198,6 +2221,7 @@ namespace Nekoyume.BlockChain
                     }
                 }
             }
+
 
             var isNewRecord = raiderState is null ||
                               raiderState.HighScore < simulator.DamageDealt;

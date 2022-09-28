@@ -35,7 +35,8 @@ namespace Nekoyume.PandoraBox
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
 
-        //General
+        //General 
+        public static string CrystalTransferTx = "";
         public static string InspectedAddress = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
@@ -56,9 +57,6 @@ namespace Nekoyume.PandoraBox
 
         //Objects
         public PandoraSettings Settings;
-        public GameObject UIErrorWindow;
-        public GameObject UISettings;
-        public GameObject UIWhatsNew;
         public AudioMixer Audiomixer;
         public GameObject CosmicSword;
         public Sprite CosmicIcon;
@@ -140,7 +138,6 @@ namespace Nekoyume.PandoraBox
     public class PandoraSettings
     {
         //General
-        [HideInInspector] public bool WhatsNewShown { get; set; } = false;
         [HideInInspector] public bool IsStory { get; set; } = true;
         [HideInInspector] public bool IsMultipleLogin { get; set; } = true;
 
@@ -181,7 +178,6 @@ namespace Nekoyume.PandoraBox
         {
             //General
             PlayerPrefs.SetString("_PandoraBox_Ver", PandoraMaster.VersionId);
-            PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", System.Convert.ToInt32(WhatsNewShown));
             PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
             PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
@@ -219,7 +215,6 @@ namespace Nekoyume.PandoraBox
             if (int.Parse(PandoraMaster.VersionId.Substring(0, 5)) >
                 int.Parse(PlayerPrefs.GetString("_PandoraBox_Ver").Substring(0, 5)))
             {
-                WhatsNewShown = false;
                 PlayerPrefs.SetString("_PandoraBox_Ver", PandoraMaster.VersionId);
                 //PlayerPrefs.SetInt("_PandoraBox_General_WhatsNewShown", 0); //false
 
@@ -228,8 +223,6 @@ namespace Nekoyume.PandoraBox
 
             //General
             //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
-            WhatsNewShown = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_WhatsNewShown",
-                System.Convert.ToInt32(WhatsNewShown)));
             IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory",
                 System.Convert.ToInt32(IsStory)));
             IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin",

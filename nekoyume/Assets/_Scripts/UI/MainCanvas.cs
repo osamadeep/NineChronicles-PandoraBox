@@ -170,6 +170,9 @@ namespace Nekoyume.UI
 
                 // 팝업 영역.
                 Widget.Create<SettingPopup>(),
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                Widget.Create<PandoraSettingPopup>(),
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 // 팝업 영역: 알림.
                 Widget.Create<BlockFailTitleOneButtonSystem>(),

@@ -490,8 +490,20 @@ namespace Nekoyume.BlockChain
 
             foreach (var action in actions)
             {
+                try
+                {
                 var ga = (GameAction)action.InnerAction;
+
                 _transactions.TryAdd(ga.Id, tx.Id);
+                }
+                catch
+                {
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    // this is not optimal, need to Fix later
+                    // we assume that its ncg request crystal ?
+                    PandoraBox.PandoraMaster.CrystalTransferTx = tx.Id.ToString();
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                }
             }
         }
 
@@ -728,6 +740,10 @@ namespace Nekoyume.BlockChain
         public int GetQueueCount()
         {
             return _queuedActions.Count;
+        }
+        public void EnqueueActionBase(ActionBase action)
+        {
+            _queuedActions.Enqueue(action);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

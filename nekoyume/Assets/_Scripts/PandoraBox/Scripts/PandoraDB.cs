@@ -57,6 +57,7 @@ namespace Nekoyume.PandoraBox
         public List<PandoraMembership> PandoraMemberships;
         public int DiceRoll;
         public int TrialPremium;
+        public int Crystal;
         public List<PandoraPlayer> Players;
     }
 

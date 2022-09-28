@@ -755,9 +755,6 @@ namespace Nekoyume.UI
         protected override void OnEnable()
         {
             base.OnEnable();
-            //StartCoroutine(arenaRemainsTime());
-            StartCoroutine(ShowWhatsNew());
-
             DailyBonus.IsTrying = false;
         }
 
@@ -796,20 +793,10 @@ namespace Nekoyume.UI
             Close();
         }
 
-        IEnumerator ShowWhatsNew()
-        {
-            yield return new WaitForSeconds(2);
-            if (!PandoraMaster.Instance.Settings.WhatsNewShown)
-            {
-                AudioController.instance.PlaySfx("sfx_bgm_great_success");
-                PandoraMaster.Instance.UIWhatsNew.SetActive(true);
-            }
-        }
-
         public void ShowPandoraSettings()
         {
             AudioController.PlayClick();
-            PandoraMaster.Instance.UISettings.SetActive(true);
+            Widget.Find<PandoraSettingPopup>().Show();
         }
 
         public void ShowNFT()

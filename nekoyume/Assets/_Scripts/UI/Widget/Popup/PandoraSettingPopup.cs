@@ -1,14 +1,23 @@
 using TMPro;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using Libplanet;
+using Libplanet.Crypto;
+using Nekoyume.Game.Controller;
+using Nekoyume.Helper;
+using Nekoyume.L10n;
+using Nekoyume.Model.Mail;
+using UniRx;
+using TimeSpan = System.TimeSpan;
+using Nekoyume.UI.Scroller;
+using Nekoyume.PandoraBox;
 
-namespace Nekoyume.PandoraBox
+namespace Nekoyume.UI
 {
-
-    public class PandoraUISettings : MonoBehaviour
+    public class PandoraSettingPopup : PopupWidget
     {
-        int blockShowType;
-
         //node connected
         [SerializeField]
         TextMeshProUGUI nodeText;
@@ -69,14 +78,20 @@ namespace Nekoyume.PandoraBox
         [SerializeField]
         Image introStoryOffImage;
 
+        protected override void Awake()
+        {
+            base.Awake();
+        }
 
-        void OnEnable()
+        protected override void OnEnable()
         {
             if (PandoraMaster.Instance == null)
                 return;
 
+
             try
-            { nodeText.text = "Connected Node: <color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }catch { }
+            { nodeText.text = "Connected Node: <color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }
+            catch { }
 
             //Load settings
             blockShowType = PandoraMaster.Instance.Settings.BlockShowType;
@@ -92,7 +107,29 @@ namespace Nekoyume.PandoraBox
             LoadRaidMethod();
             LoadMultipleLogin();
             LoadIntroStory();
+
+            SubmitWidget = () => Close(true);
+            CloseWidget = () => Close(true);
+            base.OnEnable();
         }
+
+        public override void Close(bool ignoreCloseAnimation = false)
+        {
+            PandoraMaster.Instance.Settings.BlockShowType = blockShowType;
+            PandoraMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
+            PandoraMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
+            PandoraMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
+            PandoraMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
+            PandoraMaster.Instance.Settings.Save();
+            base.Close(ignoreCloseAnimation);
+            AudioController.PlayClick();
+        }
+
+        public override void Show(bool ignoreStartAnimation = false)
+        {
+            base.Show(true);
+        }
+        int blockShowType;
 
         public void ResetDefault()
         {
@@ -113,18 +150,6 @@ namespace Nekoyume.PandoraBox
             LoadRaidMethod();
             LoadMultipleLogin();
             LoadIntroStory();
-        }
-
-        public void SaveSettings()
-        {
-            PandoraMaster.Instance.Settings.BlockShowType = blockShowType;
-            PandoraMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
-            PandoraMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
-            PandoraMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
-            PandoraMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
-
-            PandoraMaster.Instance.Settings.Save();
-            gameObject.SetActive(false);
         }
 
         public void ChangeTimeScale(int value)

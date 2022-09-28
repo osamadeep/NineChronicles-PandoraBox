@@ -41,10 +41,10 @@ namespace Nekoyume.UI
         [SerializeField] private Button RelistAllBtn = null;
         [SerializeField] private Button ReturnAllBtn = null;
         [SerializeField] private Button CancelLastBtn = null;
-        [SerializeField] private TextMeshProUGUI LastSoldTxt = null;
+        public TextMeshProUGUI LastSoldTxt = null;
 
-        Lib9c.Model.Order.OrderDigest lastItemSold = null;
-        ItemSubType lastItemSoldSubItem = ItemSubType.Armor;
+        public ItemBase LastItemSold = null;
+        public Guid LastItemSoldOrderID = new Guid();
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -80,7 +80,7 @@ namespace Nekoyume.UI
 
         void ReturnLast()
         {
-            Premium.CancellLastShopItem(lastItemSold, lastItemSoldSubItem);
+            Premium.CancellLastShopItem();
         }
 
         public void RelistAll()
@@ -129,6 +129,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             RelistAllBtn.onClick.AddListener(() => { RelistAll(); });
             ReturnAllBtn.onClick.AddListener(() => { ReturnAll(); });
+            CancelLastBtn.onClick.AddListener(() => { ReturnLast(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -344,7 +345,12 @@ namespace Nekoyume.UI
 
                 updateSellInfos.Add(updateSellInfo);
                 oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (orderDigest.OrderId == orderDigests.Last().OrderId)
+                    LastItemSold = itemBase;
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
+
 
             Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
             Analyzer.Instance.Track("Unity/UpdateSellAll", new Value
@@ -434,8 +440,8 @@ namespace Nekoyume.UI
             Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
                 .Subscribe();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            lastItemSoldSubItem = itemSubType;
-            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedNonColoredName() + " " + totalPrice.MajorUnit;
+            LastItemSold = data.Item.Value.ItemBase.Value;
+            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Analyzer.Instance.Track("Unity/Sell", new Value
             {

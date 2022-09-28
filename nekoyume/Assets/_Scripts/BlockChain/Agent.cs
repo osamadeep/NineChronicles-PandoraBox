@@ -1088,5 +1088,13 @@ namespace Nekoyume.BlockChain
             string text = string.Format(format, count, totalCount);
             return $"{text}  ({state.CurrentPhase} / {PreloadState.TotalPhase})";
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnqueueActionBase(ActionBase action)
+        {
+            _queuedActions.Enqueue(action);
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
     }
 }

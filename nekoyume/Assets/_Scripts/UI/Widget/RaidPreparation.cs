@@ -170,7 +170,7 @@ namespace Nekoyume.UI
             startButton.onClick.AddListener(OnClickStartButton);
 
             Game.Event.OnRoomEnter.AddListener(b => Close());
-            toggle.gameObject.SetActive(GameConfig.IsEditor);
+            //toggle.gameObject.SetActive(GameConfig.IsEditor);
         }
 
         public void Show(int bossId, bool ignoreShowAnimation = false)

@@ -591,6 +591,9 @@ namespace Nekoyume.BlockChain
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
             ProcessAction(action);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Widget.Find<ShopSell>().LastItemSoldOrderID = action.orderId;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return _agent.ActionRenderer.EveryRender<Sell>()
                 .Timeout(ActionTimeout)
@@ -638,6 +641,9 @@ namespace Nekoyume.BlockChain
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
             ProcessAction(action);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            Widget.Find<ShopSell>().LastItemSoldOrderID = action.updateSellInfos.Last().orderId;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return _agent.ActionRenderer.EveryRender<UpdateSell>()
                 .Timeout(ActionTimeout)
