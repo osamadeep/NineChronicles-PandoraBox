@@ -81,19 +81,6 @@ namespace Nekoyume.BlockChain
                 Debug.Log($"[{nameof(BlockRenderHandler)}] Render actions end");
             }).AddTo(_disposables);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //_actionRenderer.EveryRender<HackAndSlash>()
-            ////.Where(ValidateEvaluationForCurrentAgent)
-            //.ObserveOnMainThread()
-            //.Subscribe(eval =>
-            //{
-            //    Debug.LogError(eval.BlockIndex);
-            //})
-            //.AddTo(_disposables);
-
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
             _actionRenderer.ActionRenderSubject.ObserveOnMainThread().Subscribe(eval =>
             {
                 if (!(eval.Action is GameAction gameAction))
@@ -237,7 +224,6 @@ namespace Nekoyume.BlockChain
                 .Subscribe(ResponseSell)
                 .AddTo(_disposables);
         }
-
         private void SellCancellation()
         {
             _actionRenderer.EveryRender<SellCancellation>()
@@ -388,7 +374,6 @@ namespace Nekoyume.BlockChain
                 .Subscribe(ResponseTransferAsset)
                 .AddTo(_disposables);
         }
-
         private void HackAndSlashSweep()
         {
             _actionRenderer.EveryRender<HackAndSlashSweep>()
@@ -1663,6 +1648,7 @@ namespace Nekoyume.BlockChain
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             UpdateAgentStateAsync(eval).Forget();
         }
+
 
         private void ResponseGrinding(ActionBase.ActionEvaluation<Grinding> eval)
         {

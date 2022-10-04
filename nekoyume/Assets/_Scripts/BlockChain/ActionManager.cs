@@ -114,9 +114,6 @@ namespace Nekoyume.BlockChain
             var actionType = gameAction.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (actionType.TypeIdentifier == "sell10")
-                Debug.LogError("sell id?" + (gameAction as Sell).orderId );
-
             try
             {
                 bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);

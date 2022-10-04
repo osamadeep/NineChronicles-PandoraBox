@@ -20,7 +20,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100301";
-        public static string VersionId = "010069";
+        public static string VersionId = "010070A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -35,7 +35,7 @@ namespace Nekoyume.PandoraBox
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
 
-        //General 
+        //General
         public static string CrystalTransferTx = "";
         public static string InspectedAddress = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
@@ -163,7 +163,6 @@ namespace Nekoyume.PandoraBox
         //PVE
         [HideInInspector] public int FightSpeed { get; set; } = 1;
         [HideInInspector] public int RaidCooldown { get; set; } = 30;
-        [HideInInspector] public bool RaidMethodIsProgress { get; set; }
 
         //PVP
 
@@ -191,7 +190,6 @@ namespace Nekoyume.PandoraBox
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             PlayerPrefs.SetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-            PlayerPrefs.SetInt("_PandoraBox_PVE_RaidMethodIsProgress", System.Convert.ToInt32(RaidMethodIsProgress));
 
             //PVP
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
@@ -238,8 +236,6 @@ namespace Nekoyume.PandoraBox
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
             RaidCooldown = PlayerPrefs.GetInt("_PandoraBox_PVE_RaidCooldown", RaidCooldown);
-            RaidMethodIsProgress = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_RaidMethodIsProgress",
-                System.Convert.ToInt32(RaidMethodIsProgress)));
 
             //PVP
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);

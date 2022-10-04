@@ -18,6 +18,19 @@ namespace Nekoyume.UI
 {
     public class PandoraSettingPopup : PopupWidget
     {
+        [Header("PANDORA PRIME")]
+        [SerializeField] private TMP_InputField cAmount;
+        [SerializeField] private TMP_InputField cAaddress;
+        [SerializeField] private TMP_InputField cMemo;
+        [SerializeField] private TextMeshProUGUI cLog;
+
+        [Space(50)]
+
+        public Transform tabHolder;
+
+        [SerializeField]
+        Transform tabContentHolder;
+
         //node connected
         [SerializeField]
         TextMeshProUGUI nodeText;
@@ -57,13 +70,6 @@ namespace Nekoyume.UI
         [SerializeField]
         Slider arenaLoSlider;
 
-        //Raid Method
-        [SerializeField]
-        Image farmImage;
-
-        [SerializeField]
-        Image progressImage;
-
         //multiple login
         [SerializeField]
         Image multiLogOnImage;
@@ -77,6 +83,8 @@ namespace Nekoyume.UI
 
         [SerializeField]
         Image introStoryOffImage;
+
+        int blockShowType;
 
         protected override void Awake()
         {
@@ -104,7 +112,6 @@ namespace Nekoyume.UI
             LoadArenaUp();
             arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
-            LoadRaidMethod();
             LoadMultipleLogin();
             LoadIntroStory();
 
@@ -129,7 +136,17 @@ namespace Nekoyume.UI
         {
             base.Show(true);
         }
-        int blockShowType;
+
+        public void SwitchTab(int currentTab)
+        {
+            foreach (Transform item in tabHolder)
+                item.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 0.5f);
+            foreach (Transform item in tabContentHolder)
+                item.gameObject.SetActive(false);
+
+            tabHolder.GetChild(currentTab).GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 1, 1, 1);
+            tabContentHolder.GetChild(currentTab).gameObject.SetActive(true);
+        }
 
         public void ResetDefault()
         {
@@ -147,7 +164,6 @@ namespace Nekoyume.UI
             LoadArenaUp();
             arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
-            LoadRaidMethod();
             LoadMultipleLogin();
             LoadIntroStory();
         }
@@ -163,18 +179,6 @@ namespace Nekoyume.UI
             timeImage.color = blockShowType == 0 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             blockImage.color = blockShowType == 1 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             bothImage.color = blockShowType == 2 ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-        }
-
-        public void ChangeRaidMethod(bool value)
-        {
-            PandoraMaster.Instance.Settings.RaidMethodIsProgress = value;
-            LoadRaidMethod();
-        }
-
-        void LoadRaidMethod()
-        {
-            progressImage.color = PandoraMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            farmImage.color = !PandoraMaster.Instance.Settings.RaidMethodIsProgress ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeMultipleLogin(bool value)
@@ -238,6 +242,12 @@ namespace Nekoyume.UI
         public void LoadArenaLo()
         {
             arenaLoText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
+        }
+
+        public void SC()
+        {
+            //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
+            cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
         }
     }
 }
