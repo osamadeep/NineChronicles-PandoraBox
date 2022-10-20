@@ -347,10 +347,12 @@ namespace Nekoyume.UI
                 oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 if (orderDigest.OrderId == orderDigests.Last().OrderId)
+                {
                     LastItemSold = itemBase;
+                    LastSoldTxt.text = LastItemSold.GetLocalizedName() + "><b><color=#FFCF2A>" + orderDigest.Price.MajorUnit + "</color></b>NCG";
+                }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
-
 
             Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
             Analyzer.Instance.Track("Unity/UpdateSellAll", new Value
@@ -437,12 +439,14 @@ namespace Nekoyume.UI
             var totalPrice = data.Price.Value;
             var count = data.Count.Value;
             var itemSubType = data.Item.Value.ItemBase.Value.ItemSubType;
-            Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
-                .Subscribe();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             LastItemSold = data.Item.Value.ItemBase.Value;
             LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
+            //Prime.IsSellDebugAnalyze = Find<ItemCountableAndPricePopup>().SellActionDebug.isOn;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
+                .Subscribe();
+
             Analyzer.Instance.Track("Unity/Sell", new Value
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
@@ -492,7 +496,10 @@ namespace Nekoyume.UI
                 totalPrice,
                 count
             );
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            LastItemSold = data.Item.Value.ItemBase.Value;
+            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Game.Game.instance.ActionManager.UpdateSell(new List<UpdateSellInfo> {updateSellInfo}).Subscribe();
             Analyzer.Instance.Track("Unity/UpdateSell", new Value
             {

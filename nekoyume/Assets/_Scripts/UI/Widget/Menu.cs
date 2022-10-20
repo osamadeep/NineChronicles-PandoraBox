@@ -173,7 +173,7 @@ namespace Nekoyume.UI
             fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
             updateAvatarButton.onClick.AddListener(() => { UpdateAvatar(); });
             runnerButton.onClick.AddListener(() => { ShowRunner(); });
-            eventButton.onClick.AddListener(() => { FastShowEvent(); });
+            //eventButton.onClick.AddListener(() => { FastShowEvent(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -555,7 +555,7 @@ namespace Nekoyume.UI
 
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
             //set name to playfab
-            if (string.IsNullOrEmpty(PandoraMaster.PlayFabDisplayName))
+            if (string.IsNullOrEmpty(PandoraMaster.PlayFabCurrentPlayer.DisplayName))
             {
                 var request = new UpdateUserTitleDisplayNameRequest {
                     DisplayName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4),
@@ -581,7 +581,7 @@ namespace Nekoyume.UI
 
         void OnChangePlayFabNameSuccess(UpdateUserTitleDisplayNameResult result)
         {
-            PandoraMaster.PlayFabDisplayName = States.Instance.CurrentAvatarState.NameWithHash;
+            PandoraMaster.PlayFabCurrentPlayer.DisplayName = States.Instance.CurrentAvatarState.NameWithHash;
             //success
         }
 

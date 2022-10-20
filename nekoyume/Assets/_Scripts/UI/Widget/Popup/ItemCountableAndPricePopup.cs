@@ -18,6 +18,12 @@ namespace Nekoyume.UI
 
     public class ItemCountableAndPricePopup : ItemCountPopup<Model.ItemCountableAndPricePopup>
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        public UnityEngine.UI.Toggle SellActionDebug;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private Button overrideCancelButton;
 
         [SerializeField] private TMP_InputField priceInputField = null;

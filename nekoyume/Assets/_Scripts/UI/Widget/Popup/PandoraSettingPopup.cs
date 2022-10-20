@@ -84,6 +84,20 @@ namespace Nekoyume.UI
         [SerializeField]
         Image introStoryOffImage;
 
+        //arena multi method
+        [SerializeField]
+        Image arenaConfirmImage;
+
+        [SerializeField]
+        Image arenaPushImage;
+
+        //Arena Push Step Count
+        [SerializeField]
+        TextMeshProUGUI pushStepText;
+
+        [SerializeField]
+        Slider pushStepSlider;
+
         int blockShowType;
 
         protected override void Awake()
@@ -108,12 +122,15 @@ namespace Nekoyume.UI
             LoadMenuSpeed();
             fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
             LoadFightSpeed();
+            pushStepSlider.value = PandoraMaster.Instance.Settings.ArenaPushStep;
+            LoadArenaPushSteps();
             arenaUpSlider.value = PandoraMaster.Instance.Settings.ArenaListUpper;
             LoadArenaUp();
             arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadMultipleLogin();
             LoadIntroStory();
+            LoadArenaMethod();
 
             SubmitWidget = () => Close(true);
             CloseWidget = () => Close(true);
@@ -125,6 +142,7 @@ namespace Nekoyume.UI
             PandoraMaster.Instance.Settings.BlockShowType = blockShowType;
             PandoraMaster.Instance.Settings.MenuSpeed = (int)menuSpeedSlider.value;
             PandoraMaster.Instance.Settings.FightSpeed = (int)fightSpeedSlider.value;
+            PandoraMaster.Instance.Settings.ArenaPushStep = (int)pushStepSlider.value;
             PandoraMaster.Instance.Settings.ArenaListUpper = (int)arenaUpSlider.value;
             PandoraMaster.Instance.Settings.ArenaListLower = (int)arenaLoSlider.value;
             PandoraMaster.Instance.Settings.Save();
@@ -160,12 +178,15 @@ namespace Nekoyume.UI
             LoadMenuSpeed();
             fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
             LoadFightSpeed();
+            pushStepSlider.value = PandoraMaster.Instance.Settings.ArenaPushStep;
+            LoadArenaPushSteps();
             arenaUpSlider.value = PandoraMaster.Instance.Settings.ArenaListUpper;
             LoadArenaUp();
             arenaLoSlider.value = PandoraMaster.Instance.Settings.ArenaListLower;
             LoadArenaLo();
             LoadMultipleLogin();
             LoadIntroStory();
+            LoadArenaMethod();
         }
 
         public void ChangeTimeScale(int value)
@@ -205,6 +226,18 @@ namespace Nekoyume.UI
             introStoryOffImage.color = !PandoraMaster.Instance.Settings.IsStory ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
+        public void ChangeArenaMethod(bool value)
+        {
+            PandoraMaster.Instance.Settings.ArenaPush = value;
+            LoadArenaMethod();
+        }
+
+        void LoadArenaMethod()
+        {
+            arenaPushImage.color = PandoraMaster.Instance.Settings.ArenaPush ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            arenaConfirmImage.color = !PandoraMaster.Instance.Settings.ArenaPush ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
         public void ChangeMenuSpeed()
         {
             LoadMenuSpeed();
@@ -225,6 +258,16 @@ namespace Nekoyume.UI
             fightSpeedText.text = "Fight Speed : X" + (int)fightSpeedSlider.value;
         }
 
+        public void ChangeArenaPushSteps()
+        {
+            LoadArenaPushSteps();
+        }
+
+        public void LoadArenaPushSteps()
+        {
+            pushStepText.text = "Arena Push Blocks : " + (int)pushStepSlider.value;
+        }
+
         public void ChangeArenaUp()
         {
             LoadArenaUp();
@@ -242,12 +285,6 @@ namespace Nekoyume.UI
         public void LoadArenaLo()
         {
             arenaLoText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
-        }
-
-        public void SC()
-        {
-            //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
-            cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
         }
     }
 }

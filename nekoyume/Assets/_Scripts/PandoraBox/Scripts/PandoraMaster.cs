@@ -29,8 +29,7 @@ namespace Nekoyume.PandoraBox
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //Playfab
-        public static string PlayFabID;
-        public static string PlayFabDisplayName;
+        public static PlayerProfileModel PlayFabCurrentPlayer = new PlayerProfileModel();
         public static string PlayFabRunnerLeaderboard = "Runner2";
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
@@ -138,8 +137,8 @@ namespace Nekoyume.PandoraBox
     public class PandoraSettings
     {
         //General
-        [HideInInspector] public bool IsStory { get; set; } = true;
-        [HideInInspector] public bool IsMultipleLogin { get; set; } = true;
+        [HideInInspector] public bool IsStory { get; set; } = false;
+        [HideInInspector] public bool IsMultipleLogin { get; set; } = false;
 
         [HideInInspector] public int BlockShowType { get; set; } = 0;
         [HideInInspector] public int MenuSpeed { get; set; } = 3;
@@ -171,7 +170,8 @@ namespace Nekoyume.PandoraBox
         [HideInInspector] public int ArenaListLower { get; set; } = 0;
 
         [HideInInspector] public int ArenaListStep { get; set; } = 90;
-        [HideInInspector] public bool ArenaPush { get; set; } //push means send every 3 whatever its confirm or not 
+        [HideInInspector] public bool ArenaPush { get; set; } = true; //push means send every 'ArenaPushStep' whatever its confirm or not
+        [HideInInspector] public int ArenaPushStep { get; set; } = 5;
 
         public void Save()
         {
@@ -195,7 +195,8 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
-            PlayerPrefs.SetInt("_PandoraBox_PVE_ArenaPush", System.Convert.ToInt32(ArenaPush));
+            PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPush", System.Convert.ToInt32(ArenaPush));
+            PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
 
             //apply ingame changes
             DOTween.timeScale = MenuSpeed;
@@ -241,7 +242,8 @@ namespace Nekoyume.PandoraBox
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
             ArenaListLower = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
             ArenaListStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
-            ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVE_ArenaPush",System.Convert.ToInt32(ArenaPush)));
+            ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPush",System.Convert.ToInt32(ArenaPush)));
+            ArenaPushStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
 
             //Load ingame changes
             DOTween.timeScale = MenuSpeed;

@@ -18,8 +18,7 @@ namespace Nekoyume.PandoraBox
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                PandoraMaster.Instance.ShowError(404,
-                    "Cannot connect to Pandora Server, please visit us for more information!");
+                PandoraMaster.Instance.ShowError(404,"Cannot connect to Pandora Server, please visit us for more information!");
             }
             else
             {

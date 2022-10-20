@@ -12,6 +12,7 @@ using Nekoyume.State;
 using Nekoyume.PandoraBox;
 using Nekoyume.UI.Scroller;
 using PlayFab.Json;
+using Cysharp.Threading.Tasks;
 
 namespace Nekoyume.UI
 {
@@ -536,13 +537,9 @@ namespace Nekoyume.UI
                 if (scoreDistance - gameSeed > Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score)
                 {
                     //send highscore notify
-                    using (dWebHook dcWeb = new dWebHook())
-                    {
-                        dcWeb.WebHook = DatabasePath.PandoraDiscordBot;
-                        dcWeb.SendMessage($"<:highScore:1009757079042539520>**[High Score]** {PandoraMaster.PlayFabDisplayName} "+
-                            $" broke {Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.PlayerName}"+
-                            $" by scoring **7897m**");
-                    }
+                    Premium.SendWebhookT(DatabasePath.PandoraDiscordBot, $"<:highScore:1009757079042539520>**[High Score]** {PandoraMaster.PlayFabCurrentPlayer.DisplayName} " +
+                            $" broke {Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.PlayerName}" +
+                            $" by scoring **7897m**").Forget();
                 }
             }
         }

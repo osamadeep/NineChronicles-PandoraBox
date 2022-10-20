@@ -39,6 +39,7 @@ namespace Nekoyume.Game
     using Nekoyume.PandoraBox;
     using PlayFab;
     using PlayFab.ClientModels;
+    using PlayFab.Json;
     using System.Net.Http;
     using UniRx;
 
@@ -134,6 +135,7 @@ namespace Nekoyume.Game
             {
                 Agent = GetComponent<Agent>();
             }
+
 
             States = new States();
             LocalLayer = new LocalLayer();
@@ -711,10 +713,20 @@ namespace Nekoyume.Game
             if (result.InfoResultPayload.PlayerProfile != null)
             {
                 isAuth = false;
-                PandoraMaster.PlayFabDisplayName = result.InfoResultPayload.PlayerProfile.DisplayName;
-                PandoraMaster.PlayFabID = result.InfoResultPayload.PlayerProfile.PlayerId;
-                Premium.CFHGKFITREER();
-                PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, PlayFabError);
+                PandoraMaster.PlayFabCurrentPlayer = result.InfoResultPayload.PlayerProfile;
+                PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, OnPlayFabError);
+
+                //testing
+                //PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest { StatisticName = "PremiumEndBlock",
+                //    ProfileConstraints = new PlayerProfileViewConstraints(){ShowDisplayName = true,ShowLinkedAccounts = true,}
+                //}, success =>
+                //{
+                //    foreach (var item in success.Leaderboard[0].Profile.LinkedAccounts)
+                //    {
+                //        Debug.LogError(item.PlatformUserId);
+                //    }
+                    
+                //}, OnPlayFabError);
             }
         }
         void OnStartSuccess(ExecuteCloudScriptResult result)
@@ -725,9 +737,13 @@ namespace Nekoyume.Game
         private void OnPlayFabInventorySuccess(GetUserInventoryResult result)
         {
             PandoraMaster.PlayFabInventory = result;
+
+            //get all player data
+            //PandoraPlayFabManager.GetPlayerData("");
+            //Debug.LogError();
         }
 
-        private void PlayFabError(PlayFabError error)
+        private void OnPlayFabError(PlayFabError error)
         {
             Debug.LogError(error.GenerateErrorReport());
         }
@@ -920,5 +936,6 @@ namespace Nekoyume.Game
                 rpcServerHost,
                 isTrackable);
         }
+
     }
 }

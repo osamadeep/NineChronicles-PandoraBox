@@ -590,6 +590,8 @@ namespace Nekoyume.BlockChain
             ProcessAction(action);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             Widget.Find<ShopSell>().LastItemSoldOrderID = action.orderId;
+            //if (Prime.IsSellDebugAnalyze)
+            //    Prime.DoSellDebugAnalyze(action);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return _agent.ActionRenderer.EveryRender<Sell>()
@@ -639,7 +641,7 @@ namespace Nekoyume.BlockChain
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
             ProcessAction(action);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            Widget.Find<ShopSell>().LastItemSoldOrderID = action.updateSellInfos.Last().orderId;
+            Widget.Find<ShopSell>().LastItemSoldOrderID = action.updateSellInfos.Last().updateSellOrderId;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return _agent.ActionRenderer.EveryRender<UpdateSell>()

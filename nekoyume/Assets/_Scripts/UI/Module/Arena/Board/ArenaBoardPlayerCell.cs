@@ -53,9 +53,9 @@ namespace Nekoyume.UI.Module.Arena.Board
         [SerializeField] private TextMeshProUGUI rateText = null;
 
         [SerializeField] private Transform bannerHolder = null;
-        [SerializeField] private Image rarityMockupImage = null;
+        [SerializeField] private GameObject transperentBlackText = null;
         [SerializeField] private GameObject FavTarget = null;
-        [SerializeField] private GameObject bannedObj = null;
+        [SerializeField] private GameObject GuildButton = null;
         public GameObject BlinkSelected = null;
 
         //arena
@@ -153,6 +153,11 @@ namespace Nekoyume.UI.Module.Arena.Board
             meAP = PlayersArenaParticipant.Value;
             selectedPan = PandoraMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
             enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
+            GuildButton.SetActive(!(enemyGuildPlayer is null));
+            if (!(enemyGuildPlayer is null))
+            {
+                GuildButton.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + enemyGuildPlayer.Guild);
+            }
 
             if (Widget.Find<FriendInfoPopupPandora>().enemyAP is null)
                 BlinkSelected.SetActive(false);
@@ -160,7 +165,6 @@ namespace Nekoyume.UI.Module.Arena.Board
                 BlinkSelected.SetActive(selectedAP.AvatarAddr ==
                                         Widget.Find<FriendInfoPopupPandora>().enemyAP.AvatarAddr);
             FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
-            bannedObj.SetActive(selectedPan.IsBanned);
 
             if (bannerHolder.childCount > 0)
                 foreach (Transform item in bannerHolder)
@@ -283,11 +287,24 @@ namespace Nekoyume.UI.Module.Arena.Board
 
         void SetBanner()
         {
+            //change cell color
+            Color selectedColor = new Color();
+            if (transform.GetSiblingIndex() % 2 == 0)
+                ColorUtility.TryParseHtmlString("#150C0D", out selectedColor);
+            else
+                ColorUtility.TryParseHtmlString("#29191B", out selectedColor);
+            transform.GetChild(0).GetComponent<Image>().color = selectedColor;
+
             NFTOwner currentNFTOwner = new NFTOwner();
             //Debug.LogError(avatarAddress);
             currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
+
+            
+
             if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
             {
+                //set text anti banner black transperent image
+                transperentBlackText.SetActive(true);
                 if (currentNFTOwner.CurrentArenaBanner != "")
                 {
                     NFTItem arenaBanner = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
@@ -314,6 +331,9 @@ namespace Nekoyume.UI.Module.Arena.Board
             }
             else
             {
+                //set text anti banner black transperent image
+                transperentBlackText.SetActive(false);
+
                 if (bannerHolder.childCount > 0)
                     Destroy(bannerHolder.GetChild(0).gameObject);
             }
@@ -337,7 +357,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                     var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
                     var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
                     var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
-                    extraInfoText.text = $"W.L: <color=green>{win}</color>/<color=red>{lose}</color>\nLeft: {a1}\nBought: {a3}";
+                    extraInfoText.text = $"<color=green>{win}</color>/<color=red>{lose}</color>\n{a1}\n{a3}";
                 }
             }
         }

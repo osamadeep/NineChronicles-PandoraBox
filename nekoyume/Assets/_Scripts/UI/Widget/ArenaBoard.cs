@@ -163,11 +163,6 @@ namespace Nekoyume.UI
         {
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             SetLastUpdate();
-            //RefreshObj.SetActive(true);
-
-            //await UniTask.WaitWhile(() =>
-            //    RxProps.ArenaParticipantsOrderedWithScore.IsUpdating);
-
             Show(
                 RxProps.ArenaParticipantsOrderedWithScore.Value,
                 ignoreShowAnimation);
@@ -238,7 +233,10 @@ namespace Nekoyume.UI
             //StartCoroutine(RefreshCooldown());
             StartCoroutine(LastUpdateCounter());
             RefreshObj.SetActive(false);
-            Premium.CheckForArenaQueue();
+            if (!PandoraMaster.Instance.Settings.ArenaPush)
+                Premium.CheckForArenaQueue();
+            else
+                Premium.PushArenaFight();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -282,8 +280,8 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             OldScore = player.Score;
-            extraInfoText.text = $"Win/Lose: <color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
-                $"\nLeft: {player.CurrentArenaInfo.Ticket}\nBought: {player.CurrentArenaInfo.PurchasedTicketCount}";
+            extraInfoText.text = $"<color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
+                $"\n{player.CurrentArenaInfo.Ticket}\n{player.CurrentArenaInfo.PurchasedTicketCount}";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

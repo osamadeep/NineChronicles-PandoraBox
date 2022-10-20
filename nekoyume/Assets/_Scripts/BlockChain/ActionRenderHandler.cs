@@ -1928,7 +1928,9 @@ namespace Nekoyume.BlockChain
                 {
                     arenaBattlePreparation.OnRenderBattleArena(eval);
                 }
-
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                Premium.CancelMultiArena();
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
 
                 return;
@@ -2078,7 +2080,13 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (Premium.ArenaBattleInProgress)
+            if (PandoraMaster.Instance.Settings.ArenaPush)
+            {
+                //no need to do anything except updating the agent
+                UpdateAgentStateAsync(eval).Forget();
+                UpdateCurrentAvatarStateAsync().Forget();
+            }
+            else if (Premium.ArenaBattleInProgress && !PandoraMaster.Instance.Settings.ArenaPush)
             {
                 UpdateAgentStateAsync(eval).Forget();
                 UpdateCurrentAvatarStateAsync().Forget();

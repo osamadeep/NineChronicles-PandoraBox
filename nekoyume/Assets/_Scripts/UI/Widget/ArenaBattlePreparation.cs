@@ -228,7 +228,15 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChangeTicketsCount()
         {
-            Premium.ChangeTicketsCount(maxTriesSld.value, _roundData);
+            try
+            {
+                Premium.ChangeTicketsCount(maxTriesSld.value, _roundData);
+            }catch
+            {
+                CurrentTicketsText.text = maxTriesSld.value.ToString();
+                ExpectedCostText.text = "? NCG";
+                ExpectedBlockText.text = "#?";
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
