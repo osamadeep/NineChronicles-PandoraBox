@@ -50,10 +50,7 @@ namespace Nekoyume.BlockChain
             Action<bool> callback
         );
 
-        void EnqueueAction(GameAction gameAction);
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        void EnqueueActionBase(ActionBase action);
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        void EnqueueAction(ActionBase actionBase);
 
         IValue GetState(Address address);
         Task<IValue> GetStateAsync(Address address);

@@ -317,7 +317,7 @@ namespace Nekoyume.UI
                     equipmentSlots.gameObject.SetActive(false);
                 },
                 ElementalTypeExtension.GetAllTypes(),
-                true);
+                isArena: true);
         }
 
         private void UpdateTitle()

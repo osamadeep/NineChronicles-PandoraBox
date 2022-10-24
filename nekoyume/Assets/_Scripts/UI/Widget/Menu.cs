@@ -237,6 +237,7 @@ namespace Nekoyume.UI
             Analyzer.Instance.Track("Unity/Click Guided Quest Combination Equipment", new Value
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
             CombinationClickInternal(() =>
                 Find<Craft>().ShowWithEquipmentRecipeId(recipeId));
@@ -416,6 +417,7 @@ namespace Nekoyume.UI
             Analyzer.Instance.Track("Unity/Enter arena page", new Value
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
             AudioController.PlayClick();
         }

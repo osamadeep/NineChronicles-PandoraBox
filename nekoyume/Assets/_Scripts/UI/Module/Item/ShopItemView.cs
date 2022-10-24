@@ -92,18 +92,16 @@ namespace Nekoyume.UI.Module
 
             baseItemView.CountText.gameObject.SetActive(model.ItemBase.ItemType == ItemType.Material);
             baseItemView.CountText.text = model.OrderDigest.ItemCount.ToString();
-            //baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (model.OrderDigest.ItemCount == 1)
-                baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+
+            if (model.OrderDigest.ItemCount > 1 && decimal.TryParse(model.OrderDigest.Price.GetQuantityString(), out var price))
+            {
+                var priceText = decimal.Round(price / model.OrderDigest.ItemCount, 3);
+                baseItemView.PriceText.text = $"{model.OrderDigest.Price.GetQuantityString()}({priceText})";
+            }
             else
             {
-                string unitPrice = ((float)model.OrderDigest.Price.MajorUnit / (float)model.OrderDigest.ItemCount)
-                    .ToString(); //.ToString("0.00");
-                baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString()
-                                              + $"({unitPrice})";
+                baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
             }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             model.Selected.Subscribe(b => baseItemView.SelectObject.SetActive(b)).AddTo(_disposables);
             model.Expired.Subscribe(b => baseItemView.ExpiredObject.SetActive(b)).AddTo(_disposables);

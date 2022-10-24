@@ -109,9 +109,9 @@ namespace Nekoyume.BlockChain
             return true;
         }
 
-        private void ProcessAction<T>(T gameAction) where T : GameAction
+        private void ProcessAction<T>(T actionBase) where T : ActionBase
         {
-            var actionType = gameAction.GetActionTypeAttribute();
+            var actionType = actionBase.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             try
@@ -126,8 +126,12 @@ namespace Nekoyume.BlockChain
             catch { } 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-            _agent.EnqueueAction(gameAction);
-            _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
+            _agent.EnqueueAction(actionBase);
+
+            if (actionBase is GameAction gameAction)
+            {
+                _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
+            }
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -255,6 +259,7 @@ namespace Nekoyume.BlockChain
                 ["StageId"] = stageId,
                 ["PlayCount"] = playCount,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
@@ -428,6 +433,7 @@ namespace Nekoyume.BlockChain
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
 
             var action = new CombinationConsumable
@@ -746,6 +752,7 @@ namespace Nekoyume.BlockChain
             Analyzer.Instance.Track("Unity/Item Enhancement", new Value
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
 
             var action = new ItemEnhancement
@@ -783,6 +790,7 @@ namespace Nekoyume.BlockChain
             Analyzer.Instance.Track("Unity/Ranking Battle", new Value
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -915,6 +923,7 @@ namespace Nekoyume.BlockChain
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
 
             var agentAddress = States.Instance.AgentState.address;
@@ -930,25 +939,27 @@ namespace Nekoyume.BlockChain
                 States.Instance.UpdateHammerPointStates(
                     recipeId, new HammerPointState(originHammerPointState.Address, recipeId));
             }
-
-            foreach (var pair in recipeInfo.Materials)
+            else
             {
-                var id = pair.Key;
-                var count = pair.Value;
-
-                if (!Game.Game.instance.TableSheets.MaterialItemSheet.TryGetValue(id, out var row))
+                foreach (var pair in recipeInfo.Materials)
                 {
-                    continue;
-                }
+                    var id = pair.Key;
+                    var count = pair.Value;
 
-                if (recipeInfo.ReplacedMaterials.ContainsKey(row.Id))
-                {
-                    count = avatarState.inventory.TryGetFungibleItems(row.ItemId, out var items)
-                        ? items.Sum(x => x.count)
-                        : 0;
-                }
+                    if (!Game.Game.instance.TableSheets.MaterialItemSheet.TryGetValue(id, out var row))
+                    {
+                        continue;
+                    }
 
-                LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId, count);
+                    if (recipeInfo.ReplacedMaterials.ContainsKey(row.Id))
+                    {
+                        count = avatarState.inventory.TryGetFungibleItems(row.ItemId, out var items)
+                            ? items.Sum(x => x.count)
+                            : 0;
+                    }
+
+                    LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId, count);
+                }
             }
 
             var action = new CombinationEquipment
@@ -986,6 +997,7 @@ namespace Nekoyume.BlockChain
             {
                 ["HourglassCount"] = cost,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             });
 
             var action = new RapidCombination

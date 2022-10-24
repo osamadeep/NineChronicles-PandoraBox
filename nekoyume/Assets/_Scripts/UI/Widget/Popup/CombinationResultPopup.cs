@@ -239,8 +239,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             _cpListForAnimationSteps.Clear();
             _resultItem.itemNameText.text = itemUsable.GetLocalizedName(false);
-            _resultItem.itemView.SetData(
-                Game.Game.instance.TableSheets.ItemSheet.OrderedList.First(e => e.Id == itemUsable.Id));
+            _resultItem.itemView.SetData(itemUsable);
             _resultItem.mainStatText.text = string.Empty;
             _resultItem.cpText.text = string.Empty;
 

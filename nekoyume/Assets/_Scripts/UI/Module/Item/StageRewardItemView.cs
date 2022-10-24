@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Nekoyume.Game.Character;
+using Nekoyume.Model.Item;
 using Nekoyume.TableData;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ namespace Nekoyume.UI.Module
     public class StageRewardItemView : VanillaItemView
     {
         public RectTransform RectTransform { get; private set; }
-        public ItemSheet.Row Data { get; private set; }
+        public ItemBase Data { get; private set; }
 
         public TouchHandler touchHandler;
 
@@ -29,10 +30,10 @@ namespace Nekoyume.UI.Module
             Clear();
         }
 
-        public override void SetData(ItemSheet.Row itemRow, System.Action onClick = null)
+        public override void SetData(ItemBase itemBase, System.Action onClick = null)
         {
-            base.SetData(itemRow, onClick);
-            Data = itemRow;
+            base.SetData(itemBase, onClick);
+            Data = itemBase;
             _disposables.DisposeAllAndClear();
             if (touchHandler != null && onClick != null)
             {

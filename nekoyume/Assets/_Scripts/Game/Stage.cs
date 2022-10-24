@@ -630,6 +630,7 @@ namespace Nekoyume.Game
                 ["CP"] = cp,
                 ["FoodCount"] = foodCount,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             };
             Analyzer.Instance.Track("Unity/Stage End", props);
         }

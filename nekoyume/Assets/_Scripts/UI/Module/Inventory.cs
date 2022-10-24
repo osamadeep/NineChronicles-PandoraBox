@@ -505,6 +505,7 @@ namespace Nekoyume.UI.Module
             System.Action clickEquipmentToggle,
             System.Action clickCostumeToggle,
             IEnumerable<ElementalType> elementalTypes,
+            Action<Inventory, Nekoyume.Model.Item.Inventory> onUpdateInventory = null,
             bool isArena = false,
             bool useConsumable = false)
         {
@@ -519,7 +520,8 @@ namespace Nekoyume.UI.Module
             Set(
                 itemSetDimPredicates: predicateList,
                 isArena: isArena,
-                useConsumable: useConsumable);
+                useConsumable: useConsumable,
+                onUpdateInventory: onUpdateInventory);
             _allowMoveTab = true;
         }
 
