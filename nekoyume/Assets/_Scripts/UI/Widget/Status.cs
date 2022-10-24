@@ -81,16 +81,17 @@ namespace Nekoyume.UI
             base.Show(ignoreStartAnimation);
             battleTimerView.Close();
             hpBar.transform.parent.gameObject.SetActive(false);
-            PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -52.5f);
-            //PandoraStatus.gameObject.SetActive(true);
             buffLayout.SetBuff(null);
+
+            PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -52.5f);
+            StopCoroutine(UpdateRemainingPremium());
+            StartCoroutine(UpdateRemainingPremium());
         }
 
         public void ShowBattleStatus()
         {
             hpBar.transform.parent.gameObject.SetActive(true);
             PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -79f);
-            //PandoraStatus.gameObject.SetActive(false);
         }
 
         public void ShowBattleTimer(int timeLimit)
@@ -153,7 +154,7 @@ namespace Nekoyume.UI
             //textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (gameObject.activeInHierarchy)
-                StartCoroutine(UpdataPandoraStatus());
+                UpdataPandoraStatus();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var displayHp = _player.CurrentHP;
             textHp.text = $"{displayHp} / {_player.HP}";
@@ -174,21 +175,9 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        IEnumerator UpdataPandoraStatus()
+        void UpdataPandoraStatus()
         {
-            if (Premium.IsPremium)
-            {
-                var timeR = Util.GetBlockToTime(PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
-                //PandoraStatus.text = $"Pandora:<color=green>PREMIUM</color> {timeR} ({PandoraBoxMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
-                PandoraStatus.gameObject.SetActive(true);
-                PandoraStatus.text = $"{timeR} ({PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
-            }
-            else
-            {
-                PandoraStatus.gameObject.SetActive(false);
-                //PandoraStatus.text = $"Pandora:<color=red> Basic</color>";
-            }
-
+            PandoraStatus.gameObject.SetActive(Premium.IsPremium);
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
 
@@ -197,7 +186,24 @@ namespace Nekoyume.UI
             {
                 textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
             }
-            yield return new WaitForSeconds(10);
+        }
+
+        IEnumerator UpdateRemainingPremium()
+        {
+            while (true)
+            {
+                try
+                {
+                    PandoraStatus.gameObject.SetActive(Premium.IsPremium);
+                    if (Premium.IsPremium)
+                    {
+                        var timeR = Util.GetBlockToTime(Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
+                        PandoraStatus.text = $"{timeR} ({Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+                    }
+                }
+                catch { }
+                yield return new WaitForSeconds(10);
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

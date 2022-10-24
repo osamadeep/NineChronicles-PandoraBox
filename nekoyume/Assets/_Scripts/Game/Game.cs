@@ -675,19 +675,34 @@ namespace Nekoyume.Game
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //auth is complete
             if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
-            {
-                /*
-                Please change the titleId below to your own titleId from PlayFab Game Manager.
-                If you have already set the value in the Editor Extensions, this can be skipped.
-                */
-                PlayFabSettings.staticSettings.TitleId = "42";
-            }
+            PlayFabSettings.staticSettings.TitleId = "42";
 
             Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address;
-            //Debug.LogError(currentLoginAddress);
-            var request = new LoginWithCustomIDRequest { CustomId = currentLoginAddress.ToString(),
-                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true } };
-            PlayFabClientAPI.LoginWithCustomID(request, OnPlayFabLoginSuccess, PlayFabLoginError);
+
+            //Login into playfab
+            PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
+            {
+                CustomId = currentLoginAddress.ToString(),
+                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
+            },
+            success =>
+            {
+                if (success.InfoResultPayload.PlayerProfile != null)
+                {
+                    isAuth = false;
+                    PandoraMaster.PlayFabCurrentPlayer = success.InfoResultPayload.PlayerProfile;
+
+                    //get players
+                    Premium.GetDatabase(currentLoginAddress);
+                }
+            },
+            failed =>
+            {
+                if (failed.Error == PlayFabErrorCode.AccountBanned)
+                    PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+                else
+                    Debug.LogError(failed.GenerateErrorReport());
+            });
 
             while (isAuth)
             {
@@ -708,52 +723,9 @@ namespace Nekoyume.Game
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         bool isAuth = true;
-        private void OnPlayFabLoginSuccess(LoginResult result)
-        {
-            if (result.InfoResultPayload.PlayerProfile != null)
-            {
-                isAuth = false;
-                PandoraMaster.PlayFabCurrentPlayer = result.InfoResultPayload.PlayerProfile;
-                PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), OnPlayFabInventorySuccess, OnPlayFabError);
-
-                //testing
-                //PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest { StatisticName = "PremiumEndBlock",
-                //    ProfileConstraints = new PlayerProfileViewConstraints(){ShowDisplayName = true,ShowLinkedAccounts = true,}
-                //}, success =>
-                //{
-                //    foreach (var item in success.Leaderboard[0].Profile.LinkedAccounts)
-                //    {
-                //        Debug.LogError(item.PlatformUserId);
-                //    }
-                    
-                //}, OnPlayFabError);
-            }
-        }
-        void OnStartSuccess(ExecuteCloudScriptResult result)
-        {
-            Debug.LogError(result.FunctionResult);
-        }
-
-        private void OnPlayFabInventorySuccess(GetUserInventoryResult result)
-        {
-            PandoraMaster.PlayFabInventory = result;
-
-            //get all player data
-            //PandoraPlayFabManager.GetPlayerData("");
-            //Debug.LogError();
-        }
-
         private void OnPlayFabError(PlayFabError error)
         {
             Debug.LogError(error.GenerateErrorReport());
-        }
-
-        private void PlayFabLoginError(PlayFabError error)
-        {
-            if (error.Error == PlayFabErrorCode.AccountBanned )
-                    PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
-            else
-                Debug.LogError(error.GenerateErrorReport());
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

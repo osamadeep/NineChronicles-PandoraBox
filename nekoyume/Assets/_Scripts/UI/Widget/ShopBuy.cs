@@ -147,6 +147,9 @@ namespace Nekoyume.UI
             }
 
             view.IsDoneLoadItem = true;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            view.PriceToggle.isOn = false;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||

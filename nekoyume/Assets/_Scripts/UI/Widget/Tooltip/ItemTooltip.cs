@@ -109,7 +109,7 @@ namespace Nekoyume.UI
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (!PandoraMaster.CurrentPandoraPlayer.IsPremium())
+                if (!Premium.CurrentPandoraPlayer.IsPremium())
                 {
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: This is Premium Feature!",
@@ -158,7 +158,7 @@ namespace Nekoyume.UI
 
             string itemString = "===== Pandora Item Information =====";
 
-            if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
+            if (Premium.CurrentPandoraPlayer.IsPremium())
             {
                 PandoraPlayer currentPandoraPlayer =
                     PandoraMaster.GetPandoraPlayer(ownerAvatarState.agentAddress.ToString());
@@ -368,7 +368,7 @@ namespace Nekoyume.UI
                 else
                 {
                     int maxCount = 2;
-                    if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
+                    if (Premium.CurrentPandoraPlayer.IsPremium())
                         maxCount = 15;
 
                     if (PandoraMaster.FavItems.Count > maxCount)

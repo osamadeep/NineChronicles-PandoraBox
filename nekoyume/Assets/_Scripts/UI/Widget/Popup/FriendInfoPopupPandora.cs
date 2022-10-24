@@ -154,7 +154,7 @@ namespace Nekoyume.UI
             else
             {
                 int maxCount = 2;
-                if (PandoraMaster.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                if (Premium.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
                     maxCount = 9;
 
                 if (PandoraMaster.ArenaFavTargets.Count > maxCount)

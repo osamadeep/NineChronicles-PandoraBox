@@ -8,6 +8,7 @@ using Nekoyume.UI.Scroller;
 using PlayFab;
 using PlayFab.ClientModels;
 using PlayFab.Json;
+using Nekoyume.State;
 
 namespace Nekoyume.UI
 {
@@ -71,7 +72,7 @@ namespace Nekoyume.UI
 
         void BuyMembership(int days)
         {
-            var request = new ExecuteCloudScriptRequest
+            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
             {
                 FunctionName = "buyMembership",
                 FunctionParameter = new
@@ -81,34 +82,35 @@ namespace Nekoyume.UI
                     currency = CurrencySTR,
                     cost = ItemPrice
                 }
-            };
-            PlayFabClientAPI.ExecuteCloudScript(request, OnValidateSuccess, OnPlayFabError);
-        }
-
-        void OnValidateSuccess(ExecuteCloudScriptResult result)
-        {
-            if (result.FunctionResult.ToString() == "Success")
+            },
+            success =>
             {
-                //adding score success
-                PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
-                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=green>Success!</color>", NotificationCell.NotificationType.Information);
-                Widget.Find<PandoraShopPopup>().UpdateCurrency();
-                Widget.Find<NineRunnerPopup>().UpdateCurrency();
-            }
-            else
+                if (success.FunctionResult.ToString() == "Success")
+                {
+                    //adding score success
+                    PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
+                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=green>Success!</color>", NotificationCell.NotificationType.Information);
+                    Widget.Find<PandoraShopPopup>().UpdateCurrency();
+                    Widget.Find<NineRunnerPopup>().UpdateCurrency();
+
+                    //update database
+                    Premium.GetDatabase(States.Instance.CurrentAvatarState.agentAddress);
+                }
+                else
+                {
+                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
+                }
+
+                foreach (Transform item in transform.parent)
+                    item.GetComponent<PandoraShopSlot>().buyBtn.interactable = true;
+
+            },
+            failed =>
             {
-                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-            }
-
-            foreach (Transform item in transform.parent)
-                item.GetComponent<PandoraShopSlot>().buyBtn.interactable = true;
-        }
-
-        void OnPlayFabError(PlayFabError result)
-        {
-            foreach (Transform item in transform.parent)
-                item.GetComponent<PandoraShopSlot>().buyBtn.interactable = true;
-            Debug.LogError("Score Not Sent!, " + result.GenerateErrorReport());
+                foreach (Transform item in transform.parent)
+                    item.GetComponent<PandoraShopSlot>().buyBtn.interactable = true;
+                Debug.LogError("Score Not Sent!, " + failed.GenerateErrorReport());
+            });
         }
     }
 }

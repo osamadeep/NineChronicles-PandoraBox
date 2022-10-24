@@ -30,8 +30,9 @@ namespace Nekoyume
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private UnityEngine.UI.Toggle PriceToggle;
+        [Header("PANDORA CUSTOM FIELDS")]
+        public UnityEngine.UI.Toggle PriceToggle;
+        [SerializeField] private UnityEngine.UI.Toggle SpellToggle;
 
         [SerializeField] private TMP_InputField priceValueTxt = null;
         [SerializeField] private TMP_Dropdown IsLessDrop = null;
@@ -206,6 +207,11 @@ namespace Nekoyume
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PriceToggle.onValueChanged.AddListener(_ => { UpdateView(); });
+            SpellToggle.onValueChanged.AddListener(_ => { UpdateView(); });
+            priceValueTxt.onValueChanged.AddListener(_ => {
+                if (priceValueTxt.text.Length > 0)
+                    UpdateView();
+            });
             IsLessDrop.onValueChanged.AddListener(_ => { UpdateView(); });
             ItemElementType.onValueChanged.AddListener(_ => { UpdateView(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -439,6 +445,12 @@ namespace Nekoyume
             {
                 models = models.Where(x =>
                     x.ItemBase.ElementalType == (Nekoyume.Model.Elemental.ElementalType)ItemElementType.value).ToList();
+            }
+
+            if (SpellToggle.isOn)
+            {
+                models = models.Where(x =>
+                    x.ItemBase.ItemType == Model.Item.ItemType.Equipment && (x.ItemBase as Model.Item.Equipment).Skills.Count > 0 ).ToList();
             }
 
             //SharedModel.isPrice = PriceToggle.isOn;

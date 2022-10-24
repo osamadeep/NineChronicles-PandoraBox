@@ -57,6 +57,7 @@ namespace Nekoyume.PandoraBox
         public int DiceRoll;
         public int TrialPremium;
         public int Crystal;
+        public float CrystalPremiumBouns;
         public List<PandoraPlayer> Players;
     }
 

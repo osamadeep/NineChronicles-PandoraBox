@@ -24,7 +24,7 @@ namespace Nekoyume.PandoraBox
 
         //Pandora Database
         public static PanDatabase PanDatabase;
-        public static PandoraPlayer CurrentPandoraPlayer; //data for local player since we use it alot
+        //public static PandoraPlayer CurrentPandoraPlayer; //data for local player since we use it alot
         public static Guild CurrentGuild; //data for local player since we use it alot
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
@@ -106,7 +106,7 @@ namespace Nekoyume.PandoraBox
         public static void SetCurrentPandoraPlayer(PandoraPlayer player)
         {
             //Initilize Current player for all Pandora information
-            CurrentPandoraPlayer = player;
+            //CurrentPandoraPlayer = player;
             Premium.Initialize(player);
 
             //Check for all Errors

@@ -550,7 +550,7 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PandoraMaster.SetCurrentPandoraPlayer(PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
+            //PandoraMaster.SetCurrentPandoraPlayer(PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
             string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraMaster.LoginIndex + "_Name";
 
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
