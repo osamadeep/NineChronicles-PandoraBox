@@ -15,13 +15,16 @@ using UnityEngine.UI;
 using PlayFab;
 using PlayFab.ClientModels;
 using Nekoyume.PandoraBox;
+using Nekoyume.Game.Controller;
 
 namespace Nekoyume.UI
 {
     public class PandoraShopPopup : PopupWidget
     {
         public Transform TabHolder;
+        public GameObject WaitingImage;
         [SerializeField] Transform tabContentHolder;
+
 
         [Header("Crystal Tab")]
         [SerializeField] TextMeshProUGUI EstimatedValueText;
@@ -46,21 +49,33 @@ namespace Nekoyume.UI
             base.Awake();
         }
 
+        public void ContactSupport()
+        {
+            Application.OpenURL("https://discordapp.com/users/1015187437888225310");
+        }
+
         public void SwitchTab(int currentTab)
         {
             foreach (Transform item in TabHolder)
-                item.GetComponentInChildren<Image>().color = new Color(1, 1, 1, 0.5f);
+            {
+                item.GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+                item.GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+            }
             foreach (Transform item in tabContentHolder)
                 item.gameObject.SetActive(false);
 
-            TabHolder.GetChild(currentTab).GetComponentInChildren<Image>().color = new Color(1, 1, 1, 1);
+            TabHolder.GetChild(currentTab).GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            TabHolder.GetChild(currentTab).GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1, 1);
             tabContentHolder.GetChild(currentTab).gameObject.SetActive(true);
+            AudioController.PlayClick();
         }
 
         public void Show()
         {
-            UpdateCurrency();
             base.Show();
+            UpdateCurrency();
+
+            WaitingImage.gameObject.SetActive(false);
 
             //Crystal tab
             BuyCrystalBtn.interactable = true;
@@ -83,6 +98,7 @@ namespace Nekoyume.UI
 
         public void BuyCrystal()
         {
+            AudioController.PlayClick();
             if (States.Instance.GoldBalanceState.Gold.MajorUnit < currentNcg)
             {
                 OneLineSystem.Push(MailType.System,
@@ -92,7 +108,8 @@ namespace Nekoyume.UI
             }
 
             int choosenCrystalPrice = CrystalPerNCG;
-            float totalchoosenCrystal = Premium.IsPremium ? (choosenCrystalPrice * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : choosenCrystalPrice * currentNcg;
+            float totalchoosenCrystal = Premium.CurrentPandoraPlayer.IsPremium() ?
+                (choosenCrystalPrice * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : choosenCrystalPrice * currentNcg;
             string content = $"Are you sure to spend <b>{currentNcg}</b> <color=#FFCF2A>NCG</color> to get <b>{(int)totalchoosenCrystal}</b> <color=#EF3DFF>CRYSTALS</color> ?";
             Find<TwoButtonSystem>().Show(content, "Yes","No",
             (() => {
@@ -107,7 +124,8 @@ namespace Nekoyume.UI
             if (!string.IsNullOrEmpty(NcgInput.text))
             {
                 currentNcg = Mathf.Clamp(int.Parse(NcgInput.text),10,1000);
-                totalCrystal = Premium.IsPremium ? (CrystalPerNCG * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : CrystalPerNCG * currentNcg;
+                totalCrystal = Premium.CurrentPandoraPlayer.IsPremium() ?
+                    (CrystalPerNCG * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : CrystalPerNCG * currentNcg;
                 CrystalInput.text = ((int)totalCrystal).ToString();
             }
         }
@@ -124,7 +142,8 @@ namespace Nekoyume.UI
                 int sliderValue = 100;
                 CrystalPerNCG = Random.Range(PandoraMaster.PanDatabase.Crystal - 500, PandoraMaster.PanDatabase.Crystal);
                 EstimatedValueText.text = $"Estimated Price:   <b>1</b> <color=#FFCF2A>NCG</color> = <b>{CrystalPerNCG}</b> <color=#EF3DFF>CRYSTALS</color>";
-                totalCrystal = Premium.IsPremium ? (CrystalPerNCG * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : CrystalPerNCG * currentNcg;
+                totalCrystal = Premium.CurrentPandoraPlayer.IsPremium() ?
+                    (CrystalPerNCG * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : CrystalPerNCG * currentNcg;
                 CrystalInput.text = ((int)totalCrystal).ToString();
                 while (--sliderValue > 0)
                 {

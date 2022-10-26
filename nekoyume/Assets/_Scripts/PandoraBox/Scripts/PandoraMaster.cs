@@ -107,7 +107,7 @@ namespace Nekoyume.PandoraBox
         {
             //Initilize Current player for all Pandora information
             //CurrentPandoraPlayer = player;
-            Premium.Initialize(player);
+            //Premium.Initialize(player);
 
             //Check for all Errors
             //if (CurrentPandoraPlayer.IsBanned)

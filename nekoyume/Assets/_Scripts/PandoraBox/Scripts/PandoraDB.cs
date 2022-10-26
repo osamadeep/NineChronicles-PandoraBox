@@ -57,6 +57,7 @@ namespace Nekoyume.PandoraBox
         public int DiceRoll;
         public int TrialPremium;
         public int Crystal;
+        public int PremiumPrice;
         public float CrystalPremiumBouns;
         public List<PandoraPlayer> Players;
     }
@@ -77,13 +78,20 @@ namespace Nekoyume.PandoraBox
 
         public bool IsPremium()
         {
-            int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
-            bool result = false;
-            if (PremiumEndBlock >= currentBlock)
-                result = true;
-            if (PandoraMaster.PanDatabase.TrialPremium > currentBlock)
-                result = true;
-            return result;
+            try
+            {
+                int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
+                bool result = false;
+                if (PremiumEndBlock >= currentBlock)
+                    result = true;
+                if (PandoraMaster.PanDatabase.TrialPremium > currentBlock)
+                    result = true;
+                return result;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 

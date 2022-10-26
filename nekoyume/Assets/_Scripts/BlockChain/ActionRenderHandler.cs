@@ -1628,10 +1628,25 @@ namespace Nekoyume.BlockChain
                         OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: Crystal Request Sent <color=green><b>Successfully</b></color>!"
                         , NotificationCell.NotificationType.Information);
+                        Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
                         Widget.Find<PandoraShopPopup>().Close();
 
-                        //Debug.LogError("RESPONSE: " + eval.Action.Memo);
+                        //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
                         Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo);
+                    }
+                    else if (eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
+                    {
+                        //OneLineSystem.Push(MailType.System,
+                        //"<color=green>Pandora Box</color>: Gems Request Sent <color=green><b>Successfully</b></color>!"
+                        //, NotificationCell.NotificationType.Information);
+
+                        Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
+                        Widget.Find<PandoraShopPopup>().Close();
+
+                        int ncg = (int)eval.Action.Amount.MajorUnit;
+                        int gems = int.Parse(eval.Action.Memo.Substring(14));
+                        //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
+                        Premium.ConfirmGemsRequest(eval.BlockIndex, gems, ncg);
                     }
                 }
                 catch { }

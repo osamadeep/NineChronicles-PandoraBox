@@ -114,7 +114,7 @@ namespace Nekoyume.UI
         {
             RefreshBtn.interactable = false;
             int cooldown = 25;
-            if (Premium.IsPremium)
+            if (Premium.CurrentPandoraPlayer.IsPremium())
                 cooldown = 10;
             TextMeshProUGUI buttonText = RefreshBtn.GetComponentInChildren<TextMeshProUGUI>();
 

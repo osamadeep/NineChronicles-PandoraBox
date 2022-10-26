@@ -83,9 +83,11 @@ namespace Nekoyume.UI
             hpBar.transform.parent.gameObject.SetActive(false);
             buffLayout.SetBuff(null);
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraStatus.rectTransform.anchoredPosition = new Vector2(95, -52.5f);
-            StopCoroutine(UpdateRemainingPremium());
+            StopAllCoroutines();
             StartCoroutine(UpdateRemainingPremium());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void ShowBattleStatus()
@@ -177,7 +179,12 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void UpdataPandoraStatus()
         {
-            PandoraStatus.gameObject.SetActive(Premium.IsPremium);
+            try
+            {
+                PandoraStatus.gameObject.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+            }
+            catch { }
+            
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
 
@@ -194,14 +201,15 @@ namespace Nekoyume.UI
             {
                 try
                 {
-                    PandoraStatus.gameObject.SetActive(Premium.IsPremium);
-                    if (Premium.IsPremium)
+                    //Debug.LogError("pre? " + Premium.CurrentPandoraPlayer.IsPremium());
+                    PandoraStatus.gameObject.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+                    if (Premium.CurrentPandoraPlayer.IsPremium())
                     {
                         var timeR = Util.GetBlockToTime(Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
                         PandoraStatus.text = $"{timeR} ({Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
                     }
                 }
-                catch { }
+                catch {}
                 yield return new WaitForSeconds(10);
             }
         }

@@ -109,6 +109,31 @@ namespace Nekoyume.BlockChain
             return true;
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public IObservable<ActionBase.ActionEvaluation<TransferAsset>> TransferAsset(
+        Address sender,
+        Address recipient,
+        FungibleAssetValue amount,
+        string memo)
+        {
+            // Create an action.
+            var action = new TransferAsset(
+                sender,
+                recipient,
+                amount,
+                memo);
+
+            // Request to create a transaction to IAgent inside of ProcessAction method.
+            ProcessAction(action);
+
+            // Return observable of the first render of the `TransferAsset` rendered from now.
+            return _agent.ActionRenderer.EveryRender<TransferAsset>()
+                .Timeout(ActionTimeout)
+                .First()
+                .ObserveOnMainThread();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         private void ProcessAction<T>(T actionBase) where T : ActionBase
         {
             var actionType = actionBase.GetActionTypeAttribute();

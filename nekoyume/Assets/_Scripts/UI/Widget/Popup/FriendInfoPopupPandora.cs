@@ -217,7 +217,7 @@ namespace Nekoyume.UI
         async void MultipleSimulate()
         {
             rateText.text = "Win Rate :" + "..."; //prevent old value
-            Premium.CheckPremium();
+            Premium.CheckPremiumFeature();
             rateText.text = "Win Rate :" + await Premium.WinRatePVP(meAP.AvatarAddr, enemyAP.AvatarAddr, meAP.AvatarState, enemyAP.AvatarState,100);
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";

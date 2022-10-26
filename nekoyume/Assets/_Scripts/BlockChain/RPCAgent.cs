@@ -495,24 +495,23 @@ namespace Nekoyume.BlockChain
 
             foreach (var action in actions)
             {
-                //try
-                //{
-                //    var ga = (GameAction)action.InnerAction;
-
-                //    _transactions.TryAdd(ga.Id, tx.Id);
-                //}
-                //catch
-                //{
-                //    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                //    // this is not optimal, need to Fix later
-                //    // we assume that its ncg request crystal ?
-                //    PandoraBox.PandoraMaster.CrystalTransferTx = tx.Id.ToString();
-                //    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                //}
                 if (action.InnerAction is GameAction gameAction)
                 {
                     _transactions.TryAdd(gameAction.Id, tx.Id);
                 }
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                else
+                {
+                    //this not gameAction, then we assume this is transfer to pandora
+                    PandoraBox.PandoraMaster.CrystalTransferTx = tx.Id.ToString();
+
+                    //if (gameAction.GetActionTypeAttribute().TypeIdentifier == "transfer_asset3")
+                    //{
+                    //    //there is no transfer_asset3 in game yet, se we assume this is transfer to pandora
+
+                    //}
+                }
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             }
         }
 

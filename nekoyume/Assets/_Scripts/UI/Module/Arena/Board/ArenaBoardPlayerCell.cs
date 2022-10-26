@@ -299,44 +299,46 @@ namespace Nekoyume.UI.Module.Arena.Board
             //Debug.LogError(avatarAddress);
             currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
 
-            
-
-            if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
+            try
             {
-                //set text anti banner black transperent image
-                transperentBlackText.SetActive(true);
-                if (currentNFTOwner.CurrentArenaBanner != "")
+                if (!(currentNFTOwner is null) && currentNFTOwner.OwnedItems.Count > 0)
                 {
-                    NFTItem arenaBanner = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
-                    if (bannerHolder.childCount > 0)
+                    //set text anti banner black transperent image
+                    transperentBlackText.SetActive(true);
+                    if (currentNFTOwner.CurrentArenaBanner != "")
                     {
-                        PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
-                        if (currentBanner.ItemName != arenaBanner.ItemName)
+                        NFTItem arenaBanner = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
+                        if (bannerHolder.childCount > 0)
                         {
-                            Destroy(bannerHolder.GetChild(0).gameObject);
+                            PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
+                            if (currentBanner.ItemName != arenaBanner.ItemName)
+                            {
+                                Destroy(bannerHolder.GetChild(0).gameObject);
+                                Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                            }
+                        }
+                        else
+                        {
                             Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
                         }
                     }
                     else
                     {
-                        Instantiate(Resources.Load(arenaBanner.PrefabLocation) as GameObject, bannerHolder);
+                        //clear arena slot
+                        if (bannerHolder.childCount > 0)
+                            Destroy(bannerHolder.GetChild(0).gameObject);
                     }
                 }
                 else
                 {
-                    //clear arena slot
+                    //set text anti banner black transperent image
+                    transperentBlackText.SetActive(false);
+
                     if (bannerHolder.childCount > 0)
                         Destroy(bannerHolder.GetChild(0).gameObject);
                 }
             }
-            else
-            {
-                //set text anti banner black transperent image
-                transperentBlackText.SetActive(false);
-
-                if (bannerHolder.childCount > 0)
-                    Destroy(bannerHolder.GetChild(0).gameObject);
-            }
+            catch { }
         }
 
         async void SetArenaInfo()
