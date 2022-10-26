@@ -82,9 +82,9 @@ namespace Nekoyume.PandoraBox
             {
                 int currentBlock = (int)Game.Game.instance.Agent.BlockIndex;
                 bool result = false;
-                if (PremiumEndBlock >= currentBlock)
+                if (PremiumEndBlock >= currentBlock && PremiumEndBlock > 5263000)
                     result = true;
-                if (PandoraMaster.PanDatabase.TrialPremium > currentBlock)
+                if (PandoraMaster.PanDatabase.TrialPremium > currentBlock && PandoraMaster.PanDatabase.TrialPremium > 5263000)
                     result = true;
                 return result;
             }
