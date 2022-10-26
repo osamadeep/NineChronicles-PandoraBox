@@ -2108,18 +2108,23 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraMaster.Instance.Settings.ArenaPush)
+            if (Premium.ArenaBattleInProgress)
             {
-                //no need to do anything except updating the agent
-                UpdateAgentStateAsync(eval).Forget();
-                UpdateCurrentAvatarStateAsync().Forget();
-            }
-            else if (Premium.ArenaBattleInProgress && !PandoraMaster.Instance.Settings.ArenaPush)
-            {
-                UpdateAgentStateAsync(eval).Forget();
-                UpdateCurrentAvatarStateAsync().Forget();
-                _disposableForBattleEnd = null;
-                Premium.OnArenaEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+                if (PandoraMaster.Instance.Settings.ArenaPush)
+                {
+                    //no need to do anything except updating the agent
+                    Premium.ArenaBattleInProgress = false;
+                    Widget.Find<ArenaBoard>().RefreshList().Forget();
+                    UpdateAgentStateAsync(eval).Forget();
+                    UpdateCurrentAvatarStateAsync().Forget();
+                }
+                else if (Premium.ArenaBattleInProgress && !PandoraMaster.Instance.Settings.ArenaPush)
+                {
+                    UpdateAgentStateAsync(eval).Forget();
+                    UpdateCurrentAvatarStateAsync().Forget();
+                    _disposableForBattleEnd = null;
+                    Premium.OnArenaEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+                }
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             else if (arenaBattlePreparation && arenaBattlePreparation.IsActive())
