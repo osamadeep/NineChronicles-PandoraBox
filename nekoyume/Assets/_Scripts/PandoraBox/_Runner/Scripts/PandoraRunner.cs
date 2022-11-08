@@ -20,15 +20,15 @@ namespace Nekoyume.PandoraBox
     public class PandoraRunner : MonoBehaviour
     {
         public enum RunnerState { Start, Play, Die, Hit, Info, Pause }
+        public RunnerController player;
         [SerializeField] Transform[] BgArray;
         [SerializeField] Transform[] enemiesArray;
         [SerializeField] Transform[] CoinsArray;
-        [SerializeField] RunnerController player;
+
         [SerializeField] Transform runnerBoss;
 
         //booster
         public BoosterSlot SelectedBooster = null;
-
         int scoreDistance;
         int scoreCoins;
         int life;
@@ -60,7 +60,7 @@ namespace Nekoyume.PandoraBox
             //Login into playfab
             PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
             {
-                CustomId = "0x1012041FF2254f43d0a938aDF89c3f11867A2A58",
+                CustomId = "0x46528E7DEdaC16951bDccb55B20303AB0c729679",
                 CreateAccount = true,
                 InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
             },
@@ -140,6 +140,8 @@ namespace Nekoyume.PandoraBox
             //reset boss position
             player.transform.position = new Vector2(-4.185f, -1.11f);
             runnerBoss.position = new Vector2(-6.463f, -1.11f);
+            player.gameObject.SetActive(true);
+            runnerBoss.gameObject.SetActive(true);
 
             SelectedBooster = null;
 
@@ -150,11 +152,11 @@ namespace Nekoyume.PandoraBox
         {
             //intro animation
             player.WalkingSound.enabled = true;
-            float learp = 0;
-            while (learp < 1)
+            //float learp = 0;
+            while (player.transform.position.x < 1)
             {
-                learp += Time.deltaTime / 2;
-                yield return new WaitForSeconds(0);
+                //learp += Time.deltaTime / 2;
+                yield return new WaitForSeconds(0.02f);
                 player.transform.position += new Vector3(0.04f, 0);
                 runnerBoss.position += new Vector3(0.04f, 0);
             }
@@ -163,7 +165,7 @@ namespace Nekoyume.PandoraBox
             RunnerUI.Show();
             yield return StartCoroutine(RunnerUI.ShowBoosterSelection()); //Widget.Find<Runner>()
 
-            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+            //runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
 
             //prepare start could function
             object FuncParam = new { booster = "None" };
@@ -244,12 +246,10 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator FinishStartAnimation(bool isBoosted)
         {
-            float learp = 0;
             runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
-            while (learp < 1)
+            while (player.transform.position.x > -2)
             {
-                learp += Time.deltaTime / 2;
-                yield return new WaitForSeconds(0);
+                yield return new WaitForSeconds(0.02f);
                 player.transform.position -= new Vector3(0.025f, 0);
                 runnerBoss.position -= new Vector3(0.04f, 0);
             }
@@ -340,34 +340,37 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator RocketSpawn()
         {
-            //while (true)
-            //{
-            //    yield return new WaitForSeconds(Random.Range(5f, 10f) / LevelSpeed);
-            //    if (currentRunnerState == RunnerState.Play)
-            //    {
-            //        //show warning
-            //        bool isVisible = false;
-            //        for (int i = 0; i < 10; i++)
-            //        {
-            //            isVisible = !isVisible;
-            //            warningObj.gameObject.SetActive(isVisible);
-            //            if (isVisible)
-            //                AudioController.instance.PlaySfx(AudioController.SfxCode.Alert);
-            //            yield return new WaitForSeconds(0.2f / LevelSpeed);
-            //        }
-            //        warningObj.gameObject.SetActive(false);
+            while (true)
+            {
+                yield return new WaitForSeconds(Random.Range(5f, 10f) / LevelSpeed);
+                if (currentRunnerState == RunnerState.Play)
+                {
+                    RunnerMissile currentEnemy = enemiesArray[0].GetComponent<RunnerMissile>(); //rocket enemy
 
-            //        if (currentRunnerState == RunnerState.Play)
-            //        {
-            //            Transform currentEnemy = enemiesArray[0]; //rocket enemy
-            //            currentEnemy.GetComponent<RectTransform>().anchoredPosition = new Vector2(850, warningObj.anchoredPosition.y);
-            //            currentEnemy.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
-            //            AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
-            //            currentEnemy.gameObject.SetActive(true);
-            //        }
+                    //show warning
+                    bool isVisible = false;
+                    AudioController.instance.PlaySfx(AudioController.SfxCode.Alert);
 
-            //    }
-            //}
+                    currentEnemy.WarningSprite.gameObject.SetActive(false);
+                    for (int i = 0; i < 10; i++)
+                    {
+                        isVisible = !isVisible;
+                        currentEnemy.WarningSprite.gameObject.SetActive(isVisible);
+                        yield return new WaitForSeconds(0.2f / LevelSpeed);
+                    }
+                    currentEnemy.WarningSprite.gameObject.SetActive(false);
+
+                    if (currentRunnerState == RunnerState.Play)
+                    {
+
+                        currentEnemy.Missile.transform.position = new Vector3(10, currentEnemy.WarningSprite.transform.position.y);
+                        currentEnemy.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
+                        AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
+                        currentEnemy.gameObject.SetActive(true);
+                    }
+
+                }
+            }
 
             yield return new WaitForSeconds(0);
         }
@@ -449,7 +452,7 @@ namespace Nekoyume.PandoraBox
                     item.gameObject.SetActive(false);
 
                 //player animation
-                player.SkeletonAnimation.state.TimeScale = 1;
+                player.RunnerSkeletonAnimation.state.TimeScale = 1;
                 player.LoseAnimation();
 
                 yield return new WaitForSeconds(1f);
@@ -657,7 +660,7 @@ namespace Nekoyume.PandoraBox
                 item.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
 
             //player
-            player.SkeletonAnimation.state.TimeScale = LevelSpeed;
+            player.RunnerSkeletonAnimation.state.TimeScale = LevelSpeed;
             player.WalkingSound.pitch = Mathf.Clamp(LevelSpeed, 1, 2);
         }
 

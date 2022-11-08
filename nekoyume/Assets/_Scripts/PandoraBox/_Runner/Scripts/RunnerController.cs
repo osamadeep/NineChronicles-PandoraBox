@@ -19,11 +19,11 @@ namespace Nekoyume.PandoraBox
         Rigidbody2D rb;
         int jumpCount;
         public float TimeScale;
-        public PandoraRunner.RunnerState runner;
+        public PandoraRunner.RunnerState runner = PandoraRunner.RunnerState.Start;
         bool IsSheld = false;
         public AudioSource WalkingSound;
 
-        public SkeletonAnimation SkeletonAnimation;
+        public SkeletonAnimation RunnerSkeletonAnimation;
 
         public Animator Animator;
 
@@ -44,13 +44,13 @@ namespace Nekoyume.PandoraBox
             WalkingSound = GetComponent<AudioSource>();
 
             // Find the slot by name.
-            var slot = SkeletonAnimation.skeleton.FindSlot("shadow");
+            var slot = RunnerSkeletonAnimation.skeleton.FindSlot("shadow");
             // Get the attachment by name from the skeleton's skin or default skin.
-            attachment = SkeletonAnimation.skeleton.GetAttachment(slot.Skeleton.FindSlotIndex("shadow"), "shadow");
+            attachment = RunnerSkeletonAnimation.skeleton.GetAttachment(slot.Skeleton.FindSlotIndex("shadow"), "shadow");
             // Sets the slot's attachment.
             slot.Attachment = attachment;
 
-            SkeletonAnimation.Skeleton.SetAttachment("weapon", null);
+            RunnerSkeletonAnimation.Skeleton.SetAttachment("weapon", null);
         }
 
         // Update is called once per frame
@@ -78,15 +78,12 @@ namespace Nekoyume.PandoraBox
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.CompareTag("Enemy") && runner == PandoraRunner.RunnerState.Play && !IsSheld)
+            if (( collision.CompareTag("Enemy") || collision.CompareTag("Missile")) && runner == PandoraRunner.RunnerState.Play && !IsSheld)
             {
 
                 //Widget.Find<Runner>().PlayerGotHit();
                 PandoraRunner.instance.PlayerGotHit();
-                if (collision.name == "EnemyRocket")
-                    collision.gameObject.SetActive(false);
-                else
-                    collision.transform.parent.gameObject.SetActive(false);
+                collision.transform.parent.gameObject.SetActive(false);
                 //ActionCamera.instance.Shake();
             }
             else if (collision.CompareTag("Coin") && runner == PandoraRunner.RunnerState.Play)
@@ -98,7 +95,7 @@ namespace Nekoyume.PandoraBox
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (collision.transform.CompareTag("GroundCollider"))
+            if (collision.transform.CompareTag("GroundCollider") && runner == PandoraRunner.RunnerState.Play)
             {
                 JetPackIsOn(false);
             }
@@ -138,13 +135,13 @@ namespace Nekoyume.PandoraBox
             if (isOn)
             {
                 Animator.Play(nameof(CharacterAnimation.Type.Casting), 0, 0f);
-                SkeletonAnimation.Skeleton.SetAttachment("shadow", null);
+                RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", null);
                 GetComponent<AudioSource>().enabled = false;
             }
             else
             {
                 Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
-                SkeletonAnimation.Skeleton.SetAttachment("shadow", attachment.Name);
+                RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", attachment.Name);
                 GetComponent<AudioSource>().enabled = true;
             }
 

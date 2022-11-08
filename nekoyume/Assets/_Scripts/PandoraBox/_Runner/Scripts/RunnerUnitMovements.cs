@@ -24,8 +24,15 @@ namespace Nekoyume
             transform.Translate(MoveAxis * MoveSpeed * TimeScale * Time.deltaTime);
             //rb.MovePosition(rb.position + (MoveAxis * MoveSpeed * TimeScale * Time.deltaTime));
             //rb.velocity = MoveAxis * MoveSpeed * TimeScale * Time.deltaTime * 100;
-            if (transform.position.x <= -30)
-                gameObject.SetActive(false);
+            if (transform.position.x <= -20)
+            {
+                if (transform.CompareTag("Missile"))
+                {
+                    transform.parent.gameObject.SetActive(false);
+                }
+                else
+                    gameObject.SetActive(false);
+            }
         }
     }
 }
