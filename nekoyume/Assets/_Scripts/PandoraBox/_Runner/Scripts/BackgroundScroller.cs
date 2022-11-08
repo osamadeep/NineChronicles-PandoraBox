@@ -29,8 +29,8 @@ namespace Nekoyume.UI
         {
             while (true)
             {
+                yield return new WaitForSeconds(20);
                 StartCoroutine(ChangeScene());
-                yield return new WaitForSeconds(5);
             }
         }
 

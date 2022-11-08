@@ -46,6 +46,9 @@ namespace Nekoyume.Game
     [RequireComponent(typeof(Agent), typeof(RPCAgent))]
     public class Game : MonoSingleton<Game>
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField] private PandoraRunner runner = null;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField] private Stage stage = null;
 
         [SerializeField] private Arena arena = null;
@@ -68,6 +71,9 @@ namespace Nekoyume.Game
 
         public Analyzer Analyzer { get; private set; }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public PandoraRunner Runner => runner;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         public Stage Stage => stage;
         public Arena Arena => arena;
         public RaidStage RaidStage => raidStage;
@@ -220,7 +226,9 @@ namespace Nekoyume.Game
             Stage.Initialize();
             Arena.Initialize();
             RaidStage.Initialize();
-
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Runner.Initialize();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Widget.Find<VersionSystem>().SetVersion(Agent.AppProtocolVersion);
 
@@ -903,11 +911,11 @@ namespace Nekoyume.Game
                 isTrackable = false;
             }
 
+
             Analyzer = new Analyzer(
                 uniqueId,
                 rpcServerHost,
                 isTrackable);
         }
-
     }
 }

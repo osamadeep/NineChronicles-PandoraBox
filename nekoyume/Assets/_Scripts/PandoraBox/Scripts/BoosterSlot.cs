@@ -54,7 +54,8 @@ namespace Nekoyume
             if (CheckObj.activeInHierarchy)
             {
                 CheckObj.SetActive(false);
-                Widget.Find<Runner>().SelectedBooster = null;
+                //Game.Game.instance.Runner.SelectedBooster = null; // <-- use this for production
+                PandoraRunner.instance.SelectedBooster = null;
             }
             else
             {
@@ -64,7 +65,8 @@ namespace Nekoyume
                 }
                 CheckObj.SetActive(true);
 
-                Widget.Find<Runner>().SelectedBooster = this;
+                //Game.Game.instance.Runner.SelectedBooster = this; // <-- use this for production
+                PandoraRunner.instance.SelectedBooster = this;
             }
         }
     }

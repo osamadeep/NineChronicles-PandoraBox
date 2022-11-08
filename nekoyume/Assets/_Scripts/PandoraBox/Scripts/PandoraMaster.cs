@@ -20,7 +20,8 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100311";
-        public static string VersionId = "010070";
+        public static string VersionId = "010071A";
+
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -52,6 +53,7 @@ namespace Nekoyume.PandoraBox
         public static int SelectedWorldID; // pve simulate
         public static int SelectedStageID; // pve simulate
         public static string CurrentArenaEnemyAddress;
+        public static Model.State.AvatarState CurrentShopSellerAvatar; //selected item owner avatar
 
 
         //Objects
@@ -94,7 +96,7 @@ namespace Nekoyume.PandoraBox
 
         public static PandoraPlayer GetPandoraPlayer(string address)
         {
-            foreach (PandoraPlayer player in PanDatabase.Players)
+            foreach (PandoraPlayer player in Premium.Pandoraplayers)
             {
                 if (player.Address.ToLower() == address.ToLower())
                     return player;

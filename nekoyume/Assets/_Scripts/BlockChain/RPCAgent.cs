@@ -745,10 +745,6 @@ namespace Nekoyume.BlockChain
         {
             return _queuedActions.Count;
         }
-        public void EnqueueActionBase(ActionBase action)
-        {
-            _queuedActions.Enqueue(action);
-        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

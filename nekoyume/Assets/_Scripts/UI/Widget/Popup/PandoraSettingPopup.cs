@@ -286,5 +286,11 @@ namespace Nekoyume.UI
         {
             arenaLoText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
         }
+
+        public void SC()
+        {
+            //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
+            //cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
+        }
     }
 }

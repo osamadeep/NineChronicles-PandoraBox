@@ -21,7 +21,7 @@ namespace Nekoyume.UI
                 if (Widget.Find<IntroScreen>().IsActive())
                     IntroRunnerLevelManager.instance.UpdateScore(50, 1);
                 else
-                    Widget.Find<Runner>().UpdateScore(50, 1);
+                    Game.Game.instance.Runner.UpdateScore(50, 1);
 
                 AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem);
                 GameObject ob = PickupPooler.instance.GetpooledObject();
@@ -29,7 +29,7 @@ namespace Nekoyume.UI
                 if (Widget.Find<IntroScreen>().IsActive())
                     ob.transform.SetParent(IntroRunnerLevelManager.instance.transform);
                 else
-                    ob.transform.SetParent(Widget.Find<Runner>().transform.Find("PooledObj"));
+                    ob.transform.SetParent(Game.Game.instance.Runner.transform.Find("PooledObj"));
                 RectTransform playerRecttransform = Recttransform;
                 ob.GetComponent<RectTransform>().anchoredPosition = playerRecttransform.anchoredPosition;
                 ob.GetComponent<RectTransform>().anchorMax = playerRecttransform.anchorMax;

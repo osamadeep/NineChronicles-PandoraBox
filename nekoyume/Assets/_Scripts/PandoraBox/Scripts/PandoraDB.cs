@@ -59,22 +59,14 @@ namespace Nekoyume.PandoraBox
         public int Crystal;
         public int PremiumPrice;
         public float CrystalPremiumBouns;
-        public List<PandoraPlayer> Players;
+        //public List<PandoraPlayer> Players;
     }
 
     [System.Serializable]
     public class PandoraPlayer
     {
         public string Address;
-        public bool IsBanned;
-        public bool IsProtected;
-        public bool IsIgnoringMessage;
-        public string DiscordID;
         public int PremiumEndBlock;
-        public int ArenaBanner;
-        public int ArenaIcon;
-        public int SwordSkin;
-        public int FriendViewSkin;
 
         public bool IsPremium()
         {

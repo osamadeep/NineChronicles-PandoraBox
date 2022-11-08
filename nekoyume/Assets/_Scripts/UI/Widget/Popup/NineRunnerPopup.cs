@@ -71,7 +71,7 @@ namespace Nekoyume.UI
 
         public void StartRunner()
         {
-            Find<Runner>().Show();
+            Game.Game.instance.Runner.OnRunnerStart();
             Close();
         }
 
