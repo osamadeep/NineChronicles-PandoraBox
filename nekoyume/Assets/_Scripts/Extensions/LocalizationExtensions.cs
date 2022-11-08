@@ -23,6 +23,7 @@ using Nekoyume.Model.Stat;
 using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
+using Nekoyume.UI.Model;
 using UnityEngine;
 using MailModel = Nekoyume.Model.Mail.Mail;
 using QuestModel = Nekoyume.Model.Quest.Quest;
@@ -222,6 +223,9 @@ namespace Nekoyume
                     return L10nManager.Localize("UI_MONSTER_COLLECTION_MAIL_FORMAT");
                 case GrindingMail grindingMail:
                     return L10nManager.Localize("UI_GRINDING_CRYSTALMAIL_FORMAT", grindingMail.Asset.ToString());
+                case RaidRewardMail rewardMail:
+                    return L10nManager.Localize("UI_RAID_SEASON_REWARD_MAIL_FORMAT",
+                        rewardMail.RaidId, rewardMail.CurrencyName, rewardMail.Amount);
                 default:
                     throw new NotSupportedException(
                         $"Given mail[{mail}] doesn't support {nameof(ToInfo)}() method.");

@@ -1,6 +1,7 @@
 using System;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
+using Nekoyume.Model.Mail;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,12 +22,12 @@ namespace Nekoyume.UI.Scroller
         [SerializeField]
         private ConditionalButton button = null;
 
+        private Mail _mail;
+
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField]
         private ConditionalButton buttonAgain = null;
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-        private Nekoyume.Model.Mail.Mail _mail;
 
         private void Awake()
         {
@@ -42,7 +43,7 @@ namespace Nekoyume.UI.Scroller
                 .AddTo(gameObject);
         }
 
-        public override void UpdateContent(Nekoyume.Model.Mail.Mail itemData)
+        public override void UpdateContent(Mail itemData)
         {
             _mail = itemData;
             UpdateView();
@@ -59,11 +60,12 @@ namespace Nekoyume.UI.Scroller
             var isNew = _mail.New;
 
             button.Interactable = isNew;
+            iconImage.overrideSprite = SpriteHelper.GetLocalMailIcon(_mail) ??
+                                       SpriteHelper.GetMailIcon(_mail.MailType);
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             button.gameObject.SetActive(isNew);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            iconImage.overrideSprite = SpriteHelper.GetMailIcon(_mail.MailType);
-
             content.text = await _mail.ToInfo();
             content.color = isNew
                 ? ColorHelper.HexToColorRGB("fff9dd")

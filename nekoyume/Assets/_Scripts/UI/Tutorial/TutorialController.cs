@@ -204,7 +204,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            var props = new Value
+            var props = new Dictionary<string, Value>()
             {
                 ["Id"] = id,
             };

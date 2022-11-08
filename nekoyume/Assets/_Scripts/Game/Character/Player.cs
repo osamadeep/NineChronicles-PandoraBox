@@ -707,7 +707,7 @@ namespace Nekoyume.Game.Character
 
             if (Level != level)
             {
-                Analyzer.Instance.Track("Unity/User Level Up", new Value
+                Analyzer.Instance.Track("Unity/User Level Up", new Dictionary<string, Value>()
                 {
                     ["code"] = level,
                     ["AvatarAddress"] = Game.instance.States.CurrentAvatarState.address.ToString(),
