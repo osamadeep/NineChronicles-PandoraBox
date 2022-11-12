@@ -50,22 +50,22 @@ namespace Nekoyume.UI
 
             if (playerData.Position == 0)
             {
-                _gemText.text = "x 20";
+                _gemText.text = "x 200";
                 _coinText.text = "x 12K";
             }
             else if (playerData.Position > 0 && playerData.Position < 5)
             {
-                _gemText.text = "x 12";
+                _gemText.text = "x 120";
                 _coinText.text = "x 7K";
             }
             else if (playerData.Position >= 5 && playerData.Position < 10)
             {
-                _gemText.text = "x 6";
+                _gemText.text = "x 60";
                 _coinText.text = "x 5K";
             }
             else if (playerData.Position >= 10 && playerData.Position < 15)
             {
-                _gemText.text = "x 2";
+                _gemText.text = "x 20";
                 _coinText.text = "x 3k";
             }
             else if (playerData.Position >= 15 && playerData.Position < 20)

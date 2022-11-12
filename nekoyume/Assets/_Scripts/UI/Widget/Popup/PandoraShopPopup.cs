@@ -31,6 +31,7 @@ namespace Nekoyume.UI
         [SerializeField] TMP_InputField NcgInput;
         [SerializeField] TextMeshProUGUI PremiumBounsText;
         [SerializeField] TMP_InputField CrystalInput;
+        [SerializeField] TextMeshProUGUI BonusGemsText;
         [SerializeField] Slider crystalPriceSlider;
         public Button BuyCrystalBtn;
         int CrystalPerNCG = 0;
@@ -127,6 +128,7 @@ namespace Nekoyume.UI
                 totalCrystal = Premium.CurrentPandoraPlayer.IsPremium() ?
                     (CrystalPerNCG * PandoraMaster.PanDatabase.CrystalPremiumBouns) * currentNcg : CrystalPerNCG * currentNcg;
                 CrystalInput.text = ((int)totalCrystal).ToString();
+                BonusGemsText.text = (currentNcg / 10).ToString();
             }
         }
 

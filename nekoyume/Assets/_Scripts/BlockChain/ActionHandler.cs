@@ -272,19 +272,32 @@ namespace Nekoyume.BlockChain
 
         protected static void UpdateCrystalBalance<T>(ActionBase.ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            if (!evaluation.Signer.Equals(States.Instance.AgentState.address) ||
-                !evaluation.OutputStates.UpdatedFungibleAssets.TryGetValue(
-                    evaluation.Signer,
-                    out var currencies) ||
+            //if (!evaluation.Signer.Equals(States.Instance.AgentState.address) ||
+            //    !evaluation.OutputStates.UpdatedFungibleAssets.TryGetValue(
+            //        evaluation.Signer,
+            //        out var currencies) ||
+            //    !currencies.Contains(CrystalCalculator.CRYSTAL))
+            //{
+            //    return;
+            //}
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            var addr = States.Instance.AgentState.address; // In case i am the sender
+            if (!evaluation.Signer.Equals(States.Instance.AgentState.address)) // In case i am the reciever
+                addr = evaluation.Signer;
+
+            if (!evaluation.OutputStates.UpdatedFungibleAssets.TryGetValue(
+                addr,
+                out var currencies) ||
                 !currencies.Contains(CrystalCalculator.CRYSTAL))
             {
                 return;
             }
-
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             try
             {
                 var crystal = evaluation.OutputStates.GetBalance(
-                    evaluation.Signer,
+                    States.Instance.AgentState.address,//evaluation.Signer,
                     CrystalCalculator.CRYSTAL);
                 States.Instance.SetCrystalBalance(crystal);
             }

@@ -150,11 +150,15 @@ namespace Nekoyume
                 var nonFungibleId = nonFungibleItem.NonFungibleId;
                 //Debug.LogError(nonFungibleId);
                 FeatureObj.SetActive(false);
+                FeatureObj.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "";
                 FeatureItem currentFeatureItem =
                     PandoraMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
 
                 if (!(currentFeatureItem is null) && currentFeatureItem.IsValid())
+                {
                     FeatureObj.SetActive(true);
+                    FeatureObj.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = $"PROMO>{currentFeatureItem.EndBlock}";
+                }
 
                 //if (nonFungibleId.ToString() == "8208c642-6848-4fba-81b3-494f36178e19" || nonFungibleId.ToString() == "4e8f40e9-00a2-4e0e-89fe-1d686da22702")
                 FavoriteObj.SetActive(PandoraMaster.FavItems.Contains(nonFungibleId.ToString()));

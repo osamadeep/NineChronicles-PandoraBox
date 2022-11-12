@@ -33,6 +33,33 @@ namespace Nekoyume.UI
             base.Close(ignoreCloseAnimation);
         }
 
+        public void PauseGame(bool isPause)
+        {
+            if (isPause)
+            {
+                Time.timeScale = 0;
+            }
+            else
+            {
+                Time.timeScale = 1;
+            }
+        }
+
+        public void ExitToMenu()
+        {
+            Time.timeScale = 1;
+            Game.Event.OnRoomEnter.Invoke(false);
+            Find<VersionSystem>().Show();
+
+            Close();
+            //gameObject.SetActive(false);
+        }
+
+        public void RestartGame()
+        {
+            Game.Game.instance.Runner.OnRunnerStart();
+        }
+
         public IEnumerator ShowBoosterSelection()
         {
             startCounterText.text = "";

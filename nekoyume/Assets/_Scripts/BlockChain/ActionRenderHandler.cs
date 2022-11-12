@@ -1625,14 +1625,14 @@ namespace Nekoyume.BlockChain
                 {
                     if (eval.Action.Memo.Substring(0, 15) == "Pandora Crystal")
                     {
-                        OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: Crystal Request Sent <color=green><b>Successfully</b></color>!"
-                        , NotificationCell.NotificationType.Information);
+                        //OneLineSystem.Push(MailType.System,
+                        //"<color=green>Pandora Box</color>: Crystal Request Sent <color=green><b>Successfully</b></color>!"
+                        //, NotificationCell.NotificationType.Information);
                         Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
                         Widget.Find<PandoraShopPopup>().Close();
 
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
-                        Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo);
+                        Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
                     }
                     else if (eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
                     {
@@ -1668,11 +1668,22 @@ namespace Nekoyume.BlockChain
                         L10nManager.Localize("UI_TRANSFERASSET_NOTIFICATION_RECIPIENT", amount, senderAddress),
                         NotificationCell.NotificationType.Notification);
                 }
+
+
+                try
+                {
+                    if (eval.Action.Memo.Substring(0, 6) == "PNDCRY")
+                    {
+                        Widget.Find<Alert>().Show("Crystals Incoming",
+                        $"You received {eval.Action.Amount.MajorUnit} <color=#EF3DFF>CRYSTALS</color>, Thank you for Using Pandora Service!", "OK", false);
+                    }
+                }
+                catch { }
+
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (eval.Action.Amount.MajorUnit > 100000) //maybe its crytal?
-                UpdateCrystalBalance(eval);
+            UpdateCrystalBalance(eval); //in case its crystal
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             UpdateAgentStateAsync(eval).Forget();
         }
@@ -2151,9 +2162,12 @@ namespace Nekoyume.BlockChain
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             var preRaiderStateEarly = WorldBossStates.GetRaiderState(avatarAddress);
+            int HighScore = 0;
+            if (!(preRaiderStateEarly is null))
+                HighScore = preRaiderStateEarly.HighScore;
             OneLineSystem.Push(MailType.System,
             "<color=green>Pandora Box</color>: Raid " +
-            $"<color=green><b>Successfully</b></color> committed on the blockchain, Your High is <color=green><b>{preRaiderStateEarly.HighScore}</b></color>"
+            $"<color=green><b>Successfully</b></color> committed on the blockchain, Your High is <color=green><b>{HighScore}</b></color>"
             , NotificationCell.NotificationType.Information);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

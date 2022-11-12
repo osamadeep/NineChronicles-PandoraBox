@@ -54,8 +54,8 @@ namespace Nekoyume
             if (CheckObj.activeInHierarchy)
             {
                 CheckObj.SetActive(false);
-                //Game.Game.instance.Runner.SelectedBooster = null; // <-- use this for production
-                PandoraRunner.instance.SelectedBooster = null;
+                Game.Game.instance.Runner.SelectedBooster = null; // <-- use this for production
+                //PandoraRunner.instance.SelectedBooster = null;
             }
             else
             {
@@ -65,8 +65,8 @@ namespace Nekoyume
                 }
                 CheckObj.SetActive(true);
 
-                //Game.Game.instance.Runner.SelectedBooster = this; // <-- use this for production
-                PandoraRunner.instance.SelectedBooster = this;
+                Game.Game.instance.Runner.SelectedBooster = this; // <-- use this for production
+                //PandoraRunner.instance.SelectedBooster = this;
             }
         }
     }

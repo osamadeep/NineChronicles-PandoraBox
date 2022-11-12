@@ -101,6 +101,32 @@ namespace Nekoyume.UI
                     NotificationCell.NotificationType.Information);
             }
 
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                //check client-side if cost is enough
+                if (PandoraMaster.PlayFabInventory.VirtualCurrency["PG"] < PandoraMaster.PanDatabase.ShopFeaturePrice)
+                {
+                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: You dont have {PandoraMaster.PanDatabase.ShopFeaturePrice} Pandora Gems!"
+                        , NotificationCell.NotificationType.Alert);
+                }
+                else
+                {
+                    if (currentItemBase is ITradableItem tradableItem)
+                    {
+                        
+                        if (currentItemBase is INonFungibleItem nonFungibleItem)
+                        {
+                            string content = $"Are you sure to spend <color=#76F3FE><b>{PandoraMaster.PanDatabase.ShopFeaturePrice} " +
+                                $"Pandora Gems</b></color> to Feature this item in market for 36500 Blocks(5 days)?";
+                            Find<TwoButtonSystem>().Show(content, "Yes", "No",
+                            (() => {
+                                Premium.BuyFeatureShop(nonFungibleItem.NonFungibleId.ToString());
+                            }));
+                        }
+                    }
+                }
+            }
+
             if (Input.GetKeyDown(KeyCode.I))
             {
                 if (!Premium.CurrentPandoraPlayer.IsPremium())

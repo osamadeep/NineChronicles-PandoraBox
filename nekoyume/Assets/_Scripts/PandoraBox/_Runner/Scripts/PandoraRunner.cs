@@ -21,11 +21,14 @@ namespace Nekoyume.PandoraBox
     {
         public enum RunnerState { Start, Play, Die, Hit, Info, Pause }
         public RunnerController player;
+        [SerializeField] Transform runnerBoss;
+        [SerializeField] Transform runnerLevel;
+
         [SerializeField] Transform[] BgArray;
         [SerializeField] Transform[] enemiesArray;
+        [SerializeField] Transform missileEnemy;
         [SerializeField] Transform[] CoinsArray;
 
-        [SerializeField] Transform runnerBoss;
 
         //booster
         public BoosterSlot SelectedBooster = null;
@@ -47,52 +50,55 @@ namespace Nekoyume.PandoraBox
 
         public Runner RunnerUI; //DELETE
 
-        public static PandoraRunner instance;
+        //public static PandoraRunner instance;
         void Awake()
         {
-            AudioController.instance.Initialize(); //delete
+            //AudioController.instance.Initialize(); //delete
             //ActionCamera.instance.Shake();
-            instance = this; //delete
+            //instance = this; //delete
+
         }
 
         private void Start()
         {
-            //Login into playfab
-            PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
-            {
-                CustomId = "0x46528E7DEdaC16951bDccb55B20303AB0c729679",
-                CreateAccount = true,
-                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
-            },
-            success =>
-            {
-                if (success.InfoResultPayload.PlayerProfile != null)
-                {
-                    PandoraMaster.PlayFabCurrentPlayer = success.InfoResultPayload.PlayerProfile;
+          
 
-                    //get inv
-                    PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(),
-                    succuss =>
-                    {
-                        PandoraMaster.PlayFabInventory = succuss;
-                        try
-                        {
-                            OnRunnerStart();
-                        }
-                        catch { }
-                    }, fail =>
-                    {
-                        PandoraMaster.Instance.ShowError(322, "Pandora cannot read Player Inventory!");
-                    });
-                }
-            },
-            failed =>
-            {
-                if (failed.Error == PlayFabErrorCode.AccountBanned)
-                    PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
-                else
-                    Debug.LogError(failed.GenerateErrorReport());
-            });
+            ////Login into playfab
+            //PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
+            //{
+            //    CustomId = "0x46528E7DEdaC16951bDccb55B20303AB0c729679",
+            //    CreateAccount = true,
+            //    InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
+            //},
+            //success =>
+            //{
+            //    if (success.InfoResultPayload.PlayerProfile != null)
+            //    {
+            //        PandoraMaster.PlayFabCurrentPlayer = success.InfoResultPayload.PlayerProfile;
+
+            //        //get inv
+            //        PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(),
+            //        succuss =>
+            //        {
+            //            PandoraMaster.PlayFabInventory = succuss;
+            //            try
+            //            {
+            //                OnRunnerStart();
+            //            }
+            //            catch { }
+            //        }, fail =>
+            //        {
+            //            PandoraMaster.Instance.ShowError(322, "Pandora cannot read Player Inventory!");
+            //        });
+            //    }
+            //},
+            //failed =>
+            //{
+            //    if (failed.Error == PlayFabErrorCode.AccountBanned)
+            //        PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+            //    else
+            //        Debug.LogError(failed.GenerateErrorReport());
+            //});
 
 
             
@@ -103,18 +109,17 @@ namespace Nekoyume.PandoraBox
             //something to Initialize
         }
 
-        void Update()
-        {
-            //warningObj.anchoredPosition = new Vector2(warningObj.anchoredPosition.x, runnerPlayer.position.y - 360);
-        }
 
         public void OnRunnerStart()
         {
+            runnerLevel.gameObject.SetActive(true);
+            player.gameObject.SetActive(true);
+            RunnerUI = Widget.Find<Runner>();
             Time.timeScale = 1;
 
-            //Widget.Find<HeaderMenuStatic>().Close();
-            //Widget.Find<Menu>().Close();
-            //Widget.Find<VersionSystem>().Close();
+            Widget.Find<HeaderMenuStatic>().Close();
+            Widget.Find<Menu>().Close();
+            Widget.Find<VersionSystem>().Close();
             LevelSpeed = 1;
             SpeedChange();
             StopAllCoroutines();
@@ -140,7 +145,6 @@ namespace Nekoyume.PandoraBox
             //reset boss position
             player.transform.position = new Vector2(-4.185f, -1.11f);
             runnerBoss.position = new Vector2(-6.463f, -1.11f);
-            player.gameObject.SetActive(true);
             runnerBoss.gameObject.SetActive(true);
 
             SelectedBooster = null;
@@ -164,8 +168,6 @@ namespace Nekoyume.PandoraBox
 
             RunnerUI.Show();
             yield return StartCoroutine(RunnerUI.ShowBoosterSelection()); //Widget.Find<Runner>()
-
-            //runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
 
             //prepare start could function
             object FuncParam = new { booster = "None" };
@@ -271,7 +273,7 @@ namespace Nekoyume.PandoraBox
             StartCoroutine(ScorePerMinute());
             StartCoroutine(EnemySpawn());
             StartCoroutine(IncreaseSpeed());
-            StartCoroutine(RocketSpawn());
+            StartCoroutine(MissileSpawn());
         }
 
         IEnumerator SpeedUp(int targetDistance)
@@ -338,14 +340,14 @@ namespace Nekoyume.PandoraBox
             }
         }
 
-        IEnumerator RocketSpawn()
+        IEnumerator MissileSpawn()
         {
             while (true)
             {
                 yield return new WaitForSeconds(Random.Range(5f, 10f) / LevelSpeed);
                 if (currentRunnerState == RunnerState.Play)
                 {
-                    RunnerMissile currentEnemy = enemiesArray[0].GetComponent<RunnerMissile>(); //rocket enemy
+                    RunnerMissile currentEnemy = missileEnemy.GetComponent<RunnerMissile>(); //rocket enemy
 
                     //show warning
                     bool isVisible = false;
@@ -364,7 +366,7 @@ namespace Nekoyume.PandoraBox
                     {
 
                         currentEnemy.Missile.transform.position = new Vector3(10, currentEnemy.WarningSprite.transform.position.y);
-                        currentEnemy.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
+                        currentEnemy.GetComponentInChildren<RunnerUnitMovements>().TimeScale = LevelSpeed;
                         AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
                         currentEnemy.gameObject.SetActive(true);
                     }
@@ -443,7 +445,7 @@ namespace Nekoyume.PandoraBox
                 StopCoroutine(ScorePerMinute());
                 StopCoroutine(EnemySpawn());
                 StopCoroutine(IncreaseSpeed());
-                StopCoroutine(RocketSpawn());
+                StopCoroutine(MissileSpawn());
                 
                 //clear all pooled objects
                 foreach (Transform item in enemiesArray)
@@ -528,7 +530,7 @@ namespace Nekoyume.PandoraBox
                 StartCoroutine(ScorePerMinute());
                 StartCoroutine(EnemySpawn());
                 StartCoroutine(IncreaseSpeed());
-                StartCoroutine(RocketSpawn());
+                StartCoroutine(MissileSpawn());
             }
         }
 
@@ -589,18 +591,6 @@ namespace Nekoyume.PandoraBox
         void OnPlayFabError(PlayFabError result)
         {
             Debug.LogError("Score Not Sent!, " + result.GenerateErrorReport());
-        }
-
-        public void PauseGame(bool isPause)
-        {
-            if (isPause)
-            {
-                Time.timeScale = 0;
-            }
-            else
-            {
-                Time.timeScale = 1;
-            }
         }
 
         //IEnumerator CrystalSpawner()
@@ -685,13 +675,5 @@ namespace Nekoyume.PandoraBox
         //    for (int i = 0; i < lives; i++)
         //        healthHolder.GetChild(i).gameObject.SetActive(true);
         //}
-
-        public void ExitToMenu()
-        {
-            Time.timeScale = 1;
-            Game.Event.OnRoomEnter.Invoke(false);
-            Widget.Find<VersionSystem>().Show();
-            gameObject.SetActive(false);
-        }
     }
 }

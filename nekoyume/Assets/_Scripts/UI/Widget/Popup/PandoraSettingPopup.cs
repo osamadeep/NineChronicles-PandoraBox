@@ -291,6 +291,7 @@ namespace Nekoyume.UI
         {
             //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
             //cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
+            //cAmount.text = cMemo.text = cAaddress.text = "";
         }
     }
 }

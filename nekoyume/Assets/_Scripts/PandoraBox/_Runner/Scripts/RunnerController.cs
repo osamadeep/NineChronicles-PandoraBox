@@ -33,16 +33,21 @@ namespace Nekoyume.PandoraBox
 
         private void Awake()
         {
-
+            rb = GetComponent<Rigidbody2D>();
+            WalkingSound = GetComponent<AudioSource>();
         }
 
         Attachment attachment;
         // Start is called before the first frame update
         void Start()
         {
-            rb = GetComponent<Rigidbody2D>();
-            WalkingSound = GetComponent<AudioSource>();
+            StartCoroutine(InitilizeRunner());
 
+        }
+
+        IEnumerator InitilizeRunner()
+        {
+            yield return new WaitForSeconds(1);
             // Find the slot by name.
             var slot = RunnerSkeletonAnimation.skeleton.FindSlot("shadow");
             // Get the attachment by name from the skeleton's skin or default skin.
@@ -82,14 +87,15 @@ namespace Nekoyume.PandoraBox
             {
 
                 //Widget.Find<Runner>().PlayerGotHit();
-                PandoraRunner.instance.PlayerGotHit();
+                Game.Game.instance.Runner.PlayerGotHit();
+                //PandoraRunner.instance.PlayerGotHit();
                 collision.transform.parent.gameObject.SetActive(false);
                 //ActionCamera.instance.Shake();
             }
             else if (collision.CompareTag("Coin") && runner == PandoraRunner.RunnerState.Play)
             {
                 //Widget.Find<Runner>().CollectCoins(collision.transform);
-                PandoraRunner.instance.CollectCoins(collision.transform);
+                Game.Game.instance.Runner.CollectCoins(collision.transform);
             }
         }
 
