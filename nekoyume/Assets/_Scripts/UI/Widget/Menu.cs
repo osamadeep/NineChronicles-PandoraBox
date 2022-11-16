@@ -762,9 +762,9 @@ namespace Nekoyume.UI
 
         public void ShowRunner()
         {
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under maintenance!",
-            NotificationCell.NotificationType.Information);
-            return;
+            //OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under maintenance!",
+            //NotificationCell.NotificationType.Information);
+            //return;
             Find<NineRunnerPopup>().Show();
         }
 

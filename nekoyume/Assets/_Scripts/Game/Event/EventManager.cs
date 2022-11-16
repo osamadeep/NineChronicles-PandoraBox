@@ -27,17 +27,16 @@ namespace Nekoyume
         {
             var currentBlockIndex = Game.Game.instance.Agent.BlockIndex;
             var currentEventDungeonId = RxProps.EventDungeonRow?.Id ?? 0;
-            return SO.timeBasedEvents.FirstOrDefault(e =>
-                       Util.IsInTime(e.beginDateTime, e.endDateTime)) ??
-                   SO.blockIndexBasedEvents.FirstOrDefault(e =>
-                       e.beginBlockIndex <= currentBlockIndex &&
-                       e.endBlockIndex >= currentBlockIndex) ??
-                   SO.eventDungeonIdBasedEvents.FirstOrDefault(e =>
-                       e.targetDungeonIds.Contains(currentEventDungeonId)) ??
-                   SO.defaultSettings;
+            //return SO.timeBasedEvents.FirstOrDefault(e =>
+            //           Util.IsInTime(e.beginDateTime, e.endDateTime)) ??
+            //       SO.blockIndexBasedEvents.FirstOrDefault(e =>
+            //           e.beginBlockIndex <= currentBlockIndex &&
+            //           e.endBlockIndex >= currentBlockIndex) ??
+            //       SO.eventDungeonIdBasedEvents.FirstOrDefault(e =>
+            //           e.targetDungeonIds.Contains(currentEventDungeonId)) ??
+            //       SO.defaultSettings;
 
-            //return SO.Events.FirstOrDefault(x => Util.IsInTime(x.BeginDateTime, x.EndDateTime)) ??
-            //       SO.DefaultEvent;
+            return SO.timeBasedEvents.FirstOrDefault(x => x.eventType == EventType.Christmas);
         }
 
         public static bool TryGetEvent(EventType eventType, out EventInfo timeBasedEventInfo)

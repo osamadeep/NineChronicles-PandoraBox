@@ -1,3 +1,4 @@
+using Spine.Unity;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,16 +7,25 @@ namespace Nekoyume
 {
     public class PandoraTest : MonoBehaviour
     {
-        // Start is called before the first frame update
-        void Start()
+
+        private SkeletonAnimation skeletonAnimation;
+
+        void Awake()
         {
-        
+            skeletonAnimation = GetComponent<SkeletonAnimation>();
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
-        
+            if (Input.GetKey(KeyCode.Space))
+                skeletonAnimation.AnimationName = "Casting";
+            else
+                skeletonAnimation.AnimationName = "Run";
+        }
+
+        void LateUpdate()
+        {
+
         }
     }
 }

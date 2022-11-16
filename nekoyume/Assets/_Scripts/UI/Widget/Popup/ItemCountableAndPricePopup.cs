@@ -21,6 +21,9 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         public UnityEngine.UI.Toggle SellActionDebug;
+        [SerializeField] private Button repeatLastButton;
+        int lastCount = 1;
+        decimal lastPrice = 1;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -51,6 +54,10 @@ namespace Nekoyume.UI
         {
             base.Awake();
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            repeatLastButton.onClick.AddListener(() => { priceInputField.text = lastPrice.ToString(); countInputField.text = lastCount.ToString(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             if (overrideCancelButton != null)
             {
                 overrideCancelButton.onClick.AddListener(() =>
@@ -77,6 +84,9 @@ namespace Nekoyume.UI
                     }
                     var count = InputFieldValueToValue<int>(countInputField);
                     var result = Mathf.Clamp(count, 1, maxCount);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    lastCount = result;
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     countInputField.text = result.ToString();
                     _data.OnChangeCount.OnNext(result);
                 }
@@ -121,6 +131,9 @@ namespace Nekoyume.UI
                 else
                 {
                     var price = InputFieldValueToValue<decimal>(priceInputField);
+                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                    lastPrice = price;
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     _data.OnChangePrice.OnNext(price);
                 }
 

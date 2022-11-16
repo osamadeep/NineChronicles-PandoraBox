@@ -26,7 +26,7 @@ namespace Nekoyume.PandoraBox
 
         [SerializeField] Transform[] BgArray;
         [SerializeField] Transform[] enemiesArray;
-        [SerializeField] Transform missileEnemy;
+        [SerializeField] RunnerMissile missileEnemy;
         [SerializeField] Transform[] CoinsArray;
 
 
@@ -156,6 +156,7 @@ namespace Nekoyume.PandoraBox
         {
             //intro animation
             player.WalkingSound.enabled = true;
+            player.JetPackIsOn(false);
             //float learp = 0;
             while (player.transform.position.x < 1)
             {
@@ -170,9 +171,9 @@ namespace Nekoyume.PandoraBox
             yield return StartCoroutine(RunnerUI.ShowBoosterSelection()); //Widget.Find<Runner>()
 
             //prepare start could function
-            object FuncParam = new { booster = "None" };
+            object FuncParam = new { booster = "None", block = Game.Game.instance.Agent.BlockIndex };
             if (SelectedBooster != null)
-                FuncParam = new { booster = SelectedBooster.ItemID };
+                FuncParam = new { booster = SelectedBooster.ItemID, block = Game.Game.instance.Agent.BlockIndex };
 
             //Get Greenlight from Server
             var request = new ExecuteCloudScriptRequest
@@ -342,39 +343,51 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator MissileSpawn()
         {
+            //RunnerMissile currentEnemy = missileEnemy.GetComponent<RunnerMissile>(); //rocket enemy
+            var sprite = missileEnemy.WarningSprite.GetComponent<SpriteRenderer>();
             while (true)
             {
                 yield return new WaitForSeconds(Random.Range(5f, 10f) / LevelSpeed);
                 if (currentRunnerState == RunnerState.Play)
                 {
-                    RunnerMissile currentEnemy = missileEnemy.GetComponent<RunnerMissile>(); //rocket enemy
+                    //fade sign
+                    sprite.color = new Color(1, 1, 1, 0);
+                    missileEnemy.WarningSprite.gameObject.SetActive(true);
+
+                    float learp = 0;
+                    while (learp < 1)
+                    {
+                        learp += 0.0075f * LevelSpeed;
+                        yield return new WaitForSeconds(0);
+                        sprite.color = new Color(1f, 1f, 1f, learp);
+                    }
 
                     //show warning
                     bool isVisible = false;
                     AudioController.instance.PlaySfx(AudioController.SfxCode.Alert);
 
-                    currentEnemy.WarningSprite.gameObject.SetActive(false);
+                    missileEnemy.WarningSprite.gameObject.SetActive(false);
                     for (int i = 0; i < 10; i++)
                     {
                         isVisible = !isVisible;
-                        currentEnemy.WarningSprite.gameObject.SetActive(isVisible);
-                        yield return new WaitForSeconds(0.2f / LevelSpeed);
+                        missileEnemy.WarningSprite.gameObject.SetActive(isVisible);
+                        yield return new WaitForSeconds(0.1f / LevelSpeed);
                     }
-                    currentEnemy.WarningSprite.gameObject.SetActive(false);
+                    missileEnemy.WarningSprite.gameObject.SetActive(false);
 
                     if (currentRunnerState == RunnerState.Play)
                     {
 
-                        currentEnemy.Missile.transform.position = new Vector3(10, currentEnemy.WarningSprite.transform.position.y);
-                        currentEnemy.GetComponentInChildren<RunnerUnitMovements>().TimeScale = LevelSpeed;
+                        missileEnemy.Missile.transform.position = new Vector3(10, missileEnemy.WarningSprite.transform.position.y);
+                        missileEnemy.Missile.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
                         AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
-                        currentEnemy.gameObject.SetActive(true);
+                        missileEnemy.Missile.gameObject.SetActive(true);
                     }
 
                 }
             }
 
-            yield return new WaitForSeconds(0);
+            //yield return new WaitForSeconds(0);
         }
         IEnumerator EnemySpawn()
         {
@@ -435,6 +448,9 @@ namespace Nekoyume.PandoraBox
             //SetLifeUI(life - gameSeed);
             if (life <= gameSeed)
             {
+                ActionCamera.instance.Shake();
+                AudioController.instance.PlaySfx(AudioController.SfxCode.Critical01);
+
                 currentRunnerState = RunnerState.Die;
                 player.runner = RunnerState.Die;
 
@@ -457,7 +473,7 @@ namespace Nekoyume.PandoraBox
                 player.RunnerSkeletonAnimation.state.TimeScale = 1;
                 player.LoseAnimation();
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(3f);
                 SelectedBooster = null;
 
                 RunnerUI.UIBoostersDie.SetActive(true);
@@ -480,11 +496,11 @@ namespace Nekoyume.PandoraBox
                 RunnerUI.UIBoostersDie.SetActive(false);
 
                 //prepare start could function
-                object FuncParam = new { booster = "None" };
+                object FuncParam = new { booster = "None", block = Game.Game.instance.Agent.BlockIndex };
                 if (SelectedBooster != null)
                 {
                     //player want to continue
-                    FuncParam = new { booster = SelectedBooster.ItemID, count = livesBought - gameSeed };
+                    FuncParam = new { booster = SelectedBooster.ItemID, count = livesBought - gameSeed, block = Game.Game.instance.Agent.BlockIndex };
 
                     //check if player has enough cost for end boosters
                     var request = new ExecuteCloudScriptRequest
@@ -549,7 +565,8 @@ namespace Nekoyume.PandoraBox
                     distance = scoreDistance,
                     sections = sectionsPassed,
                     coins = scoreCoins,
-                    address = "0x1012041FF2254f43d0a938aDF89c3f11867A2A58", //address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                    highscore = scoreDistance - gameSeed > Widget.Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score,
 
                     //statistics
                     lives = livesTaken,

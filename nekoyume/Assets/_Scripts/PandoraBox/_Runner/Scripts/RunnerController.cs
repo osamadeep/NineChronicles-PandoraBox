@@ -25,8 +25,6 @@ namespace Nekoyume.PandoraBox
 
         public SkeletonAnimation RunnerSkeletonAnimation;
 
-        public Animator Animator;
-
         [SerializeField]
         GameObject jetpackFire;
 
@@ -37,17 +35,18 @@ namespace Nekoyume.PandoraBox
             WalkingSound = GetComponent<AudioSource>();
         }
 
-        Attachment attachment;
-        // Start is called before the first frame update
         void Start()
         {
             StartCoroutine(InitilizeRunner());
-
         }
 
+
+        Attachment attachment;
         IEnumerator InitilizeRunner()
         {
-            yield return new WaitForSeconds(1);
+            WalkingSound.enabled = false;
+            yield return new WaitForSeconds(2);
+
             // Find the slot by name.
             var slot = RunnerSkeletonAnimation.skeleton.FindSlot("shadow");
             // Get the attachment by name from the skeleton's skin or default skin.
@@ -56,6 +55,7 @@ namespace Nekoyume.PandoraBox
             slot.Attachment = attachment;
 
             RunnerSkeletonAnimation.Skeleton.SetAttachment("weapon", null);
+            gameObject.SetActive(false);
         }
 
         // Update is called once per frame
@@ -83,14 +83,15 @@ namespace Nekoyume.PandoraBox
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (( collision.CompareTag("Enemy") || collision.CompareTag("Missile")) && runner == PandoraRunner.RunnerState.Play && !IsSheld)
+            if (( collision.CompareTag("Enemy")) && runner == PandoraRunner.RunnerState.Play && !IsSheld)
             {
-
-                //Widget.Find<Runner>().PlayerGotHit();
                 Game.Game.instance.Runner.PlayerGotHit();
-                //PandoraRunner.instance.PlayerGotHit();
                 collision.transform.parent.gameObject.SetActive(false);
-                //ActionCamera.instance.Shake();
+            }
+            else if (collision.CompareTag("Missile") && runner == PandoraRunner.RunnerState.Play && !IsSheld)
+            {
+                Game.Game.instance.Runner.PlayerGotHit();
+                collision.gameObject.SetActive(false);
             }
             else if (collision.CompareTag("Coin") && runner == PandoraRunner.RunnerState.Play)
             {
@@ -116,18 +117,25 @@ namespace Nekoyume.PandoraBox
         public void LoseAnimation()
         {
             WalkingSound.enabled = false;
-            Animator.Play(nameof(CharacterAnimation.Type.TurnOver_02), 0, 0f);
+            RunnerSkeletonAnimation.loop = false;
+            RunnerSkeletonAnimation.AnimationName = "TurnOver_02";
+            //Animator.Play(nameof(CharacterAnimation.Type.TurnOver_02), 0, 0f);
             //Animator.SetBool(nameof(CharacterAnimation.Type.Run), false);
         }
 
         public IEnumerator RecoverAnimation()
         {
-            Animator.Play(nameof(CharacterAnimation.Type.Win_03), 0, 0f);
-            yield return new WaitForSeconds(2);
+            RunnerSkeletonAnimation.loop = false;
+            RunnerSkeletonAnimation.AnimationName = "Win";
+            //Animator.Play(nameof(CharacterAnimation.Type.Win_03), 0, 0f);
+            yield return new WaitForSeconds(2.33f);
 
             WalkingSound.enabled = true;
-            Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
-            Animator.SetBool(nameof(CharacterAnimation.Type.Run), true);
+            RunnerSkeletonAnimation.loop = true;
+            RunnerSkeletonAnimation.AnimationName = "Run";
+
+            //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
+            //Animator.SetBool(nameof(CharacterAnimation.Type.Run), true);
         }
 
         public void Attack()
@@ -136,23 +144,27 @@ namespace Nekoyume.PandoraBox
         }
 
 
-        void JetPackIsOn(bool isOn)
+        public void JetPackIsOn(bool isOn)
         {
             if (isOn)
             {
-                Animator.Play(nameof(CharacterAnimation.Type.Casting), 0, 0f);
+                RunnerSkeletonAnimation.loop = true;
+                RunnerSkeletonAnimation.AnimationName = "Casting";
+                //Animator.Play(nameof(CharacterAnimation.Type.Casting), 0, 0f);
                 RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", null);
                 GetComponent<AudioSource>().enabled = false;
             }
             else
             {
-                Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
+                RunnerSkeletonAnimation.loop = true;
+                RunnerSkeletonAnimation.AnimationName = "Run";
+                //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
                 RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", attachment.Name);
                 GetComponent<AudioSource>().enabled = true;
             }
 
             jetpackFire.SetActive(isOn);
-            Animator.SetBool(nameof(CharacterAnimation.Type.Run), !isOn);
+            //Animator.SetBool(nameof(CharacterAnimation.Type.Run), !isOn);
         }
     }
 }

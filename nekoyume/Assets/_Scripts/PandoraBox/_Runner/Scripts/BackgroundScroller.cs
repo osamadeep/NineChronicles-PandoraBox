@@ -29,7 +29,7 @@ namespace Nekoyume.UI
         {
             while (true)
             {
-                yield return new WaitForSeconds(20);
+                yield return new WaitForSeconds(100);
                 StartCoroutine(ChangeScene());
             }
         }

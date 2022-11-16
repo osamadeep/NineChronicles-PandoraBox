@@ -26,6 +26,8 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI lastUpdateText = null;
+        [SerializeField] private TextMeshProUGUI AttackStatusText = null;
+
         public TextMeshProUGUI ExpectedTicketsText = null;
         public TextMeshProUGUI ExpectedRankText = null;
         public TextMeshProUGUI LastFightText = null;
@@ -90,6 +92,52 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        async UniTaskVoid GetDifferenceAttack()
+        {
+            while (true)
+            {
+
+                try
+                {
+                    long diff = 0;
+                    var myArenaAvatarStateAddr = Nekoyume.Model.State.ArenaAvatarState.DeriveAddress(RxProps.PlayersArenaParticipant.Value.AvatarAddr);
+                    var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
+                        ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
+                        : null;
+                    var myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
+                    diff = Game.Game.instance.Agent.BlockIndex - myLastBattle;
+
+                    if (diff < 3)
+                    {
+                        AttackStatusText.text = $"<color=red>Attack will Fail!</color>({diff})";
+                        foreach (Transform item in AttackStatusText.transform)
+                            item.gameObject.SetActive(false);
+                        AttackStatusText.transform.GetChild(2).gameObject.SetActive(true);
+                    }
+                    else if (diff >= 3 && diff < 6)
+                    {
+                        AttackStatusText.text = $"<color=#FF6B00>Risk To Fight!</color>({diff})";
+                        foreach (Transform item in AttackStatusText.transform)
+                            item.gameObject.SetActive(false);
+                        AttackStatusText.transform.GetChild(1).gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        AttackStatusText.text = $"<color=green>Safe To Attack!</color>({diff})";
+                        foreach (Transform item in AttackStatusText.transform)
+                            item.gameObject.SetActive(false);
+                        AttackStatusText.transform.GetChild(0).gameObject.SetActive(true);
+                    }
+                    await Task.Delay(System.TimeSpan.FromSeconds(5));
+                }
+                catch { }
+
+                await Task.Delay(System.TimeSpan.FromSeconds(.1f));
+            }
+
+        }
+
         void GoMyPlace()
         {
             UpdateScrolls();
@@ -231,6 +279,7 @@ namespace Nekoyume.UI
 
             base.Show(ignoreShowAnimation);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            GetDifferenceAttack().Forget();
             //StartCoroutine(RefreshCooldown());
             StartCoroutine(LastUpdateCounter());
             RefreshObj.SetActive(false);
