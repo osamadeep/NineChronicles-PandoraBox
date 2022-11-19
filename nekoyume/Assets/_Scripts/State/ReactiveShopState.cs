@@ -121,6 +121,9 @@ namespace Nekoyume.State
             }
 
             _buyDigest[itemSubType] = d;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _buyDigest[itemSubType] = digests.ToList();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var buyDigests = new List<OrderDigest>();
             foreach (var pair in _buyDigest)

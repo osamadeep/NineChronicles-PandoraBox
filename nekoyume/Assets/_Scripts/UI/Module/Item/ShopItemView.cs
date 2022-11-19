@@ -58,6 +58,10 @@ namespace Nekoyume.UI.Module
                     baseItemView.GuildObj.SetActive(true);
                 }
             }
+
+            // my item
+            baseItemView.myItem.SetActive(model.OrderDigest.SellerAgentAddress ==States.Instance.CurrentAvatarState.agentAddress);
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             baseItemView.GradeImage.overrideSprite = data.GradeBackground;

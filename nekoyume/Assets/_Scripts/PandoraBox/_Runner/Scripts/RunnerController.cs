@@ -62,7 +62,6 @@ namespace Nekoyume.PandoraBox
         void Update()
         {
             rb.gravityScale = TimeScale;
-            //Debug.LogError(transform.position.y);
             if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) &&  runner == PandoraRunner.RunnerState.Play)
             {
                 //AudioController.instance.PlaySfx(AudioController.SfxCode.Jump);
@@ -73,12 +72,6 @@ namespace Nekoyume.PandoraBox
 
                 JetPackIsOn(true);
             }
-
-            //Debug.LogError(transform.position.y);
-            //if (transform.position.y <= -1f)
-            //{
-
-            //}
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
@@ -95,7 +88,6 @@ namespace Nekoyume.PandoraBox
             }
             else if (collision.CompareTag("Coin") && runner == PandoraRunner.RunnerState.Play)
             {
-                //Widget.Find<Runner>().CollectCoins(collision.transform);
                 Game.Game.instance.Runner.CollectCoins(collision.transform);
             }
         }
@@ -119,23 +111,17 @@ namespace Nekoyume.PandoraBox
             WalkingSound.enabled = false;
             RunnerSkeletonAnimation.loop = false;
             RunnerSkeletonAnimation.AnimationName = "TurnOver_02";
-            //Animator.Play(nameof(CharacterAnimation.Type.TurnOver_02), 0, 0f);
-            //Animator.SetBool(nameof(CharacterAnimation.Type.Run), false);
         }
 
         public IEnumerator RecoverAnimation()
         {
             RunnerSkeletonAnimation.loop = false;
             RunnerSkeletonAnimation.AnimationName = "Win";
-            //Animator.Play(nameof(CharacterAnimation.Type.Win_03), 0, 0f);
             yield return new WaitForSeconds(2.33f);
 
             WalkingSound.enabled = true;
             RunnerSkeletonAnimation.loop = true;
             RunnerSkeletonAnimation.AnimationName = "Run";
-
-            //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
-            //Animator.SetBool(nameof(CharacterAnimation.Type.Run), true);
         }
 
         public void Attack()
@@ -148,6 +134,7 @@ namespace Nekoyume.PandoraBox
         {
             if (isOn)
             {
+                AudioController.instance.PlaySfx(AudioController.SfxCode.Jet);
                 RunnerSkeletonAnimation.loop = true;
                 RunnerSkeletonAnimation.AnimationName = "Casting";
                 //Animator.Play(nameof(CharacterAnimation.Type.Casting), 0, 0f);
@@ -156,6 +143,8 @@ namespace Nekoyume.PandoraBox
             }
             else
             {
+                ActionCamera.instance.Shake();
+                AudioController.instance.PlaySfx(AudioController.SfxCode.InputItem);
                 RunnerSkeletonAnimation.loop = true;
                 RunnerSkeletonAnimation.AnimationName = "Run";
                 //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);

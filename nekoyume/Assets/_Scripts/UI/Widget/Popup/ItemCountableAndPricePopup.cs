@@ -55,7 +55,13 @@ namespace Nekoyume.UI
             base.Awake();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            repeatLastButton.onClick.AddListener(() => { priceInputField.text = lastPrice.ToString(); countInputField.text = lastCount.ToString(); });
+            repeatLastButton.onClick.AddListener(() =>
+            {
+                countInputField.text = lastCount.ToString();
+                countInputField.onEndEdit.Invoke(lastCount.ToString());
+                priceInputField.text = lastPrice.ToString();
+                priceInputField.onEndEdit.Invoke(lastPrice.ToString());
+            });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (overrideCancelButton != null)

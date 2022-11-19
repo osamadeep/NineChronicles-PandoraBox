@@ -22,6 +22,7 @@ namespace Nekoyume
         [Header("PANDORA CUSTOM FIELDS")] public GameObject FeatureObj = null;
         public GameObject FavoriteObj = null;
         public GameObject GuildObj = null;
+        public GameObject myItem = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -145,6 +146,7 @@ namespace Nekoyume
             FeatureObj.SetActive(false);
             FavoriteObj.SetActive(false);
             GuildObj.SetActive(false);
+            myItem.SetActive(false);
             if (itemBase is INonFungibleItem nonFungibleItem)
             {
                 var nonFungibleId = nonFungibleItem.NonFungibleId;

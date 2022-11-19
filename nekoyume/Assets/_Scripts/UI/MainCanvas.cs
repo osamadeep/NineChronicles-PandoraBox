@@ -255,6 +255,8 @@ namespace Nekoyume.UI
             secondWidgets.Add(Widget.Create<NoticePopup>());
             yield return null;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<PandoraLab>());
+            yield return null;
             secondWidgets.Add(Widget.Create<Runner>());
             yield return null;
             secondWidgets.Add(Widget.Create<FriendInfoPopupPandora>());

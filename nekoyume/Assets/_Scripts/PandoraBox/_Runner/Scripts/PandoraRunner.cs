@@ -21,8 +21,8 @@ namespace Nekoyume.PandoraBox
     {
         public enum RunnerState { Start, Play, Die, Hit, Info, Pause }
         public RunnerController player;
-        [SerializeField] Transform runnerBoss;
-        [SerializeField] Transform runnerLevel;
+        public Transform runnerBoss;
+        public Transform runnerLevel;
 
         [SerializeField] Transform[] BgArray;
         [SerializeField] Transform[] enemiesArray;
@@ -139,6 +139,7 @@ namespace Nekoyume.PandoraBox
             player.runner = currentRunnerState;
 
             AudioController.instance.PlayMusic(AudioController.MusicCode.Runner1, 0.5f);
+            missileEnemy.WarningSprite.gameObject.SetActive(false);
             RunnerUI.FinalResult.SetActive(false);
             RunnerUI.UIElement.SetActive(false);
 
@@ -165,7 +166,7 @@ namespace Nekoyume.PandoraBox
                 player.transform.position += new Vector3(0.04f, 0);
                 runnerBoss.position += new Vector3(0.04f, 0);
             }
-            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+            AudioController.instance.PlaySfx(AudioController.SfxCode.RunnerBoss);
 
             RunnerUI.Show();
             yield return StartCoroutine(RunnerUI.ShowBoosterSelection()); //Widget.Find<Runner>()
@@ -249,7 +250,7 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator FinishStartAnimation(bool isBoosted)
         {
-            runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
+            AudioController.instance.PlaySfx(AudioController.SfxCode.RunnerBoss);
             while (player.transform.position.x > -2)
             {
                 yield return new WaitForSeconds(0.02f);
@@ -318,8 +319,7 @@ namespace Nekoyume.PandoraBox
         public void CollectCoins(Transform currentCoin)
         {
             UpdateScore(1, 1);
-            AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem);
-
+            AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem,0.3f);
             GameObject ob = PickupPooler.instance.GetpooledObject();
             ob.transform.SetParent(transform.Find("PooledObj"));
             ob.transform.position = currentCoin.transform.position;
@@ -347,7 +347,7 @@ namespace Nekoyume.PandoraBox
             var sprite = missileEnemy.WarningSprite.GetComponent<SpriteRenderer>();
             while (true)
             {
-                yield return new WaitForSeconds(Random.Range(5f, 10f) / LevelSpeed);
+                yield return new WaitForSeconds(Random.Range(8f, 15f) / LevelSpeed);
                 if (currentRunnerState == RunnerState.Play)
                 {
                     //fade sign
@@ -377,10 +377,9 @@ namespace Nekoyume.PandoraBox
 
                     if (currentRunnerState == RunnerState.Play)
                     {
-
                         missileEnemy.Missile.transform.position = new Vector3(10, missileEnemy.WarningSprite.transform.position.y);
                         missileEnemy.Missile.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
-                        AudioController.instance.PlaySfx(AudioController.SfxCode.DamageFire);
+                        AudioController.instance.PlaySfx(AudioController.SfxCode.FailedEffect);
                         missileEnemy.Missile.gameObject.SetActive(true);
                     }
 
@@ -492,7 +491,6 @@ namespace Nekoyume.PandoraBox
                     AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
                     yield return new WaitForSeconds(1);
                 }
-                //runnerBoss.GetComponent<AudioSource>().PlayOneShot(runnerBoss.GetComponent<AudioSource>().clip);
                 RunnerUI.UIBoostersDie.SetActive(false);
 
                 //prepare start could function

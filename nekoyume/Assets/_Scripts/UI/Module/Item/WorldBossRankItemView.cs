@@ -137,8 +137,14 @@ namespace Nekoyume.UI
                 ? new WorldBossKillRewardRecord(killRewardList)
                 : null;
 
-            
-            address.text = $"#{model.Address[..4]}" + $", ({raider.RemainChallengeCount}/3), T:{raider.TotalChallengeCount}";
+            try
+            {
+                address.text = $"#{model.Address[..4]}" + $", ({raider.RemainChallengeCount}/3), T:{raider.TotalChallengeCount}";
+            }
+            catch
+            {
+                address.text = $"#{model.Address[..4]}" + $", (?/3), T:?";
+            }
         }
     }
 }

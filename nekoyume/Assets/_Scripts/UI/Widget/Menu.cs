@@ -64,7 +64,7 @@ namespace Nekoyume.UI
         [SerializeField] private Button fastSwitchButton;
         [SerializeField] private Button updateAvatarButton;
         [SerializeField] private Button runnerButton;
-        [SerializeField] private Button eventButton;
+        [SerializeField] private Button labButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
         private ArenaInfoList _arenaInfoList = new ArenaInfoList();
@@ -173,7 +173,7 @@ namespace Nekoyume.UI
             fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
             updateAvatarButton.onClick.AddListener(() => { UpdateAvatar(); });
             runnerButton.onClick.AddListener(() => { ShowRunner(); });
-            //eventButton.onClick.AddListener(() => { FastShowEvent(); });
+            labButton.onClick.AddListener(() => { FastShowEvent(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -733,9 +733,10 @@ namespace Nekoyume.UI
 
         public void FastShowEvent()
         {
-            var worldMap = Find<WorldMap>();
-            worldMap.Show(States.Instance.CurrentAvatarState.worldInformation, true);
-            worldMap.ShowEventDungeonStage(RxProps.EventDungeonRow, false);
+            //var worldMap = Find<WorldMap>();
+            //worldMap.Show(States.Instance.CurrentAvatarState.worldInformation, true);
+            //worldMap.ShowEventDungeonStage(RxProps.EventDungeonRow, false);
+            Find<PandoraLab>().Show(PandoraLab.ToggleType.Information);
             AudioController.PlayClick();
         }
 

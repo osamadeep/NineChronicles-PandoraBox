@@ -93,8 +93,8 @@ namespace Nekoyume.UI
 
         public void UpdateCurrency()
         {
-            GemsText.text = "x" + PandoraMaster.PlayFabInventory.VirtualCurrency["PG"];
-            CoinsText.text = "x" + PandoraMaster.PlayFabInventory.VirtualCurrency["PC"];
+            GemsText.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
+            CoinsText.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
         }
 
         public void BuyCrystal()

@@ -51,34 +51,34 @@ namespace Nekoyume.UI
             if (playerData.Position == 0)
             {
                 _gemText.text = "x 200";
-                _coinText.text = "x 12K";
+                _coinText.text = "x 24K";
             }
             else if (playerData.Position > 0 && playerData.Position < 5)
             {
                 _gemText.text = "x 120";
-                _coinText.text = "x 7K";
+                _coinText.text = "x 14K";
             }
             else if (playerData.Position >= 5 && playerData.Position < 10)
             {
                 _gemText.text = "x 60";
-                _coinText.text = "x 5K";
+                _coinText.text = "x 10K";
             }
             else if (playerData.Position >= 10 && playerData.Position < 15)
             {
                 _gemText.text = "x 20";
-                _coinText.text = "x 3k";
+                _coinText.text = "x 6K";
             }
             else if (playerData.Position >= 15 && playerData.Position < 20)
             {
                 _gemText.text = "x 0";
                 _gemText.gameObject.SetActive(false);
-                _coinText.text = "x 1k";
+                _coinText.text = "x 2K";
             }
             else if (playerData.Position >= 20 && playerData.Position < 50)
             {
                 _gemText.text = "x 0";
                 _gemText.gameObject.SetActive(false);
-                _coinText.text = "x 500";
+                _coinText.text = "x 1K";
             }
             else
             {

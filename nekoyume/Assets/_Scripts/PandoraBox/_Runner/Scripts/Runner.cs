@@ -51,6 +51,8 @@ namespace Nekoyume.UI
             Game.Event.OnRoomEnter.Invoke(false);
             Find<VersionSystem>().Show();
 
+            Game.Game.instance.Runner.runnerLevel.gameObject.SetActive(false);
+            Game.Game.instance.Runner.player.gameObject.SetActive(false);
             Close();
             //gameObject.SetActive(false);
         }

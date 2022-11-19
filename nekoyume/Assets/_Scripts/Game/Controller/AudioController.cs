@@ -117,6 +117,8 @@ namespace Nekoyume.Game.Controller
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             public const string Alert = "sfx_Alert";
             public const string Jump = "sfx_Jump";
+            public const string Jet = "sfx_Jet";
+            public const string RunnerBoss = "sfx_RunnerBoss";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
