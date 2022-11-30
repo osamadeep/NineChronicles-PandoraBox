@@ -45,6 +45,8 @@ namespace Nekoyume.UI
         public int OldScore;
         int LastBlockUpdate;
         public long myLastBattle;
+
+        public List<string> CompletedBattlesResult; //TODO , show win/lose on arena button
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 #if UNITY_EDITOR

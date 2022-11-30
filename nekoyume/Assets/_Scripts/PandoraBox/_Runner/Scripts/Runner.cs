@@ -27,6 +27,10 @@ namespace Nekoyume.PandoraBox
 
         public override void Show(bool ignoreShowAnimation = false)
         {
+            UIBalance.SetActive(false);
+            UIElement.SetActive(false);
+            StartFeaturesHolder.SetActive(false);
+            EndFeaturesHolder.SetActive(false);
             base.Show(ignoreShowAnimation);
         }
 
@@ -98,6 +102,11 @@ namespace Nekoyume.PandoraBox
             }
             StartFeaturesHolder.SetActive(false);
             UIBalance.SetActive(false);
+        }
+
+        public void SkipCounter()
+        {
+            FeaturesUICooldown = 0;
         }
 
         public IEnumerator ShowEndBooster(int livesBought,int gameSeed)

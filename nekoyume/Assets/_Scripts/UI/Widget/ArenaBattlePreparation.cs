@@ -796,7 +796,7 @@ namespace Nekoyume.UI
             if (Premium.SendMultipleBattleArenaAction(maxTriesSld.value, _chooseAvatarState.address,
                 _player.Costumes.Select(e => e.NonFungibleId).ToList(),
                 _player.Equipments.Select(e => e.NonFungibleId).ToList(),
-                _roundData.ChampionshipId, _roundData.Round, _ticketCountToUse))
+                _roundData.ChampionshipId, _roundData.Round, TicketCountToUse))
             {
                 Close();
                 Find<ArenaBoard>().ShowAsync().Forget();

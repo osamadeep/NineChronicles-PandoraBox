@@ -25,9 +25,6 @@ namespace Nekoyume.UI.Module
         [SerializeField] private Image elementImage = null;
 
         [SerializeField]
-        private Image elementImage = null;
-
-        [SerializeField]
         private TextMeshProUGUI countText = null;
 
         public void Show(RecipeViewData.Data viewData, ItemSheet.Row itemRow, int count = 0)

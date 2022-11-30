@@ -133,6 +133,10 @@ namespace Nekoyume.UI.Module.Arena.Board
             _choiceButton.OnClickSubject
                 .Subscribe(_ => Context.onClickChoice?.Invoke(Index))
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            GuildButton.GetComponent<Button>().onClick.AddListener(() => { GetGuildInfo(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void UpdateContent(ArenaBoardPlayerItemData itemData)

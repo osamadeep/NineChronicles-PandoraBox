@@ -49,7 +49,6 @@ namespace Nekoyume.PandoraBox
         int sectionsPassed;
         int gameSeed = 0;
         int avoidMissiles = 0;
-        int livesTaken = 0;
         int livesBought = 0;
         int speedBooster = 0;
 
@@ -129,8 +128,10 @@ namespace Nekoyume.PandoraBox
             AudioController.instance.PlaySfx(AudioController.SfxCode.RunnerBoss);
 
             RunnerUI.Show();
-            yield return StartCoroutine(RunnerUI.ShowStartBooster()); //Widget.Find<Runner>()
+            yield return StartCoroutine(RunnerUI.ShowStartBooster()); 
 
+            if(SelectedUtilitie != null)
+                AudioController.instance.PlaySfx(AudioController.SfxCode.BgmGreatSuccess);
             //prepare StartFeatures Function
             object FuncParam = new {
                 premium = Premium.CurrentPandoraPlayer.IsPremium(),
@@ -163,7 +164,6 @@ namespace Nekoyume.PandoraBox
                     //for statistics
                     avoidMissiles = 0 + gameSeed;
                     livesBought = 0 + gameSeed;
-                    livesTaken = 0 + gameSeed;
                     speedBooster = 0 + gameSeed;
 
                     RunnerUI.UIElement.SetActive(true);
@@ -431,6 +431,8 @@ namespace Nekoyume.PandoraBox
 
                 if (SelectedUtilitie != null)
                 {
+                    AudioController.instance.PlaySfx(AudioController.SfxCode.BgmGreatSuccess);
+
                     //prepare End Features
                     object FuncParam = new
                     {
@@ -441,8 +443,9 @@ namespace Nekoyume.PandoraBox
                         //Special
                         utilitie = SelectedUtilitie != null ? SelectedUtilitie.ItemID : "None",
                         currency = SelectedUtilitie != null ? SelectedUtilitie.CurrencySTR : "XX",
-                        count = livesBought - gameSeed,
-                        currentScore = scoreDistance,
+                        count = livesBought,
+                        currentDistance = scoreDistance,
+                        currentCoins = scoreCoins,
                         //Statistics
                         seed = gameSeed,
                         playTime = (int)playTimer,
@@ -463,7 +466,7 @@ namespace Nekoyume.PandoraBox
                             StartCoroutine(GotRecover(false));
                         }
                         else
-                            StartCoroutine(EndGame());
+                            EndGame();
                     },
                     failed =>
                     {
@@ -471,7 +474,7 @@ namespace Nekoyume.PandoraBox
                     });
                 }
                 else
-                    StartCoroutine(EndGame());
+                    EndGame();
             }
             else
             {
@@ -512,64 +515,57 @@ namespace Nekoyume.PandoraBox
             }
         }
 
-        IEnumerator EndGame()
+        void EndGame()
         {
             RunnerUI.centerText.gameObject.SetActive(true);
             RunnerUI.centerText.text = "Game Over!";
 
-            //Check for cheating
+            //posting score to leaderboard
             var request = new ExecuteCloudScriptRequest
             {
-                FunctionName = "validateScore",
+                FunctionName = "postStats",
                 FunctionParameter = new
                 {
-                    iac = gameSeed,
+                    //core
+                    block = Game.Game.instance.Agent.BlockIndex,
+                    premium = Premium.CurrentPandoraPlayer.IsPremium(),
+                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+
+                    //Special
                     distance = scoreDistance,
                     sections = sectionsPassed,
                     coins = scoreCoins,
-                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-                    highscore = scoreDistance - gameSeed > Widget.Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score,
+
+                    //Statistics
+                    seed = gameSeed,
+                    playTime = (int)playTimer,
+                    pauseTime = (int)idleTimer,
 
                     //statistics
-                    lives = livesTaken,
+                    quickRevive = livesBought,
                     speedBoosterUsed = speedBooster
                 }
             };
             //Debug.LogError($"{gameSeed},{scoreDistance},{sectionsPassed},{scoreCoins},{livesTaken},{speedBooster}");
-            PlayFabClientAPI.ExecuteCloudScript(request, OnValidateSuccess, OnPlayFabError);
+            PlayFabClientAPI.ExecuteCloudScript(request,
+                success =>
+                {
+                    if (success.FunctionResult.ToString() == "Success")
+                        PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins - gameSeed; //just UI update instead of request new call
+                    else
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: sending score <color=red>Failed!</color>",
+                            NotificationCell.NotificationType.Alert);
 
-
-            yield return new WaitForSeconds(3f);
-            RunnerUI.centerText.gameObject.SetActive(false);
-            RunnerUI.UIElement.SetActive(false);
-            RunnerUI.FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = (scoreDistance - gameSeed) + "<size=60%>M</size>";
-            RunnerUI.FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = (scoreCoins - gameSeed).ToString();
-            RunnerUI.FinalResult.SetActive(true);
-        }
-
-        void OnValidateSuccess(ExecuteCloudScriptResult result)
-        {
-            if (result.FunctionResult.ToString() == "Failed")
-            {
-                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: sending score <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-            }
-            else
-            {
-                PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins - gameSeed; //just UI update instead of request new call
-
-                //if (scoreDistance - gameSeed > Widget.Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.Score)
-                //{
-                //    //send highscore notify
-                //    Premium.SendWebhookT(DatabasePath.PandoraDiscordBot, $"<:highScore:1009757079042539520>**[High Score]** {PandoraMaster.PlayFabCurrentPlayer.DisplayName} " +
-                //            $" broke {Widget.Find<NineRunnerPopup>().ScrollContent.GetChild(0).GetComponent<RunnerCell>().CurrentCellContent.PlayerName}" +
-                //            $" by scoring **7897m**").Forget();
-                //}
-            }
-        }
-
-        void OnPlayFabError(PlayFabError result)
-        {
-            Debug.LogError("Score Not Sent!, " + result.GenerateErrorReport());
+                    RunnerUI.centerText.gameObject.SetActive(false);
+                    RunnerUI.UIElement.SetActive(false);
+                    RunnerUI.FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = (scoreDistance - gameSeed) + "<size=60%>M</size>";
+                    RunnerUI.FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = (scoreCoins - gameSeed).ToString();
+                    RunnerUI.FinalResult.SetActive(true);
+                },
+                failed =>
+                {
+                    Debug.LogError("Failed to StartFeatures!, " + failed.GenerateErrorReport());
+                });
         }
 
         //IEnumerator CrystalSpawner()
