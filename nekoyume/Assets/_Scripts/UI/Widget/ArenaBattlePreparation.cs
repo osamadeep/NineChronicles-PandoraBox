@@ -83,13 +83,18 @@ namespace Nekoyume.UI
 
         [SerializeField] private GameObject blockStartingTextObject;
 
+        [SerializeField]
+        private ConditionalButton grandFinaleStartButton;
+
         private EquipmentSlot _weaponSlot;
         private EquipmentSlot _armorSlot;
         private ArenaSheet.RoundData _roundData;
         private AvatarState _chooseAvatarState;
         private Player _player;
         private GameObject _cachedCharacterTitle;
-        private const int _ticketCountToUse = 1;
+        private int _grandFinaleId;
+
+        private const int TicketCountToUse = 1;
 
         private readonly List<IDisposable> _disposables = new();
 
@@ -110,7 +115,7 @@ namespace Nekoyume.UI
                         currentRound.StartBlockIndex,
                         States.Instance.GameConfigState.DailyArenaInterval)
                     : 0;
-                return ticketCount >= _ticketCountToUse;
+                return ticketCount >= TicketCountToUse;
             }
         }
 
@@ -147,7 +152,7 @@ namespace Nekoyume.UI
                 slot.ShowUnlockTooltip = true;
             }
 
-            startButton.SetCost(CostType.ArenaTicket, _ticketCountToUse);
+            startButton.SetCost(CostType.ArenaTicket, TicketCountToUse);
 
             closeButton.onClick.AddListener(() =>
             {
@@ -168,6 +173,12 @@ namespace Nekoyume.UI
                 .Where(_ => !Game.Game.instance.IsInWorld)
                 .ThrottleFirst(TimeSpan.FromSeconds(2f))
                 .Subscribe(_ => OnClickBattle())
+                .AddTo(gameObject);
+
+            grandFinaleStartButton.OnSubmitSubject
+                .Where(_ => !Game.Game.instance.IsInWorld)
+                .ThrottleFirst(TimeSpan.FromSeconds(2f))
+                .Subscribe(_ => OnClickGrandFinale())
                 .AddTo(gameObject);
 
             Game.Event.OnRoomEnter.AddListener(b => Close());
@@ -215,6 +226,7 @@ namespace Nekoyume.UI
             UpdateStartButton(avatarState);
 
             startButton.gameObject.SetActive(true);
+            grandFinaleStartButton.gameObject.SetActive(false);
             startButton.Interactable = true;
             coverToBlockClick.SetActive(false);
             costumeSlots.gameObject.SetActive(false);
@@ -225,13 +237,49 @@ namespace Nekoyume.UI
             base.Show(ignoreShowAnimation);
         }
 
+        public void Show(
+            int grandFinaleId,
+            AvatarState chooseAvatarState,
+            bool ignoreShowAnimation = false)
+        {
+            _grandFinaleId = grandFinaleId;
+            _chooseAvatarState = chooseAvatarState;
+
+            UpdateArenaAvatarState();
+            var avatarState = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            if (!_player)
+            {
+                _player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+            }
+
+            _player.transform.position = PlayerPosition;
+            _player.Set(avatarState);
+            _player.SpineController.Appear();
+            _player.gameObject.SetActive(true);
+
+            UpdateInventory();
+            UpdateTitle();
+            UpdateStat(avatarState);
+            UpdateSlot(avatarState);
+            UpdateStartButton(avatarState);
+
+            startButton.gameObject.SetActive(false);
+            grandFinaleStartButton.gameObject.SetActive(true);
+            grandFinaleStartButton.Interactable = true;
+            coverToBlockClick.SetActive(false);
+            costumeSlots.gameObject.SetActive(false);
+            equipmentSlots.gameObject.SetActive(true);
+            base.Show(ignoreShowAnimation);
+        }
+
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public void ChangeTicketsCount()
         {
             try
             {
                 Premium.ChangeTicketsCount(maxTriesSld.value, _roundData);
-            }catch
+            }
+            catch
             {
                 CurrentTicketsText.text = maxTriesSld.value.ToString();
                 ExpectedCostText.text = "? NCG";
@@ -782,7 +830,50 @@ namespace Nekoyume.UI
                         .ToList(),
                     _roundData.ChampionshipId,
                     _roundData.Round,
-                    _ticketCountToUse)
+                    TicketCountToUse)
+                .Subscribe();
+        }
+
+        private void OnClickGrandFinale()
+        {
+            AudioController.PlayClick();
+
+            if (Game.Game.instance.IsInWorld)
+            {
+                return;
+            }
+
+            var game = Game.Game.instance;
+            game.IsInWorld = true;
+            game.Stage.IsShowHud = true;
+            SendBattleGrandFinaleAction();
+        }
+
+        private void SendBattleGrandFinaleAction()
+        {
+            startButton.gameObject.SetActive(false);
+            var playerAvatar = RxProps.PlayersArenaParticipant.Value.AvatarState;
+            Find<ArenaBattleLoadingScreen>().Show(
+                playerAvatar.NameWithHash,
+                playerAvatar.level,
+                playerAvatar.inventory.GetEquippedFullCostumeOrArmorId(),
+                _chooseAvatarState.NameWithHash,
+                _chooseAvatarState.level,
+                _chooseAvatarState.inventory.GetEquippedFullCostumeOrArmorId());
+
+            _player.StopRun();
+            _player.gameObject.SetActive(false);
+
+            ActionRenderHandler.Instance.Pending = true;
+            ActionManager.Instance.BattleGrandFinale(
+                    _chooseAvatarState.address,
+                    _player.Costumes
+                        .Select(e => e.NonFungibleId)
+                        .ToList(),
+                    _player.Equipments
+                        .Select(e => e.NonFungibleId)
+                        .ToList(),
+                    _grandFinaleId)
                 .Subscribe();
         }
 
@@ -797,6 +888,18 @@ namespace Nekoyume.UI
             Find<ArenaBattleLoadingScreen>().Close();
         }
 
+        public void OnRenderBattleArena(ActionBase.ActionEvaluation<BattleGrandFinale> eval)
+        {
+            if (eval.Exception is { })
+            {
+                Find<ArenaBattleLoadingScreen>().Close();
+                return;
+            }
+
+            Close(true);
+            Find<ArenaBattleLoadingScreen>().Close();
+        }
+
         private void UpdateStartButton(AvatarState avatarState)
         {
             _player.Set(avatarState);
@@ -804,6 +907,7 @@ namespace Nekoyume.UI
                 _player,
                 Array.Empty<int>());
             startButton.gameObject.SetActive(canBattle);
+            grandFinaleStartButton.gameObject.SetActive(canBattle);
             blockStartingTextObject.SetActive(!canBattle);
         }
 
