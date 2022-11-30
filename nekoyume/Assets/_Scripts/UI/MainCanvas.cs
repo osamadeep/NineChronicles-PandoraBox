@@ -358,7 +358,7 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<SweepPopup>());
             yield return null;
-            secondWidgets.Add(Widget.Create<BoosterPopup>());
+            secondWidgets.Add(Widget.Create<UtilitiePopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<SweepResultPopup>());
             yield return null;

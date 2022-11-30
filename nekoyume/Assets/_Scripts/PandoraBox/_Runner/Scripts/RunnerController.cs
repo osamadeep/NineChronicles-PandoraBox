@@ -15,12 +15,13 @@ namespace Nekoyume.PandoraBox
     public class RunnerController : MonoBehaviour
     {
         [SerializeField] GameObject SpeedVFX;
-        public float Jump;
+        public float AccelerateJet=0.3f;
         Rigidbody2D rb;
         int jumpCount;
         public float TimeScale;
         public PandoraRunner.RunnerState runner = PandoraRunner.RunnerState.Start;
-        bool IsSheld = false;
+        public bool IsShield = false;
+        bool IsFlying = false;
         public AudioSource WalkingSound;
 
         public SkeletonAnimation RunnerSkeletonAnimation;
@@ -59,32 +60,87 @@ namespace Nekoyume.PandoraBox
         }
 
         // Update is called once per frame
+
         void Update()
         {
-            rb.gravityScale = TimeScale;
-            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) &&  runner == PandoraRunner.RunnerState.Play)
-            {
-                //AudioController.instance.PlaySfx(AudioController.SfxCode.Jump);
-                //jumpCount++;
-                rb.velocity = Vector2.zero;
-                rb.angularDrag = 0;
-                rb.velocity = new Vector2(0, Mathf.Sqrt(-2.0f * Physics2D.gravity.y * Jump * TimeScale));
+            //    rb.gravityScale = TimeScale;
+            //    if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
+            //    {
+            //        jetpackFire.SetActive(true);
+            //        AudioController.instance.PlaySfx(AudioController.SfxCode.Jet);
+            //    }
 
-                JetPackIsOn(true);
+            //    if ((Input.GetMouseButtonUp(0) || Input.GetKeyUp(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
+            //    {
+            //        jetpackFire.SetActive(false);
+            //        GetComponent<AudioSource>().enabled = false;
+            //    }
+
+
+
+            //    if ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space)) &&  runner == PandoraRunner.RunnerState.Play)
+            //    {
+            //        rb.velocity = new Vector2(0, Mathf.Sqrt(-2.0f * Physics2D.gravity.y * Jump * TimeScale));
+            //        JetPackIsOn(true);
+            //        GetComponent<AudioSource>().enabled = true;
+            //    }
+
+            //    //check if its on ground
+            //    if (rb.velocity.y )
+            IsFlying = ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play);
+
+        }
+
+        private void FixedUpdate()
+        {
+            if (IsFlying)
+            {
+                rb.AddForce(Vector2.up * AccelerateJet * TimeScale);
+                if (rb.velocity.y < 0)
+                    rb.AddForce(Vector2.up * Mathf.Abs(rb.velocity.y) * 1f);
+            }
+            else
+            {
+
+            }
+            jetpackFire.SetActive(IsFlying);
+
+            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
+            {
+                GetComponent<AudioSource>().enabled = false;
+                AudioController.instance.PlaySfx(AudioController.SfxCode.Jet);
+                RunnerSkeletonAnimation.loop = true;
+                RunnerSkeletonAnimation.AnimationName = "Casting";
+                RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", null);
+            }
+            else if ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
+            {
+
+            }
+            else if ((Input.GetMouseButtonUp(0) || Input.GetKeyUp(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
+            {
+
             }
         }
 
+
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (( collision.CompareTag("Enemy")) && runner == PandoraRunner.RunnerState.Play && !IsSheld)
+            if (( collision.CompareTag("Enemy")) && runner == PandoraRunner.RunnerState.Play && !IsShield)
             {
                 Game.Game.instance.Runner.PlayerGotHit();
                 collision.transform.parent.gameObject.SetActive(false);
+                AudioController.instance.PlaySfx(AudioController.SfxCode.Critical01);
             }
-            else if (collision.CompareTag("Missile") && runner == PandoraRunner.RunnerState.Play && !IsSheld)
+            else if (collision.CompareTag("Missile") && runner == PandoraRunner.RunnerState.Play && !IsShield)
             {
                 Game.Game.instance.Runner.PlayerGotHit();
-                collision.gameObject.SetActive(false);
+                collision.GetComponentInParent<RunnerMissile>().EliminateMissile();
+            }
+            else if (collision.CompareTag("Missile") && runner == PandoraRunner.RunnerState.Play)
+            {
+                //add quest counter here
+                collision.GetComponentInParent<RunnerMissile>().EliminateMissile();
             }
             else if (collision.CompareTag("Coin") && runner == PandoraRunner.RunnerState.Play)
             {
@@ -94,15 +150,15 @@ namespace Nekoyume.PandoraBox
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (collision.transform.CompareTag("GroundCollider") && runner == PandoraRunner.RunnerState.Play)
+            if (collision.transform.CompareTag("GroundCollider") && runner == PandoraRunner.RunnerState.Play && !IsFlying)
             {
-                JetPackIsOn(false);
+                PlayerOnGround();
             }
         }
 
         public void EnableSpeed(bool isEnable)
         {
-            IsSheld = isEnable;
+            IsShield = isEnable;
             SpeedVFX.SetActive(isEnable);
         }
 
@@ -124,36 +180,15 @@ namespace Nekoyume.PandoraBox
             RunnerSkeletonAnimation.AnimationName = "Run";
         }
 
-        public void Attack()
+        public void PlayerOnGround()
         {
-            //Animator.Play(nameof(CharacterAnimation.Type.Attack), BaseLayerIndex, 0f);
-        }
-
-
-        public void JetPackIsOn(bool isOn)
-        {
-            if (isOn)
-            {
-                AudioController.instance.PlaySfx(AudioController.SfxCode.Jet);
-                RunnerSkeletonAnimation.loop = true;
-                RunnerSkeletonAnimation.AnimationName = "Casting";
-                //Animator.Play(nameof(CharacterAnimation.Type.Casting), 0, 0f);
-                RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", null);
-                GetComponent<AudioSource>().enabled = false;
-            }
-            else
-            {
-                ActionCamera.instance.Shake();
-                AudioController.instance.PlaySfx(AudioController.SfxCode.InputItem);
-                RunnerSkeletonAnimation.loop = true;
-                RunnerSkeletonAnimation.AnimationName = "Run";
-                //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
-                RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", attachment.Name);
-                GetComponent<AudioSource>().enabled = true;
-            }
-
-            jetpackFire.SetActive(isOn);
-            //Animator.SetBool(nameof(CharacterAnimation.Type.Run), !isOn);
+            ActionCamera.instance.Shake();
+            AudioController.instance.PlaySfx(AudioController.SfxCode.InputItem);
+            RunnerSkeletonAnimation.loop = true;
+            RunnerSkeletonAnimation.AnimationName = "Run";
+            //Animator.Play(nameof(CharacterAnimation.Type.Run), 0, 0f);
+            RunnerSkeletonAnimation.Skeleton.SetAttachment("shadow", attachment.Name);
+            GetComponent<AudioSource>().enabled = true;
         }
     }
 }

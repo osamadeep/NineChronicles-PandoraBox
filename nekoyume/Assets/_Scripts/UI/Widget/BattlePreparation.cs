@@ -950,7 +950,7 @@ namespace Nekoyume.UI
             stage.foodCount = consumables.Count;
             ActionRenderHandler.Instance.Pending = true;
 
-            Find<BoosterPopup>().Show(
+            Find<UtilitiePopup>().Show(
                 stage,
                 costumes,
                 equipments,

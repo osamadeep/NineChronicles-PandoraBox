@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+using Nekoyume.State;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
@@ -21,13 +22,19 @@ namespace Nekoyume.UI.Module.Arena.Board
         [SerializeField]
         private TextMeshProUGUI _ratingValueText;
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [SerializeField]
+        private TextMeshProUGUI _playerNameText;
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public void SetData(
             string season = "",
             int rank = 0,
             int winCount = 0,
             int loseCount = 0,
             int cp = 0,
-            int score = 0)
+            int score = 0
+            )
         {
             _seasonText.text = season;
             _rankValueText.text = rank == 0
@@ -40,6 +47,10 @@ namespace Nekoyume.UI.Module.Arena.Board
                 loseCount);
             _cpValueText.text = cp.ToString("N0", CultureInfo.CurrentCulture);
             _ratingValueText.text = score.ToString("N0", CultureInfo.CurrentCulture);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _playerNameText.text = States.Instance.CurrentAvatarState.NameWithHash;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         }
     }
 }

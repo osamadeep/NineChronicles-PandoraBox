@@ -3,6 +3,7 @@ using Nekoyume.UI;
 using Nekoyume.UI.Scroller;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
 
 namespace Nekoyume.PandoraBox
@@ -54,6 +55,35 @@ namespace Nekoyume.PandoraBox
             item.Color = gradeColors[(int)item.Grade];
             return item;
         }
+
+        public static string ToLongNumberNotation(BigInteger num)
+        {
+            var absoluteValue = BigInteger.Abs(num);
+            var exponent = BigInteger.Log10(absoluteValue);
+            if (absoluteValue >= BigInteger.One)
+            {
+                switch ((long)System.Math.Floor(exponent))
+                {
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                        return num.ToString();
+                    case 4:
+                    case 5:
+                    case 6:
+                        return BigInteger.Divide(num, (BigInteger)1e3) + "K";
+                    case 7:
+                    case 8:
+                    case 9:
+                        return BigInteger.Divide(num, (BigInteger)1e6) + "M";
+                    default:
+                        return BigInteger.Divide(num, (BigInteger)1e9) + "B";
+                }
+            }
+
+            return num.ToString();
+        }
     }
 
     public class PandoraItem
@@ -74,5 +104,4 @@ namespace Nekoyume.PandoraBox
         LEGENDARY = 4,
         MYTHIC = 5
     }
-
 }

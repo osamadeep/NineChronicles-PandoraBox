@@ -56,9 +56,7 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI arenaRemains;
-        [SerializeField] private TextMeshProUGUI arenaCount;
-        [SerializeField] private TextMeshProUGUI arenaCurrentPositionText;
+        [SerializeField] private Transform shopCrystalChanges;
 
         //Extra UI Buttons
         [SerializeField] private Button fastSwitchButton;
@@ -287,23 +285,8 @@ namespace Nekoyume.UI
                     Craft.SharedModel.HasNotification));
             shopExclamationMark.gameObject.SetActive(
 
-                //            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                //if (arenaInfo != null)
-                //{
-                //    randomButton.interactable = arenaInfo.DailyChallengeCount > 0;
-                //    randomButton.GetComponentInChildren<TextMeshProUGUI>().text =
-                //        "Random X" + arenaInfo.DailyChallengeCount;
-
-                //    if (arenaInfo.DailyChallengeCount > 0)
-                //        arenaCount.text = $"{arenaInfo.DailyChallengeCount}/5";
-                //    else
-                //        arenaCount.text = $"<color=red>{arenaInfo.DailyChallengeCount}</color>/5";
-                //}
-                //else
-                //    arenaCount.text = "<color=red>!</color>";
-                ////|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                btnShop.IsUnlocked
-                && PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
+            btnShop.IsUnlocked
+            && PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
 
             var worldMap = Find<WorldMap>();
             worldMap.UpdateNotificationInfo();
@@ -559,10 +542,10 @@ namespace Nekoyume.UI
             //set name to playfab
             if (string.IsNullOrEmpty(PandoraMaster.PlayFabCurrentPlayer.DisplayName))
             {
-                var request = new UpdateUserTitleDisplayNameRequest {
-                    DisplayName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4),
-                };
-                PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnChangePlayFabNameSuccess, OnChangePlayFabNameError);
+                var currentName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4);
+                //PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnChangePlayFabNameSuccess, OnChangePlayFabNameError);
+                PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest { DisplayName = currentName},
+                    success => { PandoraMaster.PlayFabCurrentPlayer.DisplayName = currentName;},failed => { Debug.LogError(failed.GenerateErrorReport()); });
             }
 
             //load favorite items
@@ -576,20 +559,12 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
+
+            //check crystal changes
+            ChangeCrystalRatio();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             stakingLevelIcon.sprite =
                 stakeIconData.GetIcon(States.Instance.StakingLevel, IconType.Bubble);
-        }
-
-        void OnChangePlayFabNameSuccess(UpdateUserTitleDisplayNameResult result)
-        {
-            PandoraMaster.PlayFabCurrentPlayer.DisplayName = States.Instance.CurrentAvatarState.NameWithHash;
-            //success
-        }
-
-        void OnChangePlayFabNameError(PlayFabError error)
-        {
-            Debug.LogError(error.GenerateErrorReport());
         }
 
         private void SubscribeAtShow()
@@ -725,6 +700,16 @@ namespace Nekoyume.UI
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void ChangeCrystalRatio()
+        {
+            var difference = PandoraMaster.PanDatabase.Crystal - PandoraMaster.PanDatabase.CrystalOld;
+            var percentage = Mathf.Round(((float)difference / (float)PandoraMaster.PanDatabase.CrystalOld) * 100f) ;
+            string percentageString = difference > 0 ? "<color=green>" + percentage + "</color>" : "<color=red>" + Mathf.Abs(percentage) + "</color>";
+            shopCrystalChanges.GetChild(0).GetComponent<TextMeshProUGUI>().text = "%" + percentageString;
+            shopCrystalChanges.GetChild(1).gameObject.SetActive(difference > 0); //green
+            shopCrystalChanges.GetChild(2).gameObject.SetActive(difference < 0); //red
+        }
+
 
         public void PandoraShop()
         {

@@ -242,10 +242,18 @@ namespace Nekoyume.UI
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
-            if (_player)
+            //if (_player)
+            //{
+            //    _player.gameObject.SetActive(false);
+            //}
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!(_player is null))
             {
                 _player.gameObject.SetActive(false);
+                _player = null;
             }
+            
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _disposables.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
@@ -741,7 +749,10 @@ namespace Nekoyume.UI
                 _player.Costumes.Select(e => e.NonFungibleId).ToList(),
                 _player.Equipments.Select(e => e.NonFungibleId).ToList(),
                 _roundData.ChampionshipId, _roundData.Round, _ticketCountToUse))
-                Widget.Find<ArenaBoard>().ShowAsync().Forget();
+            {
+                Close();
+                Find<ArenaBoard>().ShowAsync().Forget();
+            }
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -782,7 +793,6 @@ namespace Nekoyume.UI
                 Find<ArenaBattleLoadingScreen>().Close();
                 return;
             }
-
             Close(true);
             Find<ArenaBattleLoadingScreen>().Close();
         }

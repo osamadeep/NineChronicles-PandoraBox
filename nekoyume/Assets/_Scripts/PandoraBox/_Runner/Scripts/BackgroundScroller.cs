@@ -11,6 +11,7 @@ namespace Nekoyume.UI
         public Sprite[] Sprites;
         public float EndAlpha;
         public float TransactionTime;
+        public float XEnd = -16;
         float xDistance;
         private void Start()
         {
@@ -20,7 +21,7 @@ namespace Nekoyume.UI
         void Update()
         {
             //Debug.LogError(transform.position.x);
-            if (transform.position.x <= -16)
+            if (transform.position.x <= XEnd)
                 transform.position -= new Vector3( xDistance, 0,0);
 
         }

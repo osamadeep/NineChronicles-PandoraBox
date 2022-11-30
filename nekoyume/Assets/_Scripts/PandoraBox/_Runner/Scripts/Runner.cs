@@ -1,22 +1,29 @@
 using Nekoyume.Game.Controller;
+using Nekoyume.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace Nekoyume.UI
+namespace Nekoyume.PandoraBox
 {
     public class Runner : Widget
     {
+        public TextMeshProUGUI playerName;
+        public TextMeshProUGUI pcBalance;
+        public TextMeshProUGUI pgBalance;
         public TextMeshProUGUI centerText = null;
         public TextMeshProUGUI scoreText;
         public TextMeshProUGUI coinText;
         public TextMeshProUGUI startCounterText;
         public TextMeshProUGUI DieCounterText;
         public GameObject FinalResult;
+        public GameObject UIBalance;
         public GameObject UIElement;
-        public GameObject UIBoosters;
-        public GameObject UIBoostersDie;
+        public GameObject StartFeaturesHolder;
+        public GameObject EndFeaturesHolder;
+
+        public int FeaturesUICooldown = 0;
 
         public override void Show(bool ignoreShowAnimation = false)
         {
@@ -38,10 +45,14 @@ namespace Nekoyume.UI
             if (isPause)
             {
                 Time.timeScale = 0;
+                Game.Game.instance.Runner.currentRunnerState = PandoraRunner.RunnerState.Pause;
+                Game.Game.instance.Runner.player.runner = Game.Game.instance.Runner.currentRunnerState;
             }
             else
             {
                 Time.timeScale = 1;
+                Game.Game.instance.Runner.currentRunnerState = PandoraRunner.RunnerState.Play;
+                Game.Game.instance.Runner.player.runner = Game.Game.instance.Runner.currentRunnerState;
             }
         }
 
@@ -59,27 +70,62 @@ namespace Nekoyume.UI
 
         public void RestartGame()
         {
+            StopAllCoroutines();
             Game.Game.instance.Runner.OnRunnerStart();
         }
 
-        public IEnumerator ShowBoosterSelection()
+        public IEnumerator ShowStartBooster()
         {
+            playerName.text = PandoraMaster.PlayFabCurrentPlayer.DisplayName;
+            pcBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
+            pgBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
             startCounterText.text = "";
-            UIBoosters.SetActive(true);
-            Transform boosters = UIBoosters.transform.Find("Boosters");
-            for (int i = 0; i < 2; i++) // it should be UIBoosters.childCount when all boost is available
-            {
-                boosters.GetChild(i).GetComponent<BoosterSlot>().SetItemData();
-            }
+            StartFeaturesHolder.SetActive(true);
+            UIBalance.SetActive(true);
+            Transform boosters = StartFeaturesHolder.transform.Find("Boosters");
+            //for (int i = 0; i < 2; i++) // it should be UIBoosters.childCount when all boost is available
+            //{
+            //    boosters.GetChild(i).GetComponent<UtilitieSlot>().SetItemData();
+            //}
+            foreach (Transform Utilitie in boosters)
+                Utilitie.GetComponent<UtilitieSlot>().SetItemData();
 
-            for (int i = 5; i > 0; i--)
+            FeaturesUICooldown = 50;
+            while (FeaturesUICooldown > 0)
             {
-                startCounterText.text = i.ToString();
-                AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
-                yield return new WaitForSeconds(1);
+                startCounterText.text = (Mathf.Round((float)(FeaturesUICooldown--)/10f)).ToString();
+                yield return new WaitForSeconds(0.1f);
             }
-            UIBoosters.SetActive(false);
+            StartFeaturesHolder.SetActive(false);
+            UIBalance.SetActive(false);
         }
 
+        public IEnumerator ShowEndBooster(int livesBought,int gameSeed)
+        {
+            pcBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
+            pgBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
+            EndFeaturesHolder.SetActive(true);
+            UIBalance.SetActive(true);
+            Transform boosters = EndFeaturesHolder.transform.Find("Boosters");
+            for (int i = 0; i < 1; i++) // it should be UIBoosters.childCount when all boost is available
+            {
+                boosters.GetChild(i).GetComponent<UtilitieSlot>().SetItemData();
+            }
+            int newPrice = boosters.GetChild(0).GetComponent<UtilitieSlot>().ItemPrice
+                + (boosters.GetChild(0).GetComponent<UtilitieSlot>().ItemPrice * (livesBought - gameSeed));
+            boosters.GetChild(0).GetComponent<UtilitieSlot>().itemPrice.text = "x " + (newPrice); ;
+
+            FeaturesUICooldown = 50;
+            while (FeaturesUICooldown > 0)
+            {
+                DieCounterText.text = (Mathf.Round((float)(FeaturesUICooldown--) / 10f)).ToString();
+                if (FeaturesUICooldown % 10 == 0)
+                    AudioController.instance.PlaySfx(AudioController.SfxCode.OptionNormal);
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            EndFeaturesHolder.SetActive(false);
+            UIBalance.SetActive(false);
+        }
     }
 }

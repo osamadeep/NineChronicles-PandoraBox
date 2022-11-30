@@ -149,6 +149,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             _choiceButton.Interactable = _currentData.interactableChoiceButton;
             UpdateRank();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _cpText.text = PandoraUtil.ToLongNumberNotation(_currentData.cp);
             selectedAP = Widget.Find<ArenaBoard>()._boundedData[Index];
             meAP = PlayersArenaParticipant.Value;
             selectedPan = PandoraMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
@@ -232,25 +233,27 @@ namespace Nekoyume.UI.Module.Arena.Board
 
         void SetName()
         {
-            if (enemyGuildPlayer is null)
-                _nameText.text = _currentData.name.Split('<')[0];
-            else
-            {
-                if (PandoraMaster.CurrentGuildPlayer is null)
-                {
-                    _nameText.text =
-                        $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                }
-                else
-                {
-                    if (enemyGuildPlayer.Guild == PandoraMaster.CurrentGuildPlayer.Guild)
-                        _nameText.text =
-                            $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                    else
-                        _nameText.text =
-                            $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
-                }
-            }
+            _nameText.text = _currentData.name.Split('<')[0];
+
+            //if (enemyGuildPlayer is null)
+            //    _nameText.text = _currentData.name.Split('<')[0];
+            //else
+            //{
+            //    if (PandoraMaster.CurrentGuildPlayer is null)
+            //    {
+            //        _nameText.text =
+            //            $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+            //    }
+            //    else
+            //    {
+            //        if (enemyGuildPlayer.Guild == PandoraMaster.CurrentGuildPlayer.Guild)
+            //            _nameText.text =
+            //                $"<color=#8488BC>[</color><color=green>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+            //        else
+            //            _nameText.text =
+            //                $"<color=#8488BC>[</color>{enemyGuildPlayer.Guild}<color=#8488BC>]</color> {_currentData.name.Split('<')[0]}";
+            //    }
+            //}
         }
 
         void SetCP()
@@ -264,13 +267,13 @@ namespace Nekoyume.UI.Module.Arena.Board
             Color selectedColor = new Color();
 
             if (he > me + 20000)
-                ColorUtility.TryParseHtmlString("#FF0000", out selectedColor);
+                ColorUtility.TryParseHtmlString("#59514B", out selectedColor);
             else if (he <= me + 20000 && he > me)
-                ColorUtility.TryParseHtmlString("#FF4900", out selectedColor);
+                ColorUtility.TryParseHtmlString("#BB9176", out selectedColor);
             else if (he <= me && he > me - 20000)
-                ColorUtility.TryParseHtmlString("#4CA94C", out selectedColor);
+                ColorUtility.TryParseHtmlString("#CD8756", out selectedColor);
             else
-                ColorUtility.TryParseHtmlString("#00FF00", out selectedColor);
+                ColorUtility.TryParseHtmlString("#50A931", out selectedColor);
             _cpText.color = selectedColor;
 
 
@@ -359,7 +362,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                     var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
                     var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
                     var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
-                    extraInfoText.text = $"<color=green>{win}</color>/<color=red>{lose}</color>\n{a1}\n{a3}";
+                    extraInfoText.text = $"<color=#50A931>{win}</color>/<color=#59514B>{lose}</color>\n{a1}\n{a3}";
                 }
             }
         }

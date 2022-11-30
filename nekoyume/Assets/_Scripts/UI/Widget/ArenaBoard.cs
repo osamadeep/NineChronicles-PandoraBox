@@ -41,6 +41,7 @@ namespace Nekoyume.UI
 
         public int OldScore;
         int LastBlockUpdate;
+        public long myLastBattle;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 #if UNITY_EDITOR
@@ -105,7 +106,7 @@ namespace Nekoyume.UI
                     var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
                         ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
                         : null;
-                    var myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
+                    myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
                     diff = Game.Game.instance.Agent.BlockIndex - myLastBattle;
 
                     if (diff < 3)
@@ -129,7 +130,7 @@ namespace Nekoyume.UI
                             item.gameObject.SetActive(false);
                         AttackStatusText.transform.GetChild(0).gameObject.SetActive(true);
                     }
-                    await Task.Delay(System.TimeSpan.FromSeconds(5));
+                    await Task.Delay(System.TimeSpan.FromSeconds(15));
                 }
                 catch { }
 
