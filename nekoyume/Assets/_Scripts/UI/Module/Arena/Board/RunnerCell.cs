@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Nekoyume.Helper;
+using Nekoyume.PandoraBox;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,6 +26,8 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI _scoreText;
         [SerializeField]
+        private TextMeshProUGUI _ncgText;
+        [SerializeField]
         private TextMeshProUGUI _gemText;
         [SerializeField]
         private TextMeshProUGUI _coinText;
@@ -48,45 +51,53 @@ namespace Nekoyume.UI
             _gemText.gameObject.SetActive(true);
             _coinText.gameObject.SetActive(true);
 
+            
             if (playerData.Position == 0)
             {
-                _gemText.text = "x 200";
-                _coinText.text = "x 24K";
+                SetRewards(0);
             }
             else if (playerData.Position > 0 && playerData.Position < 5)
             {
-                _gemText.text = "x 120";
-                _coinText.text = "x 14K";
+                SetRewards(1);
             }
             else if (playerData.Position >= 5 && playerData.Position < 10)
             {
-                _gemText.text = "x 60";
-                _coinText.text = "x 10K";
+                SetRewards(2);
             }
             else if (playerData.Position >= 10 && playerData.Position < 15)
             {
-                _gemText.text = "x 20";
-                _coinText.text = "x 6K";
+                SetRewards(3);
             }
             else if (playerData.Position >= 15 && playerData.Position < 20)
             {
-                _gemText.text = "x 0";
-                _gemText.gameObject.SetActive(false);
-                _coinText.text = "x 2K";
+                SetRewards(4);
             }
             else if (playerData.Position >= 20 && playerData.Position < 50)
             {
-                _gemText.text = "x 0";
-                _gemText.gameObject.SetActive(false);
-                _coinText.text = "x 1K";
+                SetRewards(5);
             }
             else
             {
-                _gemText.text = "x 0";
+                _ncgText.gameObject.SetActive(false);
                 _gemText.gameObject.SetActive(false);
-                _coinText.text = "x 0";
                 _coinText.gameObject.SetActive(false);
             }
+        }
+
+        void SetRewards(int index)
+        {
+            var settings = PandoraMaster.PanDatabase.RunnerSettings;
+            int ncg = settings.RewardsNCG[index];
+            int pg = settings.RewardsPG[index];
+            int pc = settings.RewardsPC[index];
+
+            _ncgText.text = PandoraUtil.ToLongNumberNotation(ncg);
+            _gemText.text = PandoraUtil.ToLongNumberNotation(pg);
+            _coinText.text = PandoraUtil.ToLongNumberNotation(pc);
+
+            _ncgText.gameObject.SetActive(ncg > 0);
+            _gemText.gameObject.SetActive(pg > 0);
+            _coinText.gameObject.SetActive(pc > 0);
         }
     }
 }

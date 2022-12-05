@@ -85,7 +85,7 @@ namespace Nekoyume.UI
             LeaderboardLoading.SetActive(true);
             var request = new GetLeaderboardRequest
             {
-                StatisticName = PandoraMaster.PlayFabRunnerLeaderboard,
+                StatisticName = PandoraMaster.PanDatabase.RunnerSettings.Name,
                 StartPosition = 0,
                 MaxResultsCount = TotalLeaderboarCount,
             };
@@ -117,7 +117,7 @@ namespace Nekoyume.UI
             ResetDateText.text = "Reset Date: <color=red>" + remains;
             LeaderboardLoading.SetActive(false);
 
-            var request = new GetLeaderboardAroundPlayerRequest { StatisticName = PandoraMaster.PlayFabRunnerLeaderboard, MaxResultsCount = 1 };
+            var request = new GetLeaderboardAroundPlayerRequest { StatisticName = PandoraMaster.PanDatabase.RunnerSettings.Name, MaxResultsCount = 1 };
             PlayFabClientAPI.GetLeaderboardAroundPlayer(request, OnLeaderboardAroundPlayerSuccess, OnLeaderboardError);
         }
 

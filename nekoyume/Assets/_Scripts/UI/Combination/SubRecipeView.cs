@@ -774,6 +774,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public System.Collections.IEnumerator MaxCombineCurrentRecipe()
         {
+            Debug.LogError(_selectedRecipeInfo.RecipeId);
             if (!CanCraft)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
@@ -847,7 +848,12 @@ NotificationCell.NotificationType.Information);
         public void CombineCurrentRecipe()
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!CanCraft)
+            //Debug.LogError(_selectedRecipeInfo.RecipeId);
+            if (!CanCraft
+                && _selectedRecipeInfo.RecipeId != 10020001
+                && _selectedRecipeInfo.RecipeId != 10020002
+                && _selectedRecipeInfo.RecipeId != 10020003
+                && _selectedRecipeInfo.RecipeId != 10020004)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);

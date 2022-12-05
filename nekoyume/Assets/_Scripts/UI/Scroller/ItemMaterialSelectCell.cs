@@ -13,6 +13,7 @@ namespace Nekoyume.UI.Scroller
         [SerializeField] private TextMeshProUGUI itemNameText;
         [SerializeField] private TMP_InputField countInputField;
         [SerializeField] private Button increaseCountButton;
+        [SerializeField] private Button increase10CountButton;
         [SerializeField] private Button decreaseCountButton;
 
         private ItemMaterialSelectScroll.Model _model;
@@ -28,6 +29,7 @@ namespace Nekoyume.UI.Scroller
 
             countInputField.onValueChanged.RemoveAllListeners();
             increaseCountButton.onClick.RemoveAllListeners();
+            increase10CountButton.onClick.RemoveAllListeners();
             decreaseCountButton.onClick.RemoveAllListeners();
 
             if (model.Item.Count.Value > 0)
@@ -36,6 +38,7 @@ namespace Nekoyume.UI.Scroller
                 countInputField.textComponent.color = DefaultColor;
                 countInputField.interactable = true;
                 increaseCountButton.gameObject.SetActive(true);
+                increase10CountButton.gameObject.SetActive(true);
                 decreaseCountButton.gameObject.SetActive(true);
 
                 countInputField.onValueChanged.AddListener(count =>
@@ -44,6 +47,7 @@ namespace Nekoyume.UI.Scroller
                     countInputField.text = _model.SelectedCount.Value.ToString();
                 });
                 increaseCountButton.onClick.AddListener(() => OnChangeCount(_model.SelectedCount.Value + 1));
+                increase10CountButton.onClick.AddListener(() => OnChangeCount(_model.SelectedCount.Value + 10));
                 decreaseCountButton.onClick.AddListener(() => OnChangeCount(_model.SelectedCount.Value - 1));
 
                 _model.SelectedCount
@@ -56,6 +60,7 @@ namespace Nekoyume.UI.Scroller
                 countInputField.textComponent.color = DimmedColor;
                 countInputField.interactable = false;
                 increaseCountButton.gameObject.SetActive(false);
+                increase10CountButton.gameObject.SetActive(false);
                 decreaseCountButton.gameObject.SetActive(false);
             }
         }

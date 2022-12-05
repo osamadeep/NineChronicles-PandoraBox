@@ -20,6 +20,7 @@ namespace Nekoyume.UI.Module.Arena.Board
     using Nekoyume.UI.Scroller;
     using System.Collections;
     using UniRx;
+    using static Nekoyume.State.GrandFinaleStates;
     using static Nekoyume.State.RxProps;
 
     [Serializable]
@@ -60,12 +61,20 @@ namespace Nekoyume.UI.Module.Arena.Board
         [SerializeField] private GameObject GuildButton = null;
         public GameObject BlinkSelected = null;
 
+        //current cell address
+        //string selectedApAddress = "";
+
         //arena
-        ArenaParticipant meAP = null;
-        ArenaParticipant selectedAP = null;
+        //ArenaParticipant meAP = null;
+        //ArenaParticipant selectedAP = null;
+        AvatarState selectedEnemyAvatarState = null;
+
+        //grand arena
+        //GrandFinaleParticipant meAPG = null;
+        //GrandFinaleParticipant selectedAPG = null;
 
         //guild info
-        PandoraPlayer selectedPan = null;
+        //PandoraPlayer selectedPan = null;
         GuildPlayer enemyGuildPlayer = null;
 
         [Space(50)]
@@ -176,22 +185,31 @@ namespace Nekoyume.UI.Module.Arena.Board
             UpdateRank();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             _cpText.text = PandoraUtil.ToLongNumberNotation(_currentData.cp);
-            selectedAP = Widget.Find<ArenaBoard>()._boundedData[Index];
-            meAP = PlayersArenaParticipant.Value;
-            selectedPan = PandoraMaster.GetPandoraPlayer(selectedAP.AvatarAddr.ToString());
-            enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.IsEqual(selectedAP.AvatarAddr.ToString()));
+            var arenaBoard = Widget.Find<ArenaBoard>();
+            
+            if (arenaBoard._useGrandFinale)
+            {
+                selectedEnemyAvatarState = Widget.Find<ArenaBoard>()._grandFinaleParticipants[Index].AvatarState;
+            }
+            else
+            {
+                selectedEnemyAvatarState = Widget.Find<ArenaBoard>()._boundedData[Index].AvatarState;
+            }
+            //meAP = PlayersArenaParticipant.Value;
+
+            //selectedPan = PandoraMaster.GetPandoraPlayer(selectedEnemyAvatarState.agentAddress.ToString());
+            enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
             GuildButton.SetActive(!(enemyGuildPlayer is null));
             if (!(enemyGuildPlayer is null))
             {
                 GuildButton.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + enemyGuildPlayer.Guild);
             }
 
-            if (Widget.Find<FriendInfoPopupPandora>().enemyAP is null)
+            if (Widget.Find<FriendInfoPopupPandora>().enemyAvatarState is null)
                 BlinkSelected.SetActive(false);
             else
-                BlinkSelected.SetActive(selectedAP.AvatarAddr ==
-                                        Widget.Find<FriendInfoPopupPandora>().enemyAP.AvatarAddr);
-            FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedAP.AvatarAddr.ToString()));
+                BlinkSelected.SetActive(selectedEnemyAvatarState.address.ToString() == Widget.Find<FriendInfoPopupPandora>().enemyAvatarState.address.ToString());
+            FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedEnemyAvatarState.address.ToString()));
 
             if (bannerHolder.childCount > 0)
                 foreach (Transform item in bannerHolder)
@@ -247,7 +265,8 @@ namespace Nekoyume.UI.Module.Arena.Board
         async void SetWinRate()
         {
             rateText.text = "..."; //prevent old value
-            rateText.text = await Premium.WinRatePVP(meAP.AvatarAddr, selectedAP.AvatarAddr, meAP.AvatarState, selectedAP.AvatarState,10);
+            rateText.text = await Premium.WinRatePVP(States.Instance.CurrentAvatarState.address,
+                selectedEnemyAvatarState.address, States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 10);
         }
 
         public void GetGuildInfo()
@@ -286,7 +305,7 @@ namespace Nekoyume.UI.Module.Arena.Board
         {
             int he, me;
             me = CPHelper.GetCPV2(
-                meAP.AvatarState, Game.instance.TableSheets.CharacterSheet,
+                States.Instance.CurrentAvatarState, Game.instance.TableSheets.CharacterSheet,
                 Game.instance.TableSheets.CostumeStatSheet);
             he = _currentData.cp;
 
@@ -310,7 +329,8 @@ namespace Nekoyume.UI.Module.Arena.Board
             {
                 //cannotAttackImg.SetActive(false); //false on offseason
                 //if (currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Championship || currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Season)
-                cannotAttackImg.SetActive(_currentData.score > meAP.Score + 100 || meAP.Score > _currentData.score + 100);
+                var myScore = RxProps.PlayersArenaParticipant.Value.Score;
+                cannotAttackImg.SetActive(_currentData.score > myScore + 100 || myScore > _currentData.score + 100);
             }
         }
 
@@ -326,7 +346,7 @@ namespace Nekoyume.UI.Module.Arena.Board
 
             NFTOwner currentNFTOwner = new NFTOwner();
             //Debug.LogError(avatarAddress);
-            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedAP.AvatarAddr.ToString().ToLower());
+            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
 
             try
             {
@@ -374,23 +394,35 @@ namespace Nekoyume.UI.Module.Arena.Board
         {
             var arenaSheet = TableSheets.Instance.ArenaSheet;
             var currentBlockIndex = Game.instance.Agent.BlockIndex;
-            if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
-            {
-                var arenaInformationAddr = ArenaInformation.DeriveAddress(selectedAP.AvatarAddr, currentRoundData.ChampionshipId, currentRoundData.Round);
-                var agent = Game.instance.Agent;
 
-                var sa = await agent.GetStateAsync(arenaInformationAddr);
-                if (sa is Bencodex.Types.List serializedArenaInformationList &&
-                    serializedArenaInformationList.Count >= 3)
+            var arenaBoard = Widget.Find<ArenaBoard>();
+            if (arenaBoard._useGrandFinale)
+            {
+                var _grandFinaleScheduleRow = TableSheets.Instance.GrandFinaleScheduleSheet?.GetRowByBlockIndex(currentBlockIndex);
+                extraInfoText.text = $"<color=#50A931>{"?"}</color>/<color=#59514B>{"?"}</color>\n{"?"}\n{"?"}";
+            }
+            else
+            {
+                if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
                 {
-                    var win = (int)(Bencodex.Types.Integer)serializedArenaInformationList[1];
-                    var lose = (int)(Bencodex.Types.Integer)serializedArenaInformationList[2];
-                    var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
-                    var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
-                    var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
-                    extraInfoText.text = $"<color=#50A931>{win}</color>/<color=#59514B>{lose}</color>\n{a1}\n{a3}";
+                    var arenaInformationAddr = ArenaInformation.DeriveAddress(selectedEnemyAvatarState.address, currentRoundData.ChampionshipId, currentRoundData.Round);
+                    var agent = Game.instance.Agent;
+
+                    var sa = await agent.GetStateAsync(arenaInformationAddr);
+                    if (sa is Bencodex.Types.List serializedArenaInformationList &&
+                        serializedArenaInformationList.Count >= 3)
+                    {
+                        var win = (int)(Bencodex.Types.Integer)serializedArenaInformationList[1];
+                        var lose = (int)(Bencodex.Types.Integer)serializedArenaInformationList[2];
+                        var a1 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[3];
+                        var a2 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[4];
+                        var a3 = (int)(Bencodex.Types.Integer)serializedArenaInformationList[5];
+                        extraInfoText.text = $"<color=#50A931>{win}</color>/<color=#59514B>{lose}</color>\n{a1}\n{a3}";
+                    }
                 }
             }
+
+
         }
 
 

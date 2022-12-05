@@ -20,7 +20,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100330";
-        public static string VersionId = "010075";
+        public static string VersionId = "010076";
 
 
         //Pandora Database
@@ -31,7 +31,7 @@ namespace Nekoyume.PandoraBox
 
         //Playfab
         public static PlayerProfileModel PlayFabCurrentPlayer = new PlayerProfileModel();
-        public static string PlayFabRunnerLeaderboard = "Runner2";
+        //public static string PlayFabRunnerLeaderboard = "Runner2";
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
 

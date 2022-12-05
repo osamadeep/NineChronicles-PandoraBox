@@ -38,7 +38,7 @@ namespace Nekoyume.UI
         [SerializeField] private Button GoMyPlaceBtn = null;
         [SerializeField] private Button RefreshBtn = null;
         [SerializeField] private Button CancelMultiBtn = null;
-        [SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
+        //[SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
         [SerializeField] private GameObject RefreshObj = null;
         public Slider MultipleSlider = null;
 
@@ -58,7 +58,7 @@ namespace Nekoyume.UI
 #endif
 
         [SerializeField]
-        private ArenaBoardBillboard _billboard;
+        public ArenaBoardBillboard _billboard;
 
         public ArenaBoardPlayerScroll _playerScroll;
 
@@ -73,9 +73,9 @@ namespace Nekoyume.UI
 
         public ArenaSheet.RoundData _roundData;
         public RxProps.ArenaParticipant[] _boundedData;
-        private GrandFinaleScheduleSheet.Row _grandFinaleScheduleRow;
-        private GrandFinaleStates.GrandFinaleParticipant[] _grandFinaleParticipants;
-        private bool _useGrandFinale;
+        public GrandFinaleScheduleSheet.Row _grandFinaleScheduleRow;
+        public GrandFinaleStates.GrandFinaleParticipant[] _grandFinaleParticipants;
+        public bool _useGrandFinale;
 
         protected override void Awake()
         {
@@ -94,8 +94,16 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             GoMyPlaceBtn.OnClickAsObservable().Subscribe(_=> GoMyPlace()).AddTo(gameObject);
             RefreshBtn.OnClickAsObservable().Subscribe(_ => {
-                RefreshList().Forget();
-                StartCoroutine(RefreshCooldown());
+                if (_useGrandFinale)
+                {
+
+                }
+                else
+                {
+                    RefreshList().Forget();
+                    StartCoroutine(RefreshCooldown());
+                }
+
             }).AddTo(gameObject);
             CancelMultiBtn.OnClickAsObservable().Subscribe(_ => CancelMultiArena()).AddTo(gameObject);
             ExpectedTicketsBtn.OnClickAsObservable().Subscribe(_ => ExpectedTicketsToReach()).AddTo(gameObject);
@@ -106,18 +114,28 @@ namespace Nekoyume.UI
 
         async UniTaskVoid GetDifferenceAttack()
         {
+
+
             while (true)
             {
 
                 try
                 {
                     long diff = 0;
-                    var myArenaAvatarStateAddr = Nekoyume.Model.State.ArenaAvatarState.DeriveAddress(RxProps.PlayersArenaParticipant.Value.AvatarAddr);
-                    var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                        ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
-                        : null;
-                    myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
-                    diff = Game.Game.instance.Agent.BlockIndex - myLastBattle;
+                    if (_useGrandFinale)
+                    {
+                        diff = 999;
+                    }
+                    else
+                    {
+                        var myArenaAvatarStateAddr = Nekoyume.Model.State.ArenaAvatarState.DeriveAddress(RxProps.PlayersArenaParticipant.Value.AvatarAddr);
+                        var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
+                            ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
+                            : null;
+                        myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
+                        diff = Game.Game.instance.Agent.BlockIndex - myLastBattle;
+                    }
+
 
                     if (diff < 3)
                     {
@@ -151,21 +169,30 @@ namespace Nekoyume.UI
 
         void GoMyPlace()
         {
-            UpdateScrolls();
+            if (_useGrandFinale)
+                UpdateScrollsForGrandFinale();
+            else
+                UpdateScrolls();
         }
 
         public async UniTaskVoid RefreshList()
         {
             SetLastUpdate();
             RefreshObj.SetActive(true);
-            await UniTask.WhenAll(
-            RxProps.ArenaInfoTuple.UpdateAsync(),
-            RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
-            .AsUniTask();
+            if (_useGrandFinale)
+            {
 
-            _boundedData = RxProps.ArenaParticipantsOrderedWithScore.Value;
-            UpdateBillboard();
-            UpdateScrolls();
+            }
+            else
+            {
+                await UniTask.WhenAll(
+                    RxProps.ArenaInfoTuple.UpdateAsync(),
+                    RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
+                    .AsUniTask();
+                _boundedData = RxProps.ArenaParticipantsOrderedWithScore.Value;
+                UpdateBillboard();
+                UpdateScrolls();
+            }
             RefreshObj.SetActive(false);
         }
 
@@ -373,11 +400,15 @@ namespace Nekoyume.UI
                         return;
                     }
 #endif
-                    var data = _boundedData[index];
+                    //var data = _boundedData[index];
                     //Find<FriendInfoPopup>().Show(data.AvatarState);
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     Find<FriendInfoPopupPandora>().Close(true);
-                    Find<FriendInfoPopupPandora>().Show(_roundData, data, RxProps.PlayersArenaParticipant.Value, true);
+                    var avatarState = _useGrandFinale
+                        ? _grandFinaleParticipants[index].AvatarState
+                        : _boundedData[index].AvatarState;
+
+                    Find<FriendInfoPopupPandora>().Show(avatarState, true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     //var avatarState = _useGrandFinale// IMPORTANT
                     //    ? _grandFinaleParticipants[index].AvatarState// IMPORTANT
@@ -437,15 +468,9 @@ namespace Nekoyume.UI
                 return (_so.ArenaBoardPlayerScrollData, 0);
             }
 #endif
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            var _boundedDataPandora = _boundedData;
-            if (OnlyLowerTgl.isOn)
-                _boundedDataPandora = _boundedData.Where(y => y.AvatarState.GetCP() <= RxProps.PlayersArenaParticipant.Value.AvatarState.GetCP()).ToArray();
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             var currentAvatarAddr = States.Instance.CurrentAvatarState.address;
             var scrollData =
-                _boundedDataPandora.Select(e =>
+                _boundedData.Select(e =>
                 {
                     return new ArenaBoardPlayerItemData
                     {
@@ -467,9 +492,9 @@ namespace Nekoyume.UI
                     };
                 }).ToList();
             
-            for (var i = 0; i < _boundedDataPandora.Length; i++)
+            for (var i = 0; i < _boundedData.Length; i++)
             {
-                var data = _boundedDataPandora[i];
+                var data = _boundedData[i];
                 if (data.AvatarAddr.Equals(currentAvatarAddr))
                 {
                     return (scrollData, i);
@@ -486,6 +511,18 @@ namespace Nekoyume.UI
             GrandFinaleStates.GrandFinaleParticipant[] arenaParticipants,
             bool ignoreShowAnimation = false)
         {
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PandoraMaster.ArenaFavTargets.Clear();
+            for (int i = 0; i < 10; i++) //fav max count
+            {
+                string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
+                if (PlayerPrefs.HasKey(key))
+                    PandoraMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
+            }
+            MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
+            RefreshObj.SetActive(false);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             _useGrandFinale = true;
             _grandFinaleScheduleRow = scheduleRow;
             grandFinaleLogoObject.SetActive(true);
@@ -496,6 +533,16 @@ namespace Nekoyume.UI
 
             _noJoinedPlayersGameObject.SetActive(_playerScroll.Data.Count < 1);
             base.Show(ignoreShowAnimation);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            GetDifferenceAttack().Forget();
+            //StartCoroutine(RefreshCooldown());
+            StartCoroutine(LastUpdateCounter());
+            RefreshObj.SetActive(false);
+            if (!PandoraMaster.Instance.Settings.ArenaPush)
+                Premium.CheckForArenaQueue();
+            else
+                Premium.PushArenaFight();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         /// <summary>

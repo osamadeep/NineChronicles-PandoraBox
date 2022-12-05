@@ -54,6 +54,7 @@ namespace Nekoyume.PandoraBox
         public List<NFTItem> NFTItems;
         public List<NFTOwner> NFTOwners;
         public List<PandoraMembership> PandoraMemberships;
+        public RunnerSettings RunnerSettings;
         public int DiceRoll;
         public int TrialPremium;
         public int Crystal;
@@ -167,5 +168,15 @@ namespace Nekoyume.PandoraBox
         //Settings
         public int ActionCooldown;
         public int FavoriteItemsMaxCount;
+    }
+
+    [System.Serializable]
+    public class RunnerSettings
+    {
+        public bool Available;
+        public string Name;
+        public List<int> RewardsNCG;
+        public List<int> RewardsPG;
+        public List<int> RewardsPC;
     }
 }

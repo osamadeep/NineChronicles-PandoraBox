@@ -27,7 +27,7 @@ namespace Nekoyume.PandoraBox
         public SkeletonAnimation RunnerSkeletonAnimation;
 
         [SerializeField]
-        GameObject jetpackFire;
+        ParticleSystem jetpackFire;
 
 
         private void Awake()
@@ -89,21 +89,6 @@ namespace Nekoyume.PandoraBox
             //    if (rb.velocity.y )
             IsFlying = ((Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play);
 
-        }
-
-        private void FixedUpdate()
-        {
-            if (IsFlying)
-            {
-                rb.AddForce(Vector2.up * AccelerateJet * TimeScale);
-                if (rb.velocity.y < 0)
-                    rb.AddForce(Vector2.up * Mathf.Abs(rb.velocity.y) * 1f);
-            }
-            else
-            {
-
-            }
-            jetpackFire.SetActive(IsFlying);
 
             if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) && runner == PandoraRunner.RunnerState.Play)
             {
@@ -121,6 +106,28 @@ namespace Nekoyume.PandoraBox
             {
 
             }
+        }
+
+        private void FixedUpdate()
+        {
+            if (IsFlying)
+            {
+                rb.AddForce( Vector2.up * AccelerateJet * TimeScale);
+
+
+                var jf = jetpackFire.emission;
+                jf.enabled = true;
+            }
+            else
+            {
+                if (rb.velocity.y < 0)
+                    rb.AddForce(Vector2.up * Mathf.Abs(rb.velocity.y) * TimeScale);
+
+                var jf = jetpackFire.emission;
+                jf.enabled = false;
+            }
+
+            //if (runner == PandoraRunner.RunnerState.Play && transform.position.y < )
         }
 
 
