@@ -27,6 +27,7 @@ namespace Nekoyume.UI
 {
     using Cysharp.Threading.Tasks;
     using Nekoyume.BlockChain;
+    using Nekoyume.Model.Item;
     using UniRx;
 
     public class SubRecipeView : MonoBehaviour
@@ -180,9 +181,7 @@ namespace Nekoyume.UI
                     .Subscribe(state => { StartCoroutine(MaxCombineCurrentRecipe()); })
                     .AddTo(gameObject);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                button.OnClickSubject
-                .Subscribe(state => { CombineCurrentRecipe(); })
-                .AddTo(gameObject);
+
                 button.OnClickDisabledSubject
                     .Subscribe(_ =>
                     {
@@ -774,81 +773,30 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public System.Collections.IEnumerator MaxCombineCurrentRecipe()
         {
-            Debug.LogError(_selectedRecipeInfo.RecipeId);
-            if (!CanCraft)
+            if (!CanCraft
+                && _selectedRecipeInfo.RecipeId != 10020001
+                && _selectedRecipeInfo.RecipeId != 10020002
+                && _selectedRecipeInfo.RecipeId != 10020003
+                && _selectedRecipeInfo.RecipeId != 10020004)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);
                 yield break;
             }
 
-            var slots = Widget.Find<CombinationSlotsPopup>();
-            var avatar = States.Instance.CurrentAvatarState;
-            if (!slots.TryGetEmptyCombinationSlot(out var x))
+            PandoraBox.PandoraMaster.IsMultiCombine = true;
+            while (Widget.Find<CombinationSlotsPopup>().TryGetEmptyCombinationSlot(out var slotIndex))
             {
-                Debug.LogError($"[Prime][Enhance]: <b>{avatar.name}</b> All slots is Full!");
-                yield break;
+                CombinationActionSubject.OnNext(_selectedRecipeInfo);
+                yield return new WaitForSeconds(2);
             }
-
-            //while (true)
-            {
-                //yield return new WaitForSeconds(20f);
-
-                for (int i = 0; i < 4; i++)
-                {
-                    var insufficientMaterials = _selectedRecipeInfo.ReplacedMaterials;
-                    if (insufficientMaterials.Any())
-                    {
-                        ActionManager.Instance.CombinationEquipment(_selectedRecipeInfo, i, true, false).Subscribe();
-                    }
-                    else
-                    {
-                        ActionManager.Instance.CombinationEquipment(_selectedRecipeInfo, i, false, false).Subscribe();
-                    }
-                    yield return new WaitForSeconds(0.2f);
-                }
-
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Max Craft Sent! Please wait 30 Sec...",
-NotificationCell.NotificationType.Information);
-            }
-
-
-
-
-            //while (slots.TryGetEmptyCombinationSlot(out var slotIndex))
-            //{
-
-
-
-            //    yield return new WaitForSeconds(5);
-            //    States.Instance.SetCombinationSlotStatesAsync(avatar).Forget();
-            //    yield return new WaitForSeconds(5);
-            //}
-
-
-            //StartCoroutine(CoCombineNPCAnimation(equipment, requiredBlockIndex));
-
-
-            //var loadingScreen = Widget.Find<CombinationLoadingScreen>();
-            //if (loadingScreen.isActiveAndEnabled)
-            //{
-            //    return;
-            //}
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    try
-            //    {
-            //        CombinationActionSubject.OnNext(_selectedRecipeInfo);
-            //    }
-            //    catch { }
-            //}
+            PandoraBox.PandoraMaster.IsMultiCombine = false;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public void CombineCurrentRecipe()
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //Debug.LogError(_selectedRecipeInfo.RecipeId);
             if (!CanCraft
                 && _selectedRecipeInfo.RecipeId != 10020001
                 && _selectedRecipeInfo.RecipeId != 10020002

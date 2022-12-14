@@ -754,7 +754,8 @@ namespace Nekoyume.UI
                 NotificationCell.NotificationType.Information);
                 return;
             }
-            Find<NineRunnerPopup>().Show();
+            Find<RunnerTown>().Show(true);
+            return;
         }
 
         public void FastCharacterSwitch()

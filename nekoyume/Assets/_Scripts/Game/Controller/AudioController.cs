@@ -53,6 +53,7 @@ namespace Nekoyume.Game.Controller
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             public const string Runner1 = "bgm_Runner1";
             public const string Runner2 = "bgm_Runner2";
+            public const string RunnerTown = "bgm_event_22summer_02";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

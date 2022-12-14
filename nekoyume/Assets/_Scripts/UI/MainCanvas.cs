@@ -215,6 +215,10 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<Menu>());
             yield return null;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            secondWidgets.Add(Widget.Create<RunnerTown>());
+            yield return null;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<ArenaBattleLoadingScreen>());
             yield return null;
             // 메뉴보단 더 앞에 나와야 합니다.
@@ -368,7 +372,7 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<RaidPopup>());
             yield return null;
-            secondWidgets.Add(Widget.Create<NineRunnerPopup>());
+            secondWidgets.Add(Widget.Create<RunnerRankPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<PandoraShopPopup>());
             yield return null;

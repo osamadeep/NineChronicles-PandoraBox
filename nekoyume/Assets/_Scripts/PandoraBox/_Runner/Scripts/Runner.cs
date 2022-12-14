@@ -55,20 +55,26 @@ namespace Nekoyume.PandoraBox
             else
             {
                 Time.timeScale = 1;
-                Game.Game.instance.Runner.currentRunnerState = PandoraRunner.RunnerState.Play;
+                Game.Game.instance.Runner.currentRunnerState = PandoraRunner.RunnerState.Playing;
                 Game.Game.instance.Runner.player.runner = Game.Game.instance.Runner.currentRunnerState;
             }
         }
 
-        public void ExitToMenu()
+        public void ExitToTown()
         {
             Time.timeScale = 1;
-            Game.Event.OnRoomEnter.Invoke(false);
             Find<VersionSystem>().Show();
-
             Game.Game.instance.Runner.runnerLevel.gameObject.SetActive(false);
-            Game.Game.instance.Runner.player.gameObject.SetActive(false);
-            Close();
+            //Game.Game.instance.Runner.player.gameObject.SetActive(false);
+
+            //prepare char for town
+            //Game.Game.instance.Runner.GetComponent<AudioSource>().enabled = false;
+            Game.Game.instance.Runner.currentRunnerState = PandoraRunner.RunnerState.Town;
+            Game.Game.instance.Runner.player.transform.position = new Vector3(-5000, -5000);
+            Game.Game.instance.Runner.player.ChangeState("Idle");
+            //Game.Game.instance.Runner.player.CheckIfOnGround();
+            Find<RunnerTown>().Show(true);
+            Close(true);
             //gameObject.SetActive(false);
         }
 

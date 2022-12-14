@@ -18,7 +18,7 @@ using Nekoyume.PandoraBox;
 
 namespace Nekoyume.UI
 {
-    public class NineRunnerPopup : PopupWidget
+    public class RunnerRankPopup : PopupWidget
     {
         [SerializeField] TextMeshProUGUI GemsText;
         [SerializeField] TextMeshProUGUI CoinsText;
@@ -72,7 +72,7 @@ namespace Nekoyume.UI
         public void StartRunner()
         {
             Game.Game.instance.Runner.OnRunnerStart();
-            Close();
+            Close(true);
         }
 
         public void ShowPandoraShop()

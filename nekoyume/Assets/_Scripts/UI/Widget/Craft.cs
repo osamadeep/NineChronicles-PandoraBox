@@ -513,7 +513,41 @@ namespace Nekoyume.UI
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             if (insufficientMaterials.Any())
             {
-                Find<ReplaceMaterialPopup>().Show(insufficientMaterials,
+                //|||||||||||||| PANDORA CODE |||||||||||||||||||
+                if (PandoraBox.PandoraMaster.IsMultiCombine) // ignore confirmation
+                {
+                    var slots = Find<CombinationSlotsPopup>();
+                    slots.SetCaching(
+                        avatarAddress,
+                        slotIndex,
+                        true,
+                        requiredBlockIndex,
+                        itemUsable: equipment);
+                    Find<HeaderMenuStatic>().Crystal.SetProgressCircle(true);
+
+                    Analyzer.Instance.Track(
+                        "Unity/Replace Combination Material",
+                        new Dictionary<string, Value>()
+                        {
+                            ["MaterialCount"] = insufficientMaterials
+                                .Sum(x => x.Value),
+                            ["BurntCrystal"] = (long)recipeInfo.CostCrystal,
+                            ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                            ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                        });
+
+                    ActionManager.Instance
+                        .CombinationEquipment(
+                            recipeInfo,
+                            slotIndex,
+                            true,
+                            false)
+                        .Subscribe();
+                    StartCoroutine(CoCombineNPCAnimation(equipment, requiredBlockIndex));
+                }
+                else
+                {
+                    Find<ReplaceMaterialPopup>().Show(insufficientMaterials,
                     () =>
                     {
                         var slots = Find<CombinationSlotsPopup>();
@@ -545,6 +579,7 @@ namespace Nekoyume.UI
                             .Subscribe();
                         StartCoroutine(CoCombineNPCAnimation(equipment, requiredBlockIndex));
                     });
+                }
             }
             else
             {

@@ -19,8 +19,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100330";
-        public static string VersionId = "010076";
+        public static string OriginalVersionId = "v100340";
+        public static string VersionId = "010077";
 
 
         //Pandora Database
@@ -54,6 +54,7 @@ namespace Nekoyume.PandoraBox
         public static int SelectedStageID; // pve simulate
         public static string CurrentArenaEnemyAddress;
         public static Model.State.AvatarState CurrentShopSellerAvatar; //selected item owner avatar
+        public static bool IsMultiCombine;
 
 
         //Objects

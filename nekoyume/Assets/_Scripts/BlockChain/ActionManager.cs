@@ -32,6 +32,7 @@ using Lib9c.DevExtensions.Action;
 namespace Nekoyume.BlockChain
 {
     using Nekoyume.PandoraBox;
+    using PlayFab;
     using UniRx;
 
     /// <summary>
@@ -58,6 +59,13 @@ namespace Nekoyume.BlockChain
 
         public Exception HandleException(Guid actionId, Exception e)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             if (e is TimeoutException)
             {
                 var txId = _actionIdToTxIdBridge.ContainsKey(actionId)
@@ -116,6 +124,13 @@ namespace Nekoyume.BlockChain
         FungibleAssetValue amount,
         string memo)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             // Create an action.
             var action = new TransferAsset(
                 sender,
@@ -136,6 +151,13 @@ namespace Nekoyume.BlockChain
 
         private void ProcessAction<T>(T actionBase) where T : ActionBase
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var actionType = actionBase.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -177,6 +199,13 @@ namespace Nekoyume.BlockChain
         int ear = 0,
         int tail = 0)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             if (States.Instance.AvatarStates.ContainsKey(index))
             {
                 throw new Exception($"Already contains {index} in {States.Instance.AvatarStates}");
@@ -214,6 +243,13 @@ namespace Nekoyume.BlockChain
             int stageId,
             int playCount)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             costumes ??= new List<Costume>();
             equipments ??= new List<Equipment>();
@@ -271,6 +307,13 @@ namespace Nekoyume.BlockChain
             int playCount = 1,
             bool trackGuideQuest = false)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             if (trackGuideQuest)
             {
                 Analyzer.Instance.Track("Unity/Click Guided Quest Enter Dungeon", new Dictionary<string, Value>()
@@ -355,6 +398,13 @@ namespace Nekoyume.BlockChain
             bool buyTicketIfNeeded,
             bool trackGuideQuest = false)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             if (trackGuideQuest)
             {
                 Analyzer.Instance.Track("Unity/Click Guided Quest Enter Event Dungeon", new Dictionary<string, Value>()
@@ -435,6 +485,13 @@ namespace Nekoyume.BlockChain
             SubRecipeView.RecipeInfo recipeInfo,
             int slotIndex)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var agentAddress = States.Instance.AgentState.address;
             var avatarState = States.Instance.CurrentAvatarState;
             var avatarAddress = avatarState.address;
@@ -496,6 +553,13 @@ namespace Nekoyume.BlockChain
                 SubRecipeView.RecipeInfo recipeInfo,
                 int slotIndex)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var trackValue = new Dictionary<string, Value>()
             {
                 ["EventScheduleId"] = eventScheduleId,
@@ -567,6 +631,13 @@ namespace Nekoyume.BlockChain
                 int recipeId,
                 Dictionary<int,int> materialsToUse)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarState = States.Instance.CurrentAvatarState;
             var avatarAddress = avatarState.address;
 
@@ -607,6 +678,13 @@ namespace Nekoyume.BlockChain
             int worldId,
             int stageId)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.HackAndSlash;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -647,6 +725,13 @@ namespace Nekoyume.BlockChain
             FungibleAssetValue price,
             ItemSubType itemSubType)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             if (!(tradableItem is TradableMaterial))
@@ -692,6 +777,13 @@ namespace Nekoyume.BlockChain
             Guid tradableId,
             ItemSubType itemSubType)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new SellCancellation
             {
                 orderId = orderId,
@@ -713,6 +805,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<UpdateSell>> UpdateSell(List<UpdateSellInfo> updateSellInfos)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             var action = new UpdateSell
@@ -738,6 +837,13 @@ namespace Nekoyume.BlockChain
             
         public IObservable<ActionBase.ActionEvaluation<Buy>> Buy(List<PurchaseInfo> purchaseInfos)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var buyerAgentAddress = States.Instance.AgentState.address;
             foreach (var purchaseInfo in purchaseInfos)
             {
@@ -764,6 +870,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyReward()
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var blockCount = Game.Game.instance.Agent.BlockIndex -
                 States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
             LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
@@ -788,6 +901,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var blockCount = Game.Game.instance.Agent.BlockIndex -
                 avatarState.dailyRewardReceivedIndex + 1;
 
@@ -813,6 +933,13 @@ namespace Nekoyume.BlockChain
             int slotIndex,
             BigInteger costNCG)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var agentAddress = States.Instance.AgentState.address;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
@@ -863,6 +990,13 @@ namespace Nekoyume.BlockChain
             List<Guid> equipmentIds
         )
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             if (!ArenaHelperOld.TryGetThisWeekAddress(out var weeklyArenaAddress))
             {
                 throw new NullReferenceException(nameof(weeklyArenaAddress));
@@ -914,6 +1048,13 @@ namespace Nekoyume.BlockChain
             int round
         )
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new JoinArena
             {
                 avatarAddress = States.Instance.CurrentAvatarState.address,
@@ -946,6 +1087,13 @@ namespace Nekoyume.BlockChain
             int ticket
         )
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new BattleArena
             {
                 myAvatarAddress = States.Instance.CurrentAvatarState.address,
@@ -980,6 +1128,13 @@ namespace Nekoyume.BlockChain
             string tableName,
             string tableCsv)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new PatchTableSheet
             {
                 TableName = tableName,
@@ -1002,6 +1157,13 @@ namespace Nekoyume.BlockChain
             bool payByCrystal,
             bool useHammerPoint)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var sentryTx = Analyzer.Instance.Track(
                 "Unity/Create CombinationEquipment",
                 new Dictionary<string, Value>()
@@ -1073,6 +1235,13 @@ namespace Nekoyume.BlockChain
             CombinationSlotState state,
             int slotIndex)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var materialRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values
                 .First(r => r.ItemSubType == ItemSubType.Hourglass);
@@ -1108,6 +1277,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<RedeemCode>> RedeemCode(string code)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new RedeemCode(
                 code,
                 States.Instance.CurrentAvatarState.address
@@ -1126,6 +1302,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<ChargeActionPoint>> ChargeActionPoint(Material material)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             LocalLayerModifier.RemoveItem(avatarAddress, material.ItemId);
             LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress, States.Instance.GameConfigState.ActionPointMax);
@@ -1159,6 +1342,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<Grinding>> Grinding(List<Equipment> equipmentList, bool chargeAp)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             equipmentList.ForEach(equipment =>
             {
@@ -1204,6 +1394,13 @@ namespace Nekoyume.BlockChain
             List<int> recipeIdList,
             BigInteger openCost)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             LocalLayerModifier
                 .ModifyAgentCrystalAsync(
                     States.Instance.AgentState.address,
@@ -1229,6 +1426,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<UnlockWorld>> UnlockWorld(List<int> worldIdList)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             var action = new UnlockWorld
@@ -1248,6 +1452,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<HackAndSlashRandomBuff>> HackAndSlashRandomBuff(bool advanced)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             var action = new HackAndSlashRandomBuff
@@ -1271,6 +1482,13 @@ namespace Nekoyume.BlockChain
             List<Guid> foods,
             bool payNcg)
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new Raid
             {
                 AvatarAddress = States.Instance.CurrentAvatarState.address,
@@ -1296,6 +1514,13 @@ namespace Nekoyume.BlockChain
 
         public IObservable<ActionBase.ActionEvaluation<ClaimRaidReward>> ClaimRaidReward()
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new ClaimRaidReward(States.Instance.CurrentAvatarState.address);
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
@@ -1319,6 +1544,13 @@ namespace Nekoyume.BlockChain
             int grandFinaleId
         )
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var action = new BattleGrandFinale
             {
                 myAvatarAddress = States.Instance.CurrentAvatarState.address,
@@ -1374,6 +1606,13 @@ namespace Nekoyume.BlockChain
             int accountCount
         )
         {
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+            {
+                // Invoke invalid token occur
+                Debug.LogError("Quit");
+                Application.Quit();
+            }
+
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var action = new CreateArenaDummy
             {

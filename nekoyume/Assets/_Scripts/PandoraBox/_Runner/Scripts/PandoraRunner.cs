@@ -19,7 +19,7 @@ namespace Nekoyume.PandoraBox
 {
     public class PandoraRunner : MonoBehaviour
     {
-        public enum RunnerState { Start, Play, Die, Hit, Info, Pause }
+        public enum RunnerState { NewRound, Playing, Dead, GotHit, Pause,Town }
         public RunnerController player;
         public Transform runnerBoss;
         public Transform runnerLevel;
@@ -52,17 +52,19 @@ namespace Nekoyume.PandoraBox
         int livesBought = 0;
         int speedBooster = 0;
 
-        public RunnerState currentRunnerState = RunnerState.Start;
+        public RunnerState currentRunnerState = RunnerState.Town;
         public Runner RunnerUI; //DELETE
 
         public void Initialize()
         {
             //something to Initialize
+            currentRunnerState = RunnerState.Town;
+            player.runner = currentRunnerState;
         }
 
         private void Update()
         {
-            if (currentRunnerState == RunnerState.Play)
+            if (currentRunnerState == RunnerState.Playing)
                 playTimer += Time.deltaTime;
             else
                 idleTimer += Time.unscaledDeltaTime;
@@ -75,9 +77,6 @@ namespace Nekoyume.PandoraBox
             RunnerUI = Widget.Find<Runner>();
             Time.timeScale = 1;
 
-            Widget.Find<HeaderMenuStatic>().Close();
-            Widget.Find<Menu>().Close();
-            Widget.Find<VersionSystem>().Close();
             LevelSpeed = 1;
             SpeedChange();
             StopAllCoroutines();
@@ -94,7 +93,7 @@ namespace Nekoyume.PandoraBox
                 item.gameObject.SetActive(false);
             missileEnemy.EliminateMissile();
 
-            currentRunnerState = RunnerState.Start;
+            currentRunnerState = RunnerState.NewRound;
             player.runner = currentRunnerState;
 
             AudioController.instance.PlayMusic(AudioController.MusicCode.Runner1, 0.5f);
@@ -115,9 +114,8 @@ namespace Nekoyume.PandoraBox
         IEnumerator PrepareGame()
         {
             //intro animation
-            player.WalkingSound.enabled = true;
-            player.PlayerOnGround();
-            //float learp = 0;
+            player.ChangeState("Run");
+
             while (player.transform.position.x < 1)
             {
                 //learp += Time.deltaTime / 2;
@@ -168,8 +166,8 @@ namespace Nekoyume.PandoraBox
 
                     RunnerUI.UIElement.SetActive(true);
                     RunnerUI.centerText.gameObject.SetActive(false);
-                    currentRunnerState = RunnerState.Play;
-                    player.GetComponent<RunnerController>().runner = RunnerState.Play;
+                    currentRunnerState = RunnerState.Playing;
+                    player.runner = currentRunnerState;
                     //
 
 
@@ -227,7 +225,7 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator HeadStart(int targetDistance)
         {
-            player.GetComponent<RunnerController>().EnableSpeed(true);
+            player.EnableSpeed(true);
             yield return new WaitForSeconds(0.5f);
             speedBooster += targetDistance;
 
@@ -260,11 +258,11 @@ namespace Nekoyume.PandoraBox
             //kill all enemies
             foreach (Transform item in enemiesArray)
                 item.gameObject.SetActive(false);
-            foreach (Transform item in CoinsArray)
-                item.gameObject.SetActive(false);
+            //foreach (Transform item in CoinsArray)
+            //    item.gameObject.SetActive(false);
             missileEnemy.EliminateMissile();
 
-            player.GetComponent<RunnerController>().EnableSpeed(false);
+            player.EnableSpeed(false);
         }
 
         public void CollectCoins(Transform currentCoin)
@@ -283,10 +281,10 @@ namespace Nekoyume.PandoraBox
         {
             while (true)
             {
-                yield return new WaitForSeconds(15f/ LevelSpeed);
-                if (currentRunnerState == RunnerState.Play)
+                yield return new WaitForSeconds(20f/ LevelSpeed);
+                if (currentRunnerState == RunnerState.Playing)
                 {
-                    LevelSpeed += 0.1f;
+                    LevelSpeed += 0.05f;
                     SpeedChange();
                 }
             }
@@ -299,7 +297,7 @@ namespace Nekoyume.PandoraBox
             while (true)
             {
                 yield return new WaitForSeconds(Random.Range(8f, 15f));
-                if (currentRunnerState == RunnerState.Play)
+                if (currentRunnerState == RunnerState.Playing)
                 {
                     //fade sign
                     sprite.color = new Color(1, 1, 1, 0);
@@ -326,7 +324,7 @@ namespace Nekoyume.PandoraBox
                     }
                     missileEnemy.WarningSprite.gameObject.SetActive(false);
 
-                    if (currentRunnerState == RunnerState.Play)
+                    if (currentRunnerState == RunnerState.Playing)
                     {
                         missileEnemy.Missile.transform.position = new Vector3(10, missileEnemy.WarningSprite.transform.position.y);
                         missileEnemy.Missile.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
@@ -346,7 +344,7 @@ namespace Nekoyume.PandoraBox
             while (true)
             {
                 isCoin = !isCoin;
-                if (currentRunnerState == RunnerState.Play)
+                if (currentRunnerState == RunnerState.Playing)
                 {
                     sectionsPassed++;
                     if (isCoin)
@@ -379,8 +377,8 @@ namespace Nekoyume.PandoraBox
 
         public void PlayerGotHit()
         {
-            currentRunnerState = RunnerState.Hit;
-            player.GetComponent<RunnerController>().runner = RunnerState.Hit;
+            currentRunnerState = RunnerState.GotHit;
+            player.runner = currentRunnerState;
             StartCoroutine(GotRecover(true));
         }
 
@@ -400,8 +398,8 @@ namespace Nekoyume.PandoraBox
             {
                 ActionCamera.instance.Shake();
 
-                currentRunnerState = RunnerState.Die;
-                player.runner = RunnerState.Die;
+                currentRunnerState = RunnerState.Dead;
+                player.runner = currentRunnerState;
 
                 dieSpeed = LevelSpeed;
                 LevelSpeed = 0;
@@ -421,7 +419,7 @@ namespace Nekoyume.PandoraBox
 
                 //player animation
                 player.RunnerSkeletonAnimation.state.TimeScale = 1;
-                player.LoseAnimation();
+                player.ChangeState("Lose");
 
                 yield return new WaitForSeconds(3f);
                 SelectedUtilitie = null;
@@ -461,7 +459,7 @@ namespace Nekoyume.PandoraBox
                             life = gameSeed + 1;
                             livesBought++;
 
-                            int newPrice = SelectedUtilitie.ItemPrice + (SelectedUtilitie.ItemPrice * (livesBought - gameSeed));
+                            int newPrice = (SelectedUtilitie.ItemPrice * (livesBought - gameSeed));
                             PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] -= newPrice; //just UI update instead of request new call
                             StartCoroutine(GotRecover(false));
                         }
@@ -502,8 +500,8 @@ namespace Nekoyume.PandoraBox
                 //}
                 //playerGFX.skeleton.SetColor(new Color(1, 1, 1, 1));
 
-                currentRunnerState = RunnerState.Play;
-                player.GetComponent<RunnerController>().runner = RunnerState.Play;
+                currentRunnerState = RunnerState.Playing;
+                player.runner = currentRunnerState;
 
                 LevelSpeed = dieSpeed;
                 SpeedChange();
@@ -607,7 +605,7 @@ namespace Nekoyume.PandoraBox
             while (true)
             {
                 yield return new WaitForSeconds(0.1f/LevelSpeed);
-                if (currentRunnerState == RunnerState.Play)
+                if (currentRunnerState == RunnerState.Playing)
                     UpdateScore(1, 0);
             }
         }
