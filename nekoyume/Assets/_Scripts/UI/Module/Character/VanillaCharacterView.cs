@@ -1,5 +1,4 @@
 using System.Linq;
-using Libplanet;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
@@ -28,17 +27,6 @@ namespace Nekoyume.UI.Module
         public void Hide()
         {
             gameObject.SetActive(false);
-        }
-
-        public async void SetByAvatarAddress(Address avatarAddress)
-        {
-            var (exist, avatarState) = await States.TryGetAvatarStateAsync(avatarAddress);
-            if (!exist)
-            {
-                return;
-            }
-
-            SetByAvatarState(avatarState);
         }
 
         public virtual void SetByAvatarState(AvatarState avatarState)
@@ -135,7 +123,7 @@ namespace Nekoyume.UI.Module
 
         private void SetIcon(Sprite image)
         {
-            iconImage.overrideSprite = image;
+            iconImage.sprite = image;
             iconImage.enabled = true;
         }
     }

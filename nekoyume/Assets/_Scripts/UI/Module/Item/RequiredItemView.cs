@@ -12,9 +12,11 @@ namespace Nekoyume.UI.Module
 
     public class RequiredItemView : SimpleCountableItemView
     {
-        [SerializeField] private TextMeshProUGUI requiredText;
+        [SerializeField]
+        private TextMeshProUGUI requiredText;
 
-        [SerializeField] private GameObject enoughObject;
+        [SerializeField]
+        private GameObject enoughObject;
 
         private const string CountTextFormatEnough = "{0}/{1}";
         private const string CountTextFormatNotEnough = "<#ff5a5a>{0}</color>/{1}";
@@ -32,9 +34,8 @@ namespace Nekoyume.UI.Module
         private void ShowTooltip(Item model)
         {
             AudioController.PlayClick();
-            var rt = GetComponent<RectTransform>();
             var tooltip = ItemTooltip.Find(model.ItemBase.Value.ItemType);
-            tooltip.Show(model.ItemBase.Value, string.Empty, false, null, target: rt);
+            tooltip.Show(model.ItemBase.Value, string.Empty, false, null);
         }
 
         protected override void SetCount(int count)

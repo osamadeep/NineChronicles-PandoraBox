@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
 using Nekoyume.Game.Character;
@@ -10,6 +12,7 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using ObservableExtensions = UniRx.ObservableExtensions;
 
 namespace Nekoyume.UI
 {
@@ -33,9 +36,10 @@ namespace Nekoyume.UI
 
         private Stage _stage;
         private Player _player;
-        private List<Costume> _costumes;
-        private List<Equipment> _equipments;
+        private List<Guid> _costumes;
+        private List<Guid> _equipments;
         private List<Consumable> _consumables;
+        private List<RuneSlotInfo> _runes;
         private int _worldId;
         private int _stageId;
 
@@ -45,17 +49,18 @@ namespace Nekoyume.UI
         {
             base.Awake();
 
-            cancelButton.OnClickAsObservable().Subscribe(_ => Close()).AddTo(gameObject);
-            submitButton.OnClickAsObservable().Subscribe(_ => BoostQuest()).AddTo(gameObject);
-            boostPlusButton.OnClickAsObservable().Subscribe(_ => apSlider.value++);
-            boostMinusButton.OnClickAsObservable().Subscribe(_ => apSlider.value--);
+            ObservableExtensions.Subscribe(cancelButton.OnClickAsObservable(), _ => Close()).AddTo(gameObject);
+            ObservableExtensions.Subscribe(submitButton.OnClickAsObservable(), _ => BoostQuest()).AddTo(gameObject);
+            ObservableExtensions.Subscribe(boostPlusButton.OnClickAsObservable(), _ => apSlider.value++);
+            ObservableExtensions.Subscribe(boostMinusButton.OnClickAsObservable(), _ => apSlider.value--);
         }
 
         public void Show(
             Stage stage,
-            List<Costume> costumes,
-            List<Equipment> equipments,
+            List<Guid> costumes,
+            List<Guid> equipments,
             List<Consumable> consumables,
+            List<RuneSlotInfo> runes,
             int maxCount,
             int worldId,
             int stageId)
@@ -64,11 +69,12 @@ namespace Nekoyume.UI
             _costumes = costumes;
             _equipments = equipments;
             _consumables = consumables;
+            _runes = runes;
             _player = _stage.GetPlayer(PlayerPosition);
             _worldId = worldId;
             _stageId = stageId;
 
-            ReactiveAvatarState.ActionPoint.Subscribe(value =>
+            ObservableExtensions.Subscribe(ReactiveAvatarState.ActionPoint, value =>
             {
                 var costOfStage = GetCostOfStage();
                 apSlider.maxValue = value / costOfStage >= maxCount ? maxCount : value / costOfStage;
@@ -115,24 +121,26 @@ namespace Nekoyume.UI
 
             if (_stageId >= GameConfig.MimisbrunnrStartStageId)
             {
-                Game.Game.instance.ActionManager.MimisbrunnrBattle(
+                ObservableExtensions.Subscribe(Game.Game.instance.ActionManager.MimisbrunnrBattle(
                     _costumes,
                     _equipments,
                     _consumables,
+                    _runes,
                     _worldId,
                     _stageId,
                     (int)apSlider.value
-                ).Subscribe();
+                ));
             }
             else
             {
-                Game.Game.instance.ActionManager.HackAndSlash(
+                ObservableExtensions.Subscribe(Game.Game.instance.ActionManager.HackAndSlash(
                     _costumes,
                     _equipments,
                     _consumables,
+                    _runes,
                     _worldId,
                     _stageId
-                ).Subscribe();
+                ));
             }
 
             Debug.LogError("HACK: STEP 1");

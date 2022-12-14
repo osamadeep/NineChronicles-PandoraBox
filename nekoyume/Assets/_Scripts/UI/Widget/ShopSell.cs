@@ -162,7 +162,7 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
         }
 
-        private void ShowItemTooltip(InventoryItem model, RectTransform target)
+        private void ShowItemTooltip(InventoryItem model)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraBox.PandoraMaster.MarketPriceValue = PriceText.text;
@@ -175,13 +175,10 @@ namespace Nekoyume.UI
                 model.ItemBase is ITradableItem,
                 () => ShowSell(model),
                 inventory.ClearSelectedItem,
-                () => L10nManager.Localize("UI_UNTRADABLE"),
-                target);
+                () => L10nManager.Localize("UI_UNTRADABLE"));
         }
 
-
-
-        private void ShowSellTooltip(ShopItem model, RectTransform target)
+        private void ShowSellTooltip(ShopItem model)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.MarketPriceValue = PriceText.text;
@@ -191,7 +188,7 @@ namespace Nekoyume.UI
             tooltip.Show(model,
                 () => ShowUpdateSellPopup(model),
                 () => ShowRetrievePopup(model),
-                view.ClearSelectedItem, target);
+                view.ClearSelectedItem);
         }
 
         public override void Show(bool ignoreShowAnimation = false)

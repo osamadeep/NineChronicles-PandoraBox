@@ -1,5 +1,8 @@
 using Cysharp.Threading.Tasks;
 using Nekoyume.Extensions;
+using System;
+using System.Collections.Generic;
+using Nekoyume.Game.Character;
 using Nekoyume.Helper;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -13,6 +16,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using UniRx;
+
     public class WorldBossRankItemView : MonoBehaviour
     {
         [SerializeField]
@@ -51,8 +56,12 @@ namespace Nekoyume.UI
         [SerializeField]
         private GameObject rankTextContainer;
 
+        [SerializeField]
+        public TouchHandler touchHandler;
+
         private GameObject _gradeObject;
         private GameObject _rankObject;
+        private readonly List<IDisposable> _disposables = new();
 
         public void Set(WorldBossRankItem model, WorldBossRankScroll.ContextModel context)
         {
@@ -103,9 +112,20 @@ namespace Nekoyume.UI
                 var rankPrefab = WorldBossFrontHelper.GetRankPrefab(model.Ranking);
                 _rankObject = Instantiate(rankPrefab, rankImageContainer.transform);
             }
+            if (touchHandler != null)
+            {
+                _disposables.DisposeAllAndClear();
+                touchHandler.OnClick.Select(_ => model)
+                    .Subscribe(context.OnClick.OnNext).AddTo(_disposables);
+
+            }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             GetRemainingRickets(model).Forget();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         private async UniTask GetRemainingRickets(WorldBossRankItem model)
         {
             var avatarAddress = new Libplanet.Address(model.Address);
@@ -146,5 +166,6 @@ namespace Nekoyume.UI
                 address.text = $"#{model.Address[..4]}" + $", (?/3), T:?";
             }
         }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

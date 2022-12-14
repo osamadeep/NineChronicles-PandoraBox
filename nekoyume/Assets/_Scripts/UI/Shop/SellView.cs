@@ -14,18 +14,20 @@ namespace Nekoyume
 
     public class SellView : ShopView
     {
-        [SerializeField] private TMP_Dropdown itemSubTypeFilter = null;
+        [SerializeField]
+        private TMP_Dropdown itemSubTypeFilter;
 
-        [SerializeField] private TMP_Dropdown sortFilter = null;
+        [SerializeField]
+        private TMP_Dropdown sortFilter;
 
         private ShopItem _selectedItem;
 
         // search condition
         private readonly ReactiveProperty<ItemSubTypeFilter> _selectedSubTypeFilter =
-            new ReactiveProperty<ItemSubTypeFilter>(ItemSubTypeFilter.All);
+            new(ItemSubTypeFilter.All);
 
-        private readonly ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter =
-            new ReactiveProperty<Nekoyume.EnumType.ShopSortFilter>(Nekoyume.EnumType.ShopSortFilter.Class);
+        private readonly ReactiveProperty<ShopSortFilter> _selectedSortFilter =
+            new(ShopSortFilter.CP);
 
         public void ClearSelectedItem()
         {
@@ -84,7 +86,7 @@ namespace Nekoyume
             {
                 _selectedItem = item;
                 _selectedItem.Selected.SetValueAndForceNotify(true);
-                ClickItemAction?.Invoke(_selectedItem, _selectedItem.View); // Show tooltip popup
+                ClickItemAction?.Invoke(_selectedItem); // Show tooltip popup
             }
             else
             {
@@ -98,7 +100,7 @@ namespace Nekoyume
                     _selectedItem.Selected.SetValueAndForceNotify(false);
                     _selectedItem = item;
                     _selectedItem.Selected.SetValueAndForceNotify(true);
-                    ClickItemAction?.Invoke(_selectedItem, _selectedItem.View); // Show tooltip popup
+                    ClickItemAction?.Invoke(_selectedItem); // Show tooltip popup
                 }
             }
         }

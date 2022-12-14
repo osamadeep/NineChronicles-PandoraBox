@@ -169,5 +169,10 @@ namespace Nekoyume
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             return itemViewData.GetItemViewData(itemBase.Grade + add);
         }
+
+        public ItemViewData GetItemViewData(int grade)
+        {
+            return itemViewData.GetItemViewData(grade);
+        }
     }
 }

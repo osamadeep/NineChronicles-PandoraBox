@@ -43,7 +43,11 @@ namespace Nekoyume.UI
 
         [SerializeField] protected ConditionalButton submitButton;
 
-        [SerializeField] protected ItemTooltipBuy buy;
+        [SerializeField]
+        private Button enhancementButton;
+
+        [SerializeField]
+        protected ItemTooltipBuy buy;
 
         [SerializeField] protected ItemTooltipSell sell;
 
@@ -53,18 +57,23 @@ namespace Nekoyume.UI
 
         [SerializeField] protected Button descriptionButton;
 
-        [SerializeField] protected AcquisitionPlaceDescription acquisitionPlaceDescription;
+        [SerializeField]
+        protected GameObject submitButtonContainer;
 
-        protected readonly List<IDisposable> _disposablesForModel = new List<IDisposable>();
+        [SerializeField]
+        protected AcquisitionPlaceDescription acquisitionPlaceDescription;
 
-        protected RectTransform _descriptionButtonRectTransform;
+        private readonly List<IDisposable> _disposablesForModel = new();
 
-        protected System.Action _onSubmit;
-        protected System.Action _onClose;
-        protected System.Action _onBlocked;
+        private RectTransform _descriptionButtonRectTransform;
 
-        protected bool _isPointerOnScrollArea;
-        protected bool _isClickedButtonArea;
+        private System.Action _onSubmit;
+        private System.Action _onClose;
+        private System.Action _onBlocked;
+        private System.Action _onEnhancement;
+
+        public bool _isPointerOnScrollArea;
+        public bool _isClickedButtonArea;
 
         protected override PivotPresetType TargetPivotPresetType => PivotPresetType.TopRight;
 
@@ -435,6 +444,11 @@ namespace Nekoyume.UI
             }).AddTo(gameObject);
             submitButton.OnClickDisabledSubject.Subscribe(_ => _onBlocked?.Invoke())
                 .AddTo(gameObject);
+            enhancementButton.onClick.AddListener(() =>
+            {
+                _onEnhancement?.Invoke();
+                Close(true);
+            });
             CloseWidget = () => Close();
             SubmitWidget = () =>
             {
@@ -477,8 +491,7 @@ namespace Nekoyume.UI
             System.Action onSubmit,
             System.Action onClose = null,
             System.Action onBlocked = null,
-            int itemCount = 0,
-            RectTransform target = null)
+            int itemCount = 0)
         {
             buy.gameObject.SetActive(false);
             sell.gameObject.SetActive(false);
@@ -490,7 +503,7 @@ namespace Nekoyume.UI
                 (item.ItemType == ItemType.Equipment ||
                  item.ItemType == ItemType.Costume));
 
-            submitButton.gameObject.SetActive(onSubmit != null);
+            submitButtonContainer.SetActive(onSubmit != null);
             submitButton.Interactable = interactable;
             submitButton.Text = submitText;
             _onSubmit = onSubmit;
@@ -504,9 +517,9 @@ namespace Nekoyume.UI
             currentItemBase = item;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             scrollbar.value = 1f;
-            UpdatePosition(target);
             base.Show();
-            StartCoroutine(CoUpdate(submitButton.gameObject));
+            StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
+
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
@@ -522,7 +535,7 @@ namespace Nekoyume.UI
             System.Action onSubmit,
             System.Action onClose = null,
             System.Action onBlocked = null,
-            RectTransform target = null)
+            System.Action onEnhancement = null)
         {
             buy.gameObject.SetActive(false);
             sell.gameObject.SetActive(false);
@@ -534,12 +547,14 @@ namespace Nekoyume.UI
                 (item.ItemBase.ItemType == ItemType.Equipment ||
                  item.ItemBase.ItemType == ItemType.Costume));
 
-            submitButton.gameObject.SetActive(onSubmit != null);
+            submitButtonContainer.SetActive(onSubmit != null);
             submitButton.Interactable = interactable;
             submitButton.Text = submitText;
             _onSubmit = onSubmit;
             _onClose = onClose;
             _onBlocked = onBlocked;
+            _onEnhancement = onEnhancement;
+            enhancementButton.gameObject.SetActive(onEnhancement != null);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             CheckCrystal(item.ItemBase);
@@ -549,9 +564,8 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             scrollbar.value = 1f;
-            UpdatePosition(target);
             base.Show();
-            StartCoroutine(CoUpdate(submitButton.gameObject));
+            StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
@@ -564,10 +578,9 @@ namespace Nekoyume.UI
             ShopItem item,
             System.Action onRegister,
             System.Action onSellCancellation,
-            System.Action onClose,
-            RectTransform target = null)
+            System.Action onClose)
         {
-            submitButton.gameObject.SetActive(false);
+            submitButtonContainer.SetActive(false);
             buy.gameObject.SetActive(false);
             sell.gameObject.SetActive(true);
             sell.Set(item.OrderDigest.ExpiredBlockIndex,
@@ -602,7 +615,6 @@ namespace Nekoyume.UI
 
 
             scrollbar.value = 1f;
-            UpdatePosition(target);
             base.Show();
             StartCoroutine(CoUpdate(sell.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
@@ -616,10 +628,9 @@ namespace Nekoyume.UI
         public virtual void Show(
             ShopItem item,
             System.Action onBuy,
-            System.Action onClose,
-            RectTransform target = null)
+            System.Action onClose)
         {
-            submitButton.gameObject.SetActive(false);
+            submitButtonContainer.SetActive(false);
             sell.gameObject.SetActive(false);
             buy.gameObject.SetActive(true);
             buy.Set(item.OrderDigest.ExpiredBlockIndex,
@@ -647,7 +658,6 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             scrollbar.value = 1f;
-            UpdatePosition(target);
             base.Show();
             StartCoroutine(CoUpdate(buy.gameObject));
 
@@ -665,9 +675,9 @@ namespace Nekoyume.UI
             bool interactable,
             System.Action onSubmit,
             System.Action onClose = null,
-            System.Action onBlocked = null,
-            RectTransform target = null)
+            System.Action onBlocked = null)
         {
+            enhancementButton.gameObject.SetActive(false);
             buy.gameObject.SetActive(false);
             sell.gameObject.SetActive(false);
             detail.Set(
@@ -677,7 +687,7 @@ namespace Nekoyume.UI
                 (item.ItemBase.ItemType == ItemType.Equipment ||
                  item.ItemBase.ItemType == ItemType.Costume));
 
-            submitButton.gameObject.SetActive(onSubmit != null);
+            submitButtonContainer.SetActive(onSubmit != null);
             submitButton.Interactable = interactable;
             submitButton.Text = submitText;
             _onSubmit = onSubmit;
@@ -691,9 +701,8 @@ namespace Nekoyume.UI
             currentItemBase = item.ItemBase;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             scrollbar.value = 1f;
-            UpdatePosition(target);
             base.Show();
-            StartCoroutine(CoUpdate(submitButton.gameObject));
+            StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
         }
 
         public static ItemTooltip Find(ItemType type)
@@ -708,32 +717,32 @@ namespace Nekoyume.UI
             };
         }
 
-        protected void UpdatePosition(RectTransform target)
-        {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
-            panel.SetAnchorAndPivot(AnchorPresetType.TopLeft, PivotPresetType.TopLeft);
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)verticalLayoutGroup.transform);
-            if (target)
-            {
-                panel.MoveToRelatedPosition(target, TargetPivotPresetType, OffsetFromTarget);
-            }
-            else
-            {
-                panel.SetAnchor(AnchorPresetType.MiddleCenter);
-                panel.anchoredPosition =
-                    new Vector2(-(panel.sizeDelta.x / 2), panel.sizeDelta.y / 2);
-            }
+        //protected void UpdatePosition(RectTransform target)
+        //{
+        //    LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
+        //    panel.SetAnchorAndPivot(AnchorPresetType.TopLeft, PivotPresetType.TopLeft);
+        //    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)verticalLayoutGroup.transform);
+        //    if (target)
+        //    {
+        //        panel.MoveToRelatedPosition(target, TargetPivotPresetType, OffsetFromTarget);
+        //    }
+        //    else
+        //    {
+        //        panel.SetAnchor(AnchorPresetType.MiddleCenter);
+        //        panel.anchoredPosition =
+        //            new Vector2(-(panel.sizeDelta.x / 2), panel.sizeDelta.y / 2);
+        //    }
 
-            panel.MoveInsideOfParent(MarginFromParent);
+        //    panel.MoveInsideOfParent(MarginFromParent);
 
-            if (!(target is null) && panel.position.x - target.position.x < 0)
-            {
-                panel.SetAnchorAndPivot(AnchorPresetType.TopRight, PivotPresetType.TopRight);
-                panel.MoveToRelatedPosition(target, TargetPivotPresetType.ReverseX(),
-                    DefaultOffsetFromTarget.ReverseX());
-                UpdateAnchoredPosition(target);
-            }
-        }
+        //    if (!(target is null) && panel.position.x - target.position.x < 0)
+        //    {
+        //        panel.SetAnchorAndPivot(AnchorPresetType.TopRight, PivotPresetType.TopRight);
+        //        panel.MoveToRelatedPosition(target, TargetPivotPresetType.ReverseX(),
+        //            DefaultOffsetFromTarget.ReverseX());
+        //        UpdateAnchoredPosition(target);
+        //    }
+        //}
 
         protected IEnumerator CoUpdate(GameObject target)
         {

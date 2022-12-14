@@ -1,5 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Nekoyume.Game.Character;
+using Nekoyume.Helper;
+using Nekoyume.Model.EnumType;
+using Nekoyume.Model.Item;
+using Nekoyume.Model.Stat;
+using Nekoyume.Model.State;
 using Nekoyume.State;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Module.Timer;
@@ -14,6 +21,8 @@ using ObservableExtensions = UniRx.ObservableExtensions;
 
 namespace Nekoyume.UI
 {
+    using UniRx;
+
     public class Status : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -49,7 +58,6 @@ namespace Nekoyume.UI
         [SerializeField]
         private BattleTimerView battleTimerView = null;
 
-        private string _avatarName = "";
         private Player _player;
 
         public void ShowGuild()
@@ -66,9 +74,9 @@ namespace Nekoyume.UI
             base.Awake();
 
             Game.Event.OnRoomEnter.AddListener(b => Show());
-            ObservableExtensions.Subscribe(Game.Event.OnUpdatePlayerEquip, characterView.SetByPlayer)
+            Game.Event.OnUpdatePlayerEquip.Subscribe(characterView.SetByPlayer)
                 .AddTo(gameObject);
-            ObservableExtensions.Subscribe(Game.Event.OnUpdatePlayerStatus, SubscribeOnUpdatePlayerStatus)
+            Game.Event.OnUpdatePlayerStatus.Subscribe(SubscribeOnUpdatePlayerStatus)
                 .AddTo(gameObject);
 
             CloseWidget = null;
@@ -119,6 +127,18 @@ namespace Nekoyume.UI
             buffTooltip.gameObject.SetActive(false);
         }
 
+        public void UpdateOnlyPlayer(Player player)
+        {
+            characterView.SetByPlayer(player);
+
+            if (player)
+            {
+                _player = player;
+            }
+
+            UpdateExp();
+        }
+
         public void UpdatePlayer(Player player)
         {
             characterView.SetByPlayer(player);
@@ -152,8 +172,9 @@ namespace Nekoyume.UI
                 return;
             }
 
-            _avatarName = States.Instance.CurrentAvatarState.NameWithHash;
-            //textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
+            var level = _player.Level;
+            var avatarName = States.Instance.CurrentAvatarState.NameWithHash;
+            //textLvName.text = $"<color=#B38271>LV. {level}</color> {avatarName}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (gameObject.activeInHierarchy)
                 UpdataPandoraStatus();
@@ -176,6 +197,29 @@ namespace Nekoyume.UI
             expBar.fillAmount = expValue;
         }
 
+        public void UpdateForLobby(
+            AvatarState avatarState,
+            List<Equipment> equipments,
+            List<Costume> costumes
+        )
+        {
+            // portrait
+            var portraitId = Util.GetPortraitId(equipments, costumes);
+            characterView.SetByFullCostumeOrArmorId(portraitId);
+
+            // level& name
+            textLvName.text = $"<color=#B38271>LV. {avatarState.level}</color> {avatarState.NameWithHash}";
+
+            // exp
+            var levelSheet = Game.Game.instance.TableSheets.CharacterLevelSheet;
+            if (levelSheet.TryGetValue(avatarState.level, out var levelRow))
+            {
+                var currentExp = avatarState.exp - levelRow.Exp;
+                textExp.text = $"{currentExp} / {levelRow.ExpNeed}";
+                expBar.fillAmount = (float)currentExp / levelRow.ExpNeed;
+            }
+        }
+
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void UpdataPandoraStatus()
         {
@@ -184,7 +228,7 @@ namespace Nekoyume.UI
                 PandoraStatus.gameObject.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
             }
             catch { }
-            
+
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
 
@@ -209,7 +253,7 @@ namespace Nekoyume.UI
                         PandoraStatus.text = $"{timeR} ({Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
                     }
                 }
-                catch {}
+                catch { }
                 yield return new WaitForSeconds(10);
             }
         }

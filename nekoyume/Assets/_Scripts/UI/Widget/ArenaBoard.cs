@@ -4,7 +4,10 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Nekoyume.Action;
 using Nekoyume.Game;
+using Nekoyume.Battle;
 using Nekoyume.Game.Controller;
+using Nekoyume.Helper;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.State;
@@ -371,12 +374,32 @@ namespace Nekoyume.UI
                 return;
             }
 
+            var equipments = player.ItemSlotState.Equipments
+                .Select(guid =>
+                    player.AvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+
+            var costumes = player.ItemSlotState.Costumes
+                .Select(guid =>
+                    player.AvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
+            var runeOptions = Util.GetRuneOptions(player.RuneStates, runeOptionSheet);
+            var lv = player.AvatarState.level;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+            if (!characterSheet.TryGetValue(player.AvatarState.characterId, out var row))
+            {
+                return;
+            }
+
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet);
             _billboard.SetData(
                 "season",
                 player.Rank,
                 player.CurrentArenaInfo.Win,
                 player.CurrentArenaInfo.Lose,
-                player.CP,
+                cp,
                 player.Score);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -409,11 +432,7 @@ namespace Nekoyume.UI
                         : _boundedData[index].AvatarState;
 
                     Find<FriendInfoPopupPandora>().Show(avatarState, true);
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                    //var avatarState = _useGrandFinale// IMPORTANT
-                    //    ? _grandFinaleParticipants[index].AvatarState// IMPORTANT
-                    //    : _boundedData[index].AvatarState;// IMPORTANT
-                    //Find<FriendInfoPopup>().Show(avatarState); // IMPORTANT
+                    //Find<FriendInfoPopup>().ShowAsync(avatarState, BattleType.Arena).Forget();
                 })
                 .AddTo(gameObject);
 
@@ -429,23 +448,50 @@ namespace Nekoyume.UI
                         return;
                     }
 #endif
+
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     Find<FriendInfoPopupPandora>().Close(true);
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                     var data = _boundedData[index];
 
+                    var equipments = data.ItemSlotState.Equipments
+                        .Select(guid =>
+                            data.AvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var costumes = data.ItemSlotState.Costumes
+                        .Select(guid =>
+                            data.AvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
+                    var runeOptions = Util.GetRuneOptions(data.RuneStates, runeOptionSheet);
+                    var lv = data.AvatarState.level;
+                    var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+                    var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+                    if (!characterSheet.TryGetValue(data.AvatarState.characterId, out var row))
+                    {
+                        throw new SheetRowNotFoundException("CharacterSheet",
+                            $"{data.AvatarState.characterId}");
+                    }
+
                     Close();
+
                     if (_useGrandFinale)
                     {
                         Find<ArenaBattlePreparation>().Show(
                             _grandFinaleScheduleRow?.Id ?? 0,
-                            _grandFinaleParticipants[index].AvatarState);
+                            _grandFinaleParticipants[index].AvatarState,
+                            equipments,
+                            costumes,
+                            CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet));
                     }
                     else
                     {
                         Find<ArenaBattlePreparation>().Show(
                             _roundData,
-                            _boundedData[index].AvatarState);
+                            _boundedData[index].AvatarState,
+                            equipments,
+                            costumes,
+                            CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet));
                     }
                 })
                 .AddTo(gameObject);
@@ -469,21 +515,52 @@ namespace Nekoyume.UI
             }
 #endif
             var currentAvatarAddr = States.Instance.CurrentAvatarState.address;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
             var scrollData =
                 _boundedData.Select(e =>
                 {
+                    var equipments = e.ItemSlotState.Equipments
+                        .Select(guid =>
+                            e.AvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var costumes = e.ItemSlotState.Costumes
+                        .Select(guid =>
+                            e.AvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var runeOptions = Util.GetRuneOptions(e.RuneStates, runeOptionSheet);
+                    var lv = e.AvatarState.level;
+                    var titleId = costumes.FirstOrDefault(costume =>
+                        costume.ItemSubType == ItemSubType.Title && costume.Equipped)?.Id;
+
+                    var portrait = GameConfig.DefaultAvatarArmorId;
+
+                    var armor = equipments.FirstOrDefault(x => x.ItemSubType == ItemSubType.Armor);
+                    if (armor != null)
+                    {
+                        portrait = armor.Id;
+                    }
+
+                    var fullCostume = costumes.FirstOrDefault(x => x.ItemSubType == ItemSubType.FullCostume);
+                    if (fullCostume != null)
+                    {
+                        portrait = fullCostume.Id;
+                    }
+
+                    if (!characterSheet.TryGetValue(e.AvatarState.characterId, out var row))
+                    {
+                        throw new SheetRowNotFoundException("CharacterSheet",
+                            $"{e.AvatarState.characterId}");
+                    }
+
                     return new ArenaBoardPlayerItemData
                     {
                         name = e.AvatarState.NameWithHash,
                         level = e.AvatarState.level,
-                        fullCostumeOrArmorId =
-                            e.AvatarState.inventory.GetEquippedFullCostumeOrArmorId(),
-                        titleId = e.AvatarState.inventory.Costumes
-                            .FirstOrDefault(costume =>
-                                costume.ItemSubType == ItemSubType.Title
-                                && costume.Equipped)?
-                            .Id,
-                        cp = e.AvatarState.GetCP(),
+                        fullCostumeOrArmorId = portrait,
+                        titleId = titleId,
+                        cp = CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet),
                         score = e.Score,
                         rank = e.Rank,
                         expectWinDeltaScore = e.ExpectDeltaScore.win,
@@ -602,12 +679,33 @@ namespace Nekoyume.UI
 
             var battleRecords = player.CurrentInfo.GetBattleRecordList();
             var winCount = battleRecords.Count(pair => pair.Value);
+            var equipments = player.ItemSlotState.Equipments
+                .Select(guid =>
+                    player.AvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+
+            var costumes = player.ItemSlotState.Costumes
+                .Select(guid =>
+                    player.AvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
+            var runeOptions = Util.GetRuneOptions(player.RuneStates, runeOptionSheet);
+            var lv = player.AvatarState.level;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+            if (!characterSheet.TryGetValue(player.AvatarState.characterId, out var row))
+            {
+                return;
+            }
+
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet);
+
             _billboard.SetData(
                 "GrandFinale",
                 player.Rank,
                 winCount,
                 battleRecords.Count - winCount,
-                player.CP,
+                cp,
                 player.Score);
         }
 
@@ -630,6 +728,9 @@ namespace Nekoyume.UI
 
             var isParticipant = States.Instance.GrandFinaleStates.GrandFinalePlayer is not null;
             var currentAvatarAddr = States.Instance.CurrentAvatarState.address;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
             var scrollData =
                 _grandFinaleParticipants.Select(e =>
                 {
@@ -642,10 +743,27 @@ namespace Nekoyume.UI
                             .TryGetBattleRecord(e.AvatarAddr, out win);
                     }
 
+                    var equipments = e.ItemSlotState.Equipments
+                        .Select(guid =>
+                            e.AvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var costumes = e.ItemSlotState.Costumes
+                        .Select(guid =>
+                            e.AvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+                    var runeOptions = Util.GetRuneOptions(e.RuneStates, runeOptionSheet);
+                    var lv = e.AvatarState.level;
+                    if (!characterSheet.TryGetValue(e.AvatarState.characterId, out var row))
+                    {
+                        throw new SheetRowNotFoundException("CharacterSheet",
+                            $"{e.AvatarState.characterId}");
+                    }
+
                     return new ArenaBoardPlayerItemData
                     {
                         name = e.AvatarState.NameWithHash,
                         level = e.AvatarState.level,
+
                         fullCostumeOrArmorId =
                             e.AvatarState.inventory.GetEquippedFullCostumeOrArmorId(),
                         titleId = e.AvatarState.inventory.Costumes
@@ -653,7 +771,7 @@ namespace Nekoyume.UI
                                 costume.ItemSubType == ItemSubType.Title
                                 && costume.Equipped)?
                             .Id,
-                        cp = e.AvatarState.GetCP(),
+                        cp = CPHelper.TotalCP(equipments, costumes, runeOptions, lv, row, costumeSheet),
                         score = e.Score,
                         rank = e.Rank,
                         expectWinDeltaScore = BattleGrandFinale.WinScore,

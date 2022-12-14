@@ -46,7 +46,7 @@ namespace Nekoyume.UI.Module
         private int _row;
         private int _pageCount = 1;
 
-        protected Action<ShopItem, RectTransform> ClickItemAction;
+        protected Action<ShopItem> ClickItemAction;
         protected abstract void OnAwake();
         protected abstract void InitInteractiveUI();
         protected abstract void SubscribeToSearchConditions();
@@ -73,7 +73,7 @@ namespace Nekoyume.UI.Module
 
         public void Show(
             ReactiveProperty<List<OrderDigest>> digests,
-            Action<ShopItem, RectTransform> clickItem)
+            Action<ShopItem> clickItem)
         {
             Reset();
             InstantiateItemView();
@@ -179,7 +179,7 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        private void SetAction(Action<ShopItem, RectTransform> clickItem)
+        private void SetAction(Action<ShopItem> clickItem)
         {
             ClickItemAction = clickItem;
         }

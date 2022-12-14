@@ -7,6 +7,7 @@ using Nekoyume.Extensions;
 using Nekoyume.Game;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
@@ -102,8 +103,6 @@ namespace Nekoyume.UI
         private readonly ReactiveProperty<int> _apStoneCount = new ReactiveProperty<int>();
         private readonly ReactiveProperty<int> _ap = new ReactiveProperty<int>();
         private readonly ReactiveProperty<int> _cp = new ReactiveProperty<int>();
-        private readonly List<Guid> _equipments = new List<Guid>();
-        private readonly List<Guid> _costumes = new List<Guid>();
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
         private StageSheet.Row _stageRow;
@@ -190,7 +189,7 @@ namespace Nekoyume.UI
             _stageRow = stageRow;
             _apStoneCount.SetValueAndForceNotify(0);
             _ap.SetValueAndForceNotify(States.Instance.CurrentAvatarState.actionPoint);
-            _cp.SetValueAndForceNotify(States.Instance.CurrentAvatarState.GetCP());
+            _cp.SetValueAndForceNotify(Util.TotalCP(BattleType.Adventure));
             _repeatBattleAction = repeatBattleAction;
             var disableRepeat = States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(stageId);
             canvasGroupForRepeat.alpha = disableRepeat ? 0 : 1;
@@ -221,12 +220,7 @@ namespace Nekoyume.UI
                     return;
                 }
 
-
-                _costumes.Clear();
-                _equipments.Clear();
-                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 haveApStoneCount = 0;
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 foreach (var item in inventory.Items)
                 {
@@ -237,24 +231,6 @@ namespace Nekoyume.UI
 
                     switch (item.item.ItemType)
                     {
-                        case ItemType.Costume:
-                            var costume = (Costume)item.item;
-                            if (costume.equipped)
-                            {
-                                _costumes.Add(costume.ItemId);
-                            }
-
-                            break;
-
-                        case ItemType.Equipment:
-                            var equipment = (Equipment)item.item;
-                            if (equipment.equipped)
-                            {
-                                _equipments.Add(equipment.ItemId);
-                            }
-
-                            break;
-
                         case ItemType.Material:
                             if (item.item.ItemSubType != ItemSubType.ApStone)
                             {
@@ -294,20 +270,20 @@ namespace Nekoyume.UI
                     ? TableSheets.Instance.StakeActionPointCoefficientSheet.GetActionPointByStaking(
                         _stageRow.CostAP, 1, States.Instance.StakingLevel)
                     : _stageRow.CostAP;
-                apSlider.Set(haveApCount / _costAp,
+                apSlider.Set(0,
+                    haveApCount / _costAp,
                     haveApCount / _costAp,
                     States.Instance.GameConfigState.ActionPointMax,
                     _costAp,
                     x => _ap.Value = x * _costAp);
 
-                apStoneSlider.Set(Math.Min(haveApStoneCount, HackAndSlashSweep.UsableApStoneCount),
+                apStoneSlider.Set(0,
+                    Math.Min(haveApStoneCount, HackAndSlashSweep.UsableApStoneCount),
                     0,
                     HackAndSlashSweep.UsableApStoneCount, 1,
                     x => _apStoneCount.Value = x);
 
-                //Debug.LogError(apStonePandora.count);
-
-                _cp.Value = States.Instance.CurrentAvatarState.GetCP();
+                _cp.Value = Util.TotalCP(BattleType.Adventure);
             }).AddTo(_disposables);
         }
 
@@ -503,9 +479,14 @@ namespace Nekoyume.UI
                     return;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
+            var costumes = States.Instance.ItemSlotStates[BattleType.Adventure].Costumes;
+            var equipments = States.Instance.ItemSlotStates[BattleType.Adventure].Equipments;
+            var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
+                .GetEquippedRuneSlotInfos();
             Game.Game.instance.ActionManager.HackAndSlashSweep(
-                _costumes,
-                _equipments,
+                costumes,
+                equipments,
+                runeInfos,
                 apStoneCount,
                 actionPoint,
                 worldId,

@@ -42,6 +42,7 @@ namespace Nekoyume.UI.Module
             EventDungeon,
             WorldBoss,
             CurrencyOnly,
+            RuneStone,
         }
 
         [Serializable]
@@ -70,6 +71,9 @@ namespace Nekoyume.UI.Module
 
         [SerializeField]
         private Hourglass hourglass;
+
+        [SerializeField]
+        private RuneStone runeStone;
 
         [SerializeField]
         private ArenaTickets arenaTickets;
@@ -120,15 +124,11 @@ namespace Nekoyume.UI.Module
         private long _blockIndex;
 
         public bool ChargingAP => actionPoint.NowCharging;
-
         public Gold Gold => ncg;
-
         public ActionPoint ActionPoint => actionPoint;
-
         public Crystal Crystal => crystal;
-
         public Hourglass Hourglass => hourglass;
-
+        public RuneStone RuneStone => runeStone;
         public ArenaTickets ArenaTickets => arenaTickets;
         public EventDungeonTickets EventDungeonTickets => eventDungeonTickets;
         public WorldBossTickets WorldBossTickets => worldBossTickets;
@@ -313,6 +313,9 @@ namespace Nekoyume.UI.Module
                 case AssetVisibleState.CurrencyOnly:
                     SetActiveAssets(isNcgActive:true);
                     break;
+                case AssetVisibleState.RuneStone:
+                    SetActiveAssets(isNcgActive:true, isRuneStoneActive:true );
+                    break;
             }
         }
 
@@ -323,7 +326,8 @@ namespace Nekoyume.UI.Module
             bool isHourglassActive = false,
             bool isArenaTicketsActive = false,
             bool isEventDungeonTicketsActive = false,
-            bool isEventWorldBossTicketsActive = false)
+            bool isEventWorldBossTicketsActive = false,
+            bool isRuneStoneActive = false)
         {
             ncg.gameObject.SetActive(isNcgActive);
             actionPoint.gameObject.SetActive(isActionPointActive);
@@ -332,6 +336,7 @@ namespace Nekoyume.UI.Module
             arenaTickets.gameObject.SetActive(isArenaTicketsActive);
             eventDungeonTickets.gameObject.SetActive(isEventDungeonTicketsActive);
             worldBossTickets.gameObject.SetActive(isEventWorldBossTicketsActive);
+            runeStone.gameObject.SetActive(isRuneStoneActive);
         }
 
         private void SubscribeBlockIndex(long blockIndex)

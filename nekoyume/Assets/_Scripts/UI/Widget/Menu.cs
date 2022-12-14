@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using DG.Tweening;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
@@ -16,6 +17,7 @@ using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.EnumType;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
 using Nekoyume.State.Subjects;
@@ -122,9 +124,16 @@ namespace Nekoyume.UI
         [SerializeField]
         private StakeIconDataScriptableObject stakeIconData;
 
+        [SerializeField]
+        private RectTransform player;
+
+        [SerializeField]
+        private Transform titleSocket;
+
         private Coroutine _coLazyClose;
 
         private readonly List<IDisposable> _disposablesAtShow = new();
+        private GameObject _cachedCharacterTitle;
 
         protected override void Awake()
         {
@@ -135,6 +144,10 @@ namespace Nekoyume.UI
 
             CloseWidget = null;
 
+            playerButton.onClick.AddListener(() =>
+            {
+                Game.Game.instance.Lobby.Character.Touch();
+            });
             guidedQuest.OnClickWorldQuestCell
                 .Subscribe(tuple => HackAndSlash(tuple.quest.Goal))
                 .AddTo(gameObject);
@@ -212,6 +225,20 @@ namespace Nekoyume.UI
             {
                 Find<Menu>().QuestClick();
             }
+        }
+
+        public void UpdateTitle(Costume title)
+        {
+            Destroy(_cachedCharacterTitle);
+            var clone = ResourcesHelper.GetCharacterTitle(title.Grade,
+                title.GetLocalizedNonColoredName(false));
+            _cachedCharacterTitle = Instantiate(clone, titleSocket);
+        }
+
+        public void EnterRoom()
+        {
+            player.localPosition = new Vector3(-700, -149, 0);
+            player.DOLocalMoveX(-470, 1.0f);
         }
 
         public void GoToStage(BattleLog battleLog)
@@ -331,7 +358,6 @@ namespace Nekoyume.UI
                 PlayerPrefs.SetInt(key, 1);
             }
 
-            Game.Game.instance.Stage.SelectedPlayer.gameObject.SetActive(false);
             Close();
             var avatarState = States.Instance.CurrentAvatarState;
             Find<WorldMap>().Show(avatarState.worldInformation);
@@ -458,7 +484,6 @@ namespace Nekoyume.UI
                 PlayerPrefs.SetInt(key, 1);
             }
 
-            Game.Game.instance.Stage.SelectedPlayer.gameObject.SetActive(false);
             Close();
             AudioController.PlayClick();
 
@@ -658,13 +683,6 @@ namespace Nekoyume.UI
             }
         }
 
-        public void UpdatePlayerReactButton(System.Action callback)
-        {
-            playerButton.onClick.RemoveAllListeners();
-            playerButton.onClick.AddListener(() => callback?.Invoke());
-        }
-
-        // Invoke from TutorialController.PlayAction()
         public void TutorialActionHackAndSlash()
         {
             HackAndSlash(GuidedQuest.WorldQuest?.Goal ?? 1);

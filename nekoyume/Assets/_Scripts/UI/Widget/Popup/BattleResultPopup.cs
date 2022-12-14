@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using mixpanel;
+using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.EnumType;
 using Nekoyume.Extensions;
@@ -11,6 +12,7 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
 using Nekoyume.Model.BattleStatus;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.State;
@@ -669,10 +671,7 @@ namespace Nekoyume.UI
             player.DisableHUD();
             ActionRenderHandler.Instance.Pending = true;
 
-            yield return StartCoroutine(SendBattleActionAsync(
-                player.Equipments,
-                player.Costumes,
-                1));
+            yield return StartCoroutine(SendBattleActionAsync(1));
         }
 
         private IEnumerator CoRepeatStage()
@@ -722,17 +721,15 @@ namespace Nekoyume.UI
             var eventName = $"Unity/Stage Exit {eventKey}";
             Analyzer.Instance.Track(eventName, props);
 
-            yield return StartCoroutine(SendBattleActionAsync(
-                player.Equipments,
-                player.Costumes,
-                0));
+            yield return StartCoroutine(SendBattleActionAsync(0));
         }
 
-        private IEnumerator SendBattleActionAsync(
-            List<Equipment> equipments,
-            List<Costume> costumes,
-            int stageIdOffset)
+        private IEnumerator SendBattleActionAsync(int stageIdOffset)
         {
+            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
+            var costumes = itemSlotState.Costumes;
+            var equipments = itemSlotState.Equipments;
+            var runeSlotInfos = States.Instance.RuneSlotStates[BattleType.Adventure].GetEquippedRuneSlotInfos();
             yield return SharedModel.StageType switch
             {
                 StageType.HackAndSlash => Game.Game.instance.ActionManager
@@ -740,6 +737,7 @@ namespace Nekoyume.UI
                         costumes,
                         equipments,
                         new List<Consumable>(),
+                        runeSlotInfos,
                         SharedModel.WorldID,
                         SharedModel.StageID + stageIdOffset)
                     .StartAsCoroutine(),
@@ -748,6 +746,7 @@ namespace Nekoyume.UI
                         costumes,
                         equipments,
                         new List<Consumable>(),
+                        runeSlotInfos,
                         SharedModel.WorldID,
                         SharedModel.StageID + stageIdOffset,
                         1)
@@ -760,6 +759,7 @@ namespace Nekoyume.UI
                         equipments,
                         costumes,
                         new List<Consumable>(),
+                        runeSlotInfos,
                         false)
                     .StartAsCoroutine(),
                 _ => throw new ArgumentOutOfRangeException()
