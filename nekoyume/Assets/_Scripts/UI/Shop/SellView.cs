@@ -26,8 +26,8 @@ namespace Nekoyume
         private readonly ReactiveProperty<ItemSubTypeFilter> _selectedSubTypeFilter =
             new(ItemSubTypeFilter.All);
 
-        private readonly ReactiveProperty<ShopSortFilter> _selectedSortFilter =
-            new(ShopSortFilter.CP);
+        private readonly ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter =
+            new(Nekoyume.EnumType.ShopSortFilter.CP);
 
         public void ClearSelectedItem()
         {

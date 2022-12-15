@@ -271,15 +271,24 @@ namespace Nekoyume.UI
         IEnumerator MaxDungeon()
         {
             maxDungeonBtn.interactable = false;
-            var equipments = _player.Equipments;
-            var costumes = _player.Costumes;
-            var consumables = consumableSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item).ToList();
+            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
+            var costumes = itemSlotState.Costumes;
+            var equipments = itemSlotState.Equipments;
+            var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
+                .GetEquippedRuneSlotInfos();
+            var consumables = information.GetEquippedConsumables();
 
             int count = RxProps.EventDungeonTicketProgress.Value.currentTickets;
             for (int i = 0; i < count; i++)
             {
+                //ActionManager.Instance.EventDungeonBattle(
+                //_scheduleId.Value,
+                //_worldId,
+                //_stageId,
+                //equipments,
+                //costumes,
+                //consumables,
+                //false).Subscribe();
                 ActionManager.Instance.EventDungeonBattle(
                 _scheduleId.Value,
                 _worldId,
@@ -287,7 +296,9 @@ namespace Nekoyume.UI
                 equipments,
                 costumes,
                 consumables,
-                false).Subscribe();
+                runeInfos,
+                false,
+                _trackGuideQuest).Subscribe();
 
                 OneLineSystem.Push(MailType.System,
                 "<color=green>Pandora Box</color>: Sending Dungeon <color=red>" + _stageId
@@ -698,22 +709,22 @@ namespace Nekoyume.UI
 
         public void MultipleSimulate()
         {
-            var equipments = _player.Equipments;
-            var costumes = _player.Costumes;
-            var consumables = consumableSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item).ToList();
+            //var equipments = _player.Equipments;
+            //var costumes = _player.Costumes;
+            //var consumables = consumableSlots
+            //    .Where(slot => !slot.IsLock && !slot.IsEmpty)
+            //    .Select(slot => (Consumable)slot.Item).ToList();
 
 
-            List<Guid> costumesN;
-            List<Guid> equipmentsN;
-            List<Guid> foodsN;
+            //List<Guid> costumesN;
+            //List<Guid> equipmentsN;
+            //List<Guid> foodsN;
 
-            costumesN = costumes.Select(c => c.ItemId).ToList();
-            equipmentsN = equipments.Select(e => e.ItemId).ToList();
-            foodsN = consumables.Select(f => f.ItemId).ToList();
+            //costumesN = costumes.Select(c => c.ItemId).ToList();
+            //equipmentsN = equipments.Select(e => e.ItemId).ToList();
+            //foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            Premium.WinRatePVE(costumesN, equipmentsN, foodsN, _worldId, _stageId);          
+            Premium.WinRatePVE(_worldId, _stageId);          
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -867,125 +878,125 @@ namespace Nekoyume.UI
         public void SimulateBattlePandora()
         {
 
-            StartCoroutine(SimulatorIE());
+            //StartCoroutine(SimulatorIE());
         }
 
-        IEnumerator SimulatorIE()
-        {
-            Find<WorldMap>().Close(true);
-            Find<StageInformation>().Close(true);
-            Find<LoadingScreen>().Show();
+        //IEnumerator SimulatorIE()
+        //{
+        //    Find<WorldMap>().Close(true);
+        //    Find<StageInformation>().Close(true);
+        //    Find<LoadingScreen>().Show();
 
-            startButton.gameObject.SetActive(false);
-            _player.StartRun();
-            ActionCamera.instance.ChaseX(_player.transform);
+        //    startButton.gameObject.SetActive(false);
+        //    _player.StartRun();
+        //    ActionCamera.instance.ChaseX(_player.transform);
 
-            var level = States.Instance.CurrentAvatarState.level;
-            yield return new WaitForSeconds(2);
-            Find<WorldMap>().Close(true);
-            Find<StageInformation>().Close(true);
+        //    var level = States.Instance.CurrentAvatarState.level;
+        //    yield return new WaitForSeconds(2);
+        //    Find<WorldMap>().Close(true);
+        //    Find<StageInformation>().Close(true);
 
-            var stageId = _stageId;
-            if (!TableSheets.Instance.WorldSheet.TryGetByStageId(
-        stageId,
-        out var worldRow))
-            {
-                throw new KeyNotFoundException(
-                    $"WorldSheet.TryGetByStageId() {nameof(stageId)}({stageId})");
-            }
+        //    var stageId = _stageId;
+        //    if (!TableSheets.Instance.WorldSheet.TryGetByStageId(
+        //stageId,
+        //out var worldRow))
+        //    {
+        //        throw new KeyNotFoundException(
+        //            $"WorldSheet.TryGetByStageId() {nameof(stageId)}({stageId})");
+        //    }
 
-            var avatarState = new AvatarState(States.Instance.CurrentAvatarState)
-            {
-                level = level
-            };
+        //    var avatarState = new AvatarState(States.Instance.CurrentAvatarState)
+        //    {
+        //        level = level
+        //    };
 
-            var equipments = _player.Equipments;
-            var costumes = _player.Costumes;
-            var consumables = consumableSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => (Consumable)slot.Item).ToList();
+        //    var equipments = _player.Equipments;
+        //    var costumes = _player.Costumes;
+        //    var consumables = consumableSlots
+        //        .Where(slot => !slot.IsLock && !slot.IsEmpty)
+        //        .Select(slot => (Consumable)slot.Item).ToList();
 
-            List<Guid> costumesN;
-            List<Guid> equipmentsN;
-            List<Guid> foodsN;
+        //    List<Guid> costumesN;
+        //    List<Guid> equipmentsN;
+        //    List<Guid> foodsN;
 
-            costumesN = costumes.Select(c => c.ItemId).ToList();
-            equipmentsN = equipments.Select(e => e.ItemId).ToList();
-            foodsN = consumables.Select(f => f.ItemId).ToList();
+        //    costumesN = costumes.Select(c => c.ItemId).ToList();
+        //    equipmentsN = equipments.Select(e => e.ItemId).ToList();
+        //    foodsN = consumables.Select(f => f.ItemId).ToList();
 
-            //buffskill
-            List<Skill> buffSkills = new List<Skill>();
+        //    //buffskill
+        //    List<Skill> buffSkills = new List<Skill>();
 
-            var skillState = States.Instance.CrystalRandomSkillState;
-            var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-            if (skillId != 0)
-            {
-                skillId = skillState.SkillIds
-                .Select(buffId =>
-                    TableSheets.Instance.CrystalRandomBuffSheet
-                        .TryGetValue(buffId, out var bonusBuffRow)
-                        ? bonusBuffRow
-                        : null)
-                .Where(x => x != null)
-                .OrderBy(x => x.Rank)
-                .ThenBy(x => x.Id)
-                .First()
-                .Id;
+        //    var skillState = States.Instance.CrystalRandomSkillState;
+        //    var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
+        //    if (skillId != 0)
+        //    {
+        //        skillId = skillState.SkillIds
+        //        .Select(buffId =>
+        //            TableSheets.Instance.CrystalRandomBuffSheet
+        //                .TryGetValue(buffId, out var bonusBuffRow)
+        //                ? bonusBuffRow
+        //                : null)
+        //        .Where(x => x != null)
+        //        .OrderBy(x => x.Rank)
+        //        .ThenBy(x => x.Id)
+        //        .First()
+        //        .Id;
 
-                var skill = CrystalRandomSkillState.GetSkill(
-                    skillId,
-                    TableSheets.Instance.CrystalRandomBuffSheet,
-                    TableSheets.Instance.SkillSheet);
-                buffSkills.Add(skill);
-            }
+        //        var skill = CrystalRandomSkillState.GetSkill(
+        //            skillId,
+        //            TableSheets.Instance.CrystalRandomBuffSheet,
+        //            TableSheets.Instance.SkillSheet);
+        //        buffSkills.Add(skill);
+        //    }
 
-            var tableSheets = TableSheets.Instance;
-            var random = new Cheat.DebugRandom();
-            StageSheet.Row stageRow;
-            StageWaveSheet.Row stageWaveRow;
-            switch (_stageType)
-            {
-                case StageType.HackAndSlash:
-                case StageType.Mimisbrunnr:
-                {
-                    stageRow = tableSheets.StageSheet[_stageId];
-                    stageWaveRow = tableSheets.StageWaveSheet[_stageId];
-                    break;
-                }
-                case StageType.EventDungeon:
-                {
-                    stageRow = tableSheets.EventDungeonStageSheet[_stageId];
-                    stageWaveRow = tableSheets.EventDungeonStageWaveSheet[_stageId];
-                    break;
-                }
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+        //    var tableSheets = TableSheets.Instance;
+        //    var random = new Cheat.DebugRandom();
+        //    StageSheet.Row stageRow;
+        //    StageWaveSheet.Row stageWaveRow;
+        //    switch (_stageType)
+        //    {
+        //        case StageType.HackAndSlash:
+        //        case StageType.Mimisbrunnr:
+        //        {
+        //            stageRow = tableSheets.StageSheet[_stageId];
+        //            stageWaveRow = tableSheets.StageWaveSheet[_stageId];
+        //            break;
+        //        }
+        //        case StageType.EventDungeon:
+        //        {
+        //            stageRow = tableSheets.EventDungeonStageSheet[_stageId];
+        //            stageWaveRow = tableSheets.EventDungeonStageWaveSheet[_stageId];
+        //            break;
+        //        }
+        //        default:
+        //            throw new ArgumentOutOfRangeException();
+        //    }
 
-            PandoraMaster.IsHackAndSlashSimulate = true;
-            var simulator = new StageSimulator(
-                random,
-                States.Instance.CurrentAvatarState,
-                foodsN,
-                buffSkills,
-                worldRow.Id,
-                _stageId,
-                stageRow,
-                stageWaveRow,
-                avatarState.worldInformation.IsStageCleared(_stageId),
-                StageRewardExpHelper.GetExp(avatarState.level, _stageId),
-                tableSheets.GetSimulatorSheets(),
-                tableSheets.EnemySkillSheet,
-                tableSheets.CostumeStatSheet,
-                StageSimulator.GetWaveRewards(
-                    random,
-                    tableSheets.StageSheet[_stageId],
-                    tableSheets.MaterialItemSheet),
-                PandoraMaster.IsHackAndSlashSimulate
-            );
-            simulator.Simulate();
-            GoToStage(simulator.Log);
-        }
+        //    PandoraMaster.IsHackAndSlashSimulate = true;
+        //    var simulator = new StageSimulator(
+        //        random,
+        //        States.Instance.CurrentAvatarState,
+        //        foodsN,
+        //        buffSkills,
+        //        worldRow.Id,
+        //        _stageId,
+        //        stageRow,
+        //        stageWaveRow,
+        //        avatarState.worldInformation.IsStageCleared(_stageId),
+        //        StageRewardExpHelper.GetExp(avatarState.level, _stageId),
+        //        tableSheets.GetSimulatorSheets(),
+        //        tableSheets.EnemySkillSheet,
+        //        tableSheets.CostumeStatSheet,
+        //        StageSimulator.GetWaveRewards(
+        //            random,
+        //            tableSheets.StageSheet[_stageId],
+        //            tableSheets.MaterialItemSheet),
+        //        PandoraMaster.IsHackAndSlashSimulate
+        //    );
+        //    simulator.Simulate();
+        //    GoToStage(simulator.Log);
+        //}
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

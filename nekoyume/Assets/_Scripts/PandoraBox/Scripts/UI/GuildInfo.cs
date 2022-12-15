@@ -10,7 +10,7 @@ using System;
 using Lib9c.Model.Order;
 using Nekoyume.State;
 using System.Threading.Tasks;
-
+using Nekoyume.Helper;
 
 namespace Nekoyume.PandoraBox
 {
@@ -206,8 +206,8 @@ namespace Nekoyume.PandoraBox
                         "(<color=red>!</color>)" + member.Address.Substring(0, 6).ToLower()));
                 else
                 {
-                    gList.Add(new playerRecord(member.Rank, avatarState.level, avatarState.GetCP(), avatarState.name));
-                    totalCP += avatarState.GetCP();
+                    gList.Add(new playerRecord(member.Rank, avatarState.level, 100, avatarState.name)); //avatarState.GetCP()
+                    totalCP += 100;
                     totalLevel += avatarState.level;
                 }
             }

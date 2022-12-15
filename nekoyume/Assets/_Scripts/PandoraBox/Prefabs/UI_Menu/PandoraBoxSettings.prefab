@@ -5124,6 +5124,7 @@ GameObject:
   - component: {fileID: 2022235589162766675}
   - component: {fileID: 8050452209393071878}
   - component: {fileID: 6045281513363776995}
+  - component: {fileID: 6419601001560874181}
   m_Layer: 5
   m_Name: PandoraBoxSettings
   m_TagString: Untagged
@@ -5204,6 +5205,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6419601001560874181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710088554065693861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95f3211e6d854d21b0f28cbca6567c86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 2022235589162766675}
+  tweenDuration: 0.3
+  targetScale: 1.05
 --- !u!1 &2006058297158623171
 GameObject:
   m_ObjectHideFlags: 0

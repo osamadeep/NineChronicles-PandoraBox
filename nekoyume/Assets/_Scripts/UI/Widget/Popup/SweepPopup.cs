@@ -123,12 +123,12 @@ namespace Nekoyume.UI
             {
                 if (extendSlider.isOn)
                 {
-                    apStoneSlider.Set(Math.Min(haveApStoneCount, 100), 0,100, 1,x => _apStoneCount.Value = x);
+                    apStoneSlider.Set(0,Math.Min(haveApStoneCount, 100), 0,100, 1, x => _apStoneCount.Value = x);
                 }
                 else
                 {
-                    apStoneSlider.Set(Math.Min(haveApStoneCount, HackAndSlashSweep.UsableApStoneCount),
-                    0,HackAndSlashSweep.UsableApStoneCount, 1,x => _apStoneCount.Value = x);
+                    apStoneSlider.Set(0, Math.Min(haveApStoneCount, HackAndSlashSweep.UsableApStoneCount),
+                        0,HackAndSlashSweep.UsableApStoneCount, 1,x => _apStoneCount.Value = x);
                 }
             });
 
@@ -199,6 +199,13 @@ namespace Nekoyume.UI
                 $"({L10nManager.Localize("UI_AP")} / {L10nManager.Localize("UI_AP_POTION")})";
 
             base.Show(ignoreShowAnimation);
+            StartCoroutine(waitForBar()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+        }
+
+        System.Collections.IEnumerator waitForBar()
+        {
+            yield return new WaitForSeconds(0.2f);
+            apStoneSlider.slider.value = 0;
         }
 
         private void UpdateByToggle(bool useSweep)
@@ -473,16 +480,18 @@ namespace Nekoyume.UI
                 return;
             }
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (apStoneCount > 10)
-                if (!Premium.SweepMoreStone(apStoneCount, _costumes, _equipments, worldId, stageRow.Id))
-                    return;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             var costumes = States.Instance.ItemSlotStates[BattleType.Adventure].Costumes;
             var equipments = States.Instance.ItemSlotStates[BattleType.Adventure].Equipments;
             var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
                 .GetEquippedRuneSlotInfos();
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (apStoneCount > 10)
+                if (!Premium.SweepMoreStone(apStoneCount, costumes, equipments, runeInfos, worldId, stageRow.Id))
+                    return;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             Game.Game.instance.ActionManager.HackAndSlashSweep(
                 costumes,
                 equipments,

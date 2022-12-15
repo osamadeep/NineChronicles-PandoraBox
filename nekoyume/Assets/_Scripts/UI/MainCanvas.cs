@@ -375,8 +375,6 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<GuildInfo>());
             yield return null;
-            secondWidgets.Add(Widget.Create<RaidPopup>());
-            yield return null;
             secondWidgets.Add(Widget.Create<RunnerRankPopup>());
             yield return null;
             secondWidgets.Add(Widget.Create<PandoraShopPopup>());

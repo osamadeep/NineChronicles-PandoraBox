@@ -1715,6 +1715,8 @@ namespace Nekoyume.BlockChain
             var currentAgentAddress = States.Instance.AgentState.address;
             var playToEarnRewardAddress = new Address("d595f7e85e1757d6558e9e448fa9af77ab28be4c");
 
+
+
             if (senderAddress == currentAgentAddress)
             {
                 var amount = eval.Action.Amount;
@@ -1724,15 +1726,13 @@ namespace Nekoyume.BlockChain
                     NotificationCell.NotificationType.Notification);
 
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                try
+                //try
                 {
                     if (eval.Action.Memo.Substring(0, 15) == "Pandora Crystal")
                     {
-                        //OneLineSystem.Push(MailType.System,
-                        //"<color=green>Pandora Box</color>: Crystal Request Sent <color=green><b>Successfully</b></color>!"
-                        //, NotificationCell.NotificationType.Information);
                         Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
                         Widget.Find<PandoraShopPopup>().Close();
+
 
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
                         Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
@@ -1752,7 +1752,7 @@ namespace Nekoyume.BlockChain
                         Premium.ConfirmGemsRequest(eval.BlockIndex, gems, ncg);
                     }
                 }
-                catch { }
+                //catch { }
 
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
@@ -2400,6 +2400,11 @@ namespace Nekoyume.BlockChain
             await States.Instance.InitRuneSlotStates();
             await States.Instance.InitItemSlotStates();
 
+
+
+            var worldBoss = Widget.Find<WorldBoss>();
+            var avatarAddress = Game.Game.instance.States.CurrentAvatarState.address;
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             var preRaiderStateEarly = WorldBossStates.GetRaiderState(avatarAddress);
             int HighScore = 0;
@@ -2411,8 +2416,6 @@ namespace Nekoyume.BlockChain
             , NotificationCell.NotificationType.Information);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-            var worldBoss = Widget.Find<WorldBoss>();
-            var avatarAddress = Game.Game.instance.States.CurrentAvatarState.address;
             if (Widget.Find<RaidPreparation>().IsSkipRender)
             {
                 Widget.Find<LoadingScreen>().Close();

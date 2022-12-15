@@ -31,7 +31,6 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI CrystalValueTxt;
         public TextMeshProUGUI MarketPriceText;
         [SerializeField] private RectTransform DiscordHolder;
-        [SerializeField] protected Button CloseButton;
         [SerializeField] private GameObject ExtraInfo;
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
@@ -267,7 +266,7 @@ namespace Nekoyume.UI
             //panel.Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/ItemDescriptionText").GetComponent<TextMeshProUGUI>().text ="";
             //panel.sizeDelta = new Vector2(380, 600);
             DiscordHolder.gameObject.SetActive(false);
-            UpdatePosition(panel);
+            //UpdatePosition(panel);
         }
 
         string GetItemMainStats()
@@ -468,10 +467,6 @@ namespace Nekoyume.UI
                     acquisitionPlaceDescription.Show(panel, _descriptionButtonRectTransform);
                 });
             }
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            CloseButton.onClick.AddListener(() => { Close(); });
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)

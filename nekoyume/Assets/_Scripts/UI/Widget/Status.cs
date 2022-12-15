@@ -173,7 +173,7 @@ namespace Nekoyume.UI
             }
 
             var level = _player.Level;
-            var avatarName = States.Instance.CurrentAvatarState.NameWithHash;
+            //var avatarName = States.Instance.CurrentAvatarState.NameWithHash;
             //textLvName.text = $"<color=#B38271>LV. {level}</color> {avatarName}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (gameObject.activeInHierarchy)
@@ -230,7 +230,7 @@ namespace Nekoyume.UI
             catch { }
 
             var level = _player.Level;
-            textLvName.text = $"<color=#B38271>LV. {level}</color> {_avatarName}";
+            textLvName.text = $"<color=#B38271>LV. {level}</color> {States.Instance.CurrentAvatarState.name}";
 
             if (!(PandoraMaster.CurrentGuildPlayer is null)
                 && (PandoraMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
