@@ -464,18 +464,11 @@ namespace Nekoyume.UI.Module
             StartCoroutine(CoCombineNPCAnimation(_cachedGrindingRewardCrystal.MajorUnit));
             Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(true);
 
-            Analyzer.Instance.Track("Unity/Grinding", new Dictionary<string, Value>()
-            {
-                ["EquipmentCount"] = equipments.Count,
-                ["GainedCrystal"] = (long) _cachedGrindingRewardCrystal.MajorUnit,
-                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            });
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (equipments.Count < 11)
             {
                 ActionManager.Instance
-                    .Grinding(equipments, chargeAp)
+                    .Grinding(equipments, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
                     .Subscribe(eval =>
                     {
                         Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
@@ -493,7 +486,7 @@ namespace Nekoyume.UI.Module
             {
                 var firstPatch = equipments.Take(10).ToList();
                 ActionManager.Instance
-                .Grinding(firstPatch, chargeAp)
+                .Grinding(equipments, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
                 .Subscribe(eval =>
                 {
                     Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
@@ -508,7 +501,7 @@ namespace Nekoyume.UI.Module
                 });
                 var secondPatch = equipments.Skip(10).Take(equipments.Count -10).ToList();
                 ActionManager.Instance
-                .Grinding(secondPatch, false) //we already charge it on prevoius patch
+                .Grinding(secondPatch, false,(int)_cachedGrindingRewardCrystal.MajorUnit) //we already charge it on prevoius patch
                 .Subscribe(eval =>
                 {
                     Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
@@ -522,21 +515,7 @@ namespace Nekoyume.UI.Module
                     }
                 });
             }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            //ActionManager.Instance
-            //    .Grinding(equipments, chargeAp)
-            //    .Subscribe(eval =>
-            //    {
-            //        Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
-            //        if (eval.Exception != null)
-            //        {
-            //            Debug.LogException(eval.Exception.InnerException);
-            //            OneLineSystem.Push(
-            //                MailType.Grinding,
-            //                L10nManager.Localize("ERROR_UNKNOWN"),
-            //                NotificationCell.NotificationType.Alert);
-            //        }
-            //    });
+
             _selectedItemsForGrind.Clear();
             if (animator)
             {

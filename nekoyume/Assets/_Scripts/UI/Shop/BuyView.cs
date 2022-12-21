@@ -2,20 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Nekoyume.EnumType;
+using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
+using Nekoyume.State;
 using Nekoyume.UI;
-using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ShopItem = Nekoyume.UI.Model.ShopItem;
 using Toggle = UnityEngine.UI.Toggle;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Nekoyume
 {
@@ -421,6 +426,20 @@ namespace Nekoyume
                 models = models.Where(x => Util.IsUsableItem(x.ItemBase)).ToList();
             }
 
+            BigInteger GetCrystalPerPrice(ShopItem item)
+            {
+                return item.ItemBase.ItemType == ItemType.Equipment
+                    ? CrystalCalculator.CalculateCrystal(
+                            new[] {(Equipment) item.ItemBase},
+                            false,
+                            TableSheets.Instance.CrystalEquipmentGrindingSheet,
+                            TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
+                            States.Instance.StakingLevel).DivRem(item.OrderDigest.Price.MajorUnit)
+                        .Quotient
+                        .MajorUnit
+                    : 0;
+            }
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (PriceToggle.isOn)
             {
@@ -450,7 +469,7 @@ namespace Nekoyume
             if (SpellToggle.isOn)
             {
                 models = models.Where(x =>
-                    x.ItemBase.ItemType == Model.Item.ItemType.Equipment && (x.ItemBase as Model.Item.Equipment).Skills.Count > 0 ).ToList();
+                    x.ItemBase.ItemType == Model.Item.ItemType.Equipment && (x.ItemBase as Model.Item.Equipment).Skills.Count > 0).ToList();
             }
 
             //SharedModel.isPrice = PriceToggle.isOn;
@@ -475,6 +494,9 @@ namespace Nekoyume
                     : models.OrderByDescending(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
                         .ToList(),
+                Nekoyume.EnumType.ShopSortFilter.Crystal => _isAscending.Value
+                    ? models.OrderBy(GetCrystalPerPrice).ToList()
+                    : models.OrderByDescending(GetCrystalPerPrice).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SortShopbyTime(_isAscending, models),            
                 Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Level).ToList()

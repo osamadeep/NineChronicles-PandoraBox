@@ -444,12 +444,6 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
                 .Subscribe();
-
-            Analyzer.Instance.Track("Unity/Sell", new Dictionary<string, Value>()
-            {
-                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            });
             ResponseSell();
         }
 
@@ -500,11 +494,6 @@ namespace Nekoyume.UI
             LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Game.Game.instance.ActionManager.UpdateSell(new List<UpdateSellInfo> {updateSellInfo}).Subscribe();
-            Analyzer.Instance.Track("Unity/UpdateSell", new Dictionary<string, Value>()
-            {
-                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            });
             ResponseSell();
         }
 
@@ -602,11 +591,6 @@ namespace Nekoyume.UI
                 ReactiveShopState.GetSellDigest(tradableId, requiredBlockIndex, price, count);
             if (digest != null)
             {
-                Analyzer.Instance.Track("Unity/Sell Cancellation", new Dictionary<string, Value>()
-                {
-                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                    ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-                });
                 Game.Game.instance.ActionManager.SellCancellation(
                     avatarAddress,
                     digest.OrderId,

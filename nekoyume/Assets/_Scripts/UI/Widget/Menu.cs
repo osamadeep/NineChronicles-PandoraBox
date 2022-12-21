@@ -232,6 +232,11 @@ namespace Nekoyume.UI
         public void UpdateTitle(Costume title)
         {
             Destroy(_cachedCharacterTitle);
+            if (title == null)
+            {
+                return;
+            }
+
             var clone = ResourcesHelper.GetCharacterTitle(title.Grade,
                 title.GetLocalizedNonColoredName(false));
             _cachedCharacterTitle = Instantiate(clone, titleSocket);
@@ -646,7 +651,8 @@ namespace Nekoyume.UI
         public override void Close(bool ignoreCloseAnimation = false)
         {
             _disposablesAtShow.DisposeAllAndClear();
-            Find<NoticePopup>().Close(true);
+            Destroy(_cachedCharacterTitle);
+            Find<EventReleaseNotePopup>().Close(true);
             StopSpeeches();
             guidedQuest.Hide(true);
             Find<Status>().Close(true);

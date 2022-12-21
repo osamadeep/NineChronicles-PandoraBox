@@ -259,7 +259,7 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<EventBanner>());
             yield return null;
-            secondWidgets.Add(Widget.Create<NoticePopup>());
+            secondWidgets.Add(Widget.Create<EventReleaseNotePopup>());
             yield return null;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<PandoraLab>());

@@ -4,11 +4,12 @@ namespace Nekoyume.EnumType
 {
     public enum ShopSortFilter
     {
-        Class = 0,
-        CP = 1,
-        Price = 2,
-        Time = 3,
-        Level = 4,
+        CP = 0,
+        Price = 1,
+        Class = 2,
+        Crystal = 3,
+        Time = 4,
+        Level = 5,
     }
 
     public static class ShopSortFilterExtension
@@ -19,9 +20,10 @@ namespace Nekoyume.EnumType
             {
                 return new[]
                 {
-                    ShopSortFilter.Class,
                     ShopSortFilter.CP,
                     ShopSortFilter.Price,
+                    ShopSortFilter.Class,
+                    ShopSortFilter.Crystal,
                     ShopSortFilter.Time,
                     ShopSortFilter.Level,
                 };
