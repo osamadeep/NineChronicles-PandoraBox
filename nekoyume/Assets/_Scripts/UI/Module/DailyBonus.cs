@@ -168,9 +168,9 @@ namespace Nekoyume.UI.Module
             animator.SetBool(IsFull, _isFull);
 
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
-                if (!IsTrying)
-                    StartCoroutine(TryToAutoCollect());
+            //if (_isFull && States.Instance.CurrentAvatarState?.actionPoint == 0)
+            //    if (!IsTrying)
+            //        StartCoroutine(TryToAutoCollect());
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

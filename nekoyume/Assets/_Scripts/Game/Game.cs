@@ -146,7 +146,6 @@ namespace Nekoyume.Game
                 Agent = GetComponent<Agent>();
             }
 
-
             States = new States();
             LocalLayer = new LocalLayer();
             LocalLayerActions = new LocalLayerActions();

@@ -65,6 +65,7 @@ namespace Nekoyume.UI
         [SerializeField] private Button updateAvatarButton;
         [SerializeField] private Button runnerButton;
         [SerializeField] private Button labButton;
+        public Button chronoButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
         private ArenaInfoList _arenaInfoList = new ArenaInfoList();
@@ -185,6 +186,7 @@ namespace Nekoyume.UI
             updateAvatarButton.onClick.AddListener(() => { UpdateAvatar(); });
             runnerButton.onClick.AddListener(() => { ShowRunner(); });
             labButton.onClick.AddListener(() => { FastShowEvent(); });
+            chronoButton.onClick.AddListener(() => { Widget.Find<ChronoSlotsPopup>().Show(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

@@ -172,8 +172,8 @@ namespace Nekoyume.PandoraBox
 
         public static void ConfirmCrystalRequest(long blockIndex, string memo,int ncg)
         {
-            //if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running?
-            //    return;
+            if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running?
+                return;
 
             //auto fill
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
@@ -231,8 +231,8 @@ namespace Nekoyume.PandoraBox
 
         public static void ConfirmGemsRequest(long blockIndex, int gems,int ncg)
         {
-            //if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running
-            //    return;
+            if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running
+                return;
 
             //auto fill
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest

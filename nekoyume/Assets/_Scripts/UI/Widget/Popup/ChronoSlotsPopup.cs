@@ -11,16 +11,26 @@ namespace Nekoyume.UI
 
     public class ChronoSlotsPopup : XTweenPopupWidget
     {
-        [SerializeField] private List<ChronoSlot> slots;
+        public List<ChronoSlot> slots;
 
         private readonly List<IDisposable> _disposablesOfOnEnable = new List<IDisposable>();
 
-        protected override void OnEnable()
+        //protected override void OnEnable()
+        //{
+        //    base.OnEnable();
+
+        //}
+
+        protected override void Awake()
         {
-            base.OnEnable();
-            Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
-                .Subscribe(SubscribeBlockIndex)
-                .AddTo(_disposablesOfOnEnable);
+            base.Awake();
+            try
+            {
+                Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
+                .Subscribe(SubscribeBlockIndex);
+                //.AddTo(_disposablesOfOnEnable);
+            }
+            catch { }
         }
 
         protected override void OnDisable()
@@ -32,7 +42,7 @@ namespace Nekoyume.UI
         public override void Show(bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
-            UpdateSlots(Game.Game.instance.Agent.BlockIndex);
+            //UpdateSlots(Game.Game.instance.Agent.BlockIndex);
         }
 
         private void SubscribeBlockIndex(long blockIndex)
@@ -55,6 +65,17 @@ namespace Nekoyume.UI
                     slots[i].gameObject.SetActive(false);
                 }
             }
+
+            bool isNotify = false;
+            foreach (var item in slots)
+            {
+                if (item.hasNotificationImage.enabled)
+                {
+                    isNotify = true;
+                    break;
+                }
+            }
+            Widget.Find<Menu>().chronoButton.transform.Find("MarkImage").gameObject.SetActive(isNotify);
         }
     }
 }

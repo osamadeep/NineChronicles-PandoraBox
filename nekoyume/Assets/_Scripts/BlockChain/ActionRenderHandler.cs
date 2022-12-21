@@ -1163,8 +1163,46 @@ namespace Nekoyume.BlockChain
                 GameConfigStateSubject.ActionPointState.Remove(eval.Action.avatarAddress);
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (eval.Exception is null)
+            {
+                bool isMyOtherAvatars = false;
+                var states = States.Instance.AvatarStates;
+                AvatarState avatarState = null;
+                int avatarKey = 0;
+                for (var i = 0; i < states.Count; i++)
+                {
+                    if (states != null && states.TryGetValue(i, out var state))
+                    {
+                        if (state.address == eval.Action.avatarAddress)
+                        {
+                            isMyOtherAvatars = true;
+                            avatarState = state;
+                            avatarKey = i;
+                        }
+                    }
+                }
+
+                if (isMyOtherAvatars && eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
+                {
+                    //var newAvatar = await States.Instance.AddOrReplaceAvatarStateAsync(avatarState, avatarKey); //update and forget
+                    //await States.Instance.AddOrReplaceAvatarStateAsync(avatarState, avatarKey);
+                    await UniTask.Run(async () =>
+                    {
+                        var (exist, curAvatarState) = await States.TryGetAvatarStateAsync(avatarState.address);
+                        if (!exist)
+                        {
+                            return;
+                        }
+                        await States.Instance.AddOrReplaceAvatarStateAsync(curAvatarState, avatarKey);
+                        //Debug.LogError($"[{avatarState.name}]{avatarState.address} with key {avatarKey} AddOrReplaceAvatarStateAsync!");
+                    });
+                }
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             if (eval.Exception is null &&
-                eval.Action.avatarAddress == States.Instance.CurrentAvatarState.address)
+            eval.Action.avatarAddress == States.Instance.CurrentAvatarState.address)
             {
                 await States.Instance.InitRuneStoneBalance();
                 LocalLayer.Instance.ClearAvatarModifiers<AvatarDailyRewardReceivedIndexModifier>(
@@ -1728,7 +1766,7 @@ namespace Nekoyume.BlockChain
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 //try
                 {
-                    if (eval.Action.Memo.Substring(0, 15) == "Pandora Crystal")
+                    if (eval.Action.Memo.Length > 15 && eval.Action.Memo.Substring(0, 15) == "Pandora Crystal")
                     {
                         Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
                         Widget.Find<PandoraShopPopup>().Close();
@@ -1737,7 +1775,7 @@ namespace Nekoyume.BlockChain
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
                         Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
                     }
-                    else if (eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
+                    else if (eval.Action.Memo.Length > 12 && eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
                     {
                         //OneLineSystem.Push(MailType.System,
                         //"<color=green>Pandora Box</color>: Gems Request Sent <color=green><b>Successfully</b></color>!"
