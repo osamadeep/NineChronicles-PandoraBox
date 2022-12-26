@@ -486,7 +486,7 @@ namespace Nekoyume.UI.Module
             {
                 var firstPatch = equipments.Take(10).ToList();
                 ActionManager.Instance
-                .Grinding(equipments, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
+                .Grinding(firstPatch, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
                 .Subscribe(eval =>
                 {
                     Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);

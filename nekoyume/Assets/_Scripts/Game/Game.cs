@@ -715,7 +715,7 @@ namespace Nekoyume.Game
             failed =>
             {
                 if (failed.Error == PlayFabErrorCode.AccountBanned)
-                    PandoraMaster.Instance.ShowError(101, "This address is Banned, please visit us for more information!");
+                    PandoraMaster.Instance.ShowError(101);
                 else
                     Debug.LogError(failed.GenerateErrorReport());
             });

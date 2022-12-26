@@ -24,6 +24,7 @@ using Vector3 = UnityEngine.Vector3;
 
 namespace Nekoyume
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class BuyView : ShopView
@@ -38,11 +39,14 @@ namespace Nekoyume
         [Header("PANDORA CUSTOM FIELDS")]
         public UnityEngine.UI.Toggle PriceToggle;
         [SerializeField] private UnityEngine.UI.Toggle SpellToggle;
+        [SerializeField] private TMP_InputField AddressTxt = null;
 
         [SerializeField] private TMP_InputField priceValueTxt = null;
         [SerializeField] private TMP_Dropdown IsLessDrop = null;
         [SerializeField] private TMP_Dropdown ItemElementType = null;
+        [SerializeField] private TMP_Dropdown StarCountsDrop = null;
 
+        public UnityEngine.UI.Toggle World6Toggle;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -211,14 +215,16 @@ namespace Nekoyume
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PriceToggle.onValueChanged.AddListener(_ => { UpdateView(); });
-            SpellToggle.onValueChanged.AddListener(_ => { UpdateView(); });
+            PriceToggle.onValueChanged.AddListener(_ => {UpdateView();});
+            SpellToggle.onValueChanged.AddListener(_ => {UpdateView();});
+            World6Toggle.onValueChanged.AddListener(_ => {UpdateView();});
             priceValueTxt.onValueChanged.AddListener(_ => {
                 if (priceValueTxt.text.Length > 0)
-                    UpdateView();
-            });
+                    UpdateView();});
             IsLessDrop.onValueChanged.AddListener(_ => { UpdateView(); });
-            ItemElementType.onValueChanged.AddListener(_ => { UpdateView(); });
+            ItemElementType.onValueChanged.AddListener(_ => { UpdateView();});
+            StarCountsDrop.onValueChanged.AddListener(_ => { UpdateView();});
+            AddressTxt.onValueChanged.AddListener(_ => { UpdateView();});
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -390,8 +396,8 @@ namespace Nekoyume
             resetButton.interactable = false;
             _resetAnimator.Play(_hashDisabled);
 
-            _selectedSubTypeFilter.SetValueAndForceNotify(ItemSubTypeFilter.Weapon);
-            _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
+            //_selectedSubTypeFilter.SetValueAndForceNotify(ItemSubTypeFilter.Weapon);
+            //_selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
             _selectedItemIds.Value.Clear();
             _isAscending.SetValueAndForceNotify(false);
             _levelLimit.SetValueAndForceNotify(levelLimitToggle.isOn);
@@ -399,7 +405,12 @@ namespace Nekoyume
 
             ClearSelectedItems();
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            PriceToggle.isOn = false;
             ItemElementType.value = 5; //all elements
+            StarCountsDrop.value = 0;
+            SpellToggle.isOn = false;
+            AddressTxt.text = "";
+            World6Toggle.isOn = false;
             PandoraBox.Premium.FirstSortShop(_selectedSortFilter);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
@@ -441,6 +452,9 @@ namespace Nekoyume
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+
+
             if (PriceToggle.isOn)
             {
                 switch (IsLessDrop.value)
@@ -472,10 +486,52 @@ namespace Nekoyume
                     x.ItemBase.ItemType == Model.Item.ItemType.Equipment && (x.ItemBase as Model.Item.Equipment).Skills.Count > 0).ToList();
             }
 
-            //SharedModel.isPrice = PriceToggle.isOn;
-            //SharedModel.priceValue = priceValueTxt.text == "" ? 0 : int.Parse(priceValueTxt.text);
-            //SharedModel.isLess = IsLessDrop.value == 0 ? true : false;
-            //SharedModel.elementaltype = ItemElementType.value;
+            if (StarCountsDrop.value != 0)
+            {
+                models = models.Where(x => x.ItemBase.ItemType == Model.Item.ItemType.Equipment &&
+                    ((x.ItemBase as Model.Item.Equipment).Skills.Count + (new ItemOptionInfo(x.ItemBase as Model.Item.Equipment).StatOptions.Sum(y => y.count)) == StarCountsDrop.value)).ToList();
+            }
+
+            if (World6Toggle.isOn && Premium.CurrentPandoraPlayer.IsPremium())
+            {
+                List<int> world6IDs = new List<int> {
+                    //War Sword
+                    10140000, 10141000, 10142000, 10143000, 10144000,
+                    //Legendary Belt
+                    10350000, 10351000, 10352000, 10353000, 10354000,
+                    //Warrior's Ring
+                    10540000, 10541000, 10542000, 10543000, 10544000,
+                    //Legendary Necklace
+                    10450000, 10451000, 10452000, 10453000, 10454000,
+                    //War Armor
+                    10240000, 10241000, 10242000, 10243000, 10244000,
+                };
+                models = items[ItemSubTypeFilter.Weapon];
+                models.AddRange(items[ItemSubTypeFilter.Armor]);
+                models.AddRange(items[ItemSubTypeFilter.Belt]);
+                models.AddRange(items[ItemSubTypeFilter.Necklace]);
+                models.AddRange(items[ItemSubTypeFilter.Ring]);
+                models = models.Where(x => !x.Expired.Value).ToList();
+
+                models = models.Where(x => world6IDs.Exists(y => y == x.ItemBase.Id)).ToList();
+
+                if (_selectedItemIds.Value.Any()) // _selectedItemIds
+                {
+                    models = models.Where(x =>
+                        _selectedItemIds.Value.Exists(y => x.ItemBase.Id.Equals(y))).ToList();
+                }
+                if (_levelLimit.Value)
+                {
+                    models = models.Where(x => Util.IsUsableItem(x.ItemBase)).ToList();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(AddressTxt.text))
+            {
+                if (Premium.CurrentPandoraPlayer.IsPremium())
+                    models = models.Where(x => x.OrderDigest.SellerAgentAddress.ToString().ToLower() == AddressTxt.text.ToLower()).ToList();
+            }
+
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

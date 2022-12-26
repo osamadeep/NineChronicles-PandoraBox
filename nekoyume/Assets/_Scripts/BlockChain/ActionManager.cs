@@ -141,16 +141,18 @@ namespace Nekoyume.BlockChain
             var actionType = actionBase.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            try
-            {
-                bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
-                if (!isOriginal)
-                {
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
-                    return;
-                }
-            }
-            catch { } 
+            //try
+            //{
+            //    bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
+            //    if (!isOriginal)
+            //    {
+            //        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
+            //        return;
+            //    }
+            //}
+            //catch { }
+            if (string.IsNullOrEmpty(PandoraMaster.CurrentAvatarAddressAction))
+                PandoraMaster.CurrentAvatarAddressAction = States.Instance.CurrentAvatarState.address.ToString();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             _agent.EnqueueAction(actionBase);
@@ -159,6 +161,7 @@ namespace Nekoyume.BlockChain
             {
                 _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
             }
+
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -635,6 +638,65 @@ namespace Nekoyume.BlockChain
                 }).Finally(() => Analyzer.Instance.FinishTrace(sentryTrace));
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public IObservable<ActionBase.ActionEvaluation<HackAndSlashSweep>> HackAndSlashSweepOther(
+            AvatarState avatarState,
+            List<Guid> costumes,
+            List<Guid> equipments,
+            List<RuneSlotInfo> runeInfos,
+            int apStoneCount,
+            int actionPoint,
+            int worldId,
+            int stageId,
+            int? playCount)
+        {
+            var action = new HackAndSlashSweep
+            {
+                costumes = costumes,
+                equipments = equipments,
+                runeInfos = runeInfos,
+                avatarAddress = avatarState.address,
+                apStoneCount = apStoneCount,
+                actionPoint = actionPoint,
+                worldId = worldId,
+                stageId = stageId,
+            };
+
+            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
+            {
+                var sentryTrace = Analyzer.Instance.Track("Unity/HackAndSlashSweep", new Dictionary<string, Value>()
+                {
+                    ["stageId"] = stageId,
+                    ["apStoneCount"] = apStoneCount,
+                    ["playCount"] = playCount,
+                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                    ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                }, true);
+
+                LocalLayerModifier.ModifyAvatarActionPoint(avatarState.address, -actionPoint);
+                var apStoneRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
+                    r.ItemSubType == ItemSubType.ApStone);
+                LocalLayerModifier.RemoveItem(avatarState.address, apStoneRow.ItemId, apStoneCount);
+                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            }
+            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 50); //update avatar after 4 blocks to prevent spam
+            ProcessAction(action);
+            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
+            {
+                _lastBattleActionId = action.Id;
+            }
+
+            return _agent.ActionRenderer.EveryRender<HackAndSlashSweep>()
+                .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .Timeout(ActionTimeout)
+                .DoOnError(e =>
+                {});
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public IObservable<ActionBase.ActionEvaluation<Sell>> Sell(
             ITradableItem tradableItem,
             int count,
@@ -804,15 +866,23 @@ namespace Nekoyume.BlockChain
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
         {
-            var blockCount = Game.Game.instance.Agent.BlockIndex -
-                avatarState.dailyRewardReceivedIndex + 1;
-
             var action = new DailyReward
             {
                 avatarAddress = avatarState.address,
             };
-            action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
-            //LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+
+            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
+            {
+                var blockCount = Game.Game.instance.Agent.BlockIndex -
+                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
+                LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
+                    States.Instance.CurrentAvatarState.address,
+                    blockCount);
+                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            }
+
+            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 40); //update avatar after 3 blocks to prevent spam
             ProcessAction(action);
 
             return _agent.ActionRenderer.EveryRender<DailyReward>()

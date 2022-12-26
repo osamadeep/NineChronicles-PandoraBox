@@ -20,46 +20,69 @@ using Cysharp.Threading.Tasks;
 namespace Nekoyume.UI.Module
 {
     using Bencodex.Types;
+    using Cysharp.Threading.Tasks.Triggers;
+    using mixpanel;
+    using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Mail;
     using Nekoyume.PandoraBox;
     using Nekoyume.State.Subjects;
     using Nekoyume.UI.Module.WorldBoss;
     using Nekoyume.UI.Scroller;
     using System.Globalization;
+    using System.Threading.Tasks;
     using UniRx;
 
     public class ChronoSlot : MonoBehaviour
     {
+        [SerializeField] private GameObject SelectedAvatarVFX;
+        [SerializeField] private TextMeshProUGUI SlotNumberText;
         [SerializeField] private TextMeshProUGUI AvatarNameText;
         [SerializeField] private TextMeshProUGUI ProsperityText;
         [SerializeField] private GameObject ProsperityImage;
         [SerializeField] private TextMeshProUGUI APText;
         [SerializeField] private GameObject APImage;
-        //[SerializeField] private TextMeshProUGUI AutoStageText;
+        [SerializeField] private TextMeshProUGUI SweepStageText;
         //[SerializeField] private TextMeshProUGUI ArenaText;
         [SerializeField] private TextMeshProUGUI[] CraftingSlotsText;
-        public Image hasNotificationImage;
-        [SerializeField] private Button AutoCollectButton;
+        [SerializeField] private Image slotNotificationImage;
+        [SerializeField] private Image stageNotificationImage;
+        [SerializeField] private Image craftNotificationImage;
         [SerializeField] private Button SwitchButton;
+        [SerializeField] private Button SettingsButton;
         private AvatarState currentAvatarState;
         private int _slotIndex;
+        public bool HasNotification;
 
         //settings
+        List<CombinationSlotState> Combinationslotstates = new List<CombinationSlotState>();
+        public bool IsPrefsLoded;
+        bool IsStageNotify;
+        bool IsCraftNotify;
         bool IsAutoCollect;
-        int AutoStage; //if its 0 then no auto sweep
+        bool IsAutoSpend;
+        int sweepStage;
 
-        long currentBlockBeforeTry = 0;
+        long currentBlockIndex;
+        long collectProsperityCooldown;
+        long spendActionPointsCooldown;
+        public long craftSlotsUpdateCooldown;
 
         private void Awake()
         {
-            AutoCollectButton.onClick.AddListener(() => { CollectAP(); });
             SwitchButton.onClick.AddListener(() => { SwitchChar(); });
+            SettingsButton.onClick.AddListener(() => { OpenSlotSettings(); });
         }
 
         private void OnEnable()
         {
             //GetState();
         }
+
+        void OpenSlotSettings()
+        {
+            Widget.Find<ChronoSettingsPopup>().Show(currentAvatarState, _slotIndex);
+        }
+
 
         public async void GetState()
         {
@@ -71,150 +94,224 @@ namespace Nekoyume.UI.Module
         {
             if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
             {
-                if (!Premium.CurrentPandoraPlayer.IsPremium())
-                {
-                    OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: This is Premium Feature!",
-                        NotificationCell.NotificationType.Alert);
+                if (!Premium.CheckPremiumFeature())
                     return;
-                }
             }
 
-            if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
-                Game.Game.instance.ActionManager.DailyReward().Subscribe();
-            else
-                Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
-
-            var address = currentAvatarState.address;
-            if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
+            if (currentAvatarState.actionPoint > 5)
             {
-                GameConfigStateSubject.ActionPointState.Remove(address);
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: There is still Action Points!", NotificationCell.NotificationType.Information);
+                return;
             }
-            GameConfigStateSubject.ActionPointState.Add(address, true);
+
+            Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState).Subscribe();
+
+            collectProsperityCooldown = currentBlockIndex + 4;
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
+
+
+            //var address = currentAvatarState.address;
+            //if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
+            //{
+            //    GameConfigStateSubject.ActionPointState.Remove(address);
+            //}
+            //GameConfigStateSubject.ActionPointState.Add(address, true);
         }
 
         void LoadSettings()
         {
-            string addressKey = "_PandoraBox_Chrono_" + currentAvatarState.address;
-            if (PlayerPrefs.HasKey(addressKey))
+            if (!IsPrefsLoded)
             {
-                IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
-                AutoStage = PlayerPrefs.GetInt(addressKey + "_AutoStage", 0);
-            }
-            else
-            {
-                //register variables
-                IsAutoCollect = true;
-                AutoStage = 0;
+                IsPrefsLoded = true; //to read it once
+                string addressKey = "_PandoraBox_Chrono_" + currentAvatarState.address;
+                if (PlayerPrefs.HasKey(addressKey))
+                {
+                    IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
+                    IsCraftNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftNotify", 1));
+                    IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
+                    IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
+                    sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
+                }
+                else
+                {
+                    //register variables
+                    IsStageNotify = true;
+                    IsCraftNotify = true;
+                    IsAutoCollect = true;
+                    IsAutoSpend = false;
+                    sweepStage = 0;
+                }
+
+                var states = States.Instance.AvatarStates;
+                SwitchButton.gameObject.SetActive(states.Where(x => x.Value.address == currentAvatarState.address).Count() > 0);
+                SlotNumberText.text = "#" + (_slotIndex + 1);
             }
 
             //check for premium
             if (!Premium.CurrentPandoraPlayer.IsPremium())
             {
-                if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
+                try
                 {
-                    IsAutoCollect = false;
-                    AutoStage = 0;
+                    if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
+                    {
+                        IsAutoCollect = false;
+                        IsAutoSpend = false;
+                        sweepStage = 0;
+                    }
                 }
+                catch { }
             }
 
 
             //ui fill
-            AvatarNameText.text = currentAvatarState.NameWithHash + " | " + currentAvatarState.address.ToString();
+            try
+            {SelectedAvatarVFX.SetActive(currentAvatarState.address == States.Instance.CurrentAvatarState.address);}
+            catch { SelectedAvatarVFX.SetActive(false); }
+
+            AvatarNameText.text = currentAvatarState.NameWithHash + " : " + currentAvatarState.address.ToString();
             ProsperityImage.SetActive(IsAutoCollect);
-            APImage.SetActive(AutoStage != 0);
-            //AutoCollectText.text = IsAutoCollect ? "<color=green>TRUE" : "<color=red>FALSE";
-            //AutoStageText.text = AutoStage !=0 ? AutoStage.ToString() : "-";
-            AutoCollectButton.interactable = !IsAutoCollect;
-            AutoCollectButton.GetComponentInChildren<TextMeshProUGUI>().text = IsAutoCollect ? "Auto" : "Collect";
+            APImage.SetActive(IsAutoSpend);
+            SweepStageText.text = "Sweep > " + sweepStage.ToString(); //change sweep method later
         }
 
-        public void SetSlot(long currentBlockIndex, int slotIndex, AvatarState state = null)
+        public void SetSlot(long _currentBlockIndex, int slotIndex, AvatarState state = null)
         {
+            currentBlockIndex = _currentBlockIndex;
             _slotIndex = slotIndex;
             currentAvatarState = state;
             LoadSettings();
-            UpdateInformation(currentBlockIndex);
+            UpdateInformation();
         }
 
-        private void UpdateInformation(long currentBlockIndex)
+        private void UpdateInformation()
         {
-            var blockCount = Mathf.Clamp(Game.Game.instance.Agent.BlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1,0,1700);
-            ProsperityText.text = (int)((blockCount / 1700f) * 100) + "%";
+            //STAGE SECTION
+            var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1,0,1700);
+            int prosperityPercentage = (int)((prosperityBlocks / 1700f) * 100);
+            ProsperityText.text = prosperityPercentage ==100? $"<color=red>{prosperityPercentage}</color>%": prosperityPercentage+"%";
             string actionString = currentAvatarState.actionPoint > 5 ? $"<color=red>{currentAvatarState.actionPoint}</color>": currentAvatarState.actionPoint.ToString();
-            //string apString = blockCount >= 1700 ? $"<color=red>{blockCount}</color>" : blockCount.ToString();
             APText.text = actionString + "/120";
+            bool stageNotification = IsStageNotify && (prosperityPercentage == 100 || currentAvatarState.actionPoint > 5);
 
-            if (IsAutoCollect && blockCount >= 1700 && currentAvatarState.actionPoint < 5)
+            if (IsAutoCollect && prosperityBlocks >= 1700 && currentAvatarState.actionPoint < 5)
             {
                 try //in case actionManager is not ready yet
                 {
                     //prevent spam txs
-                    if (currentBlockBeforeTry + 4 < Game.Game.instance.Agent.BlockIndex)
-                    {
-                        currentBlockBeforeTry = currentBlockIndex;
-                        //Debug.LogError($"[{currentBlockIndex}]Chrono: {state.address} , {blockCount} , {state.actionPoint}, Colledted!");
-                        OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
+                    if (collectProsperityCooldown < currentBlockIndex)
                         CollectAP();
+                }catch { }
+            }
+
+            if (IsAutoSpend && sweepStage != 0 && currentAvatarState.actionPoint >= 5)
+            {
+                try //in case actionManager is not ready yet
+                {
+                    //prevent spam txs
+                    if (spendActionPointsCooldown < currentBlockIndex)
+                    {
+                        //sweep
+                        SweepLevel().Forget();
                     }
                 }
-                catch{ }
+                catch { }
             }
 
-            //UpdateArena(state, currentBlockIndex);
-            UpdateNotification((int)blockCount);
+            //CRAFT SECTION
+            bool craftNotification = false;
 
-            //craft
-            SetCombinationSlotStatesAsync(currentBlockIndex).Forget();
-            //var states = States.Instance.GetCombinationSlotState(currentAvatarState, currentBlockIndex);
-            //for (var i = 0; i < 4; i++)
-            //{
-            //    if (states.ContainsKey(i))
-            //    {
-            //        if (states.TryGetValue(i, out var state))
-            //        {
-            //            var diff = Math.Max(state.UnlockBlockIndex - currentBlockIndex, 1);
-            //            CraftingSlotsText[i].text = diff.ToString();
-            //        }
-            //        else
-            //        {
-            //            //slots[i].SetSlot(avatarState.address, blockIndex, i);
-            //            CraftingSlotsText[i].text = "?";
-            //            var diff = Math.Max(state.UnlockBlockIndex - currentBlockIndex, 1);
-            //            CraftingSlotsText[i].text = diff.ToString();
-            //        }
-            //    }
-            //    else
-            //    {
-            //        CraftingSlotsText[i].text = "??";
-            //        //slots[i].SetSlot(avatarState.address, blockIndex, i);
-            //    }
-            //}
+
+            //try //in case the slots is not ready yet!
+            {
+                
+                if (craftSlotsUpdateCooldown < currentBlockIndex)
+                    SetCombinationSlotStatesAsync().Forget();
+                else
+                    craftNotification = UpdateCraftingSlots() && IsCraftNotify;
+            }
+
+            //SLOT NOTIFICATION
+            HasNotification = stageNotification || craftNotification;
+            slotNotificationImage.enabled = HasNotification;
+            stageNotificationImage.enabled = stageNotification;
+            craftNotificationImage.enabled = craftNotification;
         }
 
-        public async UniTask SetCombinationSlotStatesAsync(long currentBlockIndex)
+        public async UniTaskVoid SweepLevel()
         {
+            if (!Premium.CheckPremiumFeature())
+                return;
+
+            int worldID = 0;
+            if (sweepStage < 51)
+                worldID = 1;
+            else if (sweepStage > 50 && sweepStage < 101)
+                worldID = 2;
+            else if (sweepStage > 100 && sweepStage < 151)
+                worldID = 3;
+            else if (sweepStage > 150 && sweepStage < 201)
+                worldID = 4;
+            else if (sweepStage > 200 && sweepStage < 251)
+                worldID = 5;
+            else if (sweepStage > 250 && sweepStage < 301)
+                worldID = 6;
+
+            try //in case actionManager is not ready yet
+            {
+                var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
+                if (itemSlotStates.Count < 1)
+                {
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: You need to Setup Equipments Builds!", NotificationCell.NotificationType.Alert);
+                    return;
+                }
+                Game.Game.instance.ActionManager.HackAndSlashSweepOther(
+                currentAvatarState,
+                itemSlotStates[0].Costumes,
+                itemSlotStates[0].Equipments,
+                runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                0,
+                currentAvatarState.actionPoint,
+                worldID,
+                sweepStage,
+                currentAvatarState.actionPoint).Subscribe();
+                spendActionPointsCooldown = currentBlockIndex +10;
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!", NotificationCell.NotificationType.Information);
+            }
+            catch { }
+        }
+
+        public async UniTask SetCombinationSlotStatesAsync()
+        {
+            Combinationslotstates.Clear();
             for (var i = 0; i < currentAvatarState.combinationSlotAddresses.Count; i++)
             {
-                var slotAddress = currentAvatarState.address.Derive(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        CombinationSlotState.DeriveFormat,
-                        i
-                    )
-                );
+                var slotAddress = currentAvatarState.address.Derive(string.Format(CultureInfo.InvariantCulture,CombinationSlotState.DeriveFormat,i));
                 var stateValue = await Game.Game.instance.Agent.GetStateAsync(slotAddress);
-                var state = new CombinationSlotState((Dictionary)stateValue);
-                //UpdateCombinationSlotState(avatarState.address, i, state);
-                var maxValue = Math.Max(state.UnlockBlockIndex - state.StartBlockIndex, 1);
-                var diff = currentBlockIndex - state.StartBlockIndex;
-                //CraftingSlotsText[i].text = $"[{i}]" + (int)((diff / maxValue) * 100) + "%";
-                if (currentBlockIndex > state.UnlockBlockIndex)
-                    CraftingSlotsText[i].text = $"[{i + 1}] -";
-                else
-                    CraftingSlotsText[i].text = $"[{i+1}]" + (int)((diff * 1f / maxValue * 1f) * 100f) + "%";
+                Combinationslotstates.Add( new CombinationSlotState((Dictionary)stateValue));
             }
+            craftSlotsUpdateCooldown = currentBlockIndex + 10;
         }
+
+        bool UpdateCraftingSlots()
+        {
+            bool hasNotification=false;
+            try
+            {
+                for (var i = 0; i < Combinationslotstates.Count; i++)
+                {
+                    var state = Combinationslotstates[i];
+                    var maxValue = Math.Max(state.UnlockBlockIndex - state.StartBlockIndex, 1);
+                    var diff = currentBlockIndex - state.StartBlockIndex;
+                    var craftPercentage = (int)((diff * 1f / maxValue * 1f) * 100f);
+                    if (!hasNotification && currentBlockIndex > state.UnlockBlockIndex)
+                        hasNotification = true;
+                    CraftingSlotsText[i].text = currentBlockIndex > state.UnlockBlockIndex ? $"{i + 1}] <color=red>-</color>" : $"{i + 1}]" + craftPercentage + "%";
+                }
+            }catch { }
+
+            return hasNotification;
+        }
+
 
         async void SwitchChar()
         {
@@ -230,11 +327,8 @@ namespace Nekoyume.UI.Module
             Util.SaveAvatarSlotIndex(_slotIndex);
             Game.Event.OnRoomEnter.Invoke(false);
             Game.Event.OnUpdateAddresses.Invoke();
-        }
-
-        private void UpdateNotification(int blockCount)
-        {
-            hasNotificationImage.enabled = currentAvatarState.actionPoint > 0 || blockCount >=1700;
+            Widget.Find<ChronoSlotsPopup>().Close();
+            AudioController.PlayClick();
         }
 
         //private async void UpdateArena(AvatarState state, long currentBlockIndex)
@@ -262,7 +356,7 @@ namespace Nekoyume.UI.Module
         //    long _resetIndex = weeklyArenaState.ResetIndex;
         //    float value;
 
-        //    value = Game.Game.instance.Agent.BlockIndex - _resetIndex;
+        //    value = currentBlockIndex - _resetIndex;
         //    var remainBlock = gameConfigState.DailyArenaInterval - value;
         //    var time = Util.GetBlockToTime((int)remainBlock);
 

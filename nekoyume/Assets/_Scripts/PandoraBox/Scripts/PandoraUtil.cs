@@ -1,4 +1,8 @@
+using Nekoyume.Extensions;
+using Nekoyume.Game;
 using Nekoyume.Model.Mail;
+using Nekoyume.State;
+using Nekoyume.TableData;
 using Nekoyume.UI;
 using Nekoyume.UI.Scroller;
 using System.Collections;
@@ -56,6 +60,26 @@ namespace Nekoyume.PandoraBox
             return item;
         }
 
+        public static (int, int) GetPlayCount(StageSheet.Row row,int apStoneCount,int ap,int stakingLevel)
+        {
+            if (row is null)
+            {
+                return (0, 0);
+            }
+
+            var actionMaxPoint = States.Instance.GameConfigState.ActionPointMax;
+            var costAp = row.CostAP;
+            if (stakingLevel > 0)
+            {
+                costAp = TableSheets.Instance.StakeActionPointCoefficientSheet.GetActionPointByStaking(
+                    costAp, 1, stakingLevel);
+            }
+
+            var apStonePlayCount = actionMaxPoint / costAp * apStoneCount;
+            var apPlayCount = ap / costAp;
+            return (apPlayCount, apStonePlayCount);
+        }
+
         public static string ToLongNumberNotation(BigInteger num)
         {
             var absoluteValue = BigInteger.Abs(num);
@@ -83,6 +107,44 @@ namespace Nekoyume.PandoraBox
             }
 
             return num.ToString();
+        }
+
+        public static void ShowSystemNotification(int messageCode,NotificationCell.NotificationType type)
+        {
+            NotificationSystem.Push(MailType.System, $"<color=green><b>PandoraBox</b></color>: {GetNotificationText(messageCode)}",type);
+        }
+
+        public static string GetNotificationText(int messageCode)
+        {
+            string messageText = "";
+            switch (messageCode)
+            {
+                case 5:
+                    messageText = "This version is obsolete, please visit us for more information!";
+                    break;
+                case 16:
+                    messageText = "Something wrong with parsing DB, please visit us for more information!";
+                    break;
+                case 101:
+                    messageText = "This address is Banned, please visit us for more information!";
+                    break;
+                case 404:
+                    messageText = "Cannot connect to Pandora Server, please visit us for more information!";
+                    break;
+                case 322:
+                    messageText = "cannot read Player Inventory!";
+                    break;
+                case 362:
+                    messageText = "cannot read Players database!";
+                    break;
+                case 1001:
+                    messageText = "Custom Crystal Buff <color=red>removed</color>!";
+                    break;
+                case 1002:
+                    messageText = "Custom Crystal Buff <color=green>Selected</color>!";
+                    break;
+            }
+            return messageText;
         }
     }
 

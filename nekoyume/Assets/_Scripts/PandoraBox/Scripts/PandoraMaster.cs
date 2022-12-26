@@ -11,6 +11,9 @@ using PlayFab.ClientModels;
 using Nekoyume.Model.BattleStatus;
 using UniRx;
 using Nekoyume.UI;
+using Nekoyume.Model.State;
+using Libplanet;
+using Cysharp.Threading.Tasks;
 
 namespace Nekoyume.PandoraBox
 {
@@ -36,6 +39,9 @@ namespace Nekoyume.PandoraBox
 
 
         //General
+        public static Dictionary<int, AvatarState> CustomAvatarStates = new Dictionary<int, AvatarState>();
+        public static bool TryGetCustomAvatarStatesDone = false;
+        public static string CurrentAvatarAddressAction;
         public static string CrystalTransferTx = "";
         public static string InspectedAddress = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
@@ -127,13 +133,15 @@ namespace Nekoyume.PandoraBox
             CurrentGuild = PanDatabase.Guilds.Find(x => x.Tag == CurrentGuildPlayer.Guild);
         }
 
-        public void ShowError(int errorNumber, string text)
+        public void ShowError(int errorNumber)
         {
-            //404 cannot get the link
-            //16 cannot cast the link content
-            //5 old version
-            //101 player banned
-            Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!", text);
+            Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!", PandoraUtil.GetNotificationText(errorNumber));
+        }
+
+        public static void SetCurrentAvatarAddressAction(string address,int seconds)
+        {
+            CurrentAvatarAddressAction = address;
+            //Prime.UpdateAvatar(seconds).Forget();
         }
     }
 
@@ -145,22 +153,6 @@ namespace Nekoyume.PandoraBox
 
         [HideInInspector] public int BlockShowType { get; set; } = 0;
         [HideInInspector] public int MenuSpeed { get; set; } = 3;
-
-        //[HideInInspector]
-        //public float MusicVolume { get; set; } = 0.7f;
-
-        //[HideInInspector]
-        //public float SfxVolume { get; set; } = 0.7f;
-
-        //[HideInInspector]
-        //public bool IsMusicMuted { get; set; } = false;
-
-        //[HideInInspector]
-        //public bool IsSfxMuted { get; set; } = false;
-
-        //[HideInInspector]
-        //public int ResolutionIndex { get; set; } = 2;
-
 
         //PVE
         [HideInInspector] public int FightSpeed { get; set; } = 1;
@@ -184,11 +176,6 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
-            //PlayerPrefs.SetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
-            //PlayerPrefs.SetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted));
-            //PlayerPrefs.SetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
-            //PlayerPrefs.SetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted));
-            //PlayerPrefs.SetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
 
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
@@ -224,16 +211,10 @@ namespace Nekoyume.PandoraBox
             }
 
             //General
-            //TempVersionId = PlayerPrefs.GetString("_PandoraBox_Ver", TempVersionId);
             IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory",
                 System.Convert.ToInt32(IsStory)));
             IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin",
                 System.Convert.ToInt32(IsMultipleLogin)));
-            //IsMusicMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMusicMuted", System.Convert.ToInt32(IsMusicMuted)));
-            //IsSfxMuted = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsSfxMuted", System.Convert.ToInt32(IsSfxMuted)));
-            //MusicVolume = PlayerPrefs.GetFloat("_PandoraBox_General_MusicVolume", MusicVolume);
-            //SfxVolume = PlayerPrefs.GetFloat("_PandoraBox_General_SfxVolume", SfxVolume);
-            //ResolutionIndex = PlayerPrefs.GetInt("_PandoraBox_General_ResolutionIndex", ResolutionIndex);
             BlockShowType = PlayerPrefs.GetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             MenuSpeed = PlayerPrefs.GetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
 

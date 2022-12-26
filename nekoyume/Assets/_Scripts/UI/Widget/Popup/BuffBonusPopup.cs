@@ -13,11 +13,18 @@ namespace Nekoyume.UI
 {
     using mixpanel;
     using Nekoyume.BlockChain;
+    using Nekoyume.PandoraBox;
     using System.Linq;
     using UniRx;
 
     public class BuffBonusPopup : PopupWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button resetBuffButton = null;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField]
         private ConditionalCostButton normalButton = null;
 
@@ -74,7 +81,19 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             buffListButton.onClick.AddListener(OnClickBuffListButton);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            resetBuffButton.OnClickAsObservable().Subscribe(_ => ResetSimulationBuff()).AddTo(gameObject);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void ResetSimulationBuff()
+        {
+            PandoraUtil.ShowSystemNotification(1001, NotificationCell.NotificationType.Information);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", -1);
+            Widget.Find<BattlePreparation>().UpdateSimulateBuff();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Initialize()
         {
@@ -169,7 +188,7 @@ namespace Nekoyume.UI
             Close();
         }
 
-        private void OnClickBuffListButton()
+        public void OnClickBuffListButton()
         {
             var pos = cellContainer.anchoredPosition;
             pos.y = 0;

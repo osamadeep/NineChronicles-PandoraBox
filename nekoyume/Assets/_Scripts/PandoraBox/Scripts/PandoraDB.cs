@@ -18,7 +18,7 @@ namespace Nekoyume.PandoraBox
 
             if (www.result != UnityWebRequest.Result.Success)
             {
-                PandoraMaster.Instance.ShowError(404,"Cannot connect to Pandora Server, please visit us for more information!");
+                PandoraMaster.Instance.ShowError(404);
             }
             else
             {
@@ -28,7 +28,7 @@ namespace Nekoyume.PandoraBox
                 } // Debug.LogError(JsonUtility.ToJson(PanDatabase)); }
                 catch
                 {
-                    PandoraMaster.Instance.ShowError(16, "Something wrong, please visit us for more information!");
+                    PandoraMaster.Instance.ShowError(16);
                 }
             }
         }

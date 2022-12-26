@@ -2,11 +2,15 @@ using Nekoyume.Game.Controller;
 using Nekoyume.PandoraBox;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
     public class IntroScreen : LoadingScreen
     {
+        [SerializeField]
+        private Image _background;
+
         private string _keyStorePath;
         private string _privateKey;
 
@@ -14,7 +18,7 @@ namespace Nekoyume.UI
         {
             base.Awake();
             indicator.Close();
-            _background.sprite = EventManager.GetEventInfo().Intro;
+            //_background.sprite = EventManager.GetEventInfo().Intro;
         }
 
         public void Show(string keyStorePath, string privateKey)
@@ -61,7 +65,7 @@ namespace Nekoyume.UI
                 yield break;
             }
 
-            PandoraMaster.Instance.ShowError(5, "This version is obsolete, please visit us for more information!");
+            PandoraMaster.Instance.ShowError(5);
 
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

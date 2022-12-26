@@ -18,22 +18,15 @@ namespace Nekoyume.UI
 {
     public class PandoraSettingPopup : PopupWidget
     {
-        [Header("PANDORA PRIME")]
         [SerializeField] private TMP_InputField cAmount;
         [SerializeField] private TMP_InputField cAaddress;
         [SerializeField] private TMP_InputField cMemo;
         [SerializeField] private TextMeshProUGUI cLog;
-
-        [Space(50)]
-
         public Transform tabHolder;
-
-        [SerializeField]
-        Transform tabContentHolder;
+        [SerializeField] Transform tabContentHolder;
 
         //node connected
-        [SerializeField]
-        TextMeshProUGUI nodeText;
+        [SerializeField] TextMeshProUGUI nodeText;
 
         //Time Scale Elements
         [SerializeField]
@@ -292,6 +285,11 @@ namespace Nekoyume.UI
             //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
             //cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
             //cAmount.text = cMemo.text = cAaddress.text = "";
+        }
+
+        public void ShowOriginal()
+        {
+            PandoraMaster.TryGetCustomAvatarStatesDone = false;
         }
     }
 }

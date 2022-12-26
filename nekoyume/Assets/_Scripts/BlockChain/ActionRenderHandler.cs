@@ -1373,6 +1373,36 @@ namespace Nekoyume.BlockChain
                     "<color=green><b>Successfully</b></color> committed on the blockchain!"
                     , NotificationCell.NotificationType.Information);
                 }
+
+                bool isMyOtherAvatars = false;
+                var states = States.Instance.AvatarStates;
+                AvatarState avatarState = null;
+                int avatarKey = 0;
+                for (var i = 0; i < states.Count; i++)
+                {
+                    if (states != null && states.TryGetValue(i, out var state))
+                    {
+                        if (state.address == eval.Action.avatarAddress)
+                        {
+                            isMyOtherAvatars = true;
+                            avatarState = state;
+                            avatarKey = i;
+                        }
+                    }
+                }
+
+                if (isMyOtherAvatars && eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
+                {
+                    await UniTask.Run(async () =>
+                    {
+                        var (exist, curAvatarState) = await States.TryGetAvatarStateAsync(avatarState.address);
+                        if (!exist)
+                        {
+                            return;
+                        }
+                        await States.Instance.AddOrReplaceAvatarStateAsync(curAvatarState, avatarKey);
+                    });
+                }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
 
@@ -1390,6 +1420,9 @@ namespace Nekoyume.BlockChain
                 await Task.WhenAll(
                     States.Instance.UpdateItemSlotStates(BattleType.Adventure),
                     States.Instance.UpdateRuneSlotStates(BattleType.Adventure));
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (Widget.Find<BattlePreparation>().IsActive())
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 Widget.Find<BattlePreparation>().UpdateInventoryView();
             }
             else

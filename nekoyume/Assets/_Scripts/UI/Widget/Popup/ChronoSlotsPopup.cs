@@ -7,13 +7,14 @@ using UnityEngine;
 
 namespace Nekoyume.UI
 {
+    using Cysharp.Threading.Tasks;
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class ChronoSlotsPopup : XTweenPopupWidget
     {
         public List<ChronoSlot> slots;
-
-        private readonly List<IDisposable> _disposablesOfOnEnable = new List<IDisposable>();
+        public GameObject slotPrefab;
 
         //protected override void OnEnable()
         //{
@@ -33,12 +34,6 @@ namespace Nekoyume.UI
             catch { }
         }
 
-        protected override void OnDisable()
-        {
-            _disposablesOfOnEnable.DisposeAllAndClear();
-            base.OnDisable();
-        }
-
         public override void Show(bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
@@ -52,24 +47,46 @@ namespace Nekoyume.UI
 
         private void UpdateSlots(long blockIndex)
         {
-            var states = States.Instance.AvatarStates;
-
-            for (var i = 0; i < slots.Count; i++)
+            if (!PandoraMaster.TryGetCustomAvatarStatesDone)
             {
-                if (states != null && states.TryGetValue(i, out var state))
+                var states = States.Instance.AvatarStates;
+                for (var i = 0; i < slots.Count; i++)
                 {
-                    slots[i].SetSlot(blockIndex, i, state);
+                    if (states != null && states.TryGetValue(i, out var state))
+                    {
+                        slots[i].gameObject.SetActive(true);
+                        slots[i].SetSlot(blockIndex, i, state);
+                    }
+                    else
+                        slots[i].gameObject.SetActive(false);
                 }
-                else
+            }
+            else
+            {
+                var states = PandoraMaster.CustomAvatarStates;
+                for (int i = 0; i < states.Count; i++)
                 {
-                    slots[i].gameObject.SetActive(false);
+                    if (slots.Count < i +1) //add new slot
+                    {
+                        var newSlot = Instantiate(slotPrefab, slots[0].transform.parent);
+                        slots.Add(newSlot.GetComponent<ChronoSlot>());
+                    }
+
+                    if (PandoraMaster.CustomAvatarStates.TryGetValue(i, out var state))
+                    {
+                        slots[i].gameObject.SetActive(true);
+                        slots[i].SetSlot(blockIndex, i, state);
+                    }
+                    else
+                        slots[i].gameObject.SetActive(false);
+
                 }
             }
 
             bool isNotify = false;
             foreach (var item in slots)
             {
-                if (item.hasNotificationImage.enabled)
+                if (item.HasNotification)
                 {
                     isNotify = true;
                     break;

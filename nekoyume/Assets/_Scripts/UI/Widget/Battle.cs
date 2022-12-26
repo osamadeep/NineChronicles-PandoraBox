@@ -98,23 +98,11 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             exitMenu.onClick.AddListener(() =>
             {
-                Game.Game.instance.Stage.IsSkip = true;
-                //StartCoroutine(Game.Game.instance.Stage.CoStageEnd(PandoraBoxMaster.CurrentBattleLog));
-                //Close();
+                if (Premium.CheckPremiumFeature())
+                    Game.Game.instance.Stage.IsSkip = true;
             });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void ExitToMenu()
-        {
-            //Game.Game.instance.Stage.objectPool.ReleaseAll();
-            //Game.Game.instance.IsInWorld = false;
-            ////Game.Game.instance.Stage.IsInStage = false;
-            //Game.Event.OnRoomEnter.Invoke(false);
-            //MainCanvas.instance.InitWidgetInMain();
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Close(bool ignoreCloseAnimation = false)
         {

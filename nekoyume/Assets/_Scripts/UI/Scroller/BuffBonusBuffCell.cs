@@ -1,3 +1,4 @@
+using Nekoyume.PandoraBox;
 using Nekoyume.TableData.Crystal;
 using TMPro;
 using UnityEngine;
@@ -32,6 +33,24 @@ namespace Nekoyume.UI.Scroller
             buffIconImage.sprite = bonusBuffViewData.GetBonusBuffIcon(skillRow.SkillCategory);
             buffNameText.text = skillRow.GetLocalizedName();
             buffNameText.color = itemData.Rank.GetBuffGradeColor();
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            itemDataSimulation = itemData;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        CrystalRandomBuffSheet.Row itemDataSimulation;
+        public void SetSimulateBuff()
+        {
+            if (!Premium.CheckPremiumFeature())
+                return;
+            PandoraUtil.ShowSystemNotification(1002, NotificationCell.NotificationType.Information);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", itemDataSimulation.Id);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuffRank", (int)itemDataSimulation.Rank);
+            Widget.Find<BattlePreparation>().UpdateSimulateBuff();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

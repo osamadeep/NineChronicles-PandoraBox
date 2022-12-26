@@ -379,6 +379,8 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<PandoraShopPopup>());
             yield return null;
+            secondWidgets.Add(Widget.Create<ChronoSettingsPopup>());
+            yield return null;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<StakingPopup>());
             yield return null;

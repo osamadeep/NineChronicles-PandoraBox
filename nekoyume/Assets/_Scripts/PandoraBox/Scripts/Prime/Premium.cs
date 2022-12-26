@@ -28,10 +28,12 @@ namespace Nekoyume.PandoraBox
     using Nekoyume.Game.Controller;
     using Nekoyume.Helper;
     using Nekoyume.Model;
+    using Nekoyume.Model.BattleStatus;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Rune;
     using Nekoyume.Model.Skill;
     using Nekoyume.TableData;
+    using Nekoyume.UI.Module;
     using PlayFab;
     using PlayFab.ClientModels;
     using System.Threading.Tasks;
@@ -119,9 +121,9 @@ namespace Nekoyume.PandoraBox
                         Widget.Find<RunnerRankPopup>().UpdateCurrency();
                     }
                     catch { }
-                }, fail =>{PandoraMaster.Instance.ShowError(322, "Pandora cannot read Player Inventory!");});
+                }, fail =>{PandoraUtil.ShowSystemNotification(322,NotificationCell.NotificationType.Alert);});
             },
-            fail =>{ PandoraMaster.Instance.ShowError(362, "Pandora cannot read Players database!");});
+            fail =>{ PandoraUtil.ShowSystemNotification(362, NotificationCell.NotificationType.Alert);});
         }
 
         public static void BuyFeatureShop(string itemID)
@@ -564,7 +566,12 @@ namespace Nekoyume.PandoraBox
             return  IEMultipleSimulate(myDigest, enemyDigest, iterations);
         }
 
-        public static async void WinRatePVE(int _worldId,int _stageId)
+        public static StageSimulator SoloPVESimulate(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
+        {
+            return GetPVESimulator(_worldId, _stageId, consumables, skillId);
+        }
+
+        public static async void MultiPVESimulate(int _worldId,int _stageId,List<Guid> consumables, int skillId = -1)
         {
             if (!CheckPremiumFeature())
                 return;
@@ -575,63 +582,13 @@ namespace Nekoyume.PandoraBox
             foreach (var item in preparePVE.winStarTexts)
                 item.text = "?";
 
-            List<Skill> buffSkills = new List<Skill>();
-            var skillState = States.Instance.CrystalRandomSkillState;
-            var skillId = PlayerPrefs.GetInt("HackAndSlash.SelectedBonusSkillId", 0);
-            if (skillId != 0)
-            {
-                skillId = skillState.SkillIds
-                .Select(buffId =>
-                    Game.TableSheets.Instance.CrystalRandomBuffSheet
-                        .TryGetValue(buffId, out var bonusBuffRow)
-                        ? bonusBuffRow
-                        : null)
-                .Where(x => x != null)
-                .OrderBy(x => x.Rank)
-                .ThenBy(x => x.Id)
-                .First()
-                .Id;
-
-                var skill = CrystalRandomSkillState.GetSkill(
-                    skillId,
-                    Game.TableSheets.Instance.CrystalRandomBuffSheet,
-                    Game.TableSheets.Instance.SkillSheet);
-                buffSkills.Add(skill);
-            }
-
             int totalSimulations = 200;
             int[] winStars = { 0, 0, 0 };
-
-            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
-            var costumes = itemSlotState.Costumes;
-            var equipments = itemSlotState.Equipments;
-            //var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
-            //    .GetEquippedRuneSlotInfos();
-            var foods = new List<Guid>(); //change
-
 
             for (int i = 0; i < totalSimulations; i++)
             {
                 PandoraMaster.IsHackAndSlashSimulate = true;
-                var tableSheets = Game.Game.instance.TableSheets;
-                var simulator = new StageSimulator(
-                    new Cheat.DebugRandom(),
-                    States.Instance.CurrentAvatarState,
-                    foods,
-                    States.Instance.GetEquippedRuneStates(BattleType.Adventure),
-                    buffSkills,
-                    _worldId,
-                    _stageId,
-                    tableSheets.StageSheet[_stageId],
-                    tableSheets.StageWaveSheet[_stageId],
-                    States.Instance.CurrentAvatarState.worldInformation.IsStageCleared(_stageId),
-                    StageRewardExpHelper.GetExp(States.Instance.CurrentAvatarState.level, _stageId),
-                    tableSheets.GetStageSimulatorSheets(),
-                    tableSheets.EnemySkillSheet,
-                    tableSheets.CostumeStatSheet,
-                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
-                    PandoraMaster.IsHackAndSlashSimulate
-                );
+                var simulator = GetPVESimulator(_worldId, _stageId, consumables, skillId);
                 simulator.Simulate();
                 await Task.Delay(1);
 
@@ -672,8 +629,6 @@ namespace Nekoyume.PandoraBox
             preparePVE.MultipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
 
-
-
         static string IEMultipleSimulate(ArenaPlayerDigest mD, ArenaPlayerDigest eD, int iterations)
         {
             string result = "";
@@ -705,6 +660,48 @@ namespace Nekoyume.PandoraBox
                 result = $"<color=#50A931>{FinalValue}</color>%";
 
             return result;
+        }
+
+        public static StageSimulator GetPVESimulator(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
+        {
+            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
+            var equipments = itemSlotState.Equipments;
+            var costumes = itemSlotState.Costumes;
+            var runeStates = States.Instance.GetEquippedRuneStates(BattleType.Adventure);
+            var tableSheets = Game.Game.instance.TableSheets;
+            var avatarState = States.Instance.CurrentAvatarState;
+            var items = new List<Guid>();
+            items.AddRange(equipments);
+            items.AddRange(costumes);
+            avatarState.EquipItems(items);
+            List<Model.Skill.Skill> buffSkills = new List<Model.Skill.Skill>();
+            if (skillId != -1 && CurrentPandoraPlayer.IsPremium())
+            {
+                var skill = CrystalRandomSkillState.GetSkill(
+                    skillId,
+                    tableSheets.CrystalRandomBuffSheet,
+                    tableSheets.SkillSheet);
+                buffSkills.Add(skill);
+            }
+
+            return new StageSimulator(
+                    new Cheat.DebugRandom(),
+                    avatarState,
+                    consumables,
+                    runeStates,
+                    buffSkills,
+                    _worldId,
+                    _stageId,
+                    tableSheets.StageSheet[_stageId],
+                    tableSheets.StageWaveSheet[_stageId],
+                    avatarState.worldInformation.IsStageCleared(_stageId),
+                    StageRewardExpHelper.GetExp(avatarState.level, _stageId),
+                    tableSheets.GetStageSimulatorSheets(),
+                    tableSheets.EnemySkillSheet,
+                    tableSheets.CostumeStatSheet,
+                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
+                    PandoraMaster.IsHackAndSlashSimulate
+                );
         }
 
         public static async void RepeatMultiple(Action<StageType, int, bool> _repeatBattleAction
@@ -758,13 +755,17 @@ namespace Nekoyume.PandoraBox
         }
 
         public static bool SweepMoreStone(int apStoneCount, List<Guid> _costumes, List<Guid> _equipments, List<RuneSlotInfo> _runes
-            ,int worldId, int stageRowID)
+            ,int worldId, StageSheet.Row stageRow)
         {
             if (!CheckPremiumFeature())
                 return false;
 
             int extraApStoneCount = Mathf.FloorToInt(apStoneCount / 10f);
             apStoneCount -= extraApStoneCount * 10;
+
+            var (apPlayCount, apStonePlayCount)
+            = PandoraUtil.GetPlayCount(stageRow, apStoneCount, 0, States.Instance.StakingLevel);
+            var totalPlayCount = apPlayCount + apStonePlayCount;
 
             for (int i = 0; i < extraApStoneCount; i++)
             {
@@ -775,7 +776,7 @@ namespace Nekoyume.PandoraBox
                 10,
                 0,
                 worldId,
-                stageRowID);
+                stageRow.Id, totalPlayCount);
             }
             return true;
         }
