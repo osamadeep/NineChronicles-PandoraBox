@@ -294,7 +294,7 @@ namespace Nekoyume.UI
 
         public void UpdateSimulateBuff()
         {
-            var skillId = PlayerPrefs.GetInt("_PandoraBox_PVE_SelectedCrystalBuff", -1);
+            var skillId = PlayerPrefs.GetInt("_PandoraBox_PVE_SelectedCrystalBuffSkillId", -1);
             simulatorBuffIconImage.transform.parent.gameObject.SetActive(skillId != -1);
             if (skillId == -1)
             {
@@ -305,6 +305,7 @@ namespace Nekoyume.UI
                 var skillSheet = Game.Game.instance.TableSheets.SkillSheet;
                 if (skillSheet.TryGetValue(skillId, out var skillRow))
                 {
+                    
                     var skillRank = (TableData.Crystal.CrystalRandomBuffSheet.Row.BuffRank)(PlayerPrefs.GetInt("_PandoraBox_PVE_SelectedCrystalBuffRank", 1));
 
                     simulatorBuffIconImage.sprite = bonusBuffViewData.GetBonusBuffIcon(skillRow.SkillCategory);

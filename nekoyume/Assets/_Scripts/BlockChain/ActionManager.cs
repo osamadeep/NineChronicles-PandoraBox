@@ -863,38 +863,6 @@ namespace Nekoyume.BlockChain
                 .DoOnError(e => throw HandleException(action.Id, e));
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
-        {
-            var action = new DailyReward
-            {
-                avatarAddress = avatarState.address,
-            };
-
-            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
-            {
-                var blockCount = Game.Game.instance.Agent.BlockIndex -
-                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
-                LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
-                    States.Instance.CurrentAvatarState.address,
-                    blockCount);
-                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
-                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
-            }
-
-            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 40); //update avatar after 3 blocks to prevent spam
-            ProcessAction(action);
-
-            return _agent.ActionRenderer.EveryRender<DailyReward>()
-                .Timeout(ActionTimeout)
-                .Where(eval => eval.Action.Id.Equals(action.Id))
-                .First()
-                .ObserveOnMainThread()
-                .DoOnError(e => HandleException(action.Id, e));
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
         public IObservable<ActionBase.ActionEvaluation<ItemEnhancement>> ItemEnhancement(
             Equipment baseEquipment,
             Equipment materialEquipment,
@@ -1595,5 +1563,58 @@ namespace Nekoyume.BlockChain
         {
             _disposables.DisposeAllAndClear();
         }
+
+
+
+
+        //CUSTOM ACTIONS
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
+        {
+            var action = new DailyReward
+            {
+                avatarAddress = avatarState.address,
+            };
+
+            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
+            {
+                var blockCount = Game.Game.instance.Agent.BlockIndex -
+                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
+                LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
+                    States.Instance.CurrentAvatarState.address,
+                    blockCount);
+                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
+                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
+            }
+
+            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 40); //update avatar after 3 blocks to prevent spam
+            ProcessAction(action);
+
+            return _agent.ActionRenderer.EveryRender<DailyReward>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e => HandleException(action.Id, e));
+        }
+
+        public void AutoCraft(Address address,int slotIndex,int recipeId, int subRecipeId,bool payByCrystal, bool useHammerPoint)
+        {
+            PandoraMaster.SetCurrentAvatarAddressAction(address.ToString(), 0);
+            var action = new CombinationEquipment
+            {
+                avatarAddress = address,
+                slotIndex = slotIndex,
+                recipeId = recipeId,
+                subRecipeId = subRecipeId,
+                payByCrystal = payByCrystal,
+                useHammerPoint = useHammerPoint,
+            };
+            ProcessAction(action);
+        }
+
+
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

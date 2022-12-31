@@ -77,7 +77,7 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")] bool CanCraft = false;
         [SerializeField] private TextMeshProUGUI UnlockText = null;
         [SerializeField] private ConditionalCostButton maxButton;
-
+        [SerializeField] private Button copyItemIDBtn;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -180,6 +180,7 @@ namespace Nekoyume.UI
                 maxButton.OnClickSubject
                     .Subscribe(state => { StartCoroutine(MaxCombineCurrentRecipe()); })
                     .AddTo(gameObject);
+                copyItemIDBtn.onClick.AddListener(() => { CopyItemID(); });
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 button.OnClickDisabledSubject
@@ -771,6 +772,16 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void CopyItemID()
+        {
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Item ID copied to clipboard!",
+            NotificationCell.NotificationType.Information);
+            var tableSheets = TableSheets.Instance;
+            var equipmentRow = tableSheets.EquipmentItemRecipeSheet[_selectedRecipeInfo.RecipeId];
+            ClipboardHelper.CopyToClipboard(equipmentRow.ResultEquipmentId.ToString());
+
+        }
+
         public System.Collections.IEnumerator MaxCombineCurrentRecipe()
         {
             if (!CanCraft

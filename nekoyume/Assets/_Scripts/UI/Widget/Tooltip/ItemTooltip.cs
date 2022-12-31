@@ -27,6 +27,7 @@ namespace Nekoyume.UI
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private TextMeshProUGUI PandoraScoreTxt;
         [SerializeField] private TextMeshProUGUI OwnerName;
         [SerializeField] private TextMeshProUGUI CrystalValueTxt;
         public TextMeshProUGUI MarketPriceText;
@@ -34,6 +35,7 @@ namespace Nekoyume.UI
         [SerializeField] private GameObject ExtraInfo;
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
+        int PandoraScore = 0;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -267,6 +269,92 @@ namespace Nekoyume.UI
             //panel.sizeDelta = new Vector2(380, 600);
             DiscordHolder.gameObject.SetActive(false);
             //UpdatePosition(panel);
+        }
+
+        void SetStatsPercentage()
+        {
+            if (!Premium.CurrentPandoraPlayer.IsPremium())
+                return;
+            //ToDO: Not Optimize way to get the stats
+            Transform content = panel
+                .Find("ViewGroup_Item/Group/Content/ScrollArea/Scroll View/Viewport/Content/OptionArea").transform;
+            StatView statView;
+
+            PandoraScore = 0;
+
+            int level = 0;
+            switch (currentItemBase)
+            {
+                case Equipment equipment:
+                    level = equipment.level;
+                    break;
+            }
+
+            if (content.Find("StatView_01").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_01").GetComponent<StatView>();
+                int stars = 0;
+                foreach (Transform star in statView.transform.Find("KeyContainer/GameObject"))
+                {
+                    if (star.gameObject.activeInHierarchy)
+                        stars++;
+                }
+                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level,out int percent1);
+                if (stars == 1)
+                    PandoraScore += (int)(percent1 * 0.25f);
+                else if (stars == 2)
+                    PandoraScore += (int)(percent1 * 0.5f);
+            }
+
+            if (content.Find("StatView_02").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_02").GetComponent<StatView>();
+                int stars = 0;
+                foreach (Transform star in statView.transform.Find("KeyContainer/GameObject"))
+                {
+                    if (star.gameObject.activeInHierarchy)
+                        stars++;
+                }
+                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent2);
+                if (stars == 1)
+                    PandoraScore += (int)(percent2 * 0.25f);
+                else if (stars == 2)
+                    PandoraScore += (int)(percent2 * 0.5f);
+            }
+
+            if (content.Find("StatView_03").gameObject.activeInHierarchy)
+            {
+                statView = content.Find("StatView_03").GetComponent<StatView>();
+                int stars = 0;
+                foreach (Transform star in statView.transform.Find("KeyContainer/GameObject"))
+                {
+                    if (star.gameObject.activeInHierarchy)
+                        stars++;
+                }
+                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent3);
+                if (stars == 1)
+                    PandoraScore += (int)(percent3 * 0.25f);
+                else if (stars == 2)
+                    PandoraScore += (int)(percent3 * 0.5f);
+            }
+
+            if (content.Find("SkillView").gameObject.activeInHierarchy)
+            {
+                var skillView = content.Find("SkillView").GetComponent<UI.Module.SkillView>();
+                skillView.powerText.text += Premium.GetStatePercentage(currentItemBase.Id, null, 1, level, out int percent4,skillView);
+                if (percent4 == 0)
+                    PandoraScore += 25;
+                else
+                    PandoraScore += (int)(percent4 * 0.25f);
+            }
+            if (PandoraScore >= 80)
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{PandoraScore}<size=80%>% Excellent</color></size>";
+            else if (PandoraScore >= 60 && PandoraScore < 80)
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{PandoraScore}<size=80%>% Good</color></size>";
+            else if (PandoraScore >= 40 && PandoraScore < 60)
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=#FF4900>{PandoraScore}<size=80%>% Fair</color></size>";
+            else
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=red>{PandoraScore}<size=80%>% Low</color></size>";
         }
 
         string GetItemMainStats()
@@ -516,6 +604,7 @@ namespace Nekoyume.UI
             StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
 
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            SetStatsPercentage();
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
@@ -562,6 +651,7 @@ namespace Nekoyume.UI
             base.Show();
             StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            SetStatsPercentage();
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
@@ -603,6 +693,7 @@ namespace Nekoyume.UI
             currentItemBase = item.ItemBase;
             var order = Util.GetOrder(item.OrderDigest.OrderId);
             OwnerName.gameObject.SetActive(false);
+            
 #if UNITY_EDITOR
             Debug.LogError(item.OrderDigest.OrderId);
 #endif
@@ -613,6 +704,7 @@ namespace Nekoyume.UI
             base.Show();
             StartCoroutine(CoUpdate(sell.gameObject));
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            SetStatsPercentage();
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
@@ -650,13 +742,14 @@ namespace Nekoyume.UI
             OwnerName.gameObject.SetActive(false);
             currentItemBase = item.ItemBase;
             SetItemOwner(item.OrderDigest.OrderId);
+            
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             scrollbar.value = 1f;
             base.Show();
             StartCoroutine(CoUpdate(buy.gameObject));
-
             //|||||||||||||| PANDORA CODE |||||||||||||||||||
+            SetStatsPercentage();
             if (PandoraMaster.MarketPriceHelper)
                 EnableShopTool();
             else
@@ -698,6 +791,7 @@ namespace Nekoyume.UI
             scrollbar.value = 1f;
             base.Show();
             StartCoroutine(CoUpdate(submitButtonContainer.gameObject));
+            SetStatsPercentage();
         }
 
         public static ItemTooltip Find(ItemType type)

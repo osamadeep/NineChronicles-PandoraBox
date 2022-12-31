@@ -22,8 +22,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100350";
-        public static string VersionId = "010078";
+        public static string OriginalVersionId = "v100352";
+        public static string VersionId = "010079";
 
 
         //Pandora Database
@@ -141,7 +141,8 @@ namespace Nekoyume.PandoraBox
         public static void SetCurrentAvatarAddressAction(string address,int seconds)
         {
             CurrentAvatarAddressAction = address;
-            //Prime.UpdateAvatar(seconds).Forget();
+            //if (seconds != 0)
+            //    Prime.UpdateAvatar(seconds).Forget();
         }
     }
 

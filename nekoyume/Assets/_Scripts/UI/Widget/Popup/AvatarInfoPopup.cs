@@ -11,6 +11,7 @@ using ToggleGroup = Nekoyume.UI.Module.ToggleGroup;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
     using UniRx;
 
     public class AvatarInfoPopup : XTweenPopupWidget
@@ -18,7 +19,9 @@ namespace Nekoyume.UI
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
+        [Header("PANDORA CUSTOM FIELDS")]
+        public TextMeshProUGUI PriceText;
+        [SerializeField] private GameObject premiumVFX;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -141,6 +144,10 @@ namespace Nekoyume.UI
             information.UpdateInventory(BattleType.Adventure);
             OnClickPresetTab(adventureButton, BattleType.Adventure, _onToggleCallback[BattleType.Adventure]);
             HelpTooltip.HelpMe(100013, true);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            premiumVFX.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public override void Close(bool ignoreCloseAnimation = false)

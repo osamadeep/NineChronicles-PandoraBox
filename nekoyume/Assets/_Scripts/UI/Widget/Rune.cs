@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +28,15 @@ namespace Nekoyume.UI
     using UniRx;
     public class Rune : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button multiButton;
+        [SerializeField] private TextMeshProUGUI multiText;
+        [SerializeField] private Slider multiSlider;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
         [SerializeField]
         private RuneOptionView currentOptions;
 
@@ -144,6 +153,9 @@ namespace Nekoyume.UI
 
             combineButton.onClick.AddListener(Enhancement);
             levelUpButton.onClick.AddListener(Enhancement);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            multiButton.onClick.AddListener(MultiEnhancement);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             disableCombineButton.onClick.AddListener(() =>
             {
                 NotificationSystem.Push(MailType.System,
@@ -327,6 +339,25 @@ namespace Nekoyume.UI
             LoadingHelper.RuneEnhancement.Value = true;
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void MultiEnhancement()
+        {
+            var runeId = _selectedRuneItem.Row.Id;
+            Animator.Play(HashToMaterialUse);
+            for (int i = 0; i < multiSlider.value; i++)
+                ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
+
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {multiSlider.value} times Upgrade sent!", NotificationCell.NotificationType.Information);
+            LoadingHelper.RuneEnhancement.Value = true;
+        }
+
+        public void ChangeMultiSlider()
+        {
+            multiText.text = "Up x" + multiSlider.value.ToString();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
         private void Set(RuneItem item)
         {
             if (item is null)
@@ -405,11 +436,17 @@ namespace Nekoyume.UI
             {
                 combineButton.gameObject.SetActive(false);
                 levelUpButton.gameObject.SetActive(false);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                multiButton.gameObject.SetActive(false);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else
             {
                 combineButton.gameObject.SetActive(item.Level == 0);
                 levelUpButton.gameObject.SetActive(item.Level != 0);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                multiButton.gameObject.SetActive(item.Level != 0);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
         }
 

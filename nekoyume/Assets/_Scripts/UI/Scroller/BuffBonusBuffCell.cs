@@ -48,6 +48,7 @@ namespace Nekoyume.UI.Scroller
                 return;
             PandoraUtil.ShowSystemNotification(1002, NotificationCell.NotificationType.Information);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", itemDataSimulation.Id);
+            PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuffSkillId", itemDataSimulation.SkillId);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuffRank", (int)itemDataSimulation.Rank);
             Widget.Find<BattlePreparation>().UpdateSimulateBuff();
         }

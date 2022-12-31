@@ -21,10 +21,12 @@ using System;
 namespace Nekoyume.PandoraBox
 {
     using Cysharp.Threading.Tasks;
+    using mixpanel;
     using Nekoyume.Action;
     using Nekoyume.Arena;
     using Nekoyume.Battle;
     using Nekoyume.EnumType;
+    using Nekoyume.Extensions;
     using Nekoyume.Game.Controller;
     using Nekoyume.Helper;
     using Nekoyume.Model;
@@ -32,10 +34,13 @@ namespace Nekoyume.PandoraBox
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Rune;
     using Nekoyume.Model.Skill;
+    using Nekoyume.Model.Stat;
     using Nekoyume.TableData;
+    using Nekoyume.UI.Model;
     using Nekoyume.UI.Module;
     using PlayFab;
     using PlayFab.ClientModels;
+    using System.Globalization;
     using System.Threading.Tasks;
     using UniRx;
     using UnityEngine.Networking;
@@ -1029,6 +1034,113 @@ namespace Nekoyume.PandoraBox
         {
             await Task.Delay(System.TimeSpan.FromSeconds(time));
             GetDatabase(States.Instance.CurrentAvatarState.agentAddress);
+        }
+
+        public static string GetStatePercentage(int itemID, StatView statView,int starCount,int level, out int percent100,UI.Module.SkillView skillView = null)
+        {
+            percent100 = 0;
+            var tableSheets = Game.TableSheets.Instance;
+            var itemSheet = tableSheets.EquipmentItemRecipeSheet;
+            var itemRow = itemSheet.First(x=> x.Value.ResultEquipmentId == itemID).Value;
+
+            float levelStatsMultiply = 1;
+            for (int i = 0; i <= level; i++)
+            {
+                if (i == 4 || i==7)
+                    levelStatsMultiply *= 1.3f;
+                else if (i > 7)
+                    levelStatsMultiply *= 1.1f;
+            }
+
+            if (itemRow != null)
+            {
+                var itemSubSheet = tableSheets.EquipmentItemSubRecipeSheetV2;
+                var optionSheet = tableSheets.EquipmentItemOptionSheet;
+                var skillSheet = tableSheets.SkillSheet;
+
+                var itemSub = itemSubSheet.First(x => x.Value.Id == itemRow.SubRecipeIds[1]).Value;
+                var optionInfos = itemSub.Options;
+
+                var options = optionInfos
+                .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                .ToList();
+
+                var statOptions = optionInfos
+                    .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                    .Where(x => x.option.StatType != StatType.NONE)
+                    .ToList();
+
+                var skillOptions = optionInfos
+                    .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                    .Except(statOptions)
+                    .ToList();
+
+                float stateValue = 0;
+                float statMin = 0;
+                float statMax = 0;
+
+
+                foreach (var (ratio, option) in options)
+                {
+                    if (skillView is null)
+                    {
+                        stateValue = float.Parse(statView.valueText.text);
+                        var xx = Enum.TryParse(statView.statTypeText.text, out StatType statType);
+                        if (option.StatType == statType)
+                        {
+                            float newMin = statType == StatType.SPD || statType == StatType.DRR ? (option.StatMin / 100f) : option.StatMin;
+                            if (newMin > statMin)
+                                statMin = newMin;
+
+                            float newMax = statType == StatType.SPD || statType == StatType.DRR ? (option.StatMax / 100f) : option.StatMax;
+                            if (starCount == 1)
+                            {
+                                if (statMax == 0)
+                                    statMax = newMax;
+                            }
+                            else
+                            {
+                                statMax += statType == StatType.SPD || statType == StatType.DRR ? (option.StatMax / 100f) : option.StatMax;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            stateValue = float.Parse(skillView.powerText.text.Substring(7));
+                            if (skillSheet.TryGetValue(option.SkillId, out var skillRow))
+                            {
+                                statMin = option.SkillDamageMin;
+                                statMax = option.SkillDamageMax;
+                            }
+                        }
+                        catch
+                        {
+                            return "";
+                        }
+
+                    }
+                }
+
+                //apply item level
+                statMin *= levelStatsMultiply;
+                statMax *= levelStatsMultiply;
+
+                int percent = (int)((stateValue - statMin) / (statMax - statMin) * 100f);
+                percent100 = percent;
+                string precentStr = "";
+                if (percent >= 75)
+                    precentStr = $"<color=green>{percent}</color>";
+                else if (percent > 50 && percent < 75)
+                    precentStr = $"<color=#FF4900>{percent}</color>";
+                else
+                    precentStr = $"<color=red>{percent}</color>";
+                return $" <size=50%><color=#A68F7E>[{(int)statMin}-{(int)statMax}]</color></size> {precentStr}%";
+            }
+            else
+                return "";
+
         }
     }
 }
