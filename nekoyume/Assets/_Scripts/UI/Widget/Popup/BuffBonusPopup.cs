@@ -90,7 +90,8 @@ namespace Nekoyume.UI
         void ResetSimulationBuff()
         {
             PandoraUtil.ShowSystemNotification(1001, NotificationCell.NotificationType.Information);
-            PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", -1);
+            PlayerPrefs.DeleteKey("_PandoraBox_PVE_SelectedCrystalBuff");
+            PlayerPrefs.DeleteKey("_PandoraBox_PVE_SelectedCrystalBuffSkillId");
             Widget.Find<BattlePreparation>().UpdateSimulateBuff();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
