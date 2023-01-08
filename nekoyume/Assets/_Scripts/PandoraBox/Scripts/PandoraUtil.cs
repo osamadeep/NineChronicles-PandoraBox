@@ -143,6 +143,9 @@ namespace Nekoyume.PandoraBox
                 case 1002:
                     messageText = "Custom Crystal Buff <color=green>Selected</color>!";
                     break;
+                case 600:
+                    messageText = "Staking Rewards <color=green>Collected</color>!";
+                    break;
             }
             return messageText;
         }

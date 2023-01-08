@@ -74,8 +74,12 @@ namespace Nekoyume.BlockChain
         private const int SwarmLinger = 1 * 1000;
         private const string QueuedActionsFileName = "queued_actions.dat";
 
-        private readonly ConcurrentQueue<NCAction> _queuedActions =
-            new ConcurrentQueue<NCAction>();
+        //private readonly ConcurrentQueue<NCAction> _queuedActions =
+        //    new ConcurrentQueue<NCAction>();
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private readonly ConcurrentQueue<AvatarAction> _queuedActions =
+            new ConcurrentQueue<AvatarAction>();
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private readonly TransactionMap _transactions = new TransactionMap(20);
 
@@ -138,13 +142,6 @@ namespace Nekoyume.BlockChain
                 Debug.LogException(e);
             }
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public int GetQueueCount()
-        {
-            return _queuedActions.Count;
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public IEnumerator Initialize(
             CommandLineOptions options,
@@ -285,10 +282,14 @@ namespace Nekoyume.BlockChain
             disposed = true;
         }
 
-        public void EnqueueAction(ActionBase actionBase)
+        //public void EnqueueAction(ActionBase actionBase)
+        public void EnqueueAction(Address avatarAddress, ActionBase actionBase) //|||||||||||||| PANDORA CODE |||||||||||||||||||
         {
             Debug.LogFormat("Enqueue GameAction: {0}", actionBase);
-            _queuedActions.Enqueue(actionBase);
+            //_queuedActions.Enqueue(actionBase);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _queuedActions.Enqueue( new AvatarAction() {Action = actionBase,AvatarAddress = avatarAddress });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (actionBase is GameAction gameAction)
             {
@@ -885,9 +886,12 @@ namespace Nekoyume.BlockChain
                 var actions = new List<NCAction>();
 
                 Debug.LogFormat("Try Dequeue Actions. Total Count: {0}", _queuedActions.Count);
-                while (_queuedActions.TryDequeue(out NCAction action))
+                //while (_queuedActions.TryDequeue(out NCAction action))
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                while (_queuedActions.TryDequeue(out AvatarAction action))
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 {
-                    actions.Add(action);
+                    actions.Add(action.Action);
                     Debug.LogFormat("Remain Queued Actions Count: {0}", _queuedActions.Count);
                 }
 
@@ -982,7 +986,7 @@ namespace Nekoyume.BlockChain
                     var actionsList = ByteSerializer.Deserialize<List<GameAction>>(actionsListBytes);
                     foreach (var action in actionsList)
                     {
-                        EnqueueAction(action);
+                        EnqueueAction(States.Instance.AgentState.avatarAddresses.First().Value,action);
                     }
 
                     Debug.Log($"Load queued actions: {_queuedActions.Count}");
@@ -1012,7 +1016,7 @@ namespace Nekoyume.BlockChain
 
                 Debug.LogWarning($"Save QueuedActions : {_queuedActions.Count}");
                 while (_queuedActions.TryDequeue(out var action))
-                    actionsList.Add((GameAction)action.InnerAction);
+                    actionsList.Add((GameAction)((NCAction)action.Action).InnerAction);
 
                 File.WriteAllBytes(path, ByteSerializer.Serialize(actionsList));
             }
@@ -1102,9 +1106,13 @@ namespace Nekoyume.BlockChain
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public void EnqueueActionBase(ActionBase action)
+        public void EnqueueActionBase(Address avatarAddress, ActionBase action)
         {
-            _queuedActions.Enqueue(action);
+            _queuedActions.Enqueue(new AvatarAction() { Action = action, AvatarAddress = avatarAddress });
+        }
+        public int GetQueueCount()
+        {
+            return _queuedActions.Count;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

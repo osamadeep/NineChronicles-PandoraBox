@@ -207,7 +207,7 @@ namespace Nekoyume.UI
             Analyzer.Instance.Track("Unity/Click Stage", new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             });
 
             repeatToggle.isOn = false;

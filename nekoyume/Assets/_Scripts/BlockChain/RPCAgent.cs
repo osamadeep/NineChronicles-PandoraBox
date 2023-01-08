@@ -45,7 +45,11 @@ namespace Nekoyume.BlockChain
     {
         private const int RpcConnectionRetryCount = 20; //10
         private const float TxProcessInterval = 1.0f;
-        private readonly ConcurrentQueue<NCAction> _queuedActions = new ConcurrentQueue<NCAction>();
+        //private readonly ConcurrentQueue<NCAction> _queuedActions = new ConcurrentQueue<NCAction>();
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private readonly ConcurrentQueue<AvatarAction> _queuedActions =
+            new ConcurrentQueue<AvatarAction>();
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private readonly TransactionMap _transactions = new TransactionMap(20);
 
@@ -244,10 +248,18 @@ namespace Nekoyume.BlockChain
         {
         }
 
-        public void EnqueueAction(ActionBase actionBase)
+        //public void EnqueueAction(ActionBase actionBase)
+        //{
+        //    _queuedActions.Enqueue(actionBase);
+        //}
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void EnqueueAction(Address avatarAddress, ActionBase actionBase)
         {
-            _queuedActions.Enqueue(actionBase);
+            _queuedActions.Enqueue(new AvatarAction() { Action = actionBase, AvatarAddress = avatarAddress });
         }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         #region Mono
 
@@ -258,7 +270,7 @@ namespace Nekoyume.BlockChain
                 var value = new Dictionary<string, Value>();
                 if (States.Instance.AgentState is not null)
                 {
-                    value["AgentAddress"] = States.Instance.AgentState.address.ToString();
+                    value["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString();
                 }
 
                 if (States.Instance.AgentState is not null)
@@ -452,14 +464,15 @@ namespace Nekoyume.BlockChain
             {
                 yield return new WaitForSeconds(TxProcessInterval);
 
-                if (!_queuedActions.TryDequeue(out NCAction action))
+                //if (!_queuedActions.TryDequeue(out NCAction action))
+                if (!_queuedActions.TryDequeue(out AvatarAction action)) //|||||||||||||| PANDORA CODE |||||||||||||||||||
                 {
                     continue;
                 }
 
                 Task task = Task.Run(async () =>
                 {
-                    await MakeTransaction(new List<NCAction> { action });
+                    await MakeTransaction(action.AvatarAddress, new List<NCAction> { action.Action }); //|||||||||||||| PANDORA CODE |||||||||||||||||||
                 });
                 yield return new WaitUntil(() => task.IsCompleted);
 
@@ -477,7 +490,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async Task MakeTransaction(List<NCAction> actions)
+        private async Task MakeTransaction(Address avatarAddress, List<NCAction> actions) //|||||||||||||| PANDORA CODE |||||||||||||||||||
         {
             var nonce = await GetNonceAsync();
             var tx = NCTx.Create(
@@ -500,12 +513,6 @@ namespace Nekoyume.BlockChain
                 {
                     //this not gameAction, then we assume this is transfer to pandora
                     PandoraBox.PandoraMaster.CrystalTransferTx = tx.Id.ToString();
-
-                    //if (gameAction.GetActionTypeAttribute().TypeIdentifier == "transfer_asset3")
-                    //{
-                    //    //there is no transfer_asset3 in game yet, se we assume this is transfer to pandora
-
-                    //}
                 }
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             }

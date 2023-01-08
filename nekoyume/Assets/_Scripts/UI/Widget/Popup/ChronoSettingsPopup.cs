@@ -25,13 +25,22 @@ namespace Nekoyume.UI
 {
     public class ChronoSettingsPopup : PopupWidget
     {
+        [Header("GENERAL")]
         [SerializeField] List<Image> settingsTabs;
         [SerializeField] List<GameObject> settingsTabsArea;
-
         [SerializeField] TextMeshProUGUI AvatarNameText;
 
-        [Header("Chrono Stage Settings")]
-        //STAGE
+        AvatarState currentAvatarState;
+        string addressKey;
+        int index;
+
+        [Space(5)]
+
+        [Header("STAGE")]
+        [SerializeField] GameObject stageModule;
+        [SerializeField] Image stageOnImage;
+        [SerializeField] Image stageOffImage;
+
         [SerializeField] Image stageNotifyOnImage;
         [SerializeField] Image stageNotifyOffImage;
 
@@ -43,9 +52,20 @@ namespace Nekoyume.UI
 
         [SerializeField] TMP_InputField sweepStageInput;
 
-        [Space(50)]
-        [Header("Chrono Craft Settings")]
-        //CRAFT
+        bool IsStage;
+        bool IsStageNotify;
+        bool IsAutoCollect;
+        bool IsAutoSpend;
+        int sweepStage;
+        [Space(5)]
+
+
+
+        [Header("CRAFT")]
+        [SerializeField] GameObject craftModule;
+        [SerializeField] Image craftOnImage;
+        [SerializeField] Image craftOffImage;
+
         [SerializeField] Image craftNotifyOnImage;
         [SerializeField] Image craftNotifyOffImage;
 
@@ -61,23 +81,32 @@ namespace Nekoyume.UI
         [SerializeField] Image BasicCraftOnImage;
         [SerializeField] Image BasicCraftOffImage;
 
-
-        private AvatarState currentAvatarState;
-
-        //settings Satge
-        string addressKey;
-        int index;
-        bool IsStageNotify;
-        bool IsAutoCollect;
-        bool IsAutoSpend;
-        int sweepStage;
-
-        //Setting Craft
+        bool IsCraft;
         bool IsCraftNotify;
         bool IsAutoCraft;
         bool IsCraftFillCrystal;
         bool IsBasicCraft;
         int craftID;
+        [Space(5)]
+
+
+
+        [Header("EVENT")]
+        [SerializeField] GameObject eventModule;
+        [SerializeField] Image eventOnImage;
+        [SerializeField] Image eventOffImage;
+
+        [SerializeField] Image eventNotifyOnImage;
+        [SerializeField] Image eventNotifyOffImage;
+
+        [SerializeField] Image eventFightOnImage;
+        [SerializeField] Image eventFightOffImage;
+
+        [SerializeField] TMP_InputField eventLevelInput;
+        bool IsEvent;
+        bool IsEventNotify;
+        bool IsAutoEvent;
+        int eventLevel;
 
         protected override void Awake()
         {
@@ -97,20 +126,28 @@ namespace Nekoyume.UI
         {
             PlayerPrefs.SetInt(addressKey, index);
             //STAGE
+            PlayerPrefs.SetInt(addressKey + "_IsStage", System.Convert.ToInt32(IsStage));
             PlayerPrefs.SetInt(addressKey + "_IsStageNotify", System.Convert.ToInt32(IsStageNotify));
             PlayerPrefs.SetInt(addressKey + "_IsAutoCollect", System.Convert.ToInt32(IsAutoCollect));
             PlayerPrefs.SetInt(addressKey + "_IsAutoSpend", System.Convert.ToInt32(IsAutoSpend));
             PlayerPrefs.SetInt(addressKey + "_SweepStage", sweepStage);
 
             //CRAFT
+            PlayerPrefs.SetInt(addressKey + "_IsCraft", System.Convert.ToInt32(IsCraft));
             PlayerPrefs.SetInt(addressKey + "_IsCraftNotify", System.Convert.ToInt32(IsCraftNotify));
             PlayerPrefs.SetInt(addressKey + "_IsAutoCraft", System.Convert.ToInt32(IsAutoCraft));
             PlayerPrefs.SetInt(addressKey + "_IsCraftFillCrystal", System.Convert.ToInt32(IsCraftFillCrystal));
             PlayerPrefs.SetInt(addressKey + "_IsBasicCraft", System.Convert.ToInt32(IsBasicCraft));
             PlayerPrefs.SetInt(addressKey + "_CraftID", craftID);
 
+            //EVENT
+            PlayerPrefs.SetInt(addressKey + "_IsEvent", System.Convert.ToInt32(IsEvent));
+            PlayerPrefs.SetInt(addressKey + "_IsEventNotify", System.Convert.ToInt32(IsEventNotify));
+            PlayerPrefs.SetInt(addressKey + "_IsAutoEvent", System.Convert.ToInt32(IsAutoEvent));
+            PlayerPrefs.SetInt(addressKey + "_EventLevel", eventLevel);
+
             AudioController.PlayClick();
-            Widget.Find<ChronoSlotsPopup>().slots[index].IsPrefsLoded = false;
+            Widget.Find<ChronoSlotsPopup>().slots[index].CheckNowSlot();
             Close();
         }
 
@@ -123,32 +160,48 @@ namespace Nekoyume.UI
             if (PlayerPrefs.HasKey(addressKey))
             {
                 //STAGE
+                IsStage = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStage", 1));
                 IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
                 IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
                 IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
                 sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
 
                 //CRAFT
+                IsCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraft", 0));
                 IsCraftNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftNotify", 1));
                 IsAutoCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCraft", 0));
                 IsCraftFillCrystal = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftFillCrystal", 0));
                 IsBasicCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBasicCraft", 1));
                 craftID = PlayerPrefs.GetInt(addressKey + "_CraftID", 0);
+
+                //EVENT
+                IsEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEvent", 0));
+                IsEventNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEventNotify", 1));
+                IsAutoEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoEvent", 0));
+                eventLevel = PlayerPrefs.GetInt(addressKey + "_EventLevel", 0);
             }
             else
             {
                 //register STAGE variables
+                IsStage = true;
                 IsStageNotify = true;
                 IsAutoCollect = true;
                 IsAutoSpend = false;
                 sweepStage = 0;
 
                 //register CRAFT variables
+                IsCraft = false;
                 IsCraftNotify = true;
                 IsAutoCraft = false;
                 IsCraftFillCrystal = false;
                 IsBasicCraft = true;
                 craftID =0;
+
+                //register EVENT variables
+                IsEvent = false;
+                IsEventNotify = true;
+                IsAutoEvent = false;
+                eventLevel = 20;
             }
 
             //reflect on UI
@@ -156,20 +209,85 @@ namespace Nekoyume.UI
             SelectTab(0);
 
             //STAGE
+            LoadStage();
             LoadAutoCollect();
             LoadAutoSpend();
             LoadSweepStage();
             LoadStageNotify();
 
             //CRAFT
+            LoadCraft();
             LoadCraftNotify();
             LoadAutoCraft();
             LoadCraftFillCrystal();
             LoadCraftID();
             LoadBasicCraft();
 
+            //EVENT
+            LoadEvent();
+            LoadEventAutoFight();
+            LoadEventNotify();
+            LoadEventLevel();
 
             base.Show();
+        }
+
+        void LoadEvent()
+        {
+            eventOnImage.color = IsEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventOffImage.color = !IsEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventModule.SetActive(IsEvent);
+        }
+
+        public void ChangeEvent(bool value)
+        {
+            IsEvent = value;
+            LoadEvent();
+        }
+
+        void LoadEventAutoFight()
+        {
+            eventFightOnImage.color = IsAutoEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventFightOffImage.color = !IsAutoEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeEventAutoFight(bool value)
+        {
+            if (value && !Premium.CheckPremiumFeature())
+                return;
+            IsAutoEvent = value;
+            LoadEventAutoFight();
+        }
+
+        void LoadEventNotify()
+        {
+            eventNotifyOnImage.color = IsEventNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventNotifyOffImage.color = !IsEventNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeEventNotify(bool value)
+        {
+            IsEventNotify = value;
+            LoadEventNotify();
+        }
+
+        void LoadEventLevel()
+        {
+            eventLevelInput.text = eventLevel.ToString();
+        }
+
+        public void ChangeEventLevel()
+        {
+            if (string.IsNullOrEmpty(eventLevelInput.text))
+                return;
+
+            int newLevel = int.Parse(eventLevelInput.text);
+            if (newLevel < 0 || newLevel > 20)
+            {
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Event Stage Not Correct!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+            eventLevel = newLevel;
         }
 
         void LoadCraftID()
@@ -232,6 +350,19 @@ namespace Nekoyume.UI
             LoadAutoCraft();
         }
 
+        void LoadStage()
+        {
+            stageOnImage.color = IsStage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            stageOffImage.color = !IsStage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            stageModule.SetActive(IsStage);
+        }
+
+        public void ChangeStage(bool value)
+        {
+            IsStage = value;
+            LoadStage();
+        }
+
         void LoadStageNotify()
         {
             stageNotifyOnImage.color = IsStageNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -242,6 +373,19 @@ namespace Nekoyume.UI
         {
             IsStageNotify = value;
             LoadStageNotify();
+        }
+
+        void LoadCraft()
+        {
+            craftOnImage.color = IsCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            craftOffImage.color = !IsCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            craftModule.SetActive(IsCraft);
+        }
+
+        public void ChangeCraft(bool value)
+        {
+            IsCraft = value;
+            LoadCraft();
         }
 
         void LoadCraftNotify()

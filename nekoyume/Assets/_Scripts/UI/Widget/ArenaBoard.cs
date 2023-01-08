@@ -199,7 +199,7 @@ namespace Nekoyume.UI
             RefreshObj.SetActive(false);
         }
 
-        System.Collections.IEnumerator RefreshCooldown()
+        public System.Collections.IEnumerator RefreshCooldown()
         {
             RefreshBtn.interactable = false;
             int cooldown = 25;
@@ -248,13 +248,14 @@ namespace Nekoyume.UI
 
 
         //avoid loading screen
-        public void ShowAsyncPandora(bool ignoreShowAnimation = false)
+        public void ShowPandora(bool ignoreShowAnimation = false)
         {
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             SetLastUpdate();
-            Show(
-                RxProps.ArenaParticipantsOrderedWithScore.Value,
-                ignoreShowAnimation);
+            Show(RxProps.ArenaParticipantsOrderedWithScore.Value,ignoreShowAnimation);
+
+            RefreshList().Forget();
+            StartCoroutine(RefreshCooldown());
         }
 
         public void ExpectedTicketsToReach()
@@ -431,7 +432,7 @@ namespace Nekoyume.UI
                         ? _grandFinaleParticipants[index].AvatarState
                         : _boundedData[index].AvatarState;
 
-                    Find<FriendInfoPopupPandora>().Show(avatarState, true);
+                    Find<FriendInfoPopupPandora>().ShowAsync(avatarState, BattleType.Arena,true);
                     //Find<FriendInfoPopup>().ShowAsync(avatarState, BattleType.Arena).Forget();
                 })
                 .AddTo(gameObject);

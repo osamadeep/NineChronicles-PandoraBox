@@ -101,7 +101,7 @@ namespace Nekoyume.BlockChain
                             ["ActionType"] = actionType.TypeIdentifier,
                             ["Elapsed"] = elapsed,
                             ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                            ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                            ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                         });
                     }
                 }
@@ -508,7 +508,7 @@ namespace Nekoyume.BlockChain
                 avatarState.address,
                 avatarState.questList.completedQuestIds);
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = agentAddress.Derive(
                 string.Format(
                     CultureInfo.InvariantCulture,
@@ -598,7 +598,7 @@ namespace Nekoyume.BlockChain
                                     ["GainedCrystal"] = (long)enhancementResultModel.CRYSTAL.MajorUnit,
                                     ["BurntNCG"] = (long)enhancementResultModel.gold,
                                     ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                                    ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                                    ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                                 });
                                 formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE_FAIL";
                                 break;
@@ -910,7 +910,7 @@ namespace Nekoyume.BlockChain
                             ["GainedCrystal"] = (long)result.CRYSTAL.MajorUnit,
                             ["BurntNCG"] = (long)result.gold,
                             ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                            ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                            ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                         });
                         formatKey = "NOTIFICATION_ITEM_ENHANCEMENT_COMPLETE_FAIL";
                         break;
@@ -1050,7 +1050,7 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress,
                     out var avatarState, out _))
@@ -1302,7 +1302,7 @@ namespace Nekoyume.BlockChain
                         ["RandomSkillId"] = eval.Action.StageBuffId,
                         ["IsCleared"] = simulator.Log.IsClear,
                         ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                        ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                        ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                     });
                 }
 
@@ -1553,9 +1553,9 @@ namespace Nekoyume.BlockChain
                 {
                     ActionRenderHandler.Instance.Pending = false;
                     OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Event Fights " +
-                    "<color=green><b>Successfully</b></color> committed on the blockchain!"
-                    , NotificationCell.NotificationType.Information);
+                    "<color=green>Pandora Box</color>: Event Fights " + "<color=red><b>Failed</b></color>!",
+                    NotificationCell.NotificationType.Information);
+                    PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
                 }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -1588,6 +1588,10 @@ namespace Nekoyume.BlockChain
                     {
                         var task = UniTask.Run(() =>
                         {
+                            //|||||||||||||| PANDORA START CODE ||||||||||||||||||| 
+                            if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.Event)
+                                PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
+                            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                             UpdateCurrentAvatarStateAsync(eval).Forget();
                             RxProps.EventDungeonInfo.UpdateAsync().Forget();
                             _disposableForBattleEnd = null;
@@ -1648,8 +1652,8 @@ namespace Nekoyume.BlockChain
                 Widget.Find<BattleResultPopup>().NextStage(log);
             }
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            else if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.Event)
+            //|||||||||||||| PANDORA START CODE ||||||||||||||||||| 
+            else if (PandoraMaster.CurrentAction == PandoraUtil.ActionType.Event) //in case he is doing multiple fights
             {
                 UpdateCurrentAvatarStateAsync(eval).Forget();
                 RxProps.EventDungeonInfo.UpdateAsync().Forget();
@@ -1798,7 +1802,7 @@ namespace Nekoyume.BlockChain
 
             var senderAddress = eval.Action.Sender;
             var recipientAddress = eval.Action.Recipient;
-            var currentAgentAddress = States.Instance.AgentState.address;
+            var currentAgentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var playToEarnRewardAddress = new Address("d595f7e85e1757d6558e9e448fa9af77ab28be4c");
 
 
@@ -1934,7 +1938,7 @@ namespace Nekoyume.BlockChain
             var cost = CrystalCalculator.CalculateRecipeUnlockCost(recipeIds, sheet);
             await UniTask.WhenAll(
                 LocalLayerModifier.ModifyAgentCrystalAsync(
-                    States.Instance.AgentState.address,
+                    States.Instance.CurrentAvatarState.agentAddress,
                     cost.MajorUnit),
                 UpdateCurrentAvatarStateAsync(eval),
                 UpdateAgentStateAsync(eval));
@@ -2319,13 +2323,17 @@ namespace Nekoyume.BlockChain
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (Widget.Find<ArenaBoard>().IsActive())
+            {
+                Widget.Find<ArenaBoard>().RefreshList().Forget();
+                Widget.Find<ArenaBoard>().StartCoroutine(Widget.Find<ArenaBoard>().RefreshCooldown());
+            }
             if (Premium.ArenaBattleInProgress)
             {
                 if (PandoraMaster.Instance.Settings.ArenaPush)
                 {
                     //no need to do anything except updating the agent
                     Premium.ArenaBattleInProgress = false;
-                    Widget.Find<ArenaBoard>().RefreshList().Forget();
                     UpdateAgentStateAsync(eval).Forget();
                     UpdateCurrentAvatarStateAsync().Forget();
                 }

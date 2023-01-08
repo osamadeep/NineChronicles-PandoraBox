@@ -19,6 +19,7 @@ using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Rune;
 using Nekoyume.UI;
+using Nekoyume.PandoraBox;
 
 namespace Nekoyume.State
 {
@@ -458,12 +459,6 @@ namespace Nekoyume.State
             //    throw new Exception(
             //        $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (AgentState is null || (!AgentState.avatarAddresses.ContainsValue(state.address) && PandoraBox.PandoraMaster.InspectedAddress == ""))
-                throw new Exception(
-                    $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             state = LocalLayer.Instance.Modify(state);
 
             if (_avatarStates.ContainsKey(index))
@@ -521,15 +516,6 @@ namespace Nekoyume.State
 
             CurrentAvatarKey = index;
             var avatarState = _avatarStates[CurrentAvatarKey];
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (PandoraBox.PandoraMaster.InspectedAddress != "")
-            {
-                var (exist, state) = await States.TryGetAvatarStateAsync(
-                    new Address(PandoraBox.PandoraMaster.InspectedAddress.Substring(2)));
-                Debug.LogError(PandoraBox.PandoraMaster.InspectedAddress.Substring(2));
-                avatarState = state;
-            }
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             LocalLayer.Instance.InitializeCurrentAvatarState(avatarState);
             UpdateCurrentAvatarState(avatarState, initializeReactiveState);
             var agent = Game.Game.instance.Agent;

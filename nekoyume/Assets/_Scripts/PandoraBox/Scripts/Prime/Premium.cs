@@ -29,6 +29,7 @@ namespace Nekoyume.PandoraBox
     using Nekoyume.Extensions;
     using Nekoyume.Game.Controller;
     using Nekoyume.Helper;
+    using Nekoyume.L10n;
     using Nekoyume.Model;
     using Nekoyume.Model.BattleStatus;
     using Nekoyume.Model.EnumType;
@@ -44,7 +45,9 @@ namespace Nekoyume.PandoraBox
     using System.Threading.Tasks;
     using UniRx;
     using UnityEngine.Networking;
+    using static Nekoyume.Model.WorldInformation;
     using static Nekoyume.TableData.ArenaSheet;
+    using static Nekoyume.UI.BattlePreparation;
     using static Nekoyume.UI.CombinationSlotPopup;
 
     public class Premium
@@ -131,6 +134,14 @@ namespace Nekoyume.PandoraBox
             fail =>{ PandoraUtil.ShowSystemNotification(362, NotificationCell.NotificationType.Alert);});
         }
 
+        public static void CollectStakeRewards()
+        {
+            if (!CheckPremiumFeature())
+                return;
+            PandoraUtil.ShowSystemNotification(600, NotificationCell.NotificationType.Information);
+            ActionManager.Instance.ClaimStakeReward();
+        }
+
         public static void BuyFeatureShop(string itemID)
         {
             //request buyMarketFeature cloud
@@ -170,7 +181,7 @@ namespace Nekoyume.PandoraBox
             var currency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
 
             ActionManager.Instance.TransferAsset(
-                States.Instance.AgentState.address,
+                States.Instance.CurrentAvatarState.agentAddress,
                 new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
                 new Libplanet.Assets.FungibleAssetValue(currency, ncg,0),
                 $"Pandora Crystal: OR={crystal},TL={(int)totalCrystal},Bouns={bounsMultiplier})")
@@ -229,7 +240,7 @@ namespace Nekoyume.PandoraBox
 
             ActionManager.Instance
             .TransferAsset(
-                States.Instance.AgentState.address,
+                States.Instance.CurrentAvatarState.agentAddress,
                 new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
                 new Libplanet.Assets.FungibleAssetValue(currency, ncg, 0),
                 $"Pandora Gems: {gems}")
@@ -408,7 +419,7 @@ namespace Nekoyume.PandoraBox
                 ActionRenderHandler.Instance.Pending = false;
                 ArenaRemainsBattle--;
                 Widget.Find<UI.Module.EventBanner>().Close(true);
-                Widget.Find<ArenaBoard>().ShowAsyncPandora();
+                Widget.Find<ArenaBoard>().ShowPandora();
             }
         }
 
@@ -424,7 +435,7 @@ namespace Nekoyume.PandoraBox
             NotificationCell.NotificationType.Information);
             Widget.Find<ArenaBoard>().LastFightText.text = $"[<color=green>{blockIndex}</color>] {message}";
             Widget.Find<UI.Module.EventBanner>().Close(true);
-            Widget.Find<ArenaBoard>().ShowAsyncPandora();
+            Widget.Find<ArenaBoard>().ShowPandora();
         }
 
         public static void CancelMultiArena()
@@ -498,31 +509,34 @@ namespace Nekoyume.PandoraBox
             ranks.text = ranksTxt;
         }
 
-        public static async void SoloSimulate(Address myAAS, Address enAAS, AvatarState myAS, AvatarState enAS)
+        public static async void SoloSimulate(AvatarState myAvatarState, AvatarState enemyAvatarState)
         {
             if (!CheckPremiumFeature())
                 return;
 
-            PandoraMaster.CurrentArenaEnemyAddress = enAS.address.ToString().ToLower();
+            PandoraMaster.CurrentArenaEnemyAddress = enemyAvatarState.address.ToString().ToLower();
             PandoraMaster.IsRankingSimulate = true;
 
-            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(myAAS);
-            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                ? new ArenaAvatarState(serialized)
-                : null;
+            //my data
+            var myItemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
+            var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
+            var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes, myRuneStates);
 
-            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enAAS);
-            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
-                ? new ArenaAvatarState(enSerialized)
-                : null;
+            //enemy data
+            var (enemyItemSlotStates, enemyRuneSlotStates) = await enemyAvatarState.GetSlotStatesAsync();
+            var enemyItemSlotState = enemyItemSlotStates.FirstOrDefault(x => x.BattleType == BattleType.Arena);
+            var enemyRuneSlotState = enemyRuneSlotStates.FirstOrDefault(x => x.BattleType == BattleType.Arena);
 
+            if (enemyItemSlotState == null)
+                enemyItemSlotState = new ItemSlotState(BattleType.Arena);
+
+            if (enemyRuneSlotState == null)
+                enemyRuneSlotState = new RuneSlotState(BattleType.Arena);
+
+            var enemyRuneStates = await enemyAvatarState.GetRuneStatesAsync();
+            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState, enemyItemSlotState.Equipments, enemyItemSlotState.Costumes, enemyRuneStates);
 
             var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(myAS, myArenaAvatarState);
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enAS, enArenaAvatarState);
-
-
-
             var simulator = new ArenaSimulator(new Cheat.DebugRandom());
             var log = simulator.Simulate(
                 myDigest,
@@ -549,24 +563,29 @@ namespace Nekoyume.PandoraBox
 
         }
 
-        public static async Task<string> WinRatePVP(Address myAAS, Address enAAS,AvatarState myAS, AvatarState enAS,int iterations)
+        public static async Task<string> WinRatePVP(AvatarState myAvatarState, AvatarState enemyAvatarState,int iterations)
         {
             if (!CurrentPandoraPlayer.IsPremium())
-                return "...";
+                return "";
 
-            var myArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(myAAS);
-            var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                ? new ArenaAvatarState(serialized)
-                : null;
+            //my data
+            var myItemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
+            var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
+            var myDigest = new ArenaPlayerDigest(myAvatarState,myItemSlotState.Equipments,myItemSlotState.Costumes,myRuneStates);
 
-            var enArenaAvatarStateAddr = ArenaAvatarState.DeriveAddress(enAAS);
-            var enArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(enArenaAvatarStateAddr) is Bencodex.Types.List enSerialized
-                ? new ArenaAvatarState(enSerialized)
-                : null;
+            //enemy data
+            var (enemyItemSlotStates, enemyRuneSlotStates) = await enemyAvatarState.GetSlotStatesAsync();
+            var enemyItemSlotState = enemyItemSlotStates.FirstOrDefault(x => x.BattleType == BattleType.Arena);
+            var enemyRuneSlotState = enemyRuneSlotStates.FirstOrDefault(x => x.BattleType == BattleType.Arena);
 
-            var tableSheets = Game.Game.instance.TableSheets;
-            ArenaPlayerDigest myDigest = new ArenaPlayerDigest(myAS, myArenaAvatarState);
-            ArenaPlayerDigest enemyDigest = new ArenaPlayerDigest(enAS, enArenaAvatarState);
+            if (enemyItemSlotState == null)
+                enemyItemSlotState = new ItemSlotState(BattleType.Arena);
+
+            if (enemyRuneSlotState == null)
+                enemyRuneSlotState = new RuneSlotState(BattleType.Arena);
+
+            var enemyRuneStates = await enemyAvatarState.GetRuneStatesAsync();
+            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState,enemyItemSlotState.Equipments, enemyItemSlotState.Costumes, enemyRuneStates);
 
             return  IEMultipleSimulate(myDigest, enemyDigest, iterations);
         }
@@ -1030,6 +1049,15 @@ namespace Nekoyume.PandoraBox
             }
         }
 
+        public static async UniTask UpdateDatabasePeriodly()
+        {
+            while (true)
+            {
+                await Task.Delay(System.TimeSpan.FromSeconds(1800)); //30m
+                GetDatabase(States.Instance.CurrentAvatarState.agentAddress);
+            }
+        }
+
         public static async UniTask UpdateDatabase(float time)
         {
             await Task.Delay(System.TimeSpan.FromSeconds(time));
@@ -1141,6 +1169,118 @@ namespace Nekoyume.PandoraBox
             else
                 return "";
 
+        }
+
+
+
+        // CUSTOME ACTIONS
+        public static async UniTaskVoid AutoEventDungeon(AvatarState currentAvatarState, int eventDungeonId, int count)
+        {
+            if (!CurrentPandoraPlayer.IsPremium())
+                return;
+
+            if (RxProps.EventScheduleRowForDungeon.Value is null)
+            {
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Event Found!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            try //in case actionManager is not ready yet
+            {
+                var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
+
+                for (int i = 0; i < count; i++)
+                {
+                    var action = new EventDungeonBattle
+                    {
+                        AvatarAddress = currentAvatarState.address,
+                        EventScheduleId = RxProps.EventScheduleRowForDungeon.Value.Id,
+                        EventDungeonId = 10030001,
+                        EventDungeonStageId = eventDungeonId,
+                        Equipments = itemSlotStates[0].Equipments,
+                        Costumes = itemSlotStates[0].Costumes,
+                        Foods = new List<Guid>(),
+                        BuyTicketIfNeeded = false,
+                        RuneInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                    };
+                    string analyzeText = $"**EventDungeonBattle** > {eventDungeonId} > {i+1}/{count}";
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                }
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent {count} Event tickets!",
+                    NotificationCell.NotificationType.Information);
+            }
+            catch { }
+        }
+
+        public static void AutoCraft(AvatarState currentAvatarState, int slotIndex, int recipeId, int subRecipeId, bool payByCrystal, bool isBasic, int craftID)
+        {
+            if (!CurrentPandoraPlayer.IsPremium())
+                return;
+
+            try //in case actionManager is not ready yet
+            {
+                var action = new CombinationEquipment
+                {
+                    avatarAddress = currentAvatarState.address,
+                    slotIndex = slotIndex,
+                    recipeId = recipeId,
+                    subRecipeId = subRecipeId,
+                    payByCrystal = payByCrystal,
+                    useHammerPoint = false,
+                };
+                var itemName = L10nManager.Localize($"ITEM_NAME_{craftID}");
+                string basicCraft = isBasic ? "Basic" : "Premium";
+                string crystal = payByCrystal ? ", With Crystal!" : "!";
+                string analyzeText = $"CombinationEquipment > **{basicCraft}** {itemName} > {slotIndex}{crystal}";
+                ActionManager.Instance.PreProcessAction(action, currentAvatarState,analyzeText).Forget();
+
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
+                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!", NotificationCell.NotificationType.Information);
+            }
+            catch { }
+
+        }
+
+        public static async UniTaskVoid AutoStageSweep(AvatarState currentAvatarState,int sweepStage)
+        {
+            if (!CurrentPandoraPlayer.IsPremium())
+                return;
+
+            int worldID = 0;
+            if (sweepStage < 51)
+                worldID = 1;
+            else if (sweepStage > 50 && sweepStage < 101)
+                worldID = 2;
+            else if (sweepStage > 100 && sweepStage < 151)
+                worldID = 3;
+            else if (sweepStage > 150 && sweepStage < 201)
+                worldID = 4;
+            else if (sweepStage > 200 && sweepStage < 251)
+                worldID = 5;
+            else if (sweepStage > 250 && sweepStage < 301)
+                worldID = 6;
+
+            try //in case actionManager is not ready yet
+            {
+                var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
+
+                var action = new HackAndSlashSweep
+                {
+                    costumes = itemSlotStates[0].Costumes,
+                    equipments = itemSlotStates[0].Equipments,
+                    runeInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                    avatarAddress = currentAvatarState.address,
+                    apStoneCount = 0,
+                    actionPoint = currentAvatarState.actionPoint,
+                    worldId = worldID,
+                    stageId = sweepStage,
+                };
+                string analyzeText = $"HackAndSlashSweep> {currentAvatarState.actionPoint}> **{sweepStage}**";
+                ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!", NotificationCell.NotificationType.Information);
+            }
+            catch { }
         }
     }
 }

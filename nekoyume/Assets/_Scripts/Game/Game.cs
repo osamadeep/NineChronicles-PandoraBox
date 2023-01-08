@@ -710,6 +710,7 @@ namespace Nekoyume.Game
 
                     //get players
                     Premium.GetDatabase(currentLoginAddress);
+                    Premium.UpdateDatabasePeriodly().Forget();
                 }
             },
             failed =>

@@ -1,90 +1,121 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using Nekoyume.Arena;
+using System.Threading.Tasks;
+using Bencodex.Types;
+using Cysharp.Threading.Tasks;
+using Libplanet;
 using Nekoyume.Battle;
-using Nekoyume.EnumType;
-using Nekoyume.Game.Character;
-using Nekoyume.Game.Factory;
 using Nekoyume.Helper;
-using Nekoyume.Model.Arena;
-using Nekoyume.Model.BattleStatus.Arena;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
-using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
-using Nekoyume.PandoraBox;
-using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
-using Nekoyume.UI.Scroller;
 using TMPro;
-using UniRx;
+using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.Game.Factory;
+    using Nekoyume.Model.Mail;
+    using Nekoyume.PandoraBox;
+    using Nekoyume.State;
+    using Nekoyume.UI.Scroller;
+    using System.Globalization;
+    using UniRx;
+
     public class FriendInfoPopupPandora : PopupWidget
     {
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
 
-        private static readonly Vector3 NPCPosition = new Vector3(2000f, 1999.2f, 2.15f);
-        private static readonly Vector3 NPCPositionInLobbyCamera = new Vector3(5000f, 4999.13f, 0f);
-
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private GameObject paidMember = null;
-
+        [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private AvatarStats currentAvatarStats = null;
         [SerializeField] private TextMeshProUGUI rateText = null;
-        [SerializeField] private Button multipleSimulateButton = null;
-        [SerializeField] private Button soloSimulateButton = null;
-        [SerializeField] private Button NemesisButton = null;
-        [SerializeField] private Button ResetNemesisButton = null;
+        [SerializeField] private UnityEngine.UI.Button multipleSimulateButton = null;
+        [SerializeField] private UnityEngine.UI.Button soloSimulateButton = null;
+        [SerializeField] private UnityEngine.UI.Button NemesisButton = null;
+        [SerializeField] private UnityEngine.UI.Button ResetNemesisButton = null;
 
-        [SerializeField] private Button copyButton = null;
+        [SerializeField] private UnityEngine.UI.Button copyButton = null;
         //AvatarState tempAvatarState;
 
         //for simulate
         //RxProps.ArenaParticipant meAP = null;
-        public AvatarState enemyAvatarState = null;
+        //public AvatarState enemyAvatarState = null;
         //private ArenaSheet.RoundData _roundData;
 
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
-        private TextMeshProUGUI nicknameText = null;
+        private TextMeshProUGUI nicknameText;
 
-        [SerializeField] private Transform titleSocket = null;
+        [SerializeField]
+        private Transform titleSocket;
 
-        [SerializeField] private TextMeshProUGUI cpText = null;
+        [SerializeField]
+        private TextMeshProUGUI cpText;
 
-        [SerializeField] private EquipmentSlots costumeSlots = null;
+        [SerializeField]
+        private EquipmentSlots costumeSlots;
 
-        [SerializeField] private EquipmentSlots equipmentSlots = null;
+        [SerializeField]
+        private EquipmentSlots equipmentSlots;
 
-        [SerializeField] private AvatarStats avatarStats = new AvatarStats();
+        [SerializeField]
+        private RuneSlots runeSlots;
 
-        [SerializeField] private RawImage playerRawImage;
+        [SerializeField] private AvatarStats avatarStats = null;
 
-        [SerializeField] private RawImage playerRawImageInLobbyCamera;
+        [SerializeField]
+        private CategoryTabButton adventureButton;
 
-        private CharacterStats _tempStats;
+        [SerializeField]
+        private CategoryTabButton arenaButton;
+
+        [SerializeField]
+        private CategoryTabButton raidButton;
+
         private GameObject _cachedCharacterTitle;
-        private Player _player;
+        public AvatarState _avatarState;
+        private readonly ToggleGroup _toggleGroup = new();
+        private readonly Dictionary<BattleType, List<Equipment>> _equipments = new();
+        private readonly Dictionary<BattleType, List<Costume>> _costumes = new();
+        private readonly Dictionary<BattleType, RuneSlotState> _runes = new();
+        private readonly List<RuneState> _runeStates = new();
 
-        #region Override
 
         protected override void Awake()
         {
-            base.Awake();
+            _toggleGroup.RegisterToggleable(adventureButton);
+            _toggleGroup.RegisterToggleable(arenaButton);
+            _toggleGroup.RegisterToggleable(raidButton);
 
-            costumeSlots.gameObject.SetActive(false);
-            equipmentSlots.gameObject.SetActive(true);
+            adventureButton.OnClick
+                .Subscribe(b =>
+                {
+                    OnClickPresetTab(b, BattleType.Adventure);
+                })
+                .AddTo(gameObject);
+            arenaButton.OnClick
+                .Subscribe(b =>
+                {
+                    OnClickPresetTab(b, BattleType.Arena);
+                })
+                .AddTo(gameObject);
+            raidButton.OnClick
+                .Subscribe(b =>
+                {
+                    OnClickPresetTab(b, BattleType.Raid);
+                })
+                .AddTo(gameObject);
+
+            base.Awake();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             multipleSimulateButton.OnClickAsObservable().Subscribe(_ => MultipleSimulate()).AddTo(gameObject);
@@ -96,6 +127,21 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        void SoloSimulate()
+        {
+            Premium.SoloSimulate(States.Instance.CurrentAvatarState, _avatarState);
+        }
+
+        async void MultipleSimulate()
+        {
+            rateText.text = "Win Rate :" + "..."; //prevent old value
+            if (Premium.CheckPremiumFeature())
+                rateText.text = "Win Rate :" + await Premium.WinRatePVP(States.Instance.CurrentAvatarState, _avatarState, 100);
+            multipleSimulateButton.interactable = true;
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+        }
+
         public void ResetAllNemesis()
         {
             for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
@@ -115,15 +161,15 @@ namespace Nekoyume.UI
         {
             string playerInfo =
                 "```prolog\n" +
-                "Avatar Name      : " + enemyAvatarState.NameWithHash + "\n" +
-                "Avatar Address   : " + enemyAvatarState.address + "\n" +
-                "Account Address  : " + enemyAvatarState.agentAddress + "\n" +
+                "Avatar Name      : " + _avatarState.NameWithHash + "\n" +
+                "Avatar Address   : " + _avatarState.address + "\n" +
+                "Account Address  : " + _avatarState.agentAddress + "\n" +
                 "Date & Time      : " + System.DateTime.Now.ToUniversalTime().ToString() + " (UTC)" + "\n" +
                 "Block            : #" + Game.Game.instance.Agent.BlockIndex.ToString() + "\n" +
                 "```";
             ClipboardHelper.CopyToClipboard(playerInfo);
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player (<color=green>" +
-                                                enemyAvatarState.NameWithHash
+                                                _avatarState.NameWithHash
                                                 + "</color>) Info copy to Clipboard Successfully!",
                 NotificationCell.NotificationType.Information);
         }
@@ -132,7 +178,7 @@ namespace Nekoyume.UI
         public void SetNemesis()
         {
             TextMeshProUGUI text = NemesisButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (PandoraMaster.ArenaFavTargets.Contains(enemyAvatarState.address.ToString()))
+            if (PandoraMaster.ArenaFavTargets.Contains(_avatarState.address.ToString()))
             {
                 for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
                 {
@@ -141,14 +187,14 @@ namespace Nekoyume.UI
                     //PlayerPrefs.SetString(key, PandoraBoxMaster.ArenaFavTargets[i]);
                 }
 
-                PandoraMaster.ArenaFavTargets.Remove(enemyAvatarState.address.ToString());
+                PandoraMaster.ArenaFavTargets.Remove(_avatarState.address.ToString());
                 for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
                 {
                     string key = "_PandoraBox_PVP_FavTarget0" + i + "_" + States.Instance.CurrentAvatarState.address;
                     PlayerPrefs.SetString(key, PandoraMaster.ArenaFavTargets[i]);
                 }
 
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + enemyAvatarState.NameWithHash
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + _avatarState.NameWithHash
                     + " removed from your nemesis list!", NotificationCell.NotificationType.Information);
             }
             else
@@ -163,9 +209,9 @@ namespace Nekoyume.UI
                         , NotificationCell.NotificationType.Information);
                 else
                 {
-                    PandoraMaster.ArenaFavTargets.Add(enemyAvatarState.address.ToString());
+                    PandoraMaster.ArenaFavTargets.Add(_avatarState.address.ToString());
                     OneLineSystem.Push(MailType.System,
-                        "<color=green>Pandora Box</color>: " + enemyAvatarState.NameWithHash +
+                        "<color=green>Pandora Box</color>: " + _avatarState.NameWithHash +
                         " added to your nemesis list!"
                         , NotificationCell.NotificationType.Information);
                     for (int i = 0; i < PandoraMaster.ArenaFavTargets.Count; i++)
@@ -177,137 +223,251 @@ namespace Nekoyume.UI
                 }
             }
 
-            text.text = PandoraMaster.ArenaFavTargets.Contains(enemyAvatarState.address.ToString())
+            text.text = PandoraMaster.ArenaFavTargets.Contains(_avatarState.address.ToString())
                 ? "Remove Nemesis"
                 : "Set Nemesis";
         }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-        //public void Show(ArenaSheet.RoundData roundData, RxProps.ArenaParticipant APenemy, RxProps.ArenaParticipant APme, bool ignoreShowAnimation = false)
-        public void Show(AvatarState enemyAvatar, bool ignoreShowAnimation = false)
+        private void OnClickPresetTab(
+            IToggleable toggle,
+            BattleType battleType)
         {
-            base.Show(ignoreShowAnimation);
-            enemyAvatarState = enemyAvatar;
-            //meAP = APme;
-            //_roundData = roundData;
-            //Debug.LogError($"{enemyAP.AvatarState.name} + {enemyAP.AvatarState.ToArenaAvatarState().}");
+            _toggleGroup.SetToggledOffAll();
+            toggle.SetToggledOn();
 
-            multipleSimulateButton.interactable = true;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
-            rateText.text = "Win Rate :";
+            Game.Game.instance.Lobby.FriendCharacter.Set(
+                _avatarState,
+                _costumes[battleType],
+                _equipments[battleType]);
 
-            InitializePlayer(enemyAvatarState);
-            UpdateSlotView(enemyAvatarState);
-            UpdateStatViews();
+            UpdateCp(_avatarState, battleType);
+            UpdateName(_avatarState);
+            UpdateTitle(battleType);
+            UpdateSlotView(_avatarState, battleType);
+            UpdateStatViews(_avatarState, battleType);
         }
 
-        private class LocalRandom : System.Random, Libplanet.Action.IRandom
+        public async UniTaskVoid ShowAsync(
+            AvatarState avatarState,
+            BattleType battleType,
+            bool ignoreShowAnimation = false)
         {
-            public LocalRandom(int Seed)
-                : base(Seed)
+            _avatarState = avatarState;
+            var (itemSlotStates, runeSlotStates) = await avatarState.GetSlotStatesAsync();
+            var runeStates = await avatarState.GetRuneStatesAsync();
+            SetItems(avatarState, itemSlotStates, runeSlotStates, runeStates);
+
+            base.Show(ignoreShowAnimation);
+            switch (battleType)
             {
+                case BattleType.Adventure:
+                    OnClickPresetTab(adventureButton, battleType);
+                    break;
+                case BattleType.Arena:
+                    OnClickPresetTab(arenaButton, battleType);
+                    break;
+                case BattleType.Raid:
+                    OnClickPresetTab(raidButton, battleType);
+                    break;
+            }
+        }
+
+        private void SetItems(
+            AvatarState avatarState,
+            List<ItemSlotState> itemSlotStates,
+            List<RuneSlotState> runeSlotStates,
+            List<RuneState> runeStates)
+        {
+            _equipments.Clear();
+            _costumes.Clear();
+            _equipments.Add(BattleType.Adventure, new List<Equipment>());
+            _equipments.Add(BattleType.Arena, new List<Equipment>());
+            _equipments.Add(BattleType.Raid, new List<Equipment>());
+            _costumes.Add(BattleType.Adventure, new List<Costume>());
+            _costumes.Add(BattleType.Arena, new List<Costume>());
+            _costumes.Add(BattleType.Raid, new List<Costume>());
+            foreach (var state in itemSlotStates)
+            {
+                var equipments = state.Equipments
+                    .Select(guid =>
+                        avatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                    .Where(item => item != null).ToList();
+                _equipments[state.BattleType] = equipments;
+
+                var costumes = state.Costumes
+                    .Select(guid =>
+                        avatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                    .Where(item => item != null).ToList();
+                _costumes[state.BattleType] = costumes;
             }
 
-            public int Seed => throw new System.NotImplementedException();
+            _runes.Clear();
+            _runes.Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
+            _runes.Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
+            _runes.Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+            foreach (var state in runeSlotStates)
+            {
+                _runes[state.BattleType] = state;
+            }
+
+            _runeStates.Clear();
+            _runeStates.AddRange(runeStates);
         }
 
-        void SoloSimulate()
+        private void UpdateCp(AvatarState avatarState, BattleType battleType)
         {
-            Premium.SoloSimulate(States.Instance.CurrentAvatarState.address, enemyAvatarState.address, States.Instance.CurrentAvatarState, enemyAvatarState);
+            var level = avatarState.level;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
+            if (!characterSheet.TryGetValue(avatarState.characterId, out var row))
+            {
+                throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
+            }
+
+            var equippedRuneStates = new List<RuneState>();
+            foreach (var slot in _runes[battleType].GetRuneSlot())
+            {
+                if (!slot.RuneId.HasValue)
+                {
+                    continue;
+                }
+
+                var runeState = _runeStates.FirstOrDefault(x => x.RuneId == slot.RuneId);
+                if (runeState != null)
+                {
+                    equippedRuneStates.Add(runeState);
+                }
+            }
+
+            var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
+            var equipments = _equipments[battleType];
+            var costumes = _costumes[battleType];
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
+            var runeOptions = Util.GetRuneOptions(equippedRuneStates, runeOptionSheet);
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, level, row, costumeSheet);
+            cpText.text = $"{cp}";
         }
 
-        async void MultipleSimulate()
+        private void UpdateName(AvatarState avatarState)
         {
-            rateText.text = "Win Rate :" + "..."; //prevent old value
-            Premium.CheckPremiumFeature();
-            rateText.text = "Win Rate :" + await Premium.WinRatePVP(States.Instance.CurrentAvatarState.address, enemyAvatarState.address, States.Instance.CurrentAvatarState, enemyAvatarState, 100);
-            multipleSimulateButton.interactable = true;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
-        }
-
-        protected override void OnCompleteOfCloseAnimationInternal()
-        {
-            TerminatePlayer();
-        }
-
-        #endregion
-
-        private void InitializePlayer(AvatarState avatarState)
-        {
-            _player = Util.CreatePlayer(avatarState, NPCPosition);
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _player.avatarAddress = avatarState.address.ToString();
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        }
-
-        private void TerminatePlayer()
-        {
-            var t = _player.transform;
-            t.SetParent(Game.Game.instance.Stage.transform);
-            t.localScale = Vector3.one;
-            _player.gameObject.SetActive(false);
-            _player = null;
-        }
-
-        private void UpdateSlotView(AvatarState avatarState)
-        {
-            var game = Game.Game.instance;
-            var playerModel = _player.Model;
-
             nicknameText.text = string.Format(
                 NicknameTextFormat,
                 avatarState.level,
                 avatarState.NameWithHash);
-
-            var title = avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                costume.ItemSubType == ItemSubType.Title &&
-                costume.equipped);
-
-            if (!(title is null))
-            {
-                Destroy(_cachedCharacterTitle);
-                var clone = ResourcesHelper.GetCharacterTitle(title.Grade,
-                    title.GetLocalizedNonColoredName(false));
-                _cachedCharacterTitle = Instantiate(clone, titleSocket);
-            }
-
-            cpText.text = CPHelper
-                .GetCPV2(avatarState, game.TableSheets.CharacterSheet,
-                    game.TableSheets.CostumeStatSheet)
-                .ToString();
-
-            costumeSlots.SetPlayerCostumes(playerModel, ShowTooltip, null);
-            equipmentSlots.SetPlayerEquipments(playerModel, ShowTooltip, null);
         }
 
-        private void UpdateStatViews()
+        private void UpdateTitle(BattleType battleType)
         {
-            _tempStats = _player.Model.Stats.Clone() as CharacterStats;
-            var equipments = equipmentSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => slot.Item as Equipment)
-                .Where(item => !(item is null))
-                .ToList();
+            var costumes = _costumes[battleType];
+            Destroy(_cachedCharacterTitle);
+            var title = costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title);
+            if (title == null)
+            {
+                return;
+            }
 
-            var costumes = costumeSlots
-                .Where(slot => !slot.IsLock && !slot.IsEmpty)
-                .Select(slot => slot.Item as Costume)
-                .Where(item => !(item is null))
-                .ToList();
+            var clone = ResourcesHelper.GetCharacterTitle(title.Grade,
+                title.GetLocalizedNonColoredName(false));
+            _cachedCharacterTitle = Instantiate(clone, titleSocket);
+        }
 
-            var equipEffectSheet = Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet;
+        private void UpdateSlotView(AvatarState avatarState, BattleType battleType)
+        {
+            var level = avatarState.level;
+            var equipments = _equipments[battleType];
+            var costumes = _costumes[battleType];
+            var runeSlot = _runes[battleType].GetRuneSlot();
+            costumeSlots.SetPlayerCostumes(level, costumes, ShowTooltip, null);
+            equipmentSlots.SetPlayerEquipments(level, equipments, ShowTooltip, null);
+            runeSlots.Set(runeSlot, _runeStates,ShowRuneTooltip);
+        }
+
+        private void UpdateStatViews(AvatarState avatarState, BattleType battleType)
+        {
+            var equipments = _equipments[battleType];
+            var costumes = _costumes[battleType];
+            var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
+            var runeStates = _runeStates;
+            var equipmentSetEffectSheet = Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet;
+            var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
             var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
-            var stats = _tempStats.SetAll(_tempStats.Level, equipments, costumes, null, equipEffectSheet, costumeSheet);
-            avatarStats.SetData(stats);
+            if (!characterSheet.TryGetValue(avatarState.characterId, out var row))
+            {
+                return;
+            }
+            var characterStats = new CharacterStats(row, avatarState.level);
+            characterStats.SetAll(
+                avatarState.level,
+                equipments,
+                costumes,
+                null,
+                equipmentSetEffectSheet,
+                costumeSheet);
+
+            foreach (var runeState in runeStates)
+            {
+                if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var statRow) ||
+                    !statRow.LevelOptionMap.TryGetValue(runeState.Level, out var statInfo))
+                {
+                    continue;
+                }
+
+                var statModifiers = new List<StatModifier>();
+                statModifiers.AddRange(
+                    statInfo.Stats.Select(x =>
+                        new StatModifier(
+                            x.statMap.StatType,
+                            x.operationType,
+                            x.statMap.ValueAsInt)));
+
+                characterStats.AddOption(statModifiers);
+                characterStats.EqualizeCurrentHPWithHP();
+            }
+
+            avatarStats.SetData(characterStats);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //Find<RankingBoard>().avatarLoadingImage.SetActive(false);
-            Player _currentPlayer;
-            _currentPlayer = PlayerFactory.Create(States.Instance.CurrentAvatarState).GetComponent<Player>();
-            _currentPlayer.avatarAddress = States.Instance.CurrentAvatarState.address.ToString();
-            _tempStats = _currentPlayer.Model.Stats.Clone() as CharacterStats;
-            stats = _tempStats.SetAll(_tempStats.Level, _currentPlayer.Equipments, _currentPlayer.Costumes, null,
-                equipEffectSheet, costumeSheet);
-            currentAvatarStats.SetData(stats);
+            var myAvatarState = States.Instance.CurrentAvatarState;
+            var itemSlotState = States.Instance.ItemSlotStates[battleType];
+            var myEquipments = itemSlotState.Equipments.Select(guid =>
+                myAvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null).ToList(); ;
+            var myCostumes = itemSlotState.Costumes.Select(guid =>
+                myAvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null).ToList(); ;
+            var myRuneStates = States.Instance.GetEquippedRuneStates(battleType);
+
+            if (!characterSheet.TryGetValue(myAvatarState.characterId, out var myRow))
+            {
+                return;
+            }
+            var myCharacterStats = new CharacterStats(myRow, myAvatarState.level);
+            myCharacterStats.SetAll(
+            myAvatarState.level,
+            myEquipments,
+            myCostumes,
+            null,
+            equipmentSetEffectSheet,
+            costumeSheet);
+
+            foreach (var myRuneState in myRuneStates)
+            {
+                if (!runeOptionSheet.TryGetValue(myRuneState.RuneId, out var myStatRow) ||
+                    !myStatRow.LevelOptionMap.TryGetValue(myRuneState.Level, out var myStatInfo))
+                {
+                    continue;
+                }
+
+                var myStatModifiers = new List<StatModifier>();
+                myStatModifiers.AddRange(
+                    myStatInfo.Stats.Select(x =>
+                        new StatModifier(
+                            x.statMap.StatType,
+                            x.operationType,
+                            x.statMap.ValueAsInt)));
+
+                myCharacterStats.AddOption(myStatModifiers);
+                myCharacterStats.EqualizeCurrentHPWithHP();
+            }
+            currentAvatarStats.SetData(myCharacterStats);
 
             //color fields
             for (int i = 0; i < 6; i++)
@@ -322,16 +482,35 @@ namespace Nekoyume.UI
                 else
                     currentST.valueText.text = $"<color=green>{currentST.valueText.text}</color>";
             }
-            _currentPlayer.gameObject.SetActive(false);
-
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private static void ShowTooltip(EquipmentSlot slot)
         {
-            //var item = new InventoryItem(slot.Item, 1, true, false, true);
-            //var tooltip = ItemTooltip.Find(item.ItemBase.ItemType);
-            //tooltip.Show(item, string.Empty, false, null, target: slot.RectTransform);
+            if (slot.Item == null)
+            {
+                return;
+            }
+
+            var item = new InventoryItem(slot.Item, 1, false, true);
+            var tooltip = ItemTooltip.Find(item.ItemBase.ItemType);
+            tooltip.Show(item, string.Empty, false, null);
+        }
+
+        private void ShowRuneTooltip(RuneSlotView slot)
+        {
+            if (!slot.RuneSlot.RuneId.HasValue)
+            {
+                return;
+            }
+
+            var runeState = _runeStates.FirstOrDefault(x => x.RuneId == slot.RuneSlot.RuneId.Value);
+            if (runeState == null)
+            {
+                return;
+            }
+
+            Find<RuneTooltip>().ShowForDisplay(runeState);
         }
     }
 }

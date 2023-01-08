@@ -356,7 +356,7 @@ namespace Nekoyume.UI
             {
                 ["Quantity"] = updateSellInfos.Count,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             });
 
             string message;

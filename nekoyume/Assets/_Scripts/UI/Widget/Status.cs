@@ -28,6 +28,7 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         [SerializeField] private TextMeshProUGUI PandoraStatus = null;
+        [SerializeField] private Button guildButton;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -60,13 +61,6 @@ namespace Nekoyume.UI
 
         private Player _player;
 
-        public void ShowGuild()
-        {
-            if (PandoraMaster.CurrentGuildPlayer is null)
-                return;
-            Find<GuildInfo>().Show(PandoraMaster.CurrentGuildPlayer.Guild);
-        }
-
         #region Mono
 
         protected override void Awake()
@@ -80,6 +74,9 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             CloseWidget = null;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            guildButton.onClick.AddListener(() => { ShowGuild(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         #endregion
@@ -179,6 +176,7 @@ namespace Nekoyume.UI
             if (gameObject.activeInHierarchy)
                 UpdataPandoraStatus();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             var displayHp = _player.CurrentHP;
             textHp.text = $"{displayHp} / {_player.HP}";
             textExp.text =
@@ -209,6 +207,11 @@ namespace Nekoyume.UI
 
             // level& name
             textLvName.text = $"<color=#B38271>LV. {avatarState.level}</color> {avatarState.NameWithHash}";
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (!(PandoraMaster.CurrentGuildPlayer is null))
+                textLvName.text = $"<color=#B38271>LV. {avatarState.level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
+                    $"</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             // exp
             var levelSheet = Game.Game.instance.TableSheets.CharacterLevelSheet;
@@ -221,6 +224,13 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        public void ShowGuild()
+        {
+            if (PandoraMaster.CurrentGuildPlayer is null)
+                return;
+            Find<GuildInfo>().Show(PandoraMaster.CurrentGuildPlayer.Guild);
+        }
+
         void UpdataPandoraStatus()
         {
             try
@@ -232,11 +242,9 @@ namespace Nekoyume.UI
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {States.Instance.CurrentAvatarState.name}";
 
-            if (!(PandoraMaster.CurrentGuildPlayer is null)
-                && (PandoraMaster.CurrentGuildPlayer.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower()))
-            {
-                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
-            }
+            if (!(PandoraMaster.CurrentGuildPlayer is null))
+                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
+                    $"</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
         }
 
         IEnumerator UpdateRemainingPremium()

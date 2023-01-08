@@ -47,32 +47,32 @@ namespace Nekoyume.UI
 
         private void UpdateSlots(long blockIndex)
         {
-            if (!PandoraMaster.TryGetCustomAvatarStatesDone)
+            //if (!PandoraMaster.TryGetCustomAvatarStatesDone)
+            //{
+            //    var states = States.Instance.AvatarStates;
+            //    for (var i = 0; i < slots.Count; i++)
+            //    {
+            //        if (states != null && states.TryGetValue(i, out var state))
+            //        {
+            //            slots[i].gameObject.SetActive(true);
+            //            slots[i].SetSlot(blockIndex, i, state);
+            //        }
+            //        else
+            //            slots[i].gameObject.SetActive(false);
+            //    }
+            //}
+            //else
             {
                 var states = States.Instance.AvatarStates;
-                for (var i = 0; i < slots.Count; i++)
-                {
-                    if (states != null && states.TryGetValue(i, out var state))
-                    {
-                        slots[i].gameObject.SetActive(true);
-                        slots[i].SetSlot(blockIndex, i, state);
-                    }
-                    else
-                        slots[i].gameObject.SetActive(false);
-                }
-            }
-            else
-            {
-                var states = PandoraMaster.CustomAvatarStates;
                 for (int i = 0; i < states.Count; i++)
                 {
-                    if (slots.Count < i +1) //add new slot
+                    if (slots.Count < i + 1) //add new slot
                     {
                         var newSlot = Instantiate(slotPrefab, slots[0].transform.parent);
                         slots.Add(newSlot.GetComponent<ChronoSlot>());
                     }
 
-                    if (PandoraMaster.CustomAvatarStates.TryGetValue(i, out var state))
+                    if (States.Instance.AvatarStates.TryGetValue(i, out var state))
                     {
                         slots[i].gameObject.SetActive(true);
                         slots[i].SetSlot(blockIndex, i, state);
@@ -82,6 +82,7 @@ namespace Nekoyume.UI
 
                 }
             }
+            slots[0].transform.parent.GetComponent<RectTransform>().sizeDelta = new Vector2(550, 110 * States.Instance.AvatarStates.Count);
 
             bool isNotify = false;
             foreach (var item in slots)

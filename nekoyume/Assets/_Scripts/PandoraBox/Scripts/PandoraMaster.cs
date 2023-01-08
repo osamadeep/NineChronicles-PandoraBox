@@ -14,6 +14,8 @@ using Nekoyume.UI;
 using Nekoyume.Model.State;
 using Libplanet;
 using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Nekoyume.PandoraBox
 {
@@ -22,28 +24,20 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100352";
-        public static string VersionId = "010079";
-
+        public static string OriginalVersionId = "v100350-2";
+        public static string VersionId = "010080";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
-        //public static PandoraPlayer CurrentPandoraPlayer; //data for local player since we use it alot
         public static Guild CurrentGuild; //data for local player since we use it alot
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //Playfab
         public static PlayerProfileModel PlayFabCurrentPlayer = new PlayerProfileModel();
-        //public static string PlayFabRunnerLeaderboard = "Runner2";
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
-
         //General
-        public static Dictionary<int, AvatarState> CustomAvatarStates = new Dictionary<int, AvatarState>();
-        public static bool TryGetCustomAvatarStatesDone = false;
-        public static string CurrentAvatarAddressAction;
         public static string CrystalTransferTx = "";
-        public static string InspectedAddress = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
@@ -79,7 +73,6 @@ namespace Nekoyume.PandoraBox
         {
             if (Instance == null)
             {
-                //CurrentPandoraPlayer = new PandoraPlayer();
                 Instance = this;
                 Settings = new PandoraSettings();
                 Settings.Load();
@@ -112,37 +105,9 @@ namespace Nekoyume.PandoraBox
             return new PandoraPlayer();
         }
 
-        public static void SetCurrentPandoraPlayer(PandoraPlayer player)
-        {
-            //Initilize Current player for all Pandora information
-            //CurrentPandoraPlayer = player;
-            //Premium.Initialize(player);
-
-            //Check for all Errors
-            //if (CurrentPandoraPlayer.IsBanned)
-            //    Instance.ShowError(101, "This address is Banned, please visit us for more information!");
-
-
-            CurrentGuildPlayer = null;
-            CurrentGuild = null;
-
-            CurrentGuildPlayer =
-                PanDatabase.GuildPlayers.Find(x => x.IsEqual(States.Instance.CurrentAvatarState.address.ToString()));
-            if (CurrentGuildPlayer is null)
-                return;
-            CurrentGuild = PanDatabase.Guilds.Find(x => x.Tag == CurrentGuildPlayer.Guild);
-        }
-
         public void ShowError(int errorNumber)
         {
             Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!", PandoraUtil.GetNotificationText(errorNumber));
-        }
-
-        public static void SetCurrentAvatarAddressAction(string address,int seconds)
-        {
-            CurrentAvatarAddressAction = address;
-            //if (seconds != 0)
-            //    Prime.UpdateAvatar(seconds).Forget();
         }
     }
 

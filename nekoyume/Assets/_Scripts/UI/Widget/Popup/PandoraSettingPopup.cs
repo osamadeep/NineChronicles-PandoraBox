@@ -286,10 +286,5 @@ namespace Nekoyume.UI
             //cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
             //cAmount.text = cMemo.text = cAaddress.text = "";
         }
-
-        public void ShowOriginal()
-        {
-            PandoraMaster.TryGetCustomAvatarStatesDone = false;
-        }
     }
 }

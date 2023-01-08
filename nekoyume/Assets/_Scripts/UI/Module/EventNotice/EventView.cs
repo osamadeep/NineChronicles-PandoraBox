@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Nekoyume.State;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,7 +23,7 @@ namespace Nekoyume.UI.Module
                 var url = _url;
                 if (_useAgentAddress)
                 {
-                    var address = States.Instance.AgentState.address;
+                    var address = States.Instance.CurrentAvatarState.agentAddress;
                     url = string.Format(url, address);
                 }
 

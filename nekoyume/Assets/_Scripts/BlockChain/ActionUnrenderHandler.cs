@@ -176,7 +176,7 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress,
                     out var avatarState, out _))
@@ -287,7 +287,7 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = eval.Action.avatarAddress;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress, out var avatarState, out _))
             {
@@ -334,7 +334,7 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = eval.Action.avatarAddress;
             if (!eval.OutputStates.TryGetAvatarStateV2(agentAddress, avatarAddress,
                     out var avatarState, out _))
@@ -393,7 +393,7 @@ namespace Nekoyume.BlockChain
 
             var senderAddress = eval.Action.Sender;
             var recipientAddress = eval.Action.Recipient;
-            var currentAgentAddress = States.Instance.AgentState.address;
+            var currentAgentAddress = States.Instance.CurrentAvatarState.agentAddress;
 
             if (recipientAddress == currentAgentAddress ||
                 senderAddress == currentAgentAddress)

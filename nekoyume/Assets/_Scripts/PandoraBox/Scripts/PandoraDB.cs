@@ -55,6 +55,7 @@ namespace Nekoyume.PandoraBox
         public List<NFTOwner> NFTOwners;
         public List<PandoraMembership> PandoraMemberships;
         public RunnerSettings RunnerSettings;
+        public string AnalyzeKey;
         public int DiceRoll;
         public int TrialPremium;
         public int Crystal;

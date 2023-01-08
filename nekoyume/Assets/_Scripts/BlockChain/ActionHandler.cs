@@ -32,7 +32,7 @@ namespace Nekoyume.BlockChain
                 return false;
             }
 
-            return evaluation.OutputStates.UpdatedFungibleAssets.ContainsKey(States.Instance.AgentState.address);
+            return evaluation.OutputStates.UpdatedFungibleAssets.ContainsKey(States.Instance.CurrentAvatarState.agentAddress);
         }
 
         protected static bool ValidateEvaluationForCurrentAvatarState<T>(ActionBase.ActionEvaluation<T> evaluation)
@@ -44,26 +44,26 @@ namespace Nekoyume.BlockChain
             where T : ActionBase
         {
             return !(States.Instance.AgentState is null) &&
-                   evaluation.Signer.Equals(States.Instance.AgentState.address);
+                   evaluation.Signer.Equals(States.Instance.CurrentAvatarState.agentAddress);
         }
 
         protected static AgentState GetAgentState<T>(ActionBase.ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             return evaluation.OutputStates.GetAgentState(agentAddress);
         }
 
         protected GoldBalanceState GetGoldBalanceState<T>(ActionBase.ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             return evaluation.OutputStates.GetGoldBalanceState(agentAddress, GoldCurrency);
         }
 
         protected (MonsterCollectionState, int, FungibleAssetValue) GetMonsterCollectionState<T>(
             ActionBase.ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                 agentAddress,
                 States.Instance.AgentState.MonsterCollectionRound
@@ -92,7 +92,7 @@ namespace Nekoyume.BlockChain
             ActionBase.ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var stakeAddress = StakeState.DeriveAddress(agentAddress);
             if (!(evaluation.OutputStates.GetState(stakeAddress) is Bencodex.Types.Dictionary serialized))
             {
@@ -139,6 +139,22 @@ namespace Nekoyume.BlockChain
                 "Called UpdateAgentState<{0}>. Updated Addresses : `{1}`",
                 evaluation.Action,
                 string.Join(",", evaluation.OutputStates.UpdatedAddresses));
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            try
+            {
+                if (!evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[0].address) &&
+                    !evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[1].address) &&
+                    !evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[2].address)
+                    )
+                    return;
+            }
+            catch
+            {
+                return;
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
             await UpdateAgentStateAsync(GetAgentState(evaluation));
             try
             {
@@ -167,7 +183,7 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = States.Instance.AgentState.avatarAddresses[index];
             if (evaluation.OutputStates.TryGetAvatarStateV2(
                     agentAddress,
@@ -183,7 +199,7 @@ namespace Nekoyume.BlockChain
             ActionBase.ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             try
             {
@@ -274,18 +290,9 @@ namespace Nekoyume.BlockChain
 
         protected static void UpdateCrystalBalance<T>(ActionBase.ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            //if (!evaluation.Signer.Equals(States.Instance.AgentState.address) ||
-            //    !evaluation.OutputStates.UpdatedFungibleAssets.TryGetValue(
-            //        evaluation.Signer,
-            //        out var currencies) ||
-            //    !currencies.Contains(CrystalCalculator.CRYSTAL))
-            //{
-            //    return;
-            //}
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            var addr = States.Instance.AgentState.address; // In case i am the sender
-            if (!evaluation.Signer.Equals(States.Instance.AgentState.address)) // In case i am the reciever
+            var addr = States.Instance.CurrentAvatarState.agentAddress; // In case i am the sender
+            if (!evaluation.Signer.Equals(States.Instance.CurrentAvatarState.agentAddress)) // In case i am the reciever
                 addr = evaluation.Signer;
 
             if (!evaluation.OutputStates.UpdatedFungibleAssets.TryGetValue(
@@ -299,7 +306,7 @@ namespace Nekoyume.BlockChain
             try
             {
                 var crystal = evaluation.OutputStates.GetBalance(
-                    States.Instance.AgentState.address,//evaluation.Signer,
+                    States.Instance.CurrentAvatarState.agentAddress,//evaluation.Signer,
                     CrystalCalculator.CRYSTAL);
                 States.Instance.SetCrystalBalance(crystal);
             }

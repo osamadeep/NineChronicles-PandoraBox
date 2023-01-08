@@ -111,7 +111,7 @@ namespace Nekoyume.State
 
         private static void AddBuyDigest(IEnumerable<OrderDigest> digests, ItemSubType itemSubType)
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var d = digests
                 .Where(digest => !digest.SellerAgentAddress.Equals(agentAddress))
                 .ToList();

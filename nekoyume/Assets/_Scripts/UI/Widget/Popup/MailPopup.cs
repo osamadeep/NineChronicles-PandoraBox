@@ -310,7 +310,7 @@ namespace Nekoyume.UI
         public async void Read(OrderSellerMail orderSellerMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var order = await Util.GetOrder(orderSellerMail.OrderId);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //Debug.LogError(order.);
@@ -378,7 +378,7 @@ namespace Nekoyume.UI
                 if (itemEnhanceMail.attachment is ItemEnhancement.ResultModel result)
                 {
                     await LocalLayerModifier.ModifyAgentCrystalAsync(
-                        States.Instance.AgentState.address,
+                        States.Instance.CurrentAvatarState.agentAddress,
                         result.CRYSTAL.MajorUnit);
                 }
 

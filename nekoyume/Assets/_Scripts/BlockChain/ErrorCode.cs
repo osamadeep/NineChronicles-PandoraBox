@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Cysharp.Threading.Tasks;
 using Libplanet.Action;
 using Libplanet.Tx;
@@ -288,7 +288,7 @@ namespace Nekoyume.BlockChain
                 "Unity/Error",
                 ("code", code),
                 ("key", key),
-                ("AgentAddress", Game.Game.instance.Agent.Address.ToString()),
+                ("AgentAddress", Game.Game.instance.States.CurrentAvatarState.agentAddress.ToString()),
                 ("AvatarAddress", Game.Game.instance.States.CurrentAvatarState.address.ToString()));
 
             errorMsg = errorMsg == string.Empty

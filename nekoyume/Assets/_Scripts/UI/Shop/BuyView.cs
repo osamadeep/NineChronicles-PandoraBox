@@ -217,7 +217,11 @@ namespace Nekoyume
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PriceToggle.onValueChanged.AddListener(_ => {UpdateView();});
             SpellToggle.onValueChanged.AddListener(_ => {UpdateView();});
-            World6Toggle.onValueChanged.AddListener(_ => {UpdateView();});
+            World6Toggle.onValueChanged.AddListener(_ =>
+            {
+                if (World6Toggle.isOn)
+                    World6Toggle.isOn = Premium.CheckPremiumFeature();
+                UpdateView();});
             priceValueTxt.onValueChanged.AddListener(_ => {
                 if (priceValueTxt.text.Length > 0)
                     UpdateView();});

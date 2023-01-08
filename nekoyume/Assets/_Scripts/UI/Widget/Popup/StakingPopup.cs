@@ -5,6 +5,7 @@ using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.L10n;
 using Nekoyume.Model.Item;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.UI.Module;
@@ -17,6 +18,12 @@ namespace Nekoyume.UI
 {
     public class StakingPopup : PopupWidget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button collectButton;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         [SerializeField] private GameObject none;
         [SerializeField] private GameObject content;
 
@@ -125,7 +132,19 @@ namespace Nekoyume.UI
             Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
                 .Where(_ => gameObject.activeSelf).Subscribe(OnBlockUpdated)
                 .AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            collectButton.onClick.AddListener(() => { CollectRewards(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void CollectRewards()
+        {
+            collectButton.interactable = false;
+            Premium.CollectStakeRewards();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Show(bool ignoreStartAnimation = false)
         {

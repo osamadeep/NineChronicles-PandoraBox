@@ -44,8 +44,6 @@ namespace Nekoyume.PandoraBox
 
         [SerializeField] private UnityEngine.UI.Button JoinButton;
 
-        [SerializeField] private Blur blur = null;
-
         [SerializeField] private Button closeButton;
 
         protected override void Awake()

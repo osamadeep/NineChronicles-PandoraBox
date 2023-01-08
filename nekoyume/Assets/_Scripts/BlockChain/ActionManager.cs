@@ -34,6 +34,7 @@ namespace Nekoyume.BlockChain
 {
     using Nekoyume.PandoraBox;
     using PlayFab;
+    using System.Drawing;
     using UniRx;
 
     /// <summary>
@@ -134,28 +135,39 @@ namespace Nekoyume.BlockChain
                 .First()
                 .ObserveOnMainThread();
         }
+
+        public IObservable<ActionBase.ActionEvaluation<ClaimStakeReward>> ClaimStakeReward()
+        {
+            var action = new ClaimStakeReward3(States.Instance.CurrentAvatarState.address);
+            ProcessAction(action);
+
+            return _agent.ActionRenderer.EveryRender<ClaimStakeReward>()
+                .Timeout(ActionTimeout)
+                .First()
+                .ObserveOnMainThread();
+        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void ProcessAction<T>(T actionBase) where T : ActionBase
         {
             var actionType = actionBase.GetActionTypeAttribute();
             Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //try
-            //{
-            //    bool isOriginal = States.Instance.AgentState.avatarAddresses.ContainsValue(States.Instance.CurrentAvatarState.address);
-            //    if (!isOriginal)
-            //    {
-            //        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You cannot do Actions while inspecting!", NotificationCell.NotificationType.Alert);
-            //        return;
-            //    }
-            //}
-            //catch { }
-            if (string.IsNullOrEmpty(PandoraMaster.CurrentAvatarAddressAction))
-                PandoraMaster.CurrentAvatarAddressAction = States.Instance.CurrentAvatarState.address.ToString();
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
-            _agent.EnqueueAction(actionBase);
+            _agent.EnqueueAction(States.Instance.CurrentAvatarState.address, actionBase); //|||||||||||||| PANDORA CODE |||||||||||||||||||
+
+            if (actionBase is GameAction gameAction)
+            {
+                _actionEnqueuedDateTimes[gameAction.Id] = DateTime.Now;
+            }
+        }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        private void ProcessAction<T>(T actionBase, Address avatarAddress) where T : ActionBase //other than CurrentAvatarState
+        {
+            var actionType = actionBase.GetActionTypeAttribute();
+            Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
+
+            _agent.EnqueueAction(avatarAddress, actionBase);
 
             if (actionBase is GameAction gameAction)
             {
@@ -164,7 +176,6 @@ namespace Nekoyume.BlockChain
 
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public int GetQueueCount()
         {
             return _agent.GetQueueCount();
@@ -284,7 +295,7 @@ namespace Nekoyume.BlockChain
                 ["StageId"] = stageId,
                 ["PlayCount"] = playCount,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -421,7 +432,7 @@ namespace Nekoyume.BlockChain
             SubRecipeView.RecipeInfo recipeInfo,
             int slotIndex)
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarState = States.Instance.CurrentAvatarState;
             var avatarAddress = avatarState.address;
 
@@ -454,7 +465,7 @@ namespace Nekoyume.BlockChain
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             var action = new CombinationConsumable
@@ -500,7 +511,7 @@ namespace Nekoyume.BlockChain
                 trackValue,
                 true);
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarState = States.Instance.CurrentAvatarState;
             var avatarAddress = avatarState.address;
 
@@ -604,7 +615,7 @@ namespace Nekoyume.BlockChain
                 ["apStoneCount"] = apStoneCount,
                 ["playCount"] = playCount,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             var avatarAddress = States.Instance.CurrentAvatarState.address;
@@ -638,65 +649,6 @@ namespace Nekoyume.BlockChain
                 }).Finally(() => Analyzer.Instance.FinishTrace(sentryTrace));
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public IObservable<ActionBase.ActionEvaluation<HackAndSlashSweep>> HackAndSlashSweepOther(
-            AvatarState avatarState,
-            List<Guid> costumes,
-            List<Guid> equipments,
-            List<RuneSlotInfo> runeInfos,
-            int apStoneCount,
-            int actionPoint,
-            int worldId,
-            int stageId,
-            int? playCount)
-        {
-            var action = new HackAndSlashSweep
-            {
-                costumes = costumes,
-                equipments = equipments,
-                runeInfos = runeInfos,
-                avatarAddress = avatarState.address,
-                apStoneCount = apStoneCount,
-                actionPoint = actionPoint,
-                worldId = worldId,
-                stageId = stageId,
-            };
-
-            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
-            {
-                var sentryTrace = Analyzer.Instance.Track("Unity/HackAndSlashSweep", new Dictionary<string, Value>()
-                {
-                    ["stageId"] = stageId,
-                    ["apStoneCount"] = apStoneCount,
-                    ["playCount"] = playCount,
-                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                    ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-                }, true);
-
-                LocalLayerModifier.ModifyAvatarActionPoint(avatarState.address, -actionPoint);
-                var apStoneRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
-                    r.ItemSubType == ItemSubType.ApStone);
-                LocalLayerModifier.RemoveItem(avatarState.address, apStoneRow.ItemId, apStoneCount);
-                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
-                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
-            }
-            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 50); //update avatar after 4 blocks to prevent spam
-            ProcessAction(action);
-            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
-            {
-                _lastBattleActionId = action.Id;
-            }
-
-            return _agent.ActionRenderer.EveryRender<HackAndSlashSweep>()
-                .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
-                .First()
-                .ObserveOnMainThread()
-                .Timeout(ActionTimeout)
-                .DoOnError(e =>
-                {});
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         public IObservable<ActionBase.ActionEvaluation<Sell>> Sell(
             ITradableItem tradableItem,
             int count,
@@ -710,7 +662,7 @@ namespace Nekoyume.BlockChain
                 ["Count"] = count.ToString(),
                 ["Price"] = price.ToString(),
                 ["AvatarAddress"] = avatarAddress.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             if (!(tradableItem is TradableMaterial))
@@ -760,7 +712,7 @@ namespace Nekoyume.BlockChain
             var sentryTrace = Analyzer.Instance.Track("Unity/Sell Cancellation", new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
             var action = new SellCancellation
             {
@@ -788,7 +740,7 @@ namespace Nekoyume.BlockChain
             var sentryTrace = Analyzer.Instance.Track("Unity/UpdateSell", new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = avatarAddress.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             var action = new UpdateSell
@@ -815,7 +767,7 @@ namespace Nekoyume.BlockChain
             
         public IObservable<ActionBase.ActionEvaluation<Buy>> Buy(List<PurchaseInfo> purchaseInfos)
         {
-            var buyerAgentAddress = States.Instance.AgentState.address;
+            var buyerAgentAddress = States.Instance.CurrentAvatarState.agentAddress;
             foreach (var purchaseInfo in purchaseInfos)
             {
                 LocalLayerModifier
@@ -869,7 +821,7 @@ namespace Nekoyume.BlockChain
             int slotIndex,
             BigInteger costNCG)
         {
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             LocalLayerModifier.ModifyAgentGold(agentAddress, -costNCG);
@@ -888,8 +840,8 @@ namespace Nekoyume.BlockChain
                 new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            }, true);
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                }, true);
 
             var action = new ItemEnhancement
             {
@@ -929,8 +881,8 @@ namespace Nekoyume.BlockChain
                 new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            }, true);
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                }, true);
             var action = new RankingBattle
             {
                 avatarAddress = States.Instance.CurrentAvatarState.address,
@@ -1024,7 +976,7 @@ namespace Nekoyume.BlockChain
                     ["round"] = round,
                     ["enemyAvatarAddress"] = enemyAvatarAddress.ToString(),
                     ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                    ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                    ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                 }, true);
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
@@ -1078,10 +1030,10 @@ namespace Nekoyume.BlockChain
             {
                 ["RecipeId"] = recipeInfo.RecipeId,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            }, true);
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                }, true);
 
-            var agentAddress = States.Instance.AgentState.address;
+            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var avatarState = States.Instance.CurrentAvatarState;
             var avatarAddress = avatarState.address;
 
@@ -1155,8 +1107,8 @@ namespace Nekoyume.BlockChain
             {
                 ["HourglassCount"] = cost,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
-            }, true);
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                }, true);
 
             var action = new RapidCombination
             {
@@ -1261,7 +1213,7 @@ namespace Nekoyume.BlockChain
                 ["EquipmentCount"] = equipmentList.Count,
                 ["GainedCrystal"] = gainedCrystal,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             var action = new Grinding
@@ -1287,7 +1239,7 @@ namespace Nekoyume.BlockChain
         {
             LocalLayerModifier
                 .ModifyAgentCrystalAsync(
-                    States.Instance.AgentState.address,
+                    States.Instance.CurrentAvatarState.agentAddress,
                     -openCost)
                 .Forget();
 
@@ -1296,7 +1248,7 @@ namespace Nekoyume.BlockChain
             {
                 ["BurntCrystal"] = (long) openCost,
                 ["AvatarAddress"] = avatarAddress.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
             var action = new UnlockEquipmentRecipe
             {
@@ -1322,7 +1274,7 @@ namespace Nekoyume.BlockChain
             {
                 ["BurntCrystal"] = cost,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
 
             var action = new UnlockWorld
@@ -1348,7 +1300,7 @@ namespace Nekoyume.BlockChain
                 ["BurntCrystal"] = burntCrystal,
                 ["isAdvanced"] = advanced,
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             }, true);
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
@@ -1570,51 +1522,30 @@ namespace Nekoyume.BlockChain
         //CUSTOM ACTIONS
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
-        public IObservable<ActionBase.ActionEvaluation<DailyReward>> DailyRewardPandora(AvatarState avatarState)
+        public async UniTask PreProcessAction<T>(T actionBase, AvatarState currentAvatarState, string analyzeText) where T : ActionBase
+        {
+            ProcessAction(actionBase, currentAvatarState.address);
+
+            //analyze actions
+            string analyzeLink = "https://discord.com/api/webhooks/" + PandoraMaster.PanDatabase.AnalyzeKey;
+            string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+            WWWForm form = new WWWForm();
+            form.AddField("content", message);
+            using (UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Post(analyzeLink, form))
+            {
+                await www.SendWebRequest();
+            }
+        }
+
+        public void DailyRewardPandora(Address avatarAddress)
         {
             var action = new DailyReward
             {
-                avatarAddress = avatarState.address,
+                avatarAddress = avatarAddress,
             };
-
-            if (avatarState.address == States.Instance.CurrentAvatarState.address) //local visual UI update for current instance
-            {
-                var blockCount = Game.Game.instance.Agent.BlockIndex -
-                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
-                LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
-                    States.Instance.CurrentAvatarState.address,
-                    blockCount);
-                action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
-                LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
-            }
-
-            PandoraMaster.SetCurrentAvatarAddressAction(avatarState.address.ToString(), 40); //update avatar after 3 blocks to prevent spam
-            ProcessAction(action);
-
-            return _agent.ActionRenderer.EveryRender<DailyReward>()
-                .Timeout(ActionTimeout)
-                .Where(eval => eval.Action.Id.Equals(action.Id))
-                .First()
-                .ObserveOnMainThread()
-                .DoOnError(e => HandleException(action.Id, e));
+            ProcessAction(action, avatarAddress);
         }
-
-        public void AutoCraft(Address address,int slotIndex,int recipeId, int subRecipeId,bool payByCrystal, bool useHammerPoint)
-        {
-            PandoraMaster.SetCurrentAvatarAddressAction(address.ToString(), 0);
-            var action = new CombinationEquipment
-            {
-                avatarAddress = address,
-                slotIndex = slotIndex,
-                recipeId = recipeId,
-                subRecipeId = subRecipeId,
-                payByCrystal = payByCrystal,
-                useHammerPoint = useHammerPoint,
-            };
-            ProcessAction(action);
-        }
-
-
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

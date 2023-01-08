@@ -269,7 +269,7 @@ namespace Nekoyume.UI
             Analyzer.Instance.Track("Unity/Click Guided Quest Combination Equipment", new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             });
             CombinationClickInternal(() =>
                 Find<Craft>().ShowWithEquipmentRecipeId(recipeId));
@@ -433,7 +433,7 @@ namespace Nekoyume.UI
             Analyzer.Instance.Track("Unity/Enter arena page", new Dictionary<string, Value>()
             {
                 ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
+                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
             });
             AudioController.PlayClick();
         }
@@ -591,6 +591,15 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.FavItems.Add(PlayerPrefs.GetString(key));
             }
+
+            //set guild data
+            PandoraMaster.CurrentGuildPlayer = null;
+            PandoraMaster.CurrentGuild = null;
+
+            PandoraMaster.CurrentGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.
+                Find(x => x.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower());
+            if (!(PandoraMaster.CurrentGuildPlayer is null))
+                PandoraMaster.CurrentGuild = PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
 
             //check crystal changes
             ChangeCrystalRatio();

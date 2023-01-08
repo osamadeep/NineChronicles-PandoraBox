@@ -204,10 +204,10 @@ namespace Nekoyume.UI.Module.Arena.Board
                 GuildButton.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + enemyGuildPlayer.Guild);
             }
 
-            if (Widget.Find<FriendInfoPopupPandora>().enemyAvatarState is null)
+            if (Widget.Find<FriendInfoPopupPandora>()._avatarState is null)
                 BlinkSelected.SetActive(false);
             else
-                BlinkSelected.SetActive(selectedEnemyAvatarState.address.ToString() == Widget.Find<FriendInfoPopupPandora>().enemyAvatarState.address.ToString());
+                BlinkSelected.SetActive(selectedEnemyAvatarState.address == Widget.Find<FriendInfoPopupPandora>()._avatarState.address);
             FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedEnemyAvatarState.address.ToString()));
 
             if (bannerHolder.childCount > 0)
@@ -264,8 +264,8 @@ namespace Nekoyume.UI.Module.Arena.Board
         async void SetWinRate()
         {
             rateText.text = "..."; //prevent old value
-            rateText.text = await Premium.WinRatePVP(States.Instance.CurrentAvatarState.address,
-                selectedEnemyAvatarState.address, States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 10);
+            if (Premium.CheckPremiumFeature())
+                rateText.text = await Premium.WinRatePVP(States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 10);
         }
 
         public void GetGuildInfo()

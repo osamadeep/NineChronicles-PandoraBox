@@ -139,13 +139,13 @@ namespace Nekoyume.UI
             if (showOnceForEachAgentAddress)
             {
                 if (PlayerPrefs.HasKey(
-                    $"{nameof(HelpTooltip)}_{id}_{States.Instance.AgentState.address}"))
+                    $"{nameof(HelpTooltip)}_{id}_{States.Instance.CurrentAvatarState.agentAddress}"))
                 {
                     return;
                 }
 
                 PlayerPrefs.SetInt(
-                    $"{nameof(HelpTooltip)}_{id}_{States.Instance.AgentState.address}",
+                    $"{nameof(HelpTooltip)}_{id}_{States.Instance.CurrentAvatarState.agentAddress}",
                     1);
             }
 
