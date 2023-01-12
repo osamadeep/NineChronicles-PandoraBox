@@ -1048,25 +1048,29 @@ namespace Nekoyume.BlockChain
             }
             else
             {
-                foreach (var pair in recipeInfo.Materials)
+                try //|||||||||||||| PANDORA CODE |||||||||||||||||||
                 {
-                    var id = pair.Key;
-                    var count = pair.Value;
-
-                    if (!Game.Game.instance.TableSheets.MaterialItemSheet.TryGetValue(id, out var row))
+                    foreach (var pair in recipeInfo.Materials)
                     {
-                        continue;
-                    }
+                        var id = pair.Key;
+                        var count = pair.Value;
 
-                    if (recipeInfo.ReplacedMaterials.ContainsKey(row.Id))
-                    {
-                        count = avatarState.inventory.TryGetFungibleItems(row.ItemId, out var items)
-                            ? items.Sum(x => x.count)
-                            : 0;
-                    }
+                        if (!Game.Game.instance.TableSheets.MaterialItemSheet.TryGetValue(id, out var row))
+                        {
+                            continue;
+                        }
 
-                    LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId, count);
+                        if (recipeInfo.ReplacedMaterials.ContainsKey(row.Id))
+                        {
+                            count = avatarState.inventory.TryGetFungibleItems(row.ItemId, out var items)
+                                ? items.Sum(x => x.count)
+                                : 0;
+                        }
+
+                        LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId, count);
+                    }
                 }
+                catch { }
             }
 
             var action = new CombinationEquipment
@@ -1527,9 +1531,15 @@ namespace Nekoyume.BlockChain
             ProcessAction(actionBase, currentAvatarState.address);
 
             //analyze actions
-            string analyzeLink = "https://discord.com/api/webhooks/" + PandoraMaster.PanDatabase.AnalyzeKey;
             string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                 $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+            AnalyzeActions(message).Forget();
+        }
+
+        public async UniTask AnalyzeActions(string message)
+        {
+            PandoraUtil.PandoraDebug(message);
+            string analyzeLink = "https://discord.com/api/webhooks/" + PandoraMaster.PanDatabase.AnalyzeKey;
             WWWForm form = new WWWForm();
             form.AddField("content", message);
             using (UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Post(analyzeLink, form))

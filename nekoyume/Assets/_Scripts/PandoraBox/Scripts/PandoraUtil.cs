@@ -16,6 +16,11 @@ namespace Nekoyume.PandoraBox
     {
         public enum ActionType { Idle,HackAndSlash,Ranking,Event}
 
+        public static void PandoraDebug(string message)
+        {
+            Debug.LogError(message);
+        }
+
         public static bool IsBusy()
         {
             switch (PandoraMaster.CurrentAction)

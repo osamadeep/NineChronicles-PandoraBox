@@ -46,11 +46,13 @@ namespace Nekoyume.PandoraBox
     using System.Globalization;
     using System.Threading.Tasks;
     using UniRx;
+    using UnityEditor;
     using UnityEngine.Networking;
     using static Nekoyume.Model.WorldInformation;
     using static Nekoyume.TableData.ArenaSheet;
     using static Nekoyume.UI.BattlePreparation;
     using static Nekoyume.UI.CombinationSlotPopup;
+    using static Nekoyume.UI.SubRecipeView;
 
     public class Premium
     {
@@ -1193,20 +1195,41 @@ namespace Nekoyume.PandoraBox
 
                 for (int i = 0; i < count; i++)
                 {
-                    var action = new EventDungeonBattle
+                    string analyzeText = $"**EventDungeonBattle** > {eventDungeonId} > {i + 1}/{count}";
+                    if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                     {
-                        AvatarAddress = currentAvatarState.address,
-                        EventScheduleId = RxProps.EventScheduleRowForDungeon.Value.Id,
-                        EventDungeonId = 10030001,
-                        EventDungeonStageId = eventDungeonId,
-                        Equipments = itemSlotStates[0].Equipments,
-                        Costumes = itemSlotStates[0].Costumes,
-                        Foods = new List<Guid>(),
-                        BuyTicketIfNeeded = false,
-                        RuneInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
-                    };
-                    string analyzeText = $"**EventDungeonBattle** > {eventDungeonId} > {i+1}/{count}";
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                        ActionManager.Instance.EventDungeonBattle(
+                        RxProps.EventScheduleRowForDungeon.Value.Id,
+                        10030001,
+                        eventDungeonId,
+                        itemSlotStates[0].Equipments,
+                        itemSlotStates[0].Costumes,
+                        null,
+                        runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                        false).Subscribe();
+
+                        //analyze actions
+                        string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                        ActionManager.Instance.AnalyzeActions(message).Forget();
+                    }
+                    else
+                    {
+                        var action = new EventDungeonBattle
+                        {
+                            AvatarAddress = currentAvatarState.address,
+                            EventScheduleId = RxProps.EventScheduleRowForDungeon.Value.Id,
+                            EventDungeonId = 10030001,
+                            EventDungeonStageId = eventDungeonId,
+                            Equipments = itemSlotStates[0].Equipments,
+                            Costumes = itemSlotStates[0].Costumes,
+                            Foods = new List<Guid>(),
+                            BuyTicketIfNeeded = false,
+                            RuneInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                        };
+                        ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    }
+
                 }
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent {count} Event tickets!",
                     NotificationCell.NotificationType.Information);
@@ -1241,25 +1264,53 @@ namespace Nekoyume.PandoraBox
             {
 
             }
-
+            
             try //in case actionManager is not ready yet
             {
-                var action = new CombinationEquipment
-                {
-                    avatarAddress = currentAvatarState.address,
-                    slotIndex = slotIndex,
-                    recipeId = recipeId,
-                    subRecipeId = subRecipeId,
-                    payByCrystal = payByCrystal,
-                    useHammerPoint = isHammerCraft,
-                };
+
                 var itemName = L10nManager.Localize($"ITEM_NAME_{craftID}");
                 string basicCraft = isBasic ? "Basic" : "Premium";
                 string hammerCraft = isHammerCraft ? "Super Craft" : "";
                 string crystal = payByCrystal ? ", With Crystal!" : "";
-                string analyzeText = $"CombinationEquipment > **{hammerCraft}** **{basicCraft}** {itemName} > {slotIndex}{crystal} " +
-                    $"> hammer:{hammerData.HammerPoint}/{max}";
-                ActionManager.Instance.PreProcessAction(action, currentAvatarState,analyzeText).Forget();
+                string analyzeText = $"CombinationEquipment > **{hammerCraft} {basicCraft}** {itemName} > {slotIndex}{crystal} " +
+                    $"> hammer:{hammerData.HammerPoint + 1}/{max}";
+
+                if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
+                {
+                    ActionManager.Instance
+                    .CombinationEquipment(
+                        new RecipeInfo
+                        {
+                            RecipeId = recipeId,
+                            SubRecipeId = subRecipeId,
+                            CostNCG = default,
+                            CostCrystal = default,
+                            CostAP = 0,
+                            Materials = default,
+                            ReplacedMaterials = null,
+                        },
+                        slotIndex,
+                        payByCrystal,
+                        isHammerCraft)
+                    .Subscribe();
+                    //analyze actions
+                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    ActionManager.Instance.AnalyzeActions(message).Forget();
+                }
+                else
+                {
+                    var action = new CombinationEquipment
+                    {
+                        avatarAddress = currentAvatarState.address,
+                        slotIndex = slotIndex,
+                        recipeId = recipeId,
+                        subRecipeId = subRecipeId,
+                        payByCrystal = payByCrystal,
+                        useHammerPoint = isHammerCraft,
+                    };
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState,analyzeText).Forget();
+                }
 
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
                 $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint+1}</color>/{max}!",
@@ -1291,21 +1342,39 @@ namespace Nekoyume.PandoraBox
             try //in case actionManager is not ready yet
             {
                 var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
-
-                var action = new HackAndSlashSweep
-                {
-                    costumes = itemSlotStates[0].Costumes,
-                    equipments = itemSlotStates[0].Equipments,
-                    runeInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
-                    avatarAddress = currentAvatarState.address,
-                    apStoneCount = 0,
-                    actionPoint = currentAvatarState.actionPoint,
-                    worldId = worldID,
-                    stageId = sweepStage,
-                };
                 string analyzeText = $"HackAndSlashSweep> {currentAvatarState.actionPoint}> **{sweepStage}**";
-                ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
 
+                if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
+                {
+                    Game.Game.instance.ActionManager.HackAndSlashSweep(
+                    itemSlotStates[0].Costumes,
+                    itemSlotStates[0].Equipments,
+                    runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                    0,
+                    currentAvatarState.actionPoint,
+                    worldID,
+                    sweepStage,
+                    currentAvatarState.actionPoint).Subscribe();
+                    //analyze actions
+                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    ActionManager.Instance.AnalyzeActions(message).Forget();
+                }
+                else
+                {
+                    var action = new HackAndSlashSweep
+                    {
+                        costumes = itemSlotStates[0].Costumes,
+                        equipments = itemSlotStates[0].Equipments,
+                        runeInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                        avatarAddress = currentAvatarState.address,
+                        apStoneCount = 0,
+                        actionPoint = currentAvatarState.actionPoint,
+                        worldId = worldID,
+                        stageId = sweepStage,
+                    };
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                }
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!", NotificationCell.NotificationType.Information);
             }
             catch { }

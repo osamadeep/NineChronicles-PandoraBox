@@ -153,7 +153,11 @@ namespace Nekoyume.UI.Module
                 return;
             }
 
-            Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState.address);   
+            if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
+                Game.Game.instance.ActionManager.DailyReward().Subscribe();
+            else
+                Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState.address);
+
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
         }
 
