@@ -20,6 +20,7 @@ using System;
 
 namespace Nekoyume.PandoraBox
 {
+    using Bencodex.Types;
     using Cysharp.Threading.Tasks;
     using mixpanel;
     using Nekoyume.Action;
@@ -36,6 +37,7 @@ namespace Nekoyume.PandoraBox
     using Nekoyume.Model.Rune;
     using Nekoyume.Model.Skill;
     using Nekoyume.Model.Stat;
+    using Nekoyume.State.Subjects;
     using Nekoyume.TableData;
     using Nekoyume.UI.Model;
     using Nekoyume.UI.Module;
@@ -1212,10 +1214,33 @@ namespace Nekoyume.PandoraBox
             catch { }
         }
 
-        public static void AutoCraft(AvatarState currentAvatarState, int slotIndex, int recipeId, int subRecipeId, bool payByCrystal, bool isBasic, int craftID)
+        public static async UniTask AutoCraft(AvatarState currentAvatarState, int slotIndex, int recipeId, int subRecipeId, bool payByCrystal, bool isBasic, int craftID)
         {
             if (!CurrentPandoraPlayer.IsPremium())
                 return;
+
+            //check if there is supercraft
+            bool isHammerCraft = false;
+            var hammerAddress = Addresses.GetHammerPointStateAddress(currentAvatarState.address, recipeId);
+            var hammerState = await Game.Game.instance.Agent.GetStateAsync(hammerAddress);
+            var hammerData = hammerState is List list? new HammerPointState(hammerAddress, list): new HammerPointState(hammerAddress, recipeId);;
+
+            var max = Game.TableSheets.Instance.CrystalHammerPointSheet[recipeId].MaxPoint;
+            isHammerCraft = hammerData.HammerPoint == max;
+            //check if supercraft has crystal cost
+            if (isHammerCraft && States.Instance.CrystalBalance.MajorUnit < Game.TableSheets.Instance.CrystalHammerPointSheet[recipeId].CRYSTAL)
+            {
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> don't have enough Crystals for SuperCraft!"
+                    ,NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+
+            //check if he has material
+            if (!payByCrystal && !isHammerCraft)
+            {
+
+            }
 
             try //in case actionManager is not ready yet
             {
@@ -1226,16 +1251,19 @@ namespace Nekoyume.PandoraBox
                     recipeId = recipeId,
                     subRecipeId = subRecipeId,
                     payByCrystal = payByCrystal,
-                    useHammerPoint = false,
+                    useHammerPoint = isHammerCraft,
                 };
                 var itemName = L10nManager.Localize($"ITEM_NAME_{craftID}");
                 string basicCraft = isBasic ? "Basic" : "Premium";
-                string crystal = payByCrystal ? ", With Crystal!" : "!";
-                string analyzeText = $"CombinationEquipment > **{basicCraft}** {itemName} > {slotIndex}{crystal}";
+                string hammerCraft = isHammerCraft ? "Super Craft" : "";
+                string crystal = payByCrystal ? ", With Crystal!" : "";
+                string analyzeText = $"CombinationEquipment > **{hammerCraft}** **{basicCraft}** {itemName} > {slotIndex}{crystal} " +
+                    $"> hammer:{hammerData.HammerPoint}/{max}";
                 ActionManager.Instance.PreProcessAction(action, currentAvatarState,analyzeText).Forget();
 
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
-                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!", NotificationCell.NotificationType.Information);
+                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint+1}</color>/{max}!",
+                NotificationCell.NotificationType.Information);
             }
             catch { }
 

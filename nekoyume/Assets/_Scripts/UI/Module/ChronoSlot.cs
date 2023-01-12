@@ -420,10 +420,11 @@ namespace Nekoyume.UI.Module
 
                 if (currentBlockIndex > Combinationslotstates[i].UnlockBlockIndex && IsAutoCraft)
                 {
+                    await AutoCraftEquipment(i);
                     craftCooldown = currentBlockIndex + urgentUpdateInterval;
-                    AutoCraftEquipment(i);
+                    break; //enforce break to wait new craft count the hammer points
                 }
-            }
+            }                
         }
 
         bool UpdateCraftingSlots()
@@ -469,7 +470,7 @@ namespace Nekoyume.UI.Module
             return isEmptySlot;
         }
 
-        void AutoCraftEquipment(int slotIndex)
+        async UniTask AutoCraftEquipment(int slotIndex)
         {
             var tableSheets = Game.TableSheets.Instance;
             var itemSheet = tableSheets.EquipmentItemRecipeSheet;
@@ -479,7 +480,7 @@ namespace Nekoyume.UI.Module
             if (itemRow != null)
             {
                 var itemSub = itemSubSheet.First(x => x.Value.Id == itemRow.SubRecipeIds[indexSub]).Value;
-                Premium.AutoCraft(currentAvatarState, slotIndex, itemRow.Id, itemSub.Id, IsCraftFillCrystal, IsBasicCraft, craftID);
+                await Premium.AutoCraft(currentAvatarState, slotIndex, itemRow.Id, itemSub.Id, IsCraftFillCrystal, IsBasicCraft, craftID);
             }
         }
 

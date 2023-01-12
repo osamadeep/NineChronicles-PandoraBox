@@ -271,6 +271,9 @@ namespace Nekoyume.UI
                     OnClickPresetTab(raidButton, battleType);
                     break;
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            rateText.text = "Win Rate :" + "..."; //prevent old value
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void SetItems(
