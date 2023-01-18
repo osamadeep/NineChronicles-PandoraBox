@@ -363,7 +363,7 @@ namespace Nekoyume.State
                 //    currentRoundData.ArenaType,
                 //    playerScore, playerTuple.rank);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                avatarAddrAndScoresWithRank = Premium.GetBoundsWithPlayerScore(
+                avatarAddrAndScoresWithRank = Premium.PVP_GetListRange(
                 avatarAddrAndScoresWithRank,
                 currentRoundData.ArenaType,
                 playerScore, playerTuple.rank);
@@ -388,7 +388,7 @@ namespace Nekoyume.State
                 //    currentRoundData.ArenaType,
                 //    playerScore, 0);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                avatarAddrAndScoresWithRank = Premium.GetBoundsWithPlayerScore(
+                avatarAddrAndScoresWithRank = Premium.PVP_GetListRange(
                 avatarAddrAndScoresWithRank,
                 currentRoundData.ArenaType,
                 playerScore, 0);
@@ -603,39 +603,5 @@ namespace Nekoyume.State
 
             return result.ToArray();
         }
-
-        //private static (Address avatarAddr, int score, int rank)[] GetBoundsWithPlayerScore(
-        //    (Address avatarAddr, int score, int rank)[] tuples,
-        //    ArenaType arenaType,
-        //    int playerScore,int currentPlayerRank)
-        //{
-
-        //    //if (!ArenaHelper.ScoreLimits.ContainsKey(arenaType))
-        //    //{
-        //    //    throw new ArgumentOutOfRangeException(nameof(arenaType), arenaType, null);
-        //    //}
-
-        //    //var bounds = ArenaHelper.ScoreLimits[arenaType];
-        //    //bounds = (bounds.upper + playerScore, bounds.lower + playerScore);
-        //    //return tuples
-        //    //    .Where(tuple => tuple.score <= bounds.upper && tuple.score >= bounds.lower)
-        //    //    .ToArray();
-
-        //    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        //    //int upper = 10 + (PandoraMaster.Instance.Settings.ArenaListUpper *
-        //    //            PandoraMaster.Instance.Settings.ArenaListStep);
-        //    //int lower = 10 + (PandoraMaster.Instance.Settings.ArenaListLower *
-        //    //            PandoraMaster.Instance.Settings.ArenaListStep);
-        //    //if (PandoraMaster.CurrentPandoraPlayer.IsPremium())
-        //    //{
-        //    //    return tuples.Where(tuple => tuple.rank < 100 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
-        //    //}
-        //    //else
-        //    //{
-        //    //    return tuples.Where(tuple => tuple.rank < 10 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
-        //    //}
-        //    return Premium.GetBoundsWithPlayerScore(tuples);
-        //    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        //}
     }
 }

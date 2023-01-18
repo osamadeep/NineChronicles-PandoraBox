@@ -44,7 +44,7 @@ namespace Nekoyume.UI.Scroller
         CrystalRandomBuffSheet.Row itemDataSimulation;
         public void SetSimulateBuff()
         {
-            if (!Premium.CheckPremiumFeature())
+            if (!Premium.PANDORA_CheckPremium())
                 return;
             PandoraUtil.ShowSystemNotification(1002, NotificationCell.NotificationType.Information);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", itemDataSimulation.Id);

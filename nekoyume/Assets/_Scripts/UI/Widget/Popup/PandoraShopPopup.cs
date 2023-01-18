@@ -114,7 +114,7 @@ namespace Nekoyume.UI
             string content = $"Are you sure to spend <b>{currentNcg}</b> <color=#FFCF2A>NCG</color> to get <b>{(int)totalchoosenCrystal}</b> <color=#EF3DFF>CRYSTALS</color> ?";
             Find<TwoButtonSystem>().Show(content, "Yes","No",
             (() => {
-                Premium.BuyCrystals(currentNcg, choosenCrystalPrice);
+                Premium.ACCOUNT_BuyCrystals(currentNcg, choosenCrystalPrice);
                 StopCoroutine(ChangeCrystalValue());
                 }));
         }

@@ -285,7 +285,7 @@ namespace Nekoyume.UI
 
         public void OpenSimulatorBuff()
         {
-            if (!Premium.CheckPremiumFeature())
+            if (!Premium.PANDORA_CheckPremium())
                 return;
             Widget.Find<BuffBonusPopup>().Show();
             Widget.Find<BuffBonusPopup>().OnClickBuffListButton();
@@ -901,7 +901,7 @@ namespace Nekoyume.UI
             PandoraMaster.IsHackAndSlashSimulate = true;
             var consumables = information.GetEquippedConsumables().Select(x => x.ItemId).ToList();
             var skillId = PlayerPrefs.GetInt("_PandoraBox_PVE_SelectedCrystalBuff", -1);
-            var simulator = Premium.SoloPVESimulate(_worldId, _stageId, consumables, skillId);
+            var simulator = Premium.PVE_SoloSimulate(_worldId, _stageId, consumables, skillId);
             simulator.Simulate();
             GoToStage(simulator.Log);
         }
@@ -910,7 +910,7 @@ namespace Nekoyume.UI
         {
             var consumables = information.GetEquippedConsumables().Select(x => x.ItemId).ToList();
             var skillId = PlayerPrefs.GetInt("_PandoraBox_PVE_SelectedCrystalBuff", -1);
-            Premium.MultiPVESimulate(_worldId, _stageId, consumables, skillId);
+            Premium.PVE_MultiSimulate(_worldId, _stageId, consumables, skillId);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

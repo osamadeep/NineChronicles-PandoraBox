@@ -222,7 +222,7 @@ namespace Nekoyume.UI
         {
             try
             {
-                Premium.ChangeTicketsCount(maxTriesSld.value, _roundData);
+                Premium.PVP_ChangeTicketsCount(maxTriesSld.value, _roundData);
             }
             catch
             {
@@ -394,7 +394,7 @@ namespace Nekoyume.UI
         void SendMultipleBattleArenaAction()
         {
 
-            if (Premium.SendMultipleBattleArenaAction(maxTriesSld.value, _chooseAvatarState.address,
+            if (Premium.PVP_MultiConfirmBattles(maxTriesSld.value, _chooseAvatarState.address,
                 _roundData.ChampionshipId, _roundData.Round, TicketCountToUse))
             {
                 Close();

@@ -130,16 +130,16 @@ namespace Nekoyume.UI
 
         void SoloSimulate()
         {
-            Premium.SoloSimulate(States.Instance.CurrentAvatarState, _avatarState);
+            Premium.PVP_SoloSimulate(States.Instance.CurrentAvatarState, _avatarState);
         }
 
         async void MultipleSimulate()
         {
             rateText.text = "Win Rate :" + "..."; //prevent old value
-            if (Premium.CheckPremiumFeature())
-                rateText.text = "Win Rate :" + await Premium.WinRatePVP(States.Instance.CurrentAvatarState, _avatarState, 100);
+            if (Premium.PANDORA_CheckPremium())
+                rateText.text = "Win Rate :" + await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, _avatarState, 1000);
             multipleSimulateButton.interactable = true;
-            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
+            multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "1000 X Simulate";
         }
 
         public void ResetAllNemesis()

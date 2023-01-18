@@ -709,8 +709,8 @@ namespace Nekoyume.Game
                     PandoraMaster.PlayFabCurrentPlayer = success.InfoResultPayload.PlayerProfile;
 
                     //get players
-                    Premium.GetDatabase(currentLoginAddress);
-                    Premium.UpdateDatabasePeriodly().Forget();
+                    Premium.PANDORA_GetDatabase(currentLoginAddress);
+                    Premium.PANDORA_UpdateDatabasePeriodly().Forget();
                 }
             },
             failed =>
@@ -919,6 +919,8 @@ namespace Nekoyume.Game
                 Debug.Log("This is development mode.");
                 isTrackable = false;
             }
+
+
 
             Analyzer = new Analyzer(
                 uniqueId,

@@ -1825,7 +1825,7 @@ namespace Nekoyume.BlockChain
 
 
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
-                        Premium.ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
+                        Premium.ACCOUNT_ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
                     }
                     else if (eval.Action.Memo.Length > 12 && eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
                     {
@@ -1839,7 +1839,7 @@ namespace Nekoyume.BlockChain
                         int ncg = (int)eval.Action.Amount.MajorUnit;
                         int gems = int.Parse(eval.Action.Memo.Substring(14));
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
-                        Premium.ConfirmGemsRequest(eval.BlockIndex, gems, ncg);
+                        Premium.PANDORA_ConfirmGemsRequest(eval.BlockIndex, gems, ncg);
                     }
                 }
                 //catch { }
@@ -2164,7 +2164,7 @@ namespace Nekoyume.BlockChain
                     arenaBattlePreparation.OnRenderBattleArena(eval);
                 }
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                Premium.CancelMultiArena();
+                Premium.PVP_CancelPendingFights();
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
 
@@ -2330,19 +2330,17 @@ namespace Nekoyume.BlockChain
             }
             if (Premium.ArenaBattleInProgress)
             {
+                UpdateAgentStateAsync(eval).Forget();
+                UpdateCurrentAvatarStateAsync().Forget();
                 if (PandoraMaster.Instance.Settings.ArenaPush)
                 {
                     //no need to do anything except updating the agent
                     Premium.ArenaBattleInProgress = false;
-                    UpdateAgentStateAsync(eval).Forget();
-                    UpdateCurrentAvatarStateAsync().Forget();
                 }
-                else if (Premium.ArenaBattleInProgress && !PandoraMaster.Instance.Settings.ArenaPush)
+                else
                 {
-                    UpdateAgentStateAsync(eval).Forget();
-                    UpdateCurrentAvatarStateAsync().Forget();
                     _disposableForBattleEnd = null;
-                    Premium.OnArenaEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+                    Premium.PVP_OnConfirmBattleEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
                 }
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

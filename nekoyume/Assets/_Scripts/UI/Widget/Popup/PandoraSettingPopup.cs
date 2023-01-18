@@ -29,67 +29,43 @@ namespace Nekoyume.UI
         [SerializeField] TextMeshProUGUI nodeText;
 
         //Time Scale Elements
-        [SerializeField]
-        Image timeImage;
-
-        [SerializeField]
-        Image blockImage;
-
-        [SerializeField]
-        Image bothImage;
+        [SerializeField] Image timeImage;
+        [SerializeField] Image blockImage;
+        [SerializeField] Image bothImage;
 
         //Menu Speed Elements
-        [SerializeField]
-        TextMeshProUGUI menuSpeedText;
-
-        [SerializeField]
-        Slider menuSpeedSlider;
+        [SerializeField] TextMeshProUGUI menuSpeedText;
+        [SerializeField] Slider menuSpeedSlider;
 
         //Fight Speed Elements
-        [SerializeField]
-        TextMeshProUGUI fightSpeedText;
-
-        [SerializeField]
-        Slider fightSpeedSlider;
+        [SerializeField] TextMeshProUGUI fightSpeedText;
+        [SerializeField] Slider fightSpeedSlider;
 
         //Arena Speed Elements
-        [SerializeField]
-        TextMeshProUGUI arenaUpText;
-        [SerializeField]
-        TextMeshProUGUI arenaLoText;
-
-        [SerializeField]
-        Slider arenaUpSlider;
-        [SerializeField]
-        Slider arenaLoSlider;
+        [SerializeField] TextMeshProUGUI arenaUpText;
+        [SerializeField] TextMeshProUGUI arenaLoText;
+        [SerializeField] Slider arenaUpSlider;
+        [SerializeField] Slider arenaLoSlider;
 
         //multiple login
-        [SerializeField]
-        Image multiLogOnImage;
-
-        [SerializeField]
-        Image multiLogOffImage;
+        [SerializeField] Image multiLogOnImage; 
+        [SerializeField] Image multiLogOffImage;
 
         //intro story
-        [SerializeField]
-        Image introStoryOnImage;
-
-        [SerializeField]
-        Image introStoryOffImage;
+        [SerializeField] Image introStoryOnImage;
+        [SerializeField] Image introStoryOffImage;
 
         //arena multi method
-        [SerializeField]
-        Image arenaConfirmImage;
-
-        [SerializeField]
-        Image arenaPushImage;
+        [SerializeField] Image arenaConfirmImage;
+        [SerializeField] Image arenaPushImage;
 
         //Arena Push Step Count
-        [SerializeField]
-        TextMeshProUGUI pushStepText;
+        [SerializeField] TextMeshProUGUI pushStepText;
+        [SerializeField] Slider pushStepSlider;
 
-        [SerializeField]
-        Slider pushStepSlider;
+        //arena validator
+        [SerializeField] Image arenaValidatorOnImage;
+        [SerializeField] Image arenaValidatorOffImage;
 
         int blockShowType;
 
@@ -124,6 +100,7 @@ namespace Nekoyume.UI
             LoadMultipleLogin();
             LoadIntroStory();
             LoadArenaMethod();
+            LoadArenaValidator();
 
             SubmitWidget = () => Close(true);
             CloseWidget = () => Close(true);
@@ -180,7 +157,21 @@ namespace Nekoyume.UI
             LoadMultipleLogin();
             LoadIntroStory();
             LoadArenaMethod();
+            LoadArenaValidator();
         }
+
+        public void ChangeArenaValidator(bool value)
+        {
+            PandoraMaster.Instance.Settings.ArenaValidator = value;
+            LoadArenaValidator();
+        }
+
+        void LoadArenaValidator()
+        {
+            arenaValidatorOnImage.color = PandoraMaster.Instance.Settings.ArenaValidator ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            arenaValidatorOffImage.color = !PandoraMaster.Instance.Settings.ArenaValidator ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
 
         public void ChangeTimeScale(int value)
         {

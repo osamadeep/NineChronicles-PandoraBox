@@ -180,7 +180,7 @@ namespace Nekoyume.UI
                 maxButton.OnClickSubject
                     .Subscribe(state => { StartCoroutine(MaxCombineCurrentRecipe()); })
                     .AddTo(gameObject);
-                copyItemIDBtn.onClick.AddListener(() => { CopyItemID(); });
+                //copyItemIDBtn.onClick.AddListener(() => { CopyItemID(); });
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 button.OnClickDisabledSubject
@@ -602,7 +602,6 @@ namespace Nekoyume.UI
                     replacedMaterialMap.Add(row.Id, count - itemCount);
                 }
             }
-
             return replacedMaterialMap;
         }
 
@@ -772,23 +771,31 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        void CopyItemID()
+        public void CopyItemID(int craftType)
         {
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Item ID copied to clipboard!",
-            NotificationCell.NotificationType.Information);
-            var tableSheets = TableSheets.Instance;
-            var equipmentRow = tableSheets.EquipmentItemRecipeSheet[_selectedRecipeInfo.RecipeId];
-            ClipboardHelper.CopyToClipboard(equipmentRow.ResultEquipmentId.ToString());
+            NotificationCell.NotificationType.Information);      
 
+            switch (craftType)
+            {
+                case 0:
+                    var equipmentRow = _recipeRow as EquipmentItemRecipeSheet.Row;
+                    ClipboardHelper.CopyToClipboard(equipmentRow.Id.ToString());
+                    break;
+                case 1:
+                    var consumableRow = _recipeRow as ConsumableItemRecipeSheet.Row;
+                    ClipboardHelper.CopyToClipboard(consumableRow.Id.ToString());
+                    break;
+                case 2:
+                    var eventMaterialRow = _recipeRow as EventConsumableItemRecipeSheet.Row;
+                    ClipboardHelper.CopyToClipboard(eventMaterialRow.Id.ToString());
+                    break;
+            }
         }
 
         public System.Collections.IEnumerator MaxCombineCurrentRecipe()
         {
-            if (!CanCraft
-                && _selectedRecipeInfo.RecipeId != 10020001
-                && _selectedRecipeInfo.RecipeId != 10020002
-                && _selectedRecipeInfo.RecipeId != 10020003
-                && _selectedRecipeInfo.RecipeId != 10020004)
+            if (!CanCraft)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);

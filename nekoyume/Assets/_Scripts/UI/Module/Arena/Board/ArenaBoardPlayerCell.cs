@@ -265,7 +265,7 @@ namespace Nekoyume.UI.Module.Arena.Board
         {
             rateText.text = "..."; //prevent old value
             if (Premium.CurrentPandoraPlayer.IsPremium())
-                rateText.text = await Premium.WinRatePVP(States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 10);
+                rateText.text = await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 15);
         }
 
         public void GetGuildInfo()

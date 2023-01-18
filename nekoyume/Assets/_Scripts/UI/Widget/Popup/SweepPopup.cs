@@ -297,7 +297,7 @@ namespace Nekoyume.UI
         //bool RepeatMultipleIsOn = false;
         public void RepeatMultiple()
         {
-            Premium.RepeatMultiple(_repeatBattleAction, _ap, _stageRow, _costAp,
+            Premium.PVE_MultiRepeat(_repeatBattleAction, _ap, _stageRow, _costAp,
                 (int)(apStoneSlider.slider.value), apStonePandora.item as Nekoyume.Model.Item.Material);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -480,7 +480,7 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (apStoneCount > 10)
-                if (!Premium.SweepMoreStone(apStoneCount, costumes, equipments, runeInfos, worldId, stageRow))
+                if (!Premium.PVE_SweepMoreStones(apStoneCount, costumes, equipments, runeInfos, worldId, stageRow))
                     return;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

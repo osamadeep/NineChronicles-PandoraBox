@@ -156,7 +156,7 @@ namespace Nekoyume.UI
         private void Refresh()
         {
             RefreshButton.interactable = false;
-            PandoraBox.Premium.ShopRefresh(view, ShowItemTooltip, _cancellationTokenSource);
+            PandoraBox.Premium.SHOP_Refresh(view, ShowItemTooltip, _cancellationTokenSource);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

@@ -191,6 +191,8 @@ MonoBehaviour:
   collectOffImage: {fileID: 7298765884402435231}
   spendOnImage: {fileID: 969537735218642756}
   spendOffImage: {fileID: 2854352182240252586}
+  sweepOnImage: {fileID: 565995738742260396}
+  sweepOffImage: {fileID: 4579684357541960451}
   sweepStageInput: {fileID: 6323229227522834357}
   craftModule: {fileID: 1404212856026150416}
   craftOnImage: {fileID: 1250911286662095980}
@@ -2430,9 +2432,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Nekoyume.UI.PandoraSettingPopup, Nekoyume
-        m_MethodName: ChangeMultipleLogin
+      - m_Target: {fileID: 7407895453931944160}
+        m_TargetAssemblyTypeName: Nekoyume.UI.ChronoSettingsPopup, Nekoyume
+        m_MethodName: ChangeSweep
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3850,7 +3852,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3243591504461266275
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5658,7 +5660,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4036712308749684564
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13366,9 +13368,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Nekoyume.UI.PandoraSettingPopup, Nekoyume
-        m_MethodName: ChangeMultipleLogin
+      - m_Target: {fileID: 7407895453931944160}
+        m_TargetAssemblyTypeName: Nekoyume.UI.ChronoSettingsPopup, Nekoyume
+        m_MethodName: ChangeSweep
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

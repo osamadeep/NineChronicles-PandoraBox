@@ -29,6 +29,8 @@ namespace Nekoyume.UI.Module
     using Nekoyume.Model.Mail;
     using Nekoyume.PandoraBox;
     using Nekoyume.State.Subjects;
+    using Nekoyume.TableData;
+    using Nekoyume.TableData.Event;
     using Nekoyume.UI.Module.Common;
     using Nekoyume.UI.Module.WorldBoss;
     using Nekoyume.UI.Scroller;
@@ -54,7 +56,7 @@ namespace Nekoyume.UI.Module
         int updateAvatarInterval = 90; //blocks to periodly update avatar
         int updateCraftInterval = 200; //blocks to periodly update craft slots
         int updateEventInterval = 200; //blocks to periodly update event EventDungeonInfo
-        int urgentUpdateInterval = 7; //blocks to update if there is an action (auto collect,craft ...)
+        int urgentUpdateInterval = 15; //blocks to update if there is an action (auto collect,craft ...)
         [Space(5)]
 
 
@@ -74,6 +76,7 @@ namespace Nekoyume.UI.Module
         bool IsStageNotify;
         bool IsAutoCollect;
         bool IsAutoSpend;
+        bool IsSweep;
         int sweepStage;
         [Space(5)]
 
@@ -176,6 +179,7 @@ namespace Nekoyume.UI.Module
                 IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
                 IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
                 IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
+                IsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsSweep", 1));
                 sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
 
                 //CRAFT
@@ -199,6 +203,7 @@ namespace Nekoyume.UI.Module
                 IsStageNotify = true;
                 IsAutoCollect = true;
                 IsAutoSpend = false;
+                IsSweep = true;
                 sweepStage = 0;
 
                 //register CRAFT variables
@@ -224,12 +229,30 @@ namespace Nekoyume.UI.Module
             stageModule.SetActive(IsStage);
             ProsperityImage.SetActive(IsAutoCollect);
             APImage.SetActive(IsAutoSpend);
-            SweepStageText.text = "Sweep > " + sweepStage.ToString(); //change sweep method later
+            if (IsSweep)
+                SweepStageText.text = "Sweep > " + sweepStage;
+            else
+            {
+                int _stageId = 1;
+                currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);
+                _stageId = Math.Clamp(_stageId + 1, 1, 300);
+
+                SweepStageText.text = "Progress > " + _stageId;
+            }
 
             //craft
             craftModule.SetActive(IsCraft);
+            var tableSheets = Game.TableSheets.Instance;
             isCraftedImage.gameObject.SetActive(IsAutoCraft);
-            isCraftedImage.sprite = SpriteHelper.GetItemIcon(craftID);
+            if (IsAutoCraft)
+            {
+                if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
+                else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
+                else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
+            }
 
             //event
             eventAddress = Nekoyume.Model.Event.EventDungeonInfo.DeriveAddress(currentAvatarState.address, RxProps.EventDungeonRow.Id);
@@ -264,7 +287,7 @@ namespace Nekoyume.UI.Module
             {
                 var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1, 0, 1700);
                 bool isFull = prosperityBlocks == 1700;
-                //urgent upgrade
+                //urgent upgrade because prosperity is full
                 if (IsAutoCollect && isFull && stageCooldown > currentBlockIndex + urgentUpdateInterval)
                     stageCooldown = currentBlockIndex + urgentUpdateInterval;
                 long diff = (long)(1700 - prosperityBlocks);
@@ -286,7 +309,7 @@ namespace Nekoyume.UI.Module
 
                 ProsperityText.text = isFull ? $"<color=red>FULL</color>" : value;
                 APText.text = currentAvatarState.actionPoint > 5 ? $"<color=red>{currentAvatarState.actionPoint}</color>" : currentAvatarState.actionPoint.ToString();
-                //urgent upgrade
+                //urgent upgrade because there is some action points
                 if (IsAutoSpend && currentAvatarState.actionPoint > 5 && stageCooldown > currentBlockIndex + urgentUpdateInterval)
                     stageCooldown = currentBlockIndex + urgentUpdateInterval;
 
@@ -309,7 +332,7 @@ namespace Nekoyume.UI.Module
                 craftCooldownImage.fillAmount = (updateCraftInterval - cooldownBar) * 1f / updateCraftInterval;
 
                 if (craftCooldown < currentBlockIndex)
-                    SetCombinationSlotStatesAsync().Forget();                   
+                    SetCombinationSlotStatesAsync().Forget();
             }
 
             //Event
@@ -378,10 +401,17 @@ namespace Nekoyume.UI.Module
                 catch { }
             }
             //check for sweep, we used else if to not doing twice 
-            else if (IsAutoSpend && sweepStage != 0 && currentAvatarState.actionPoint >= 5)
+            else if (IsAutoSpend && IsSweep && sweepStage != 0 && currentAvatarState.actionPoint >= 5)
             {
                 try //in case actionManager is not ready yet
-                {Premium.AutoStageSweep(currentAvatarState, sweepStage).Forget(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
+                {Premium.PVE_AutoStageSweep(currentAvatarState, sweepStage).Forget(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
+                catch { }
+            }
+            //check for repeat, we used else if to not doing twice 
+            else if (IsAutoSpend && !IsSweep && currentAvatarState.actionPoint >= 5)
+            {
+                try //in case actionManager is not ready yet
+                { Premium.PVE_AutoStageRepeat(currentAvatarState).Forget(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
                 catch { }
             }
         }
@@ -406,7 +436,7 @@ namespace Nekoyume.UI.Module
                 else
                     realLevelID = int.Parse("100300" + eventLevel.ToString());
 
-                Premium.AutoEventDungeon(currentAvatarState, realLevelID, ticketsCount).Forget();
+                Premium.PVE_AutoEventDungeon(currentAvatarState, realLevelID, ticketsCount).Forget();
                 eventCooldown = currentBlockIndex + urgentUpdateInterval;
             }
         }
@@ -424,11 +454,27 @@ namespace Nekoyume.UI.Module
 
                 if (currentBlockIndex > Combinationslotstates[i].UnlockBlockIndex && IsAutoCraft)
                 {
-                    await AutoCraftEquipment(i);
-                    craftCooldown = currentBlockIndex + urgentUpdateInterval;
-                    break; //enforce break to wait new craft count the hammer points
+                    //check if its consumable or equipment
+                    var tableSheets = Game.TableSheets.Instance;
+                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                    {
+                        await AutoCraftEquipment(i, equipRow);
+                        craftCooldown = currentBlockIndex + urgentUpdateInterval;
+                        break; //enforce break to wait new craft count the hammer points
+                    }
+                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                    {
+                        if (consumableRow != null)
+                            Premium.CRAFT_AutoCraftConsumable(currentAvatarState, i, consumableRow);
+                    }
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                    {
+                        if (eventConsumableRow != null)
+                            Premium.CRAFT_AutoCraftEventConsumable(currentAvatarState, i, eventConsumableRow);
+                    }
                 }
-            }                
+            }
+            craftCooldown = currentBlockIndex + urgentUpdateInterval;
         }
 
         bool UpdateCraftingSlots()
@@ -474,20 +520,17 @@ namespace Nekoyume.UI.Module
             return isEmptySlot;
         }
 
-        async UniTask AutoCraftEquipment(int slotIndex)
+        async UniTask AutoCraftEquipment(int slotIndex,EquipmentItemRecipeSheet.Row equipRow)
         {
             var tableSheets = Game.TableSheets.Instance;
-            var itemSheet = tableSheets.EquipmentItemRecipeSheet;
             var itemSubSheet = tableSheets.EquipmentItemSubRecipeSheetV2;
-            var itemRow = itemSheet.First(x => x.Value.ResultEquipmentId == craftID).Value;
             int indexSub = IsBasicCraft ? 0 : 1;
-            if (itemRow != null)
+            if (equipRow != null)
             {
-                var itemSub = itemSubSheet.First(x => x.Value.Id == itemRow.SubRecipeIds[indexSub]).Value;
-                await Premium.AutoCraft(currentAvatarState, slotIndex, itemRow.Id, itemSub.Id, IsCraftFillCrystal, IsBasicCraft, craftID);
+                var itemSub = itemSubSheet.First(x => x.Value.Id == equipRow.SubRecipeIds[indexSub]).Value;
+                await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, slotIndex, equipRow, itemSub.Id, IsCraftFillCrystal, IsBasicCraft);
             }
         }
-
 
         async void SwitchChar()
         {

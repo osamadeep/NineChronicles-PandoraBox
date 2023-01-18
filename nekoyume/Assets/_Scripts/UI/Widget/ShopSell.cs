@@ -75,17 +75,17 @@ namespace Nekoyume.UI
 
         void ReturnAll()
         {
-            Premium.CancellAllShopItems(view);
+            Premium.SHOP_CancelAll(view);
         }
 
         void ReturnLast()
         {
-            Premium.CancellLastShopItem();
+            Premium.SHOP_CancelLast();
         }
 
         public void RelistAll()
         {
-            Premium.RelistAllShopItems(view);
+            Premium.SHOP_RelistAll(view);
         }
 
 

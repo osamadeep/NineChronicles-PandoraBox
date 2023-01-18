@@ -220,7 +220,7 @@ namespace Nekoyume
             World6Toggle.onValueChanged.AddListener(_ =>
             {
                 if (World6Toggle.isOn)
-                    World6Toggle.isOn = Premium.CheckPremiumFeature();
+                    World6Toggle.isOn = Premium.PANDORA_CheckPremium();
                 UpdateView();});
             priceValueTxt.onValueChanged.AddListener(_ => {
                 if (priceValueTxt.text.Length > 0)
@@ -415,7 +415,7 @@ namespace Nekoyume
             SpellToggle.isOn = false;
             AddressTxt.text = "";
             World6Toggle.isOn = false;
-            PandoraBox.Premium.FirstSortShop(_selectedSortFilter);
+            PandoraBox.Premium.SHOP_FirstFilter(_selectedSortFilter);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -557,7 +557,7 @@ namespace Nekoyume
                 Nekoyume.EnumType.ShopSortFilter.Crystal => _isAscending.Value
                     ? models.OrderBy(GetCrystalPerPrice).ToList()
                     : models.OrderByDescending(GetCrystalPerPrice).ToList(),
-                Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SortShopbyTime(_isAscending, models),            
+                Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SHOP_TimeFilter(_isAscending, models),            
                 Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Level).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),

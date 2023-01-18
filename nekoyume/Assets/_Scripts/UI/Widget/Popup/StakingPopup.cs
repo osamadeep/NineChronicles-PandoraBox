@@ -142,7 +142,7 @@ namespace Nekoyume.UI
         void CollectRewards()
         {
             collectButton.interactable = false;
-            Premium.CollectStakeRewards();
+            Premium.ACCOUNT_CollectStakeRewards();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

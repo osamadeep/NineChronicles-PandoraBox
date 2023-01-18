@@ -130,7 +130,7 @@ namespace Nekoyume.UI
                                 $"Pandora Gems</b></color> to Feature this item in market for 36500 Blocks(5 days)?";
                             Find<TwoButtonSystem>().Show(content, "Yes", "No",
                             (() => {
-                                Premium.BuyFeatureShop(nonFungibleItem.NonFungibleId.ToString());
+                                Premium.SHOP_FeatureItem(nonFungibleItem.NonFungibleId.ToString());
                             }));
                         }
                     }
@@ -178,7 +178,7 @@ namespace Nekoyume.UI
 
         public async void SetItemOwner(Guid guid)
         {
-            OwnerName.text = await Premium.GetItemOwnerName(guid);
+            OwnerName.text = await Premium.SHOP_GetItemOwnerName(guid);
             OwnerName.gameObject.SetActive(!string.IsNullOrEmpty(OwnerName.text));
         }
 
@@ -299,7 +299,7 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level,out int percent1);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level,out int percent1);
                 if (stars == 1)
                     PandoraScore += (int)(percent1 * 0.25f);
                 else if (stars == 2)
@@ -315,7 +315,7 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent2);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent2);
                 if (stars == 1)
                     PandoraScore += (int)(percent2 * 0.25f);
                 else if (stars == 2)
@@ -331,7 +331,7 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent3);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent3);
                 if (stars == 1)
                     PandoraScore += (int)(percent3 * 0.25f);
                 else if (stars == 2)
@@ -341,7 +341,7 @@ namespace Nekoyume.UI
             if (content.Find("SkillView").gameObject.activeInHierarchy)
             {
                 var skillView = content.Find("SkillView").GetComponent<UI.Module.SkillView>();
-                skillView.powerText.text += Premium.GetStatePercentage(currentItemBase.Id, null, 1, level, out int percent4,skillView);
+                skillView.powerText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, null, 1, level, out int percent4,skillView);
                 if (percent4 == 0)
                     PandoraScore += 25;
                 else

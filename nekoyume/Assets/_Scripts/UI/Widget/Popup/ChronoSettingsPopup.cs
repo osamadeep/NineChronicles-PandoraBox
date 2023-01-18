@@ -11,10 +11,12 @@ using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Event;
 using Nekoyume.UI.Scroller;
 using TMPro;
 using UniRx;
@@ -50,12 +52,16 @@ namespace Nekoyume.UI
         [SerializeField] Image spendOnImage;
         [SerializeField] Image spendOffImage;
 
+        [SerializeField] Image sweepOnImage;
+        [SerializeField] Image sweepOffImage;
+
         [SerializeField] TMP_InputField sweepStageInput;
 
         bool IsStage;
         bool IsStageNotify;
         bool IsAutoCollect;
         bool IsAutoSpend;
+        bool IsSweep;
         int sweepStage;
         [Space(5)]
 
@@ -130,6 +136,7 @@ namespace Nekoyume.UI
             PlayerPrefs.SetInt(addressKey + "_IsStageNotify", System.Convert.ToInt32(IsStageNotify));
             PlayerPrefs.SetInt(addressKey + "_IsAutoCollect", System.Convert.ToInt32(IsAutoCollect));
             PlayerPrefs.SetInt(addressKey + "_IsAutoSpend", System.Convert.ToInt32(IsAutoSpend));
+            PlayerPrefs.SetInt(addressKey + "_IsSweep", System.Convert.ToInt32(IsSweep));
             PlayerPrefs.SetInt(addressKey + "_SweepStage", sweepStage);
 
             //CRAFT
@@ -164,6 +171,7 @@ namespace Nekoyume.UI
                 IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
                 IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
                 IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
+                IsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsSweep", 1));
                 sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
 
                 //CRAFT
@@ -187,6 +195,7 @@ namespace Nekoyume.UI
                 IsStageNotify = true;
                 IsAutoCollect = true;
                 IsAutoSpend = false;
+                IsSweep = true;
                 sweepStage = 0;
 
                 //register CRAFT variables
@@ -201,7 +210,7 @@ namespace Nekoyume.UI
                 IsEvent = false;
                 IsEventNotify = true;
                 IsAutoEvent = false;
-                eventLevel = 20;
+                eventLevel = 1;
             }
 
             //reflect on UI
@@ -212,6 +221,7 @@ namespace Nekoyume.UI
             LoadStage();
             LoadAutoCollect();
             LoadAutoSpend();
+            LoadSweep();
             LoadSweepStage();
             LoadStageNotify();
 
@@ -253,7 +263,7 @@ namespace Nekoyume.UI
 
         public void ChangeEventAutoFight(bool value)
         {
-            if (value && !Premium.CheckPremiumFeature())
+            if (value && !Premium.PANDORA_CheckPremium())
                 return;
             IsAutoEvent = value;
             LoadEventAutoFight();
@@ -293,23 +303,46 @@ namespace Nekoyume.UI
         void LoadCraftID()
         {
             craftIDInput.text = craftID.ToString();
-            CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(craftID);
+            var tableSheets = Game.TableSheets.Instance;
+            if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
+            else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
+            else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
         }
 
         public void ChangeCraftID()
         {
-            if (!string.IsNullOrEmpty(craftIDInput.text) && craftIDInput.text.Length == 8)
+            try
             {
-                int tempCraftID = int.Parse(craftIDInput.text);
-                var tableSheets = Game.TableSheets.Instance;
-                var itemSheet = tableSheets.EquipmentItemRecipeSheet;
-                var itemRow = itemSheet.First(x => x.Value.ResultEquipmentId == tempCraftID).Value;
-                if (itemRow != null && currentAvatarState.worldInformation.IsStageCleared(itemRow.UnlockStage))
+                if (!string.IsNullOrEmpty(craftIDInput.text))
                 {
-                    craftID = tempCraftID;
+                    int tempCraftID = int.Parse(craftIDInput.text);
+                    CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(0);
+
+                    var tableSheets = Game.TableSheets.Instance;
+                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(tempCraftID, out var equipRow))
+                    {
+                        if (currentAvatarState.worldInformation.IsStageCleared(equipRow.UnlockStage))
+                        {
+                            craftID = tempCraftID; //equip
+                            CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
+                        }
+                    }
+                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(tempCraftID, out var consumableRow))
+                    {
+                        craftID = tempCraftID; //consumable
+                        CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
+                    }
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(tempCraftID, out var eventConsumableRow))
+                    {
+                        craftID = tempCraftID; //event consumable
+                        CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
+                    }
                 }
             }
-            CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(craftID);
+            catch { }
         }
 
         void LoadBasicCraft()
@@ -344,7 +377,7 @@ namespace Nekoyume.UI
 
         public void ChangeAutoCraft(bool value)
         {
-            if (value && !Premium.CheckPremiumFeature())
+            if (value && !Premium.PANDORA_CheckPremium())
                 return;
             IsAutoCraft = value;
             LoadAutoCraft();
@@ -412,6 +445,21 @@ namespace Nekoyume.UI
             LoadAutoCollect();
         }
 
+        void LoadSweep()
+        {
+            sweepOnImage.color = IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            sweepOffImage.color = !IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeSweep(bool value)
+        {
+            if (value && !Premium.PANDORA_CheckPremium())
+                return;
+            IsSweep = value;
+            sweepStageInput.transform.parent.gameObject.SetActive(IsSweep);
+            LoadSweep();
+        }
+
         void LoadAutoSpend()
         {
             spendOnImage.color = IsAutoSpend ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -420,7 +468,7 @@ namespace Nekoyume.UI
 
         public void ChangeAutoSpend(bool value)
         {
-            if (value && !Premium.CheckPremiumFeature())
+            if (value && !Premium.PANDORA_CheckPremium())
                 return;
             IsAutoSpend = value;
             LoadAutoSpend();

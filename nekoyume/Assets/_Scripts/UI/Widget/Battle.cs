@@ -98,7 +98,7 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             exitMenu.onClick.AddListener(() =>
             {
-                if (Premium.CheckPremiumFeature())
+                if (Premium.PANDORA_CheckPremium())
                     Game.Game.instance.Stage.IsSkip = true;
             });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

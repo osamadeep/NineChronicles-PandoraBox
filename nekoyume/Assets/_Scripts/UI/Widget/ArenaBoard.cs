@@ -121,7 +121,6 @@ namespace Nekoyume.UI
 
             while (true)
             {
-
                 try
                 {
                     long diff = 0;
@@ -136,7 +135,8 @@ namespace Nekoyume.UI
                             ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
                             : null;
                         myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
-                        diff = Game.Game.instance.Agent.BlockIndex - myLastBattle;
+                        var blockValidator = PandoraMaster.Instance.Settings.ArenaValidator ? Find<VersionSystem>().NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
+                        diff = (long)Mathf.Clamp(blockValidator - myLastBattle,0,999);
                     }
 
 
@@ -260,12 +260,12 @@ namespace Nekoyume.UI
 
         public void ExpectedTicketsToReach()
         {
-            Premium.ExpectedTicketsToReach(ExpectedTicketsText,ExpectedRankText);
+            Premium.PVP_ExpectedTicketsToReach(ExpectedTicketsText,ExpectedRankText);
         }
 
         public void CancelMultiArena()
         {
-            Premium.CancelMultiArena();
+            Premium.PVP_CancelPendingFights();
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -339,9 +339,9 @@ namespace Nekoyume.UI
             StartCoroutine(LastUpdateCounter());
             RefreshObj.SetActive(false);
             if (!PandoraMaster.Instance.Settings.ArenaPush)
-                Premium.CheckForArenaQueue();
+                Premium.PVP_CheckPendingConfirmFights();
             else
-                Premium.PushArenaFight();
+                Premium.PVP_PushFight();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -617,9 +617,9 @@ namespace Nekoyume.UI
             StartCoroutine(LastUpdateCounter());
             RefreshObj.SetActive(false);
             if (!PandoraMaster.Instance.Settings.ArenaPush)
-                Premium.CheckForArenaQueue();
+                Premium.PVP_CheckPendingConfirmFights();
             else
-                Premium.PushArenaFight();
+                Premium.PVP_PushFight();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

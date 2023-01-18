@@ -115,6 +115,10 @@ namespace Nekoyume.State
             {
                 await AddOrReplaceAvatarStateAsync(pair.Value, pair.Key);
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Prime.AllOfAvatarStates().Forget();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void SetGoldBalanceState(GoldBalanceState goldBalanceState)

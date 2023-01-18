@@ -24,8 +24,8 @@ namespace Nekoyume.PandoraBox
         public static PandoraMaster Instance;
 
         //Unsaved Reg Settings 
-        public static string OriginalVersionId = "v100350-2";
-        public static string VersionId = "010081";
+        public static string OriginalVersionId = "v100351";
+        public static string VersionId = "010082";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -133,6 +133,7 @@ namespace Nekoyume.PandoraBox
         [HideInInspector] public int ArenaListStep { get; set; } = 90;
         [HideInInspector] public bool ArenaPush { get; set; } = true; //push means send every 'ArenaPushStep' whatever its confirm or not
         [HideInInspector] public int ArenaPushStep { get; set; } = 5;
+        [HideInInspector] public bool ArenaValidator { get; set; } = true; //true = 9cscan, false = local node
 
         public void Save()
         {
@@ -153,6 +154,7 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPush", System.Convert.ToInt32(ArenaPush));
             PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
+            PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaValidator", System.Convert.ToInt32(ArenaValidator));
 
             //apply ingame changes
             DOTween.timeScale = MenuSpeed;
@@ -194,6 +196,7 @@ namespace Nekoyume.PandoraBox
             ArenaListStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
             ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPush",System.Convert.ToInt32(ArenaPush)));
             ArenaPushStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
+            ArenaValidator = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaValidator", System.Convert.ToInt32(ArenaValidator)));
 
             //Load ingame changes
             DOTween.timeScale = MenuSpeed;

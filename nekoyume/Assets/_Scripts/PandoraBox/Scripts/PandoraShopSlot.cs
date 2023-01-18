@@ -107,7 +107,7 @@ namespace Nekoyume.UI
             (() =>
             {
                 Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
-                Premium.BuyGems(ItemPrice, gems);
+                Premium.PANDORA_BuyGems(ItemPrice, gems);
             }),
             () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
             );
@@ -144,7 +144,7 @@ namespace Nekoyume.UI
                         Widget.Find<PandoraShopPopup>().Close();
 
                         //update database
-                        Premium.UpdateDatabase(10).Forget();
+                        Premium.PANDORA_UpdateDatabase(10).Forget();
                     }
                     else
                     {
