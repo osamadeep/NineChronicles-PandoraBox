@@ -920,8 +920,6 @@ namespace Nekoyume.Game
                 isTrackable = false;
             }
 
-
-
             Analyzer = new Analyzer(
                 uniqueId,
                 rpcServerHost,

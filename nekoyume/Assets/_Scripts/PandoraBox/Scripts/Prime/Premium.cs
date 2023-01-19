@@ -280,7 +280,7 @@ namespace Nekoyume.PandoraBox
             int missingParts = 999;
             try //in case States.Instance.CurrentAvatarState.inventory not ready
             {
-                missingParts = CRAFT_GetReplacedMaterials(materialMap).Count;
+                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
             }
             catch
             {
@@ -307,7 +307,7 @@ namespace Nekoyume.PandoraBox
                     {
                         RecipeId = consRow.Id,
                         Materials = materialMap,
-                        ReplacedMaterials = CRAFT_GetReplacedMaterials(materialMap),
+                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap),
                     };
 
                     ActionManager.Instance.CombinationConsumable(recipeInfo, slotIndex).Subscribe();
@@ -347,7 +347,7 @@ namespace Nekoyume.PandoraBox
             int missingParts = 999;
             try //in case States.Instance.CurrentAvatarState.inventory not ready
             {
-                missingParts = CRAFT_GetReplacedMaterials(materialMap).Count;
+                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
             }
             catch
             {
@@ -374,7 +374,7 @@ namespace Nekoyume.PandoraBox
                     {
                         RecipeId = consRow.Id,
                         Materials = materialMap,
-                        ReplacedMaterials = CRAFT_GetReplacedMaterials(materialMap),
+                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap),
                     };
                     ActionManager.Instance.EventConsumableItemCrafts(RxProps.EventScheduleRowForRecipe.Value.Id,recipeInfo,slotIndex).Subscribe();
                     //analyze actions
@@ -428,7 +428,7 @@ namespace Nekoyume.PandoraBox
                 int missingParts = 999;
                 try //in case States.Instance.CurrentAvatarState.inventory not ready
                 {
-                    missingParts = CRAFT_IsEnoughMaterials(recipeRow.Id, subRecipeId);
+                    missingParts = CRAFT_IsEnoughMaterials(currentAvatarState,recipeRow.Id, subRecipeId);
                 }
                 catch
                 {
@@ -496,7 +496,7 @@ namespace Nekoyume.PandoraBox
             }
             catch { }
         }
-        static int CRAFT_IsEnoughMaterials(int itemID, int itemSubID)
+        static int CRAFT_IsEnoughMaterials(AvatarState currentAvatarState, int itemID, int itemSubID)
         {
             var tableSheets = Game.TableSheets.Instance;
             var itemSheet = tableSheets.EquipmentItemRecipeSheet;
@@ -511,12 +511,12 @@ namespace Nekoyume.PandoraBox
             foreach (var material in itemSub.Materials) // Add other materials
                 materialMap.Add(material.Id, material.Count);
 
-            return CRAFT_GetReplacedMaterials(materialMap).Count;
+            return CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
         }
-        static Dictionary<int, int> CRAFT_GetReplacedMaterials(Dictionary<int, int> required)
+        static Dictionary<int, int> CRAFT_GetReplacedMaterials(AvatarState currentAvatarState,Dictionary<int, int> required)
         {
             var replacedMaterialMap = new Dictionary<int, int>();
-            var inventory = States.Instance.CurrentAvatarState.inventory;
+            var inventory = currentAvatarState.inventory;
 
             foreach (var (id, count) in required)
             {

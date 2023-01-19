@@ -449,6 +449,7 @@ namespace Nekoyume.UI
         {
             sweepOnImage.color = IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             sweepOffImage.color = !IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            sweepStageInput.transform.parent.gameObject.SetActive(IsSweep);
         }
 
         public void ChangeSweep(bool value)
