@@ -312,7 +312,7 @@ namespace Nekoyume.PandoraBox
 
                     ActionManager.Instance.CombinationConsumable(recipeInfo, slotIndex).Subscribe();
                     //analyze actions
-                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                         $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
@@ -325,9 +325,10 @@ namespace Nekoyume.PandoraBox
                         slotIndex = slotIndex,
                     };
 
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
 
+                Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
                 $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
                 NotificationCell.NotificationType.Information);
@@ -378,7 +379,7 @@ namespace Nekoyume.PandoraBox
                     };
                     ActionManager.Instance.EventConsumableItemCrafts(RxProps.EventScheduleRowForRecipe.Value.Id,recipeInfo,slotIndex).Subscribe();
                     //analyze actions
-                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                         $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
@@ -391,9 +392,10 @@ namespace Nekoyume.PandoraBox
                         EventConsumableItemRecipeId = consRow.Id,
                         SlotIndex = slotIndex,
                     };
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
 
+                Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
                 $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
                 NotificationCell.NotificationType.Information);
@@ -444,6 +446,9 @@ namespace Nekoyume.PandoraBox
                 }
             }
 
+            //check if he has crystal
+
+
             try //in case actionManager is not ready yet
             {
                 var itemName = L10nManager.Localize($"ITEM_NAME_{recipeRow.ResultEquipmentId}");
@@ -472,7 +477,7 @@ namespace Nekoyume.PandoraBox
                         isHammerCraft)
                     .Subscribe();
                     //analyze actions
-                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                         $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
@@ -487,9 +492,10 @@ namespace Nekoyume.PandoraBox
                         payByCrystal = payByCrystal,
                         useHammerPoint = isHammerCraft,
                     };
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
 
+                Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
                 $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint + 1}</color>/{max}!",
                 NotificationCell.NotificationType.Information);
@@ -613,7 +619,7 @@ namespace Nekoyume.PandoraBox
                         false).Subscribe();
 
                         //analyze actions
-                        string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                             $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                         ActionManager.Instance.AnalyzeActions(message).Forget();
                     }
@@ -631,7 +637,7 @@ namespace Nekoyume.PandoraBox
                             BuyTicketIfNeeded = false,
                             RuneInfos = runeSlotStates[0].GetEquippedRuneSlotInfos(),
                         };
-                        ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                        ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                     }
 
                 }
@@ -686,7 +692,7 @@ namespace Nekoyume.PandoraBox
                     playCount).Subscribe();
 
                     //analyze actions
-                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                         $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
@@ -704,7 +710,7 @@ namespace Nekoyume.PandoraBox
                         PlayCount = playCount,
                     };
 
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>" +
                     $"{currentAvatarState.actionPoint}</color> AP for stage {_stageId}!", NotificationCell.NotificationType.Information);
@@ -747,7 +753,7 @@ namespace Nekoyume.PandoraBox
                     sweepStage,
                     currentAvatarState.actionPoint).Subscribe();
                     //analyze actions
-                    string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                         $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
@@ -764,7 +770,7 @@ namespace Nekoyume.PandoraBox
                         worldId = worldID,
                         stageId = sweepStage,
                     };
-                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText).Forget();
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!", NotificationCell.NotificationType.Information);
             }

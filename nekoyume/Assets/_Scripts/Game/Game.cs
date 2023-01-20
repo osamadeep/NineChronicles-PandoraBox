@@ -137,15 +137,25 @@ namespace Nekoyume.Game
 
             Debug.Log("[Game] Awake() CommandLineOptions loaded");
 
-            if (_options.RpcClient)
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //if (TryGetComponent(out PandoraRPCAgent rpc))
+            //{
+            //    Agent = rpc;
+            //    SubscribePandoraRPCAgent();
+            //}
+            //else
             {
-                Agent = GetComponent<RPCAgent>();
-                SubscribeRPCAgent();
+                if (_options.RpcClient)
+                {
+                    Agent = GetComponent<RPCAgent>();
+                    SubscribeRPCAgent();
+                }
+                else
+                {
+                    Agent = GetComponent<Agent>();
+                }
             }
-            else
-            {
-                Agent = GetComponent<Agent>();
-            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             States = new States();
             LocalLayer = new LocalLayer();
@@ -902,6 +912,12 @@ namespace Nekoyume.Game
                 ? _options.RpcServerHost
                 : null;
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //Disable logs Dev confirm it not affect the statistics : https://discord.com/channels/928926944937013338/970554251308830750/1060111524015898684
+            Analyzer = new Analyzer(uniqueId,rpcServerHost,false);
+            return;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 #if UNITY_EDITOR
             Debug.Log("This is editor mode.");
             Analyzer = new Analyzer(uniqueId, rpcServerHost);
@@ -925,5 +941,186 @@ namespace Nekoyume.Game
                 rpcServerHost,
                 isTrackable);
         }
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        /*
+        private void SubscribePandoraRPCAgent()
+        {
+            if (!(Agent is PandoraRPCAgent pandoraRpcAgent))
+            {
+                return;
+            }
+
+            Debug.Log("[Game]Subscribe PandoraRPCAgent");
+
+            pandoraRpcAgent.OnRetryStarted
+                .ObserveOnMainThread()
+                .Subscribe(agent =>
+                {
+                    Debug.Log($"[Game]PandoraRPCAgent OnRetryStarted. {pandoraRpcAgent.Address.ToHex()}");
+                    OnPandoraRPCAgentRetryStarted(agent);
+                })
+                .AddTo(gameObject);
+
+            pandoraRpcAgent.OnRetryEnded
+                .ObserveOnMainThread()
+                .Subscribe(agent =>
+                {
+                    Debug.Log($"[Game]PandoraRPCAgent OnRetryEnded. {pandoraRpcAgent.Address.ToHex()}");
+                    OnPandoraRPCAgentRetryEnded(agent);
+                })
+                .AddTo(gameObject);
+
+            pandoraRpcAgent.OnPreloadStarted
+                .ObserveOnMainThread()
+                .Subscribe(agent =>
+                {
+                    Debug.Log($"[Game]PandoraRPCAgent OnPreloadStarted. {pandoraRpcAgent.Address.ToHex()}");
+                    OnPandoraRPCAgentPreloadStarted(agent);
+                })
+                .AddTo(gameObject);
+
+            pandoraRpcAgent.OnPreloadEnded
+                .ObserveOnMainThread()
+                .Subscribe(agent =>
+                {
+                    Debug.Log($"[Game]PandoraRPCAgent OnPreloadEnded. {pandoraRpcAgent.Address.ToHex()}");
+                    OnPandoraRPCAgentPreloadEnded(agent);
+                })
+                .AddTo(gameObject);
+
+            pandoraRpcAgent.OnDisconnected
+                .ObserveOnMainThread()
+                .Subscribe(agent =>
+                {
+                    Debug.Log($"[Game]PandoraRPCAgent OnDisconnected. {pandoraRpcAgent.Address.ToHex()}");
+                    QuitWithPandoraAgentConnectionError(agent);
+                })
+                .AddTo(gameObject);
+        }
+        private static void OnPandoraRPCAgentRetryStarted(PandoraRPCAgent rpcAgent)
+        {
+            Widget.Find<DimmedLoadingScreen>().Show();
+        }
+        private static void OnPandoraRPCAgentRetryEnded(PandoraRPCAgent rpcAgent)
+        {
+            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
+            if (widget.IsActive())
+            {
+                widget.Close();
+            }
+        }
+        private static void OnPandoraRPCAgentPreloadStarted(PandoraRPCAgent rpcAgent)
+        {
+            // ignore.
+        }
+        private static void OnPandoraRPCAgentPreloadEnded(PandoraRPCAgent rpcAgent)
+        {
+            if (Widget.Find<IntroScreen>().IsActive() ||
+                Widget.Find<PreloadingScreen>().IsActive() ||
+                Widget.Find<Synopsis>().IsActive())
+            {
+                // NOTE: 타이틀 화면에서 리트라이와 프리로드가 완료된 상황입니다.
+                // FIXME: 이 경우에는 메인 로비가 아니라 기존 초기화 로직이 흐르도록 처리해야 합니다.
+                return;
+            }
+
+            var needToBackToMain = false;
+            var showLoadingScreen = false;
+            var widget = (Widget)Widget.Find<DimmedLoadingScreen>();
+            if (widget.IsActive())
+            {
+                widget.Close();
+            }
+
+            if (Widget.Find<LoadingScreen>().IsActive())
+            {
+                Widget.Find<LoadingScreen>().Close();
+                widget = Widget.Find<BattlePreparation>();
+                if (widget.IsActive())
+                {
+                    widget.Close(true);
+                    needToBackToMain = true;
+                }
+
+                widget = Widget.Find<Menu>();
+                if (widget.IsActive())
+                {
+                    widget.Close(true);
+                    needToBackToMain = true;
+                }
+            }
+            else if (Widget.Find<StageLoadingEffect>().IsActive())
+            {
+                Widget.Find<StageLoadingEffect>().Close();
+
+                if (Widget.Find<BattleResultPopup>().IsActive())
+                {
+                    Widget.Find<BattleResultPopup>().Close(true);
+                }
+
+                needToBackToMain = true;
+                showLoadingScreen = true;
+            }
+            else if (Widget.Find<ArenaBattleLoadingScreen>().IsActive())
+            {
+                Widget.Find<ArenaBattleLoadingScreen>().Close();
+                needToBackToMain = true;
+            }
+
+            if (!needToBackToMain)
+            {
+                return;
+            }
+
+            BackToMainAsync(new UnableToRenderWhenSyncingBlocksException(), showLoadingScreen)
+                .Forget();
+        }
+        private void QuitWithPandoraAgentConnectionError(PandoraRPCAgent rpcAgent)
+        {
+            var screen = Widget.Find<DimmedLoadingScreen>();
+            if (screen.IsActive())
+            {
+                screen.Close();
+            }
+
+            // FIXME 콜백 인자를 구조화 하면 타입 쿼리 없앨 수 있을 것 같네요.
+            IconAndButtonSystem popup;
+            if (Agent is Agent _)
+            {
+                var errorMsg = string.Format(L10nManager.Localize("UI_ERROR_FORMAT"),
+                    L10nManager.Localize("BLOCK_DOWNLOAD_FAIL"));
+
+                popup = Widget.Find<IconAndButtonSystem>();
+                popup.Show(L10nManager.Localize("UI_ERROR"),
+                    errorMsg,
+                    L10nManager.Localize("UI_QUIT"),
+                    false,
+                    IconAndButtonSystem.SystemType.BlockChainError);
+                popup.SetCancelCallbackToExit();
+
+                return;
+            }
+
+            if (rpcAgent is null)
+            {
+                // FIXME: 최신 버전이 뭔지는 Agent.EncounrtedHighestVersion 속성에 들어있으니, 그걸 UI에서 표시해줘야 할 듯?
+                // AppProtocolVersion? newVersion = _agent is Agent agent ? agent.EncounteredHighestVersion : null;
+                return;
+            }
+
+            if (rpcAgent.Connected)
+            {
+                // 무슨 상황이지?
+                Debug.Log(
+                    $"{nameof(QuitWithAgentConnectionError)}() called. But {nameof(PandoraRPCAgent)}.Connected is {rpcAgent.Connected}.");
+                return;
+            }
+
+            popup = Widget.Find<IconAndButtonSystem>();
+            popup.Show("UI_ERROR", "UI_ERROR_RPC_CONNECTION", "UI_QUIT");
+            popup.SetCancelCallbackToExit();
+        }
+        */
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }
 }

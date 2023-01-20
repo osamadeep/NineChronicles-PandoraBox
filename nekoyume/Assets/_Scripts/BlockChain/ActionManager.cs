@@ -1526,12 +1526,12 @@ namespace Nekoyume.BlockChain
         //CUSTOM ACTIONS
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
-        public async UniTask PreProcessAction<T>(T actionBase, AvatarState currentAvatarState, string analyzeText) where T : ActionBase
+        public void PreProcessAction<T>(T actionBase, AvatarState currentAvatarState, string analyzeText) where T : ActionBase
         {
             ProcessAction(actionBase, currentAvatarState.address);
 
             //analyze actions
-            string message = $"[{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+            string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
                 $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
             AnalyzeActions(message).Forget();
         }

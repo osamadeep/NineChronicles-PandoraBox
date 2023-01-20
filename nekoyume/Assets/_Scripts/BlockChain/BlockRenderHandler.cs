@@ -70,6 +70,16 @@ namespace Nekoyume.BlockChain
                     _avatarUpdateRequired = true;
                 }).AddTo(_disposables);
             }
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //if (Game.Game.instance.Agent is PandoraRPCAgent pandoraRpcAgent)
+            //{
+            //    pandoraRpcAgent.OnRetryEnded.Subscribe(_ =>
+            //    {
+            //        _balanceUpdateRequired = true;
+            //        _avatarUpdateRequired = true;
+            //    }).AddTo(_disposables);
+            //}
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         public void Stop()

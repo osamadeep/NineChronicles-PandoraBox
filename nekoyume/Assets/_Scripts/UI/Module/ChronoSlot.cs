@@ -71,7 +71,7 @@ namespace Nekoyume.UI.Module
         [SerializeField] private TextMeshProUGUI stageCooldownText;
         [SerializeField] private Image stageCooldownImage;
 
-        long stageCooldown;
+        public long stageCooldown;
         bool IsStage;
         bool IsStageNotify;
         bool IsAutoCollect;
@@ -227,36 +227,57 @@ namespace Nekoyume.UI.Module
 
             //stage
             stageModule.SetActive(IsStage);
-            ProsperityImage.SetActive(IsAutoCollect);
-            APImage.SetActive(IsAutoSpend);
-            if (IsSweep)
-                SweepStageText.text = "Sweep > " + sweepStage;
-            else
+            if (IsStage)
             {
-                int _stageId = 1;
-                currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);
-                _stageId = Math.Clamp(_stageId + 1, 1, 300);
+                ProsperityImage.SetActive(IsAutoCollect);
+                APImage.SetActive(IsAutoSpend);
+                if (IsSweep)
+                    SweepStageText.text = "Sweep > " + sweepStage;
+                else
+                {
+                    int _stageId = 1;
+                    currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);
+                    _stageId = Math.Clamp(_stageId + 1, 1, 300);
 
-                SweepStageText.text = "Progress > " + _stageId;
+                    SweepStageText.text = "Progress > " + _stageId;
+                }
             }
 
             //craft
             craftModule.SetActive(IsCraft);
-            var tableSheets = Game.TableSheets.Instance;
-            isCraftedImage.gameObject.SetActive(IsAutoCraft);
-            if (IsAutoCraft)
+            if (IsCraft)
             {
-                if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
-                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
-                else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
-                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
-                else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
-                    isCraftedImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
+                var tableSheets = Game.TableSheets.Instance;
+                isCraftedImage.gameObject.SetActive(IsAutoCraft);
+                if (IsAutoCraft)
+                {
+                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                        isCraftedImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
+                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                        isCraftedImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                        isCraftedImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
+                }
             }
 
             //event
-            eventAddress = Nekoyume.Model.Event.EventDungeonInfo.DeriveAddress(currentAvatarState.address, RxProps.EventDungeonRow.Id);
             eventModule.SetActive(IsEvent);
+            if (IsEvent)
+            {
+                var tableSheets = Game.TableSheets.Instance;
+                if (!tableSheets.EventScheduleSheet.TryGetRowForDungeon(currentBlockIndex, out var scheduleRow) || scheduleRow.DungeonEndBlockIndex == currentBlockIndex)
+                {
+                    try
+                    {
+                        eventAddress = Nekoyume.Model.Event.EventDungeonInfo.DeriveAddress(currentAvatarState.address, RxProps.EventDungeonRow.Id);
+                    }
+                    catch { }
+                }
+                else
+                {
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read Event Data!", NotificationCell.NotificationType.Alert);
+                }
+            }
 
             //update States
             stageCooldown = 0;
@@ -418,12 +439,17 @@ namespace Nekoyume.UI.Module
 
         public async UniTaskVoid SetEventDungeon()
         {
-            eventDungeonInfo = await Game.Game.instance.Agent.GetStateAsync(eventAddress)
+            try
+            {
+                eventDungeonInfo = await Game.Game.instance.Agent.GetStateAsync(eventAddress)
                 is Bencodex.Types.List serialized
                 ? new EventDungeonInfo(serialized)
                 : null;
-            if (eventDungeonInfo is null)
-                return;
+                if (eventDungeonInfo is null)
+                    return;
+            }
+            catch { return; }
+
 
             eventCooldown = currentBlockIndex + updateEventInterval;
             var ticketsCount = eventDungeonInfo.GetRemainingTicketsConsiderReset(
@@ -529,6 +555,7 @@ namespace Nekoyume.UI.Module
             {
                 var itemSub = itemSubSheet.First(x => x.Value.Id == equipRow.SubRecipeIds[indexSub]).Value;
                 await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, slotIndex, equipRow, itemSub.Id, IsCraftFillCrystal, IsBasicCraft);
+                
             }
         }
 
