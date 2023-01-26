@@ -113,6 +113,21 @@ namespace Nekoyume.UI
         bool IsEventNotify;
         bool IsAutoEvent;
         int eventLevel;
+        [Space(5)]
+
+        [Header("World Boss")]
+        [SerializeField] GameObject bossModule;
+        [SerializeField] Image bossOnImage;
+        [SerializeField] Image bossOffImage;
+
+        [SerializeField] Image bossNotifyOnImage;
+        [SerializeField] Image bossNotifyOffImage;
+
+        [SerializeField] Image bossFightOnImage;
+        [SerializeField] Image bossFightOffImage;
+        bool IsBoss;
+        bool IsBossNotify;
+        bool IsAutoBoss;
 
         protected override void Awake()
         {
@@ -153,6 +168,11 @@ namespace Nekoyume.UI
             PlayerPrefs.SetInt(addressKey + "_IsAutoEvent", System.Convert.ToInt32(IsAutoEvent));
             PlayerPrefs.SetInt(addressKey + "_EventLevel", eventLevel);
 
+            //BOSS
+            PlayerPrefs.SetInt(addressKey + "_IsBoss", System.Convert.ToInt32(IsBoss));
+            PlayerPrefs.SetInt(addressKey + "_IsBossNotify", System.Convert.ToInt32(IsBossNotify));
+            PlayerPrefs.SetInt(addressKey + "_IsAutoBoss", System.Convert.ToInt32(IsAutoBoss));
+
             AudioController.PlayClick();
             Widget.Find<ChronoSlotsPopup>().slots[index].CheckNowSlot();
             Close();
@@ -187,6 +207,11 @@ namespace Nekoyume.UI
                 IsEventNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEventNotify", 1));
                 IsAutoEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoEvent", 0));
                 eventLevel = PlayerPrefs.GetInt(addressKey + "_EventLevel", 0);
+
+                //BOSS
+                IsBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBoss", 0));
+                IsBossNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBossNotify", 1));
+                IsAutoBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoBoss", 0));
             }
             else
             {
@@ -211,6 +236,11 @@ namespace Nekoyume.UI
                 IsEventNotify = true;
                 IsAutoEvent = false;
                 eventLevel = 1;
+
+                //register BOSS variables
+                IsBoss = false;
+                IsBossNotify = true;
+                IsAutoBoss = false;
             }
 
             //reflect on UI
@@ -239,7 +269,51 @@ namespace Nekoyume.UI
             LoadEventNotify();
             LoadEventLevel();
 
+            //EVENT
+            LoadBoss();
+            LoadBossAutoFight();
+            LoadBossNotify();
+
             base.Show();
+        }
+
+        void LoadBoss()
+        {
+            bossOnImage.color = IsBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossOffImage.color = !IsBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossModule.SetActive(IsBoss);
+        }
+
+        public void ChangeBoss(bool value)
+        {
+            IsBoss = value;
+            LoadBoss();
+        }
+
+        void LoadBossAutoFight()
+        {
+            bossFightOnImage.color = IsAutoBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossFightOffImage.color = !IsAutoBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeBossAutoFight(bool value)
+        {
+            if (value && !Premium.PANDORA_CheckPremium())
+                return;
+            IsAutoBoss = value;
+            LoadBossAutoFight();
+        }
+
+        void LoadBossNotify()
+        {
+            bossNotifyOnImage.color = IsBossNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossNotifyOffImage.color = !IsBossNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeBossNotify(bool value)
+        {
+            IsBossNotify = value;
+            LoadBossNotify();
         }
 
         void LoadEvent()

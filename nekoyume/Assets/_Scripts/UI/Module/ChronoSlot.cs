@@ -3,15 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Libplanet;
 using Nekoyume.Action;
-using Nekoyume.EnumType;
-using Nekoyume.Game.Character;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
-using Nekoyume.L10n;
-using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using Nekoyume.State;
-using Nekoyume.UI.Model;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,9 +15,6 @@ using Cysharp.Threading.Tasks;
 namespace Nekoyume.UI.Module
 {
     using Bencodex.Types;
-    using Cysharp.Threading.Tasks.Triggers;
-    using mixpanel;
-    using Nekoyume.BlockChain;
     using Nekoyume.Extensions;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Event;
@@ -54,8 +46,9 @@ namespace Nekoyume.UI.Module
         int _slotIndex;
         long currentBlockIndex;
         int updateAvatarInterval = 90; //blocks to periodly update avatar
-        int updateCraftInterval = 200; //blocks to periodly update craft slots
-        int updateEventInterval = 200; //blocks to periodly update event EventDungeonInfo
+        int updateCraftInterval = 300; //blocks to periodly update craft slots
+        int updateEventInterval = 300; //blocks to periodly update event EventDungeonInfo
+        int updateBossInterval = 300; //blocks to periodly update boss
         int urgentUpdateInterval = 15; //blocks to update if there is an action (auto collect,craft ...)
         [Space(5)]
 
@@ -115,7 +108,23 @@ namespace Nekoyume.UI.Module
         bool IsEventNotify;
         bool IsAutoEvent;
         int eventLevel;
+        [Space(5)]
 
+        [Header("BOSS")]
+        [SerializeField] private GameObject bossModule;
+        [SerializeField] private GameObject bossNotificationImage;
+        [SerializeField] private TextMeshProUGUI bossTicketsText;
+        [SerializeField] private TextMeshProUGUI bossRemainsText;
+        [SerializeField] private TextMeshProUGUI bossCooldownText;
+        [SerializeField] private Image bossCooldownImage;
+
+        long bossCooldown;
+        RaiderState raider;
+        WorldBossListSheet.Row raidRow;
+        //EventDungeonInfo eventDungeonInfo;
+        bool IsBoss;
+        bool IsBossNotify;
+        bool IsAutoBoss;
 
 
         private void Awake()
@@ -135,33 +144,6 @@ namespace Nekoyume.UI.Module
         void OpenSlotSettings()
         {
             Widget.Find<ChronoSettingsPopup>().Show(currentAvatarState, _slotIndex);
-        }
-
-
-        public async void GetState()
-        {
-            var (exist, avatarState) = await States.TryGetAvatarStateAsync(States.Instance.CurrentAvatarState.address);
-            currentAvatarState = avatarState;
-        }
-
-        public void CollectAP()
-        {
-            if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
-                if (!Premium.CurrentPandoraPlayer.IsPremium())
-                    return;
-
-            if (currentAvatarState.actionPoint > 5)
-            {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: There is still Action Points!", NotificationCell.NotificationType.Information);
-                return;
-            }
-
-            if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
-                Game.Game.instance.ActionManager.DailyReward().Subscribe();
-            else
-                Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState.address);
-
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
         }
 
         void LoadSettings()
@@ -195,6 +177,11 @@ namespace Nekoyume.UI.Module
                 IsEventNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEventNotify", 1));
                 IsAutoEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoEvent", 0));
                 eventLevel = PlayerPrefs.GetInt(addressKey + "_EventLevel", 0);
+
+                //BOSS
+                IsBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBoss", 0));
+                IsBossNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBossNotify", 1));
+                IsAutoBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoBoss", 0));
             }
             else
             {
@@ -219,6 +206,11 @@ namespace Nekoyume.UI.Module
                 IsEventNotify = true;
                 IsAutoEvent = false;
                 eventLevel = 20;
+
+                //register BOSS variables
+                IsBoss = false;
+                IsBossNotify = true;
+                IsAutoBoss = false;
             }
 
             //those settings will set only on game start or setting changes once
@@ -279,10 +271,15 @@ namespace Nekoyume.UI.Module
                 }
             }
 
+            //Boss
+            bossModule.SetActive(IsBoss);
+
+
             //update States
             stageCooldown = 0;
             craftCooldown = 0;
             eventCooldown = 0;
+            bossCooldown = 0;
         }
 
         public void SetSlot(long _currentBlockIndex, int slotIndex, AvatarState state = null)
@@ -299,7 +296,7 @@ namespace Nekoyume.UI.Module
             try
             {
                 SelectedAvatarVFX.SetActive(currentAvatarState.address == States.Instance.CurrentAvatarState.address);
-            }catch { SelectedAvatarVFX.SetActive(false); }
+            } catch { SelectedAvatarVFX.SetActive(false); }
 
 
             //STAGE SECTION
@@ -334,7 +331,7 @@ namespace Nekoyume.UI.Module
                 if (IsAutoSpend && currentAvatarState.actionPoint > 5 && stageCooldown > currentBlockIndex + urgentUpdateInterval)
                     stageCooldown = currentBlockIndex + urgentUpdateInterval;
 
-                var cooldownBar = Mathf.Clamp(updateAvatarInterval - (stageCooldown - currentBlockIndex),1, updateAvatarInterval);
+                var cooldownBar = Mathf.Clamp(updateAvatarInterval - (stageCooldown - currentBlockIndex), 1, updateAvatarInterval);
                 stageCooldownText.text = cooldownBar.ToString();
                 stageCooldownImage.fillAmount = (updateAvatarInterval - cooldownBar) * 1f / updateAvatarInterval;
                 stageNotification = IsStageNotify && (isFull || currentAvatarState.actionPoint > 5);
@@ -364,11 +361,11 @@ namespace Nekoyume.UI.Module
                 {
                     var current = eventDungeonInfo.GetRemainingTicketsConsiderReset(RxProps.EventScheduleRowForDungeon.Value, currentBlockIndex);
                     var resetIntervalBlockRange = RxProps.EventScheduleRowForDungeon.Value.DungeonTicketsResetIntervalBlockRange;
-                    var progressedBlockRange =(currentBlockIndex - RxProps.EventScheduleRowForDungeon.Value.StartBlockIndex)% resetIntervalBlockRange;
+                    var progressedBlockRange = (currentBlockIndex - RxProps.EventScheduleRowForDungeon.Value.StartBlockIndex) % resetIntervalBlockRange;
                     var blocksRemains = resetIntervalBlockRange - progressedBlockRange;
 
                     //urgent upgrade if there is any tickets
-                    if (IsAutoEvent && current> 0 &&  eventCooldown > currentBlockIndex + urgentUpdateInterval)
+                    if (IsAutoEvent && current > 0 && eventCooldown > currentBlockIndex + urgentUpdateInterval)
                         eventCooldown = currentBlockIndex + urgentUpdateInterval;
 
                     string value = "";
@@ -398,14 +395,85 @@ namespace Nekoyume.UI.Module
                 if (eventCooldown < currentBlockIndex)
                     SetEventDungeon().Forget();
             }
-                
+
+            //BOSS SECTION
+            bool bossNotification = false;
+            if (IsBoss)
+            {
+                if (!(raider is null) && !(raidRow is null))
+                {
+                    var RemainTicket = WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex);
+                    bossTicketsText.text = RemainTicket.ToString();
+                    bossNotification = RemainTicket > 0 && IsBossNotify;
+                    var start = raidRow.StartedBlockIndex;
+                    var reminder = (currentBlockIndex - start) % WorldBossHelper.RefillInterval;
+                    var remain = WorldBossHelper.RefillInterval - reminder;
+                    string value = "";
+                    switch (PandoraMaster.Instance.Settings.BlockShowType)
+                    {
+                        case 1:
+                            {
+                                value = remain.ToString();
+                                break;
+                            }
+                        default:
+                            {
+                                value = Util.GetBlockToTime(remain);
+                                break;
+                            }
+                    }
+                    bossRemainsText.text = value;
+
+                    //urgent upgrade if there is any tickets
+                    if (IsAutoBoss && RemainTicket > 0 && bossCooldown > currentBlockIndex + urgentUpdateInterval)
+                        bossCooldown = currentBlockIndex + urgentUpdateInterval;
+                }
+                var cooldownBar = Mathf.Clamp(updateBossInterval - (bossCooldown - currentBlockIndex), 1, updateBossInterval);
+                bossCooldownText.text = cooldownBar.ToString();
+                bossCooldownImage.fillAmount = (updateBossInterval - cooldownBar) * 1f / updateBossInterval;
+
+                if (bossCooldown < currentBlockIndex)
+                    SetBossRaidData().Forget();
+            }
+
 
             //SLOT NOTIFICATION
-            HasNotification = stageNotification || craftNotification || eventNotification;
+            HasNotification = stageNotification || craftNotification || eventNotification || bossNotification;
             slotNotificationImage.SetActive(HasNotification);
             stageNotificationImage.SetActive(stageNotification);
             craftNotificationImage.SetActive(craftNotification);
             eventNotificationImage.SetActive(eventNotification);
+            bossNotificationImage.SetActive(bossNotification);
+        }
+
+        async UniTaskVoid SetBossRaidData()
+        {
+            if (IsBoss)
+            {
+                var bossSheet = Game.Game.instance.TableSheets.WorldBossListSheet;
+                try
+                {
+                    raidRow = bossSheet.FindRowByBlockIndex(currentBlockIndex);
+                    if (raidRow is null)
+                        return;
+
+                    bossCooldown = currentBlockIndex + updateBossInterval;
+                    var raiderAddress = Addresses.GetRaiderAddress(currentAvatarState.address, raidRow.Id);
+                    var raiderState = await Game.Game.instance.Agent.GetStateAsync(raiderAddress);
+                    raider = raiderState is Bencodex.Types.List raiderList ? new RaiderState(raiderList) : null;
+
+                    //send fights
+                    if (WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) > 0)
+                    {
+                        Premium.PVE_AutoWorldBoss(currentAvatarState, raider).Forget();
+                        bossCooldown = currentBlockIndex + urgentUpdateInterval;
+                    }
+                }
+                catch
+                {
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read World Boss Data!", NotificationCell.NotificationType.Alert);
+                }
+            }
         }
 
         async UniTaskVoid UpdateAvatar()
@@ -437,14 +505,32 @@ namespace Nekoyume.UI.Module
             }
         }
 
+        public void CollectAP()
+        {
+            if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
+                if (!Premium.CurrentPandoraPlayer.IsPremium())
+                    return;
+
+            if (currentAvatarState.actionPoint > 5)
+            {
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: There is still Action Points!", NotificationCell.NotificationType.Information);
+                return;
+            }
+
+            if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
+                Game.Game.instance.ActionManager.DailyReward().Subscribe();
+            else
+                Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState.address);
+
+            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
+        }
+
         public async UniTaskVoid SetEventDungeon()
         {
             try
             {
                 eventDungeonInfo = await Game.Game.instance.Agent.GetStateAsync(eventAddress)
-                is Bencodex.Types.List serialized
-                ? new EventDungeonInfo(serialized)
-                : null;
+                is Bencodex.Types.List serialized? new EventDungeonInfo(serialized): null;
                 if (eventDungeonInfo is null)
                     return;
             }
@@ -480,12 +566,13 @@ namespace Nekoyume.UI.Module
 
                 if (currentBlockIndex > Combinationslotstates[i].UnlockBlockIndex && IsAutoCraft)
                 {
+                    craftCooldown = currentBlockIndex + urgentUpdateInterval;
+
                     //check if its consumable or equipment
                     var tableSheets = Game.TableSheets.Instance;
                     if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
                     {
                         await AutoCraftEquipment(i, equipRow);
-                        craftCooldown = currentBlockIndex + urgentUpdateInterval;
                         break; //enforce break to wait new craft count the hammer points
                     }
                     else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
@@ -500,7 +587,6 @@ namespace Nekoyume.UI.Module
                     }
                 }
             }
-            craftCooldown = currentBlockIndex + urgentUpdateInterval;
         }
 
         bool UpdateCraftingSlots()

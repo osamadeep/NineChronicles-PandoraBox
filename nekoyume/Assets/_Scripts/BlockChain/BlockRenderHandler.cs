@@ -79,7 +79,7 @@ namespace Nekoyume.BlockChain
             //        _avatarUpdateRequired = true;
             //    }).AddTo(_disposables);
             //}
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            //|||||||||||||| PANDORA  END CODE |||||||||||||||||||
         }
 
         public void Stop()

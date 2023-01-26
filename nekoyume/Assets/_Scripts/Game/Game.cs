@@ -708,7 +708,7 @@ namespace Nekoyume.Game
             //Login into playfab
             PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
             {
-                CustomId = currentLoginAddress.ToString(),
+                CustomId = currentLoginAddress.ToString(),              
                 CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
             },
             success =>

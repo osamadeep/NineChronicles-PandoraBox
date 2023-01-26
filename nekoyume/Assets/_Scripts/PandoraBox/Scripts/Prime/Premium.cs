@@ -547,6 +547,60 @@ namespace Nekoyume.PandoraBox
         #endregion
 
         #region PVE METHODS
+        public static async UniTaskVoid PVE_AutoWorldBoss(AvatarState currentAvatarState, RaiderState raider)
+        {
+            if (!CurrentPandoraPlayer.IsPremium())
+                return;
+
+            var currentBlockIndex = Game.Game.instance.Agent.BlockIndex;
+            var curStatus = WorldBossFrontHelper.GetStatus(currentBlockIndex);
+            if (curStatus != UI.Module.WorldBoss.WorldBossStatus.Season)
+            {
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Boss Season Found!", NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            try //in case actionManager is not ready yet
+            {
+
+                var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
+
+                string analyzeText = $"**Raid** > {3 - (WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex)-1)}/3";
+                if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
+                {
+
+                    ActionManager.Instance.Raid(itemSlotStates[2].Costumes,
+                        itemSlotStates[2].Equipments,
+                        new List<Guid>(),
+                        runeSlotStates[2].GetEquippedRuneSlotInfos(),
+                        false).Subscribe();
+
+                    //analyze actions
+                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    ActionManager.Instance.AnalyzeActions(message).Forget();
+                }
+                else
+                {
+                    var action = new Raid
+                    {
+                        AvatarAddress = currentAvatarState.address,
+                        CostumeIds = itemSlotStates[2].Costumes,
+                        EquipmentIds = itemSlotStates[2].Equipments,
+                        FoodIds = new List<Guid>(),
+                        RuneInfos = runeSlotStates[2].GetEquippedRuneSlotInfos(),
+                        PayNcg = false,
+                    };
+
+                    ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
+                }
+
+
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent World Boss Fight!",
+                    NotificationCell.NotificationType.Information);
+            }
+            catch { }
+        }
         public static StageSimulator PVE_StageSimulator(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
         {
             var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];

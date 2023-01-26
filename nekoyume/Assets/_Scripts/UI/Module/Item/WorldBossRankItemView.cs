@@ -88,10 +88,6 @@ namespace Nekoyume.UI
 
             portrait.sprite = SpriteHelper.GetItemIcon(model.Portrait);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            var raiderState = WorldBossStates.GetRaiderState(new Libplanet.Address(model.Address));
-            var RemainTicket = WorldBossFrontHelper.GetRemainTicket(raiderState, Game.Game.instance.Agent.BlockIndex);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             avatarName.text = model.AvatarName;
             address.text = $"#{model.Address[..4]}" + $", (?/3)";
             level.text = $"{model.Level}";
@@ -121,6 +117,11 @@ namespace Nekoyume.UI
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //guild name
+            var enemyGuildPlayer = PandoraBox.PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.AvatarAddress.ToLower() == "0x" + model.Address.ToString().ToLower());
+            if (!(enemyGuildPlayer is null))
+                avatarName.text = $"<color=#8488BC>[</color><color=#228232>{enemyGuildPlayer.Guild}</color><color=#8488BC>]</color> {model.AvatarName}";
+
             GetRemainingRickets(model).Forget();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
@@ -147,15 +148,7 @@ namespace Nekoyume.UI
 
             var raiderAddress = Addresses.GetRaiderAddress(avatarAddress, raidRow.Id);
             var raiderState = await Game.Game.instance.Agent.GetStateAsync(raiderAddress);
-            var raider = raiderState is Bencodex.Types.List raiderList
-                ? new RaiderState(raiderList)
-                : null;
-
-            var killRewardAddress = Addresses.GetWorldBossKillRewardRecordAddress(avatarAddress, raidRow.Id);
-            var killRewardState = await Game.Game.instance.Agent.GetStateAsync(killRewardAddress);
-            var killReward = killRewardState is Bencodex.Types.List killRewardList
-                ? new WorldBossKillRewardRecord(killRewardList)
-                : null;
+            var raider = raiderState is Bencodex.Types.List raiderList ? new RaiderState(raiderList) : null;
 
             try
             {

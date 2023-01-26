@@ -16,12 +16,6 @@ namespace Nekoyume.UI
         public List<ChronoSlot> slots;
         public GameObject slotPrefab;
 
-        //protected override void OnEnable()
-        //{
-        //    base.OnEnable();
-
-        //}
-
         protected override void Awake()
         {
             base.Awake();
@@ -29,15 +23,8 @@ namespace Nekoyume.UI
             {
                 Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
                 .Subscribe(SubscribeBlockIndex);
-                //.AddTo(_disposablesOfOnEnable);
             }
             catch { }
-        }
-
-        public override void Show(bool ignoreShowAnimation = false)
-        {
-            base.Show(ignoreShowAnimation);
-            //UpdateSlots(Game.Game.instance.Agent.BlockIndex);
         }
 
         private void SubscribeBlockIndex(long blockIndex)

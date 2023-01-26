@@ -22,6 +22,10 @@ namespace Nekoyume.UI
         [Header("PANDORA CUSTOM FIELDS")]
         public TextMeshProUGUI PriceText;
         [SerializeField] private GameObject premiumVFX;
+        [SerializeField] private GameObject GuildObj;
+        [SerializeField] private TextMeshProUGUI GuildText;
+        [SerializeField] private Image GuildImage;
+        [SerializeField] private Button guildButton;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -74,6 +78,12 @@ namespace Nekoyume.UI
             PandoraBox.PandoraMaster.MarketPriceHelper = !PandoraBox.PandoraMaster.MarketPriceHelper;
             text.text = PandoraBox.PandoraMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
+        public void ShowGuild()
+        {
+            if (PandoraMaster.CurrentGuildPlayer is null)
+                return;
+            Find<GuildInfo>().Show(PandoraMaster.CurrentGuildPlayer.Guild);
+        }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         protected override void Awake()
@@ -106,6 +116,10 @@ namespace Nekoyume.UI
                 Close();
                 AudioController.PlayClick();
             });
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            guildButton.onClick.AddListener(() => { ShowGuild(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             base.Awake();
         }
@@ -147,6 +161,13 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             premiumVFX.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+            GuildObj.SetActive(!(PandoraMaster.CurrentGuildPlayer is null));
+            if (!(PandoraMaster.CurrentGuildPlayer is null))
+            {
+                var selectedGuild = PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
+                GuildImage.sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + selectedGuild.Tag);
+                GuildText.text = $"<color=#8488BC>[</color><color=green>{selectedGuild.Tag}</color><color=#8488BC>]</color> {selectedGuild.Name}";
+            }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
