@@ -1,5 +1,6 @@
 using Libplanet;
 using Libplanet.Blocks;
+using Nekoyume.BlockChain;
 using Nekoyume.PandoraBox;
 using System.Collections;
 using TMPro;
@@ -128,6 +129,8 @@ namespace Nekoyume.UI
                 }
 
                 informationText.text = $"{pandoraTextVer} / #{_blockIndex}{current9cScanBlock}";
+                //if (Game.Game.instance.Agent is PandoraRPCAgent pandoraRpcAgent)
+                //    informationText.text += " " + pandoraRpcAgent.queueStageTxs.Count;
                 yield return new WaitForSeconds(secToUpdate);
             }
         }

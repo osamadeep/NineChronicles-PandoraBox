@@ -132,7 +132,7 @@ namespace Nekoyume.PandoraBox
             while (true)
             {
                 await Task.Delay(System.TimeSpan.FromSeconds(1800)); //30m
-                PANDORA_GetDatabase(States.Instance.CurrentAvatarState.agentAddress);
+                PANDORA_GetDatabase(States.Instance.AgentState.address);
             }
         }
         public static async UniTask PANDORA_SendWebhookT(string hook, string message)
@@ -402,10 +402,16 @@ namespace Nekoyume.PandoraBox
             }
             catch { }
         }
-        public static async UniTask CRAFT_AutoCraftEquipment(AvatarState currentAvatarState, int slotIndex, EquipmentItemRecipeSheet.Row recipeRow, int subRecipeId, bool payByCrystal, bool isBasic)
+        public static async UniTask CRAFT_AutoCraftEquipment(AvatarState currentAvatarState, int slotIndex, EquipmentItemRecipeSheet.Row recipeRow, bool payByCrystal, bool isBasic)
         {
             if (!CurrentPandoraPlayer.IsPremium())
                 return;
+
+            //get sub id
+            var tableSheets = Game.TableSheets.Instance;
+            var itemSubSheet = tableSheets.EquipmentItemSubRecipeSheetV2;
+            int indexSub = isBasic ? 0 : 1;
+            var itemSub = itemSubSheet.First(x => x.Value.Id == recipeRow.SubRecipeIds[indexSub]).Value;
 
             //check if there is supercraft
             bool isHammerCraft = false;
@@ -415,6 +421,12 @@ namespace Nekoyume.PandoraBox
 
             var max = Game.TableSheets.Instance.CrystalHammerPointSheet[recipeRow.Id].MaxPoint;
             isHammerCraft = hammerData.HammerPoint == max;
+            if (isHammerCraft)
+            {
+                indexSub = 1;
+                itemSub = itemSubSheet.First(x => x.Value.Id == recipeRow.SubRecipeIds[indexSub]).Value;
+            }
+
             //check if supercraft has crystal cost
             if (isHammerCraft && States.Instance.CrystalBalance.MajorUnit < Game.TableSheets.Instance.CrystalHammerPointSheet[recipeRow.Id].CRYSTAL)
             {
@@ -430,7 +442,7 @@ namespace Nekoyume.PandoraBox
                 int missingParts = 999;
                 try //in case States.Instance.CurrentAvatarState.inventory not ready
                 {
-                    missingParts = CRAFT_IsEnoughMaterials(currentAvatarState,recipeRow.Id, subRecipeId);
+                    missingParts = CRAFT_IsEnoughMaterials(currentAvatarState,recipeRow.Id, itemSub.Id);
                 }
                 catch
                 {
@@ -452,7 +464,7 @@ namespace Nekoyume.PandoraBox
             try //in case actionManager is not ready yet
             {
                 var itemName = L10nManager.Localize($"ITEM_NAME_{recipeRow.ResultEquipmentId}");
-                string basicCraft = isBasic ? "Basic" : "Premium";
+                string basicCraft = indexSub ==0 ? "Basic" : "Premium";
                 string hammerCraft = isHammerCraft ? "Super Craft" : "";
                 string crystal = payByCrystal ? ", With Crystal!" : "";
                 string analyzeText = $"CombinationEquipment > **{hammerCraft} {basicCraft}** {itemName} > {slotIndex}{crystal} " +
@@ -465,7 +477,7 @@ namespace Nekoyume.PandoraBox
                         new RecipeInfo
                         {
                             RecipeId = recipeRow.Id,
-                            SubRecipeId = subRecipeId,
+                            SubRecipeId = itemSub.Id,
                             CostNCG = default,
                             CostCrystal = default,
                             CostAP = 0,
@@ -488,7 +500,7 @@ namespace Nekoyume.PandoraBox
                         avatarAddress = currentAvatarState.address,
                         slotIndex = slotIndex,
                         recipeId = recipeRow.Id,
-                        subRecipeId = subRecipeId,
+                        subRecipeId = itemSub.Id,
                         payByCrystal = payByCrystal,
                         useHammerPoint = isHammerCraft,
                     };

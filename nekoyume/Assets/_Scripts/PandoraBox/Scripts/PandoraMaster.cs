@@ -25,7 +25,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100351";
-        public static string VersionId = "010085";
+        public static string VersionId = "010086A";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -119,6 +119,7 @@ namespace Nekoyume.PandoraBox
 
         [HideInInspector] public int BlockShowType { get; set; } = 0;
         [HideInInspector] public int MenuSpeed { get; set; } = 3;
+        [HideInInspector] public bool RandomNode { get; set; } = true;
 
         //PVE
         [HideInInspector] public int FightSpeed { get; set; } = 1;
@@ -143,6 +144,7 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
+            PlayerPrefs.SetInt("_PandoraBox_General_RandomNode", System.Convert.ToInt32(RandomNode));
 
             //PVE
             PlayerPrefs.SetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
@@ -185,6 +187,8 @@ namespace Nekoyume.PandoraBox
                 System.Convert.ToInt32(IsMultipleLogin)));
             BlockShowType = PlayerPrefs.GetInt("_PandoraBox_General_BlockShowType", BlockShowType);
             MenuSpeed = PlayerPrefs.GetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
+            RandomNode = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_RandomNode",
+            System.Convert.ToInt32(RandomNode)));
 
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);

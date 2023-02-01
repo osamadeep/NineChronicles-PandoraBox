@@ -27,6 +27,8 @@ namespace Nekoyume.UI
 
         //node connected
         [SerializeField] TextMeshProUGUI nodeText;
+        [SerializeField] Image randomNodeOnImage;
+        [SerializeField] Image randomNodeOffImage;
 
         //Time Scale Elements
         [SerializeField] Image timeImage;
@@ -90,6 +92,7 @@ namespace Nekoyume.UI
             menuSpeedSlider.value = PandoraMaster.Instance.Settings.MenuSpeed;
             LoadMenuSpeed();
             fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
+            LoadRandomNode();
             LoadFightSpeed();
             pushStepSlider.value = PandoraMaster.Instance.Settings.ArenaPushStep;
             LoadArenaPushSteps();
@@ -146,6 +149,7 @@ namespace Nekoyume.UI
             LoadTimeScale();
             menuSpeedSlider.value = PandoraMaster.Instance.Settings.MenuSpeed;
             LoadMenuSpeed();
+            LoadRandomNode();
             fightSpeedSlider.value = PandoraMaster.Instance.Settings.FightSpeed;
             LoadFightSpeed();
             pushStepSlider.value = PandoraMaster.Instance.Settings.ArenaPushStep;
@@ -196,6 +200,18 @@ namespace Nekoyume.UI
         {
             multiLogOnImage.color = PandoraMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             multiLogOffImage.color = !PandoraMaster.Instance.Settings.IsMultipleLogin ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeRandomNode(bool value)
+        {
+            PandoraMaster.Instance.Settings.RandomNode = value;
+            LoadRandomNode();
+        }
+
+        void LoadRandomNode()
+        {
+            randomNodeOnImage.color = PandoraMaster.Instance.Settings.RandomNode ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            randomNodeOffImage.color = !PandoraMaster.Instance.Settings.RandomNode ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeIntroStory(bool value)

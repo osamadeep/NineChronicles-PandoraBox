@@ -46,9 +46,9 @@ namespace Nekoyume.UI.Module
         int _slotIndex;
         long currentBlockIndex;
         int updateAvatarInterval = 90; //blocks to periodly update avatar
-        int updateCraftInterval = 300; //blocks to periodly update craft slots
-        int updateEventInterval = 300; //blocks to periodly update event EventDungeonInfo
-        int updateBossInterval = 300; //blocks to periodly update boss
+        int updateCraftInterval = 200; //blocks to periodly update craft slots
+        int updateEventInterval = 200; //blocks to periodly update event EventDungeonInfo
+        int updateBossInterval = 200; //blocks to periodly update boss
         int urgentUpdateInterval = 15; //blocks to update if there is an action (auto collect,craft ...)
         [Space(5)]
 
@@ -457,21 +457,23 @@ namespace Nekoyume.UI.Module
                     if (raidRow is null)
                         return;
 
-                    bossCooldown = currentBlockIndex + updateBossInterval;
                     var raiderAddress = Addresses.GetRaiderAddress(currentAvatarState.address, raidRow.Id);
                     var raiderState = await Game.Game.instance.Agent.GetStateAsync(raiderAddress);
                     raider = raiderState is Bencodex.Types.List raiderList ? new RaiderState(raiderList) : null;
-
-                    //send fights
-                    if (WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) > 0)
-                    {
-                        Premium.PVE_AutoWorldBoss(currentAvatarState, raider).Forget();
-                        bossCooldown = currentBlockIndex + urgentUpdateInterval;
-                    }
                 }
                 catch
                 {
                     OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read World Boss Data!", NotificationCell.NotificationType.Alert);
+                    return;
+                }
+
+                bossCooldown = currentBlockIndex + updateBossInterval;
+
+                //send fights
+                if (IsAutoBoss && WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) > 0)
+                {
+                    Premium.PVE_AutoWorldBoss(currentAvatarState, raider).Forget();
+                    bossCooldown = currentBlockIndex + urgentUpdateInterval;
                 }
             }
         }
@@ -572,7 +574,8 @@ namespace Nekoyume.UI.Module
                     var tableSheets = Game.TableSheets.Instance;
                     if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
                     {
-                        await AutoCraftEquipment(i, equipRow);
+                        if (equipRow != null)
+                            await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, i, equipRow, IsCraftFillCrystal, IsBasicCraft);
                         break; //enforce break to wait new craft count the hammer points
                     }
                     else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
@@ -630,19 +633,6 @@ namespace Nekoyume.UI.Module
             }catch { }
 
             return isEmptySlot;
-        }
-
-        async UniTask AutoCraftEquipment(int slotIndex,EquipmentItemRecipeSheet.Row equipRow)
-        {
-            var tableSheets = Game.TableSheets.Instance;
-            var itemSubSheet = tableSheets.EquipmentItemSubRecipeSheetV2;
-            int indexSub = IsBasicCraft ? 0 : 1;
-            if (equipRow != null)
-            {
-                var itemSub = itemSubSheet.First(x => x.Value.Id == equipRow.SubRecipeIds[indexSub]).Value;
-                await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, slotIndex, equipRow, itemSub.Id, IsCraftFillCrystal, IsBasicCraft);
-                
-            }
         }
 
         async void SwitchChar()

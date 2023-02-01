@@ -244,9 +244,6 @@ namespace Nekoyume.Game
             Stage.Initialize();
             Arena.Initialize();
             RaidStage.Initialize();
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //Runner.Initialize();
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             Widget.Find<VersionSystem>().SetVersion(Agent.AppProtocolVersion);
 
@@ -683,6 +680,8 @@ namespace Nekoyume.Game
             var settings = Widget.Find<UI.SettingPopup>();
             settings.UpdateSoundSettings();
             settings.UpdatePrivateKey(_options.PrivateKey);
+            if (PandoraMaster.Instance.Settings.RandomNode)
+                _options.RpcServerHost = $"9c-main-rpc-{UnityEngine.Random.Range(1, 5)}.nine-chronicles.com";
 
             var loginPopup = Widget.Find<LoginSystem>();
 
