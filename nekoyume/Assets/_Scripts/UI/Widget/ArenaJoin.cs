@@ -352,8 +352,8 @@ namespace Nekoyume.UI
                 _innerState = InnerState.RegistrationAndTransitionToArenaBoard;
                 Find<LoadingScreen>().Show();
                 var selectedRoundData = _scroll.SelectedItemData.RoundData;
-                var itemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
-                var runeInfos = States.Instance.RuneSlotStates[BattleType.Arena]
+                var itemSlotState = States.Instance.CurrentItemSlotStates[BattleType.Arena];
+                var runeInfos = States.Instance.CurrentRuneSlotStates[BattleType.Arena]
                     .GetEquippedRuneSlotInfos();
                 ActionManager.Instance
                     .JoinArena(
@@ -652,8 +652,8 @@ namespace Nekoyume.UI
         {
             Find<LoadingScreen>().Show();
             var selectedRoundData = _scroll.SelectedItemData.RoundData;
-            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
-            var runeInfos = States.Instance.RuneSlotStates[BattleType.Arena]
+            var itemSlotState = States.Instance.CurrentItemSlotStates[BattleType.Arena];
+            var runeInfos = States.Instance.CurrentRuneSlotStates[BattleType.Arena]
                 .GetEquippedRuneSlotInfos();
             ActionManager.Instance
                 .JoinArena(

@@ -62,7 +62,14 @@ namespace Nekoyume
 
         [SerializeField] private Button resetButton;
 
-        [SerializeField] private Toggle levelLimitToggle;
+        [SerializeField]
+        private Button historyButton;
+
+        [SerializeField]
+        private Button showCartButton;
+
+        [SerializeField]
+        private Toggle levelLimitToggle;
 
         [SerializeField] private RectTransform sortOrderIcon = null;
 
@@ -81,7 +88,7 @@ namespace Nekoyume
         };
 
         private readonly Dictionary<ItemSubTypeFilter, List<ItemSubTypeFilter>> _toggleSubTypes =
-            new Dictionary<ItemSubTypeFilter, List<ItemSubTypeFilter>>()
+            new()
             {
                 {
                     ItemSubTypeFilter.Equipment, new List<ItemSubTypeFilter>()
@@ -119,26 +126,26 @@ namespace Nekoyume
                 },
             };
 
-        private readonly List<ShopItem> _selectedItems = new List<ShopItem>();
+        private readonly List<ShopItem> _selectedItems = new();
         private readonly List<int> _itemIds = new List<int>();
         private readonly int _hashNormal = Animator.StringToHash("Normal");
         private readonly int _hashDisabled = Animator.StringToHash("Disabled");
-        private const int CartMaxCount = 8;
+        private const int CartMaxCount = 20;
 
         private readonly ReactiveProperty<ItemSubTypeFilter> _selectedSubTypeFilter =
-            new ReactiveProperty<ItemSubTypeFilter>(ItemSubTypeFilter.All);
+            new(ItemSubTypeFilter.All);
 
         private readonly ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter =
             new ReactiveProperty<Nekoyume.EnumType.ShopSortFilter>(Nekoyume.EnumType.ShopSortFilter.Class);
+        //private readonly ReactiveProperty<ShopSortFilter> _selectedSortFilter =
+        //    new(ShopSortFilter.CP);
 
-        private readonly ReactiveProperty<List<int>> _selectedItemIds =
-            new ReactiveProperty<List<int>>(new List<int>());
+        private readonly ReactiveProperty<List<int>> _selectedItemIds = new(new List<int>());
 
-        private readonly ReactiveProperty<bool> _isAscending = new ReactiveProperty<bool>();
-        private readonly ReactiveProperty<bool> _levelLimit = new ReactiveProperty<bool>();
+        private readonly ReactiveProperty<bool> _isAscending = new();
+        private readonly ReactiveProperty<bool> _levelLimit = new();
 
-        private readonly ReactiveProperty<BuyMode> _mode =
-            new ReactiveProperty<BuyMode>(BuyMode.Single);
+        private readonly ReactiveProperty<BuyMode> _mode = new(BuyMode.Single);
 
         private Action<List<ShopItem>> _onBuyMultiple;
 
@@ -150,6 +157,7 @@ namespace Nekoyume
 
         public bool IsFocused => inputField.isFocused;
         public bool IsDoneLoadItem { get; set; }
+        public bool IsCartEmpty => !_selectedItems.Any();
 
         public void ClearSelectedItems()
         {
@@ -181,6 +189,17 @@ namespace Nekoyume
             _itemIds.AddRange(tableSheets.CostumeItemSheet.Values.Select(x => x.Id));
             _itemIds.AddRange(tableSheets.MaterialItemSheet.Values.Select(x => x.Id));
 
+            historyButton.onClick.AddListener(() =>
+            {
+                Widget.Find<Alert>().Show("UI_ALERT_NOT_IMPLEMENTED_TITLE",
+                    "UI_ALERT_NOT_IMPLEMENTED_CONTENT");
+            });
+
+            showCartButton.onClick.AddListener(() =>
+            {
+                _mode.SetValueAndForceNotify(BuyMode.Multiple);
+            });
+
             cartView.Set(() =>
                 {
                     if (_selectedItems.Exists(x => x.Expired.Value))
@@ -194,7 +213,6 @@ namespace Nekoyume
                         _onBuyMultiple?.Invoke(_selectedItems);
                     }
                 },
-                () => _mode.SetValueAndForceNotify(BuyMode.Multiple),
                 () =>
                 {
                     if (_selectedItems.Any())
@@ -320,8 +338,16 @@ namespace Nekoyume
 
             _mode.Subscribe(x =>
             {
-                cartView.SetMode(x);
                 ClearSelectedItems();
+                switch (_mode.Value)
+                {
+                    case BuyMode.Single:
+                        cartView.gameObject.SetActive(false);
+                        break;
+                    case BuyMode.Multiple:
+                        cartView.gameObject.SetActive(true);
+                        break;
+                }
             }).AddTo(gameObject);
         }
 
@@ -355,6 +381,7 @@ namespace Nekoyume
                     break;
 
                 case BuyMode.Multiple:
+                    cartView.gameObject.SetActive(true);
                     var selectedItem = _selectedItems.FirstOrDefault(x =>
                         x.OrderDigest.OrderId.Equals(item.OrderDigest.OrderId));
                     if (selectedItem == null)
@@ -394,6 +421,7 @@ namespace Nekoyume
 
         protected override void Reset()
         {
+            cartView.gameObject.SetActive(false);
             toggleDropdowns.First().isOn = true;
             toggleDropdowns.First().items.First().isOn = true;
             inputField.text = string.Empty;

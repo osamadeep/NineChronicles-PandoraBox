@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using mixpanel;
 using Nekoyume.Action;
 using Nekoyume.EnumType;
 using Nekoyume.Extensions;
@@ -109,7 +108,7 @@ namespace Nekoyume.UI
         private int _worldId;
         private int _costAp;
         private bool _useSweep = true;
-        private Action<StageType, int, bool> _repeatBattleAction;
+        private Action<StageType, int, int, bool> _repeatBattleAction;
 
         protected override void Awake()
         {
@@ -146,9 +145,12 @@ namespace Nekoyume.UI
                     }
                     else
                     {
+                        var (count1, count2) = GetPlayCount(_stageRow, _apStoneCount.Value, _ap.Value,
+                            States.Instance.StakingLevel);
                         _repeatBattleAction(
                             StageType.HackAndSlash,
-                            _ap.Value / _costAp,
+                            count1 + count2,
+                            _apStoneCount.Value,
                             false);
 
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -170,10 +172,10 @@ namespace Nekoyume.UI
         public void Show(
             int worldId,
             int stageId,
-            Action<StageType, int, bool> repeatBattleAction,
+            Action<StageType, int, int, bool> repeatBattleAction,
             bool ignoreShowAnimation = false)
         {
-            if (!Game.Game.instance.TableSheets.StageSheet.TryGetValue(stageId, out var stageRow))
+            if (!TableSheets.Instance.StageSheet.TryGetValue(stageId, out var stageRow))
             {
                 throw new Exception();
             }
@@ -353,37 +355,39 @@ namespace Nekoyume.UI
             else
             {
                 information.SetActive(false);
-                //totalApText.text = (_useSweep ? totalPlayCount : apPlayCount).ToString();
+                totalApText.text = totalPlayCount.ToString();
+                apStoneText.text = apStonePlayCount > 0
+                    ? $"(+{apStonePlayCount})"
+                    : string.Empty;
+
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 totalApText.text = (totalPlayCount).ToString();
                 apStoneText.text = $"(+{apStonePlayCount})";
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-                //apStoneText.text = apStonePlayCount > 0 && _useSweep
-                //    ? $"(+{apStonePlayCount})"
-                //    : string.Empty;
             }
 
             UpdateStartButton();
         }
 
-        private void UpdateRewardView(AvatarState avatarState, StageSheet.Row row, int apPlayCount,
+        private void UpdateRewardView(
+            AvatarState avatarState,
+            StageSheet.Row row,
+            int apPlayCount,
             int apStonePlayCount)
         {
             var earnedExp = GetEarnedExp(avatarState,
                 row,
                 apPlayCount,
-                _useSweep ? apStonePlayCount : 0);
+                apStonePlayCount);
+            var maxStar = Math.Min((apPlayCount + apStonePlayCount) * 2,
+                TableSheets.Instance.CrystalStageBuffGachaSheet[row.Id].MaxStar);
             expText.text = $"+{earnedExp}";
-            starText.text = $"+{apPlayCount * 2}";
+            starText.text = $"+{maxStar}";
             expGlow.SetActive(earnedExp > 0);
         }
 
         private static bool TryGetRequiredCP(int stageId, out SweepRequiredCPSheet.Row row)
-        {
-            var sheet = Game.Game.instance.TableSheets.SweepRequiredCPSheet;
-            return sheet.TryGetValue(stageId, out row);
-        }
+            => TableSheets.Instance.SweepRequiredCPSheet.TryGetValue(stageId, out row);
 
         private static (int, int) GetPlayCount(
             StageSheet.Row row,
@@ -412,7 +416,7 @@ namespace Nekoyume.UI
         private long GetEarnedExp(AvatarState avatarState, StageSheet.Row row, int apPlayCount,
             int apStonePlayCount)
         {
-            var levelSheet = Game.Game.instance.TableSheets.CharacterLevelSheet;
+            var levelSheet = TableSheets.Instance.CharacterLevelSheet;
             var (_, exp) = avatarState.GetLevelAndExp(levelSheet, row.Id,
                 apPlayCount + apStonePlayCount);
             var earnedExp = exp - avatarState.exp;
@@ -421,19 +425,13 @@ namespace Nekoyume.UI
 
         private void UpdateStartButton()
         {
-            if (!_useSweep)
-            {
-                startButton.Interactable = _ap.Value > 0;
-                return;
-            }
-
             if (_apStoneCount.Value == 0 && _ap.Value == 0)
             {
                 startButton.Interactable = false;
                 return;
             }
 
-            if (TryGetRequiredCP(_stageRow.Id, out var row))
+            if (_useSweep && TryGetRequiredCP(_stageRow.Id, out var row))
             {
                 if (_cp.Value < row.RequiredCP)
                 {
@@ -473,9 +471,9 @@ namespace Nekoyume.UI
                 return;
             }
 
-            var costumes = States.Instance.ItemSlotStates[BattleType.Adventure].Costumes;
-            var equipments = States.Instance.ItemSlotStates[BattleType.Adventure].Equipments;
-            var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
+            var costumes = States.Instance.CurrentItemSlotStates[BattleType.Adventure].Costumes;
+            var equipments = States.Instance.CurrentItemSlotStates[BattleType.Adventure].Equipments;
+            var runeInfos = States.Instance.CurrentRuneSlotStates[BattleType.Adventure]
                 .GetEquippedRuneSlotInfos();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||

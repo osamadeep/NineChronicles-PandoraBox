@@ -1,10 +1,14 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Cysharp.Threading.Tasks;
 using Nekoyume.BlockChain;
 using Nekoyume.Game.Character;
 using Nekoyume.Game.Factory;
 using Nekoyume.Game.Tween;
+using Nekoyume.Model.EnumType;
+using Nekoyume.Model.Item;
 using Nekoyume.State;
 using Nekoyume.UI;
 using UnityEngine;
@@ -40,11 +44,23 @@ namespace Nekoyume.Game.Entrance
                     endPos.y = -0.45f;
                 if (States.Instance.AvatarStates.TryGetValue(i, out var avatarState))
                 {
-                    player = PlayerFactory.Create(avatarState).GetComponent<Player>();
+                    var itemSlotState = States.Instance.ItemSlotStates[i][BattleType.Adventure];
+                    var costumeInventory = avatarState.inventory.Costumes;
+                    var costumes = itemSlotState.Costumes
+                        .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+
+                    var equipmentInventory = avatarState.inventory.Equipments;
+                    var equipments = itemSlotState.Equipments
+                        .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
+                        .Where(item => item != null).ToList();
+
+                    var armor = equipments.OfType<Armor>().FirstOrDefault();
+                    var weapon = equipments.OfType<Weapon>().FirstOrDefault();
+                    player = PlayerFactory.Create(avatarState, costumes, armor, weapon).GetComponent<Player>();
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     player.avatarAddress = avatarState.address.ToString();
                     //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
                     player.SpineController.Appear();
                     active = true;
                 }

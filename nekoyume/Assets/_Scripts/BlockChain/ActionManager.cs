@@ -278,6 +278,7 @@ namespace Nekoyume.BlockChain
             int stageId,
             int? stageBuffId = null,
             int playCount = 1,
+            int apStoneCount = 0,
             bool trackGuideQuest = false)
         {
             if (trackGuideQuest)
@@ -317,7 +318,8 @@ namespace Nekoyume.BlockChain
                 StageId = stageId,
                 StageBuffId = stageBuffId,
                 AvatarAddress = avatarAddress,
-                PlayCount = playCount,
+                TotalPlayCount = playCount,
+                ApStoneCount = apStoneCount,
             };
             action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
             LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);

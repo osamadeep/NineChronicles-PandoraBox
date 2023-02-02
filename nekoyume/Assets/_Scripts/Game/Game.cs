@@ -136,6 +136,7 @@ namespace Nekoyume.Game
             );
 
             Debug.Log("[Game] Awake() CommandLineOptions loaded");
+            Debug.Log($"APV: {_options.AppProtocolVersion}");
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //if (TryGetComponent(out PandoraRPCAgent rpc))

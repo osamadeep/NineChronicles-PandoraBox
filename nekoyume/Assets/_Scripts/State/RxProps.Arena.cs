@@ -9,7 +9,6 @@ using Nekoyume.Arena;
 using Nekoyume.Model.Arena;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
-using Nekoyume.UI;
 using UnityEngine;
 using static Lib9c.SerializeKeys;
 
@@ -69,6 +68,7 @@ namespace Nekoyume.State
             public ArenaInformation CurrentArenaInfo;
             // public ArenaInformation NextArenaInfo;
             public int PurchasedCountDuringInterval;
+            public long LastBattleBlockIndex;
 
             public PlayerArenaParticipant(
                 Address avatarAddr,
@@ -80,7 +80,8 @@ namespace Nekoyume.State
                 List<RuneState> runeStates,
                 (int win, int lose) expectDeltaScore,
                 ArenaInformation currentArenaInfo,
-                int purchasedCountDuringInterval)
+                int purchasedCountDuringInterval,
+                long lastBattleBlockIndex)
                 : base(
                     avatarAddr,
                     score,
@@ -93,18 +94,21 @@ namespace Nekoyume.State
             {
                 CurrentArenaInfo = currentArenaInfo;
                 // NextArenaInfo = nextArenaInfo;
-                this.PurchasedCountDuringInterval = purchasedCountDuringInterval;
+                PurchasedCountDuringInterval = purchasedCountDuringInterval;
+                LastBattleBlockIndex = lastBattleBlockIndex;
             }
 
             public PlayerArenaParticipant(
                 ArenaParticipant arenaParticipant,
                 ArenaInformation currentArenaInfo,
-                int purchasedCountDuringInterval)
+                int purchasedCountDuringInterval,
+                long lastBattleBlockIndex)
                 : base(arenaParticipant)
             {
                 CurrentArenaInfo = currentArenaInfo;
                 // NextArenaInfo = nextArenaInfo;
-                this.PurchasedCountDuringInterval = purchasedCountDuringInterval;
+                PurchasedCountDuringInterval = purchasedCountDuringInterval;
+                LastBattleBlockIndex = lastBattleBlockIndex;
             }
         }
 
@@ -184,8 +188,7 @@ namespace Nekoyume.State
         private static void UpdateArenaTicketProgress(long blockIndex)
         {
             const int maxTicketCount = ArenaInformation.MaxTicketCount;
-            var ticketResetInterval =
-                States.Instance.GameConfigState.DailyArenaInterval;
+            var ticketResetInterval = States.Instance.GameConfigState.DailyArenaInterval;
             var currentArenaInfo = _arenaInfoTuple.HasValue
                 ? _arenaInfoTuple.Value.current
                 : null;
@@ -312,14 +315,15 @@ namespace Nekoyume.State
                     ArenaScore.ArenaScoreDefault,
                     0,
                     currentAvatar,
-                    States.Instance.ItemSlotStates[BattleType.Arena],
-                    States.Instance.RuneSlotStates[BattleType.Arena],
+                    States.Instance.CurrentItemSlotStates[BattleType.Arena],
+                    States.Instance.CurrentRuneSlotStates[BattleType.Arena],
                     States.Instance.GetEquippedRuneStates(BattleType.Arena),
                     (0, 0),
                     new ArenaInformation(
                         currentAvatarAddr,
                         currentRoundData.ChampionshipId,
                         currentRoundData.Round),
+                    0,
                     0));
 
                 return Array.Empty<ArenaParticipant>();
@@ -376,11 +380,12 @@ namespace Nekoyume.State
                     ArenaScore.ArenaScoreDefault,
                     0,
                     currentAvatar,
-                    States.Instance.ItemSlotStates[BattleType.Arena],
-                    States.Instance.RuneSlotStates[BattleType.Arena],
+                    States.Instance.CurrentItemSlotStates[BattleType.Arena],
+                    States.Instance.CurrentRuneSlotStates[BattleType.Arena],
                     States.Instance.GetEquippedRuneStates(BattleType.Arena),
                     default,
                     null,
+                    0,
                     0);
                 playerScore = playersArenaParticipant.Score;
                 //avatarAddrAndScoresWithRank = GetBoundsWithPlayerScore(
@@ -399,6 +404,10 @@ namespace Nekoyume.State
                 currentAvatarAddr,
                 currentRoundData.ChampionshipId,
                 currentRoundData.Round);
+            var purchasedCountAddress =
+                playerArenaInfoAddr.Derive(BattleArena.PurchasedCountKey);
+            var arenaAvatarAddress =
+                ArenaAvatarState.DeriveAddress(States.Instance.CurrentAvatarState.address);
 
             var runeListSheet = Game.Game.instance.TableSheets.RuneListSheet;
             var runeIds = runeListSheet.Values.Select(x => x.Id).ToList();
@@ -418,6 +427,9 @@ namespace Nekoyume.State
             }
 
             addrBulk.Add(playerArenaInfoAddr);
+            addrBulk.Add(purchasedCountAddress);
+            addrBulk.Add(arenaAvatarAddress);
+
             // NOTE: If the [`addrBulk`] is too large, and split and get separately.
             var stateBulk = await _agent.GetStateBulk(addrBulk);
             var runeStates = new List<RuneState>();
@@ -437,13 +449,13 @@ namespace Nekoyume.State
                 }
 
                 var itemSlotState =
-                    stateBulk[ItemSlotState.DeriveAddress(tuple.avatarAddr, BattleType.Arena)] is
+                    stateBulk[ItemSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
                         List itemSlotList
                         ? new ItemSlotState(itemSlotList)
                         : new ItemSlotState(BattleType.Arena);
 
                 var runeSlotState =
-                    stateBulk[RuneSlotState.DeriveAddress(tuple.avatarAddr, BattleType.Arena)] is
+                    stateBulk[RuneSlotState.DeriveAddress(avatarAddr, BattleType.Arena)] is
                         List runeSlotList
                         ? new RuneSlotState(runeSlotList)
                         : new RuneSlotState(BattleType.Arena);
@@ -451,7 +463,7 @@ namespace Nekoyume.State
                 runeStates.Clear();
                 foreach (var id in runeIds)
                 {
-                    var address = RuneState.DeriveAddress(tuple.avatarAddr, id);
+                    var address = RuneState.DeriveAddress(avatarAddr, id);
                     if (stateBulk[address] is List runeStateList)
                     {
                         runeStates.Add(new RuneState(runeStateList));
@@ -493,15 +505,17 @@ namespace Nekoyume.State
                 ? new ArenaInformation(arenaInfoList)
                 : null;
             var purchasedCountDuringInterval = 0;
+            long lastBattleBlockIndex = 0;
             try
             {
-                var purchasedCountDuringIntervalAddress =
-                    playerArenaInfoAddr.Derive(BattleArena.PurchasedCountKey);
-                purchasedCountDuringInterval =
-                    await _agent.GetStateAsync(purchasedCountDuringIntervalAddress)
-                        is Integer iValue
-                        ? iValue
-                        : 0;
+                purchasedCountDuringInterval = stateBulk[purchasedCountAddress] is Integer iValue
+                    ? iValue
+                    : 0;
+
+                var arenaAvatarState = stateBulk[arenaAvatarAddress] is List iValue2
+                    ? new ArenaAvatarState(iValue2)
+                    : null;
+                lastBattleBlockIndex = arenaAvatarState?.LastBattleBlockIndex ?? 0;
             }
             catch (Exception e)
             {
@@ -513,8 +527,11 @@ namespace Nekoyume.State
             {
                 var ap = result.FirstOrDefault(e =>
                     e.AvatarAddr.Equals(currentAvatarAddr));
-                playersArenaParticipant = new PlayerArenaParticipant(ap, playerArenaInfo,
-                    purchasedCountDuringInterval);
+                playersArenaParticipant = new PlayerArenaParticipant(
+                    ap,
+                    playerArenaInfo,
+                    purchasedCountDuringInterval,
+                    lastBattleBlockIndex);
             }
             else
             {
@@ -602,6 +619,21 @@ namespace Nekoyume.State
             }
 
             return result.ToArray();
+        }
+
+        private static (Address avatarAddr, int score, int rank)[] GetBoundsWithPlayerScore(
+            (Address avatarAddr, int score, int rank)[] tuples,
+            ArenaType arenaType,
+            int playerScore)
+        {
+            var bounds = ArenaHelper.ScoreLimits.ContainsKey(arenaType)
+                ? ArenaHelper.ScoreLimits[arenaType]
+                : ArenaHelper.ScoreLimits.First().Value;
+
+            bounds = (bounds.upper + playerScore, bounds.lower + playerScore);
+            return tuples
+                .Where(tuple => tuple.score <= bounds.upper && tuple.score >= bounds.lower)
+                .ToArray();
         }
     }
 }
