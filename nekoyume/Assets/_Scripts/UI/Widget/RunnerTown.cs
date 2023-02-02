@@ -73,7 +73,7 @@ namespace Nekoyume.UI
 
             AudioController.instance.PlayMusic(AudioController.MusicCode.RunnerTown);
 
-            nameTxt.text = PandoraMaster.PlayFabCurrentPlayer.DisplayName;
+            nameTxt.text = PandoraMaster.PlayFabPlayerProfile.DisplayName;
             pgTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PG"]).ToString();
             pcTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PC"]).ToString();
             prTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PR"]).ToString();

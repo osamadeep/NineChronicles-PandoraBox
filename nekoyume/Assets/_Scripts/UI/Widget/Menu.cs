@@ -572,12 +572,12 @@ namespace Nekoyume.UI
 
             PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
             //set name to playfab
-            if (string.IsNullOrEmpty(PandoraMaster.PlayFabCurrentPlayer.DisplayName))
+            if (string.IsNullOrEmpty(PandoraMaster.PlayFabPlayerProfile.DisplayName))
             {
                 var currentName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4);
                 //PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnChangePlayFabNameSuccess, OnChangePlayFabNameError);
                 PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest { DisplayName = currentName},
-                    success => { PandoraMaster.PlayFabCurrentPlayer.DisplayName = currentName;},failed => { Debug.LogError(failed.GenerateErrorReport()); });
+                    success => { PandoraMaster.PlayFabPlayerProfile.DisplayName = currentName;},failed => { Debug.LogError(failed.GenerateErrorReport()); });
             }
 
             //load favorite items

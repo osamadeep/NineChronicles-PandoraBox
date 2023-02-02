@@ -33,7 +33,8 @@ namespace Nekoyume.PandoraBox
         public static GuildPlayer CurrentGuildPlayer; //data for local player since we use it alot
 
         //Playfab
-        public static PlayerProfileModel PlayFabCurrentPlayer = new PlayerProfileModel();
+        public static PlayerProfileModel PlayFabPlayerProfile = new PlayerProfileModel();
+        public static Dictionary<string, UserDataRecord> PlayFabUserData = new Dictionary<string, UserDataRecord>();
         public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
         //General

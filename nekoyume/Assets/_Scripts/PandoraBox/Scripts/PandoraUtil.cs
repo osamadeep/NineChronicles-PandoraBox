@@ -134,6 +134,9 @@ namespace Nekoyume.PandoraBox
                 case 101:
                     messageText = "This address is Banned, please visit us for more information!";
                     break;
+                case 401:
+                    messageText = "Cannot Getting User Data From Server, please visit us for more information!";
+                    break;
                 case 404:
                     messageText = "Cannot connect to Pandora Server, please visit us for more information!";
                     break;

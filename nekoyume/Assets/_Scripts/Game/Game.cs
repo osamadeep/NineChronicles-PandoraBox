@@ -699,8 +699,8 @@ namespace Nekoyume.Game
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //auth is complete
-            if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
-            PlayFabSettings.staticSettings.TitleId = "42";
+            //if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
+            //PlayFabSettings.staticSettings.TitleId = "42";
 
             Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address;
 
@@ -714,12 +714,12 @@ namespace Nekoyume.Game
             {
                 if (success.InfoResultPayload.PlayerProfile != null)
                 {
-                    isAuth = false;
-                    PandoraMaster.PlayFabCurrentPlayer = success.InfoResultPayload.PlayerProfile;
+                    PandoraMaster.PlayFabPlayerProfile = success.InfoResultPayload.PlayerProfile;
 
                     //get players
                     Premium.PANDORA_GetDatabase(currentLoginAddress);
                     Premium.PANDORA_UpdateDatabasePeriodly().Forget();
+                    GetPlayerConfiguration(callback);                   
                 }
             },
             failed =>
@@ -727,31 +727,65 @@ namespace Nekoyume.Game
                 if (failed.Error == PlayFabErrorCode.AccountBanned)
                     PandoraMaster.Instance.ShowError(101);
                 else
-                    Debug.LogError(failed.GenerateErrorReport());
+                {
+                    Debug.LogError("Pandora Server Failed: " + failed.GenerateErrorReport());
+                    PandoraMaster.Instance.ShowError(404);
+                }
             });
-
-            while (isAuth)
-            {
-                yield return new WaitForSeconds(1);
-            }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
-
-            yield return Agent.Initialize(
-                _options,
-                loginPopup.GetPrivateKey(),
-                callback
-            );
         }
 
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        bool isAuth = true;
-        private void OnPlayFabError(PlayFabError error)
+        private void GetPlayerConfiguration(Action<bool> callback)
         {
-            Debug.LogError(error.GenerateErrorReport());
+            var loginPopup = Widget.Find<LoginSystem>();
+
+            PlayFabClientAPI.GetUserData(new GetUserDataRequest(),
+            success =>
+            {
+                PandoraMaster.PlayFabUserData = success.Data;
+
+                PlayFabClientAPI.ExecuteCloudScript(
+                new ExecuteCloudScriptRequest { FunctionName = "getGameConfiguration" },
+                success =>
+                {
+                    //JsonObject jsonResult = (JsonObject)success.FunctionResult;
+                    //object data;
+                    //jsonResult.TryGetValue("data", out data);
+                    //if (success.FunctionResult != null)
+                    {
+                        Debug.LogError("reply from clould: " + success.FunctionResult.ToString());
+                    }
+                    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+                },
+                failed =>
+                {
+                    Debug.LogError("Failed to getGameConfiguration!, " + failed.GenerateErrorReport());
+                });
+
+
+
+                
+                //Debug.LogError("9c: " + Widget.Find<VersionSystem>().Scan9cBlock + "  premium: " + int.Parse(PandoraMaster.PlayFabUserData["PremiumBlock"].Value));
+                //if (PandoraMaster.PlayFabUserData.ContainsKey("PremiumBlock")
+                //&& int.Parse(PandoraMaster.PlayFabUserData["PremiumBlock"].Value) > Widget.Find<VersionSystem>().Scan9cBlock)
+                //{
+                //    Debug.LogError("Player Premium");
+                    
+                //}
+                //else
+                //{
+                //    Debug.LogError("Player Not Premium");
+                //    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+                //}
+            },
+            failed =>
+            {
+                Debug.LogError(failed.GenerateErrorReport());
+                PandoraMaster.Instance.ShowError(401);
+            });
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

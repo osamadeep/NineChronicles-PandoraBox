@@ -86,7 +86,7 @@ namespace Nekoyume.PandoraBox
 
         public IEnumerator ShowStartBooster()
         {
-            playerName.text = PandoraMaster.PlayFabCurrentPlayer.DisplayName;
+            playerName.text = PandoraMaster.PlayFabPlayerProfile.DisplayName;
             pcBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
             pgBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
             startCounterText.text = "";
