@@ -22,13 +22,13 @@ namespace Nekoyume.Game.Character
 
     public class ArenaCharacter : Character
     {
+        public Model.ArenaCharacter CharacterModel { get; set; }
+
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         public TextMeshPro CharacterExtraInfo = null;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-        public Model.ArenaCharacter CharacterModel { get; set; }
 
         [SerializeField]
         private CharacterAppearance appearance;
@@ -261,7 +261,7 @@ namespace Nekoyume.Game.Character
                         }
                     }
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    if (!(_characterModel is null))
+                    if (!(CharacterModel is null))
                     {
                         CharacterExtraInfo.text = $"<color=green>HP</color>: {info.Target.CurrentHP}" +
                             $"\n<color=green>ATK</color>: {Model.Stat.StatType.ATK.ValueToString(info.Target.ATK)}" +

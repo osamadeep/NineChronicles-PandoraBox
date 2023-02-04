@@ -170,7 +170,7 @@ namespace Nekoyume.Game
             arenaCharacter.Animator.Win();
             arenaCharacter.ShowSpeech("PLAYER_WIN");
             Widget.Find<ArenaBattle>().Close();
-            Widget.Find<RankingBattleResultPopup>().Show(log, rewards, OnEnd, winDefeatCount);
+            Widget.Find<RankingBattleResultPopup>().Show(log, rewards, OnEnd, OnEndToMenu, winDefeatCount);
             yield return null;
         }
 

@@ -11,6 +11,7 @@ using Nekoyume.Helper;
 using Nekoyume.L10n;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
+using Nekoyume.PandoraBox;
 using Nekoyume.State;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Scroller;
@@ -26,6 +27,8 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
         public Button RefreshButton;
+        public List<Toggle> EquipmentToggles;
+        public List<Toggle> MainToggles;
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -35,7 +38,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private Button closeButton;
 
-        [SerializeField] private BuyView view;
+        public BuyView view;
 
         private CancellationTokenSource _cancellationTokenSource = new();
 
@@ -95,9 +98,21 @@ namespace Nekoyume.UI
             Find<DataLoadingScreen>().Show();
             Game.Game.instance.Stage.GetPlayer().gameObject.SetActive(false);
 
+            if (!Premium.CurrentPandoraPlayer.IsPremium())
+            {
+                foreach (var item in EquipmentToggles)
+                    item.isOn = true;
+                foreach (var item in MainToggles)
+                    item.isOn = true;
+            }
+
+
             var initWeaponTask = Task.Run(async () =>
             {
-                var list = new List<ItemSubType> { ItemSubType.Weapon, };
+                var list = new List<ItemSubType>();
+                if (EquipmentToggles[0].isOn)
+                    list.Add(ItemSubType.Weapon);
+                //var list = new List<ItemSubType> { ItemSubType.Weapon, };
                 await ReactiveShopState.SetBuyDigestsAsync(list);
                 return true;
             });
@@ -115,22 +130,53 @@ namespace Nekoyume.UI
             _cancellationTokenSource = new CancellationTokenSource();
             var initOthersTask = Task.Run(async () =>
             {
-                var list = new List<ItemSubType>
-                {
-                    ItemSubType.Armor,
-                    ItemSubType.Belt,
-                    ItemSubType.Necklace,
-                    ItemSubType.Ring,
-                    ItemSubType.Food,
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                var list = new List<ItemSubType>();
+                if (EquipmentToggles[1].isOn)
+                    list.Add(ItemSubType.Armor);
+                if (EquipmentToggles[2].isOn)
+                    list.Add(ItemSubType.Belt);
+                if (EquipmentToggles[3].isOn)
+                    list.Add(ItemSubType.Necklace);
+                if (EquipmentToggles[4].isOn)
+                    list.Add(ItemSubType.Ring);
+
+                if (MainToggles[0].isOn)
+                    list.Add(ItemSubType.Food);
+
+                if (MainToggles[1].isOn)
+                    list.AddRange(new List<ItemSubType>{
+                    ItemSubType.Hourglass,
+                    ItemSubType.ApStone,
+                });
+
+                if (MainToggles[2].isOn)
+                    list.AddRange(new List<ItemSubType>{
                     ItemSubType.FullCostume,
                     ItemSubType.HairCostume,
                     ItemSubType.EarCostume,
                     ItemSubType.EyeCostume,
                     ItemSubType.TailCostume,
-                    ItemSubType.Title,
-                    ItemSubType.Hourglass,
-                    ItemSubType.ApStone,
-                };
+                    ItemSubType.Title
+                });
+
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                //var list = new List<ItemSubType>
+                //{
+                //    ItemSubType.Armor,
+                //    ItemSubType.Belt,
+                //    ItemSubType.Necklace,
+                //    ItemSubType.Ring,
+                //    ItemSubType.Food,
+                //    ItemSubType.FullCostume,
+                //    ItemSubType.HairCostume,
+                //    ItemSubType.EarCostume,
+                //    ItemSubType.EyeCostume,
+                //    ItemSubType.TailCostume,
+                //    ItemSubType.Title,
+                //    ItemSubType.Hourglass,
+                //    ItemSubType.ApStone,
+                //};
                 await ReactiveShopState.SetBuyDigestsAsync(list);
                 return true;
             }, _cancellationTokenSource.Token);
@@ -156,7 +202,7 @@ namespace Nekoyume.UI
         private void Refresh()
         {
             RefreshButton.interactable = false;
-            PandoraBox.Premium.SHOP_Refresh(view, ShowItemTooltip, _cancellationTokenSource);
+            PandoraBox.Premium.SHOP_Refresh(ShowItemTooltip);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

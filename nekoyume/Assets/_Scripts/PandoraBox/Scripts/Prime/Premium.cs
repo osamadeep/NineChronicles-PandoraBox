@@ -615,7 +615,9 @@ namespace Nekoyume.PandoraBox
         }
         public static StageSimulator PVE_StageSimulator(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
         {
-            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
+            var avatarSlotIndex = States.Instance.AvatarStates
+                    .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+            var itemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Adventure];
             var equipments = itemSlotState.Equipments;
             var costumes = itemSlotState.Costumes;
             var runeStates = States.Instance.GetEquippedRuneStates(BattleType.Adventure);
@@ -773,7 +775,7 @@ namespace Nekoyume.PandoraBox
                         WorldId = worldID,
                         StageId = _stageId,
                         AvatarAddress = currentAvatarState.address,
-                        PlayCount = playCount,
+                        TotalPlayCount = playCount,
                     };
 
                     ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
@@ -868,7 +870,7 @@ namespace Nekoyume.PandoraBox
             }
             return true;
         }
-        public static async void PVE_MultiRepeat(Action<StageType, int, bool> _repeatBattleAction
+        public static async void PVE_MultiRepeat(Action<StageType, int, int, bool> _repeatBattleAction
             , ReactiveProperty<int> _ap, StageSheet.Row _stageRow, int _costAp, int iteration, Model.Item.Material apStone)
         {
             if (!PANDORA_CheckPremium())
@@ -890,6 +892,7 @@ namespace Nekoyume.PandoraBox
                 _repeatBattleAction(
                 StageType.HackAndSlash,
                 _ap.Value / _costAp,
+                0,
                 false);
 
                 if (iteration > 0)
@@ -910,6 +913,7 @@ namespace Nekoyume.PandoraBox
                 _repeatBattleAction(
                 StageType.HackAndSlash,
                 120 / _costAp,
+                0,
                 false);
                 await Task.Delay(System.TimeSpan.FromSeconds(2));
             }
@@ -1122,18 +1126,20 @@ namespace Nekoyume.PandoraBox
             if (!PANDORA_CheckPremium())
                 return false;
 
+            var avatarSlotIndex = States.Instance.AvatarStates
+            .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+
             ArenaMaxBattleCount = (int)count;
             ArenaRemainsBattle = ArenaMaxBattleCount;
             enemyAvatarAddress = _chooseAvatarStateAddress;
-            costumes = States.Instance.ItemSlotStates[BattleType.Arena].Costumes;
-            equipments = States.Instance.ItemSlotStates[BattleType.Arena].Equipments;
-            runeInfos = States.Instance.RuneSlotStates[BattleType.Arena].GetEquippedRuneSlotInfos();
+            costumes = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena].Costumes;
+            equipments = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena].Equipments;
+            runeInfos = States.Instance.RuneSlotStates[avatarSlotIndex][BattleType.Arena].GetEquippedRuneSlotInfos();
             championshipId = roundDataChampionshipId;
             round = _roundDataRound;
             ticket = _ticketCountToUse;
             return true;
         }
-
         public static async void PVP_CheckPendingConfirmFights()
         {
             if (!CurrentPandoraPlayer.IsPremium() || ArenaBattleInProgress)
@@ -1181,7 +1187,9 @@ namespace Nekoyume.PandoraBox
             PandoraMaster.IsRankingSimulate = true;
 
             //my data
-            var myItemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
+            var avatarSlotIndex = States.Instance.AvatarStates
+                .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
+            var myItemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena];
             var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
             var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes, myRuneStates);
 
@@ -1231,7 +1239,9 @@ namespace Nekoyume.PandoraBox
                 return "";
 
             //my data
-            var myItemSlotState = States.Instance.ItemSlotStates[BattleType.Arena];
+            var avatarSlotIndex = States.Instance.AvatarStates
+                .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
+            var myItemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena];
             var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
             var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes, myRuneStates);
 
@@ -1447,13 +1457,30 @@ namespace Nekoyume.PandoraBox
                     return "<size=120%><color=green>PREMIUM FEATURE!</color>";
             }
         }
-        public static async void SHOP_Refresh(BuyView view, Action<ShopItem> clickItem, CancellationTokenSource _cancellationTokenSource)
+        public static async void SHOP_Refresh(Action<ShopItem> clickItem)
         {
+            var shopBuy = Widget.Find<ShopBuy>();
             int cooldown = 50;
+
+            if (!CurrentPandoraPlayer.IsPremium())
+            {
+                foreach (var item in shopBuy.EquipmentToggles)
+                    item.isOn = true;
+                foreach (var item in shopBuy.MainToggles)
+                    item.isOn = true;
+            }
+            else
+            {
+                ReactiveShopState._buyDigest.Clear();
+
+            }
 
             var initWeaponTask = Task.Run(async () =>
             {
-                var list = new List<ItemSubType> { ItemSubType.Weapon, };
+                var list = new List<ItemSubType>();
+                if (shopBuy.EquipmentToggles[0].isOn)
+                    list.Add(ItemSubType.Weapon);
+                //var list = new List<ItemSubType> { ItemSubType.Weapon, };
                 await ReactiveShopState.SetBuyDigestsAsync(list);
                 return true;
             });
@@ -1462,28 +1489,44 @@ namespace Nekoyume.PandoraBox
             if (initWeaponResult)
             {
                 //base.Show(ignoreShowAnimation);
-                view.Show(ReactiveShopState.BuyDigest, clickItem);
+                shopBuy.view.Show(ReactiveShopState.BuyDigest, clickItem);
             }
 
-            _cancellationTokenSource = new CancellationTokenSource();
+
+
+            CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
             var initOthersTask = Task.Run(async () =>
             {
-                var list = new List<ItemSubType>
-                {
-                    ItemSubType.Armor,
-                    ItemSubType.Belt,
-                    ItemSubType.Necklace,
-                    ItemSubType.Ring,
-                    ItemSubType.Food,
+                var list = new List<ItemSubType>();
+                if (shopBuy.EquipmentToggles[1].isOn)
+                    list.Add(ItemSubType.Armor);
+                if (shopBuy.EquipmentToggles[2].isOn)
+                    list.Add(ItemSubType.Belt);
+                if (shopBuy.EquipmentToggles[3].isOn)
+                    list.Add(ItemSubType.Necklace);
+                if (shopBuy.EquipmentToggles[4].isOn)
+                    list.Add(ItemSubType.Ring);
+
+                if (shopBuy.MainToggles[0].isOn)
+                    list.Add(ItemSubType.Food);
+
+                if (shopBuy.MainToggles[1].isOn)
+                    list.AddRange(new List<ItemSubType>{
+                    ItemSubType.Hourglass,
+                    ItemSubType.ApStone,
+                });
+
+                if (shopBuy.MainToggles[2].isOn)
+                    list.AddRange(new List<ItemSubType>{
                     ItemSubType.FullCostume,
                     ItemSubType.HairCostume,
                     ItemSubType.EarCostume,
                     ItemSubType.EyeCostume,
                     ItemSubType.TailCostume,
-                    ItemSubType.Title,
-                    ItemSubType.Hourglass,
-                    ItemSubType.ApStone,
-                };
+                    ItemSubType.Title
+                });
+
+
                 await ReactiveShopState.SetBuyDigestsAsync(list);
                 return true;
             }, _cancellationTokenSource.Token);
@@ -1499,7 +1542,7 @@ namespace Nekoyume.PandoraBox
                 return;
             }
 
-            view.IsDoneLoadItem = true;
+            shopBuy.view.IsDoneLoadItem = true;
 
             cooldown = 5;
             if (CurrentPandoraPlayer.IsPremium())

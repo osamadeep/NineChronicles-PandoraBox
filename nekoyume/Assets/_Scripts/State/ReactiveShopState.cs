@@ -59,7 +59,7 @@ namespace Nekoyume.State
         private static ConcurrentDictionary<Guid, ItemBase> CachedShopItems { get; } = new();
 
 
-        private static readonly Dictionary<ItemSubType, List<OrderDigest>> _buyDigest = new();
+        public static readonly Dictionary<ItemSubType, List<OrderDigest>> _buyDigest = new();
         private static List<Guid> _removedOrderIds { get; } = new();
 
         public static OrderDigest GetSellDigest(
@@ -122,7 +122,7 @@ namespace Nekoyume.State
 
             _buyDigest[itemSubType] = d;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _buyDigest[itemSubType] = digests.ToList();
+            _buyDigest[itemSubType] = digests.ToList(); //show my items too
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             var buyDigests = new List<OrderDigest>();

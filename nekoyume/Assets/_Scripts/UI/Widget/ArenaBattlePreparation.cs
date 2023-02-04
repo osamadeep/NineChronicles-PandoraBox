@@ -34,7 +34,7 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button maxTriesBtn = null;
+        [SerializeField] private Button multiFightsBtn = null;
         public TextMeshProUGUI CurrentTicketsText = null;
         public TextMeshProUGUI ExpectedCostText = null;
         public TextMeshProUGUI ExpectedBlockText = null;
@@ -125,7 +125,7 @@ namespace Nekoyume.UI
             });
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            maxTriesBtn.onClick.AddListener(() =>
+            multiFightsBtn.onClick.AddListener(() =>
             {
                 SendMultipleBattleArenaAction();
             });
@@ -169,7 +169,7 @@ namespace Nekoyume.UI
             bool ignoreShowAnimation = false)
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            maxTriesBtn.interactable = true;
+            multiFightsBtn.interactable = true;
             var blockIndex = Game.Game.instance.Agent.BlockIndex;
             var currentRound =
                 TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);

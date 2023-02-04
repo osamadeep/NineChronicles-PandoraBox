@@ -319,10 +319,12 @@ namespace Nekoyume.UI
         IEnumerator MaxDungeon()
         {
             maxDungeonBtn.interactable = false;
-            var itemSlotState = States.Instance.ItemSlotStates[BattleType.Adventure];
+            var avatarSlotIndex = States.Instance.AvatarStates
+                .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+            var itemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Adventure];
             var costumes = itemSlotState.Costumes;
             var equipments = itemSlotState.Equipments;
-            var runeInfos = States.Instance.RuneSlotStates[BattleType.Adventure]
+            var runeInfos = States.Instance.RuneSlotStates[avatarSlotIndex][BattleType.Adventure]
                 .GetEquippedRuneSlotInfos();
             var consumables = information.GetEquippedConsumables();
 

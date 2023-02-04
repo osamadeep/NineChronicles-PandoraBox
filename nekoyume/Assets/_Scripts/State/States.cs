@@ -188,34 +188,38 @@ namespace Nekoyume.State
             CurrentRuneSlotStates.Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
 
             RuneSlotStates.Clear();
-            foreach (var (index, avatarState) in _avatarStates)
+            try
             {
-                RuneSlotStates.Add(index, new Dictionary<BattleType, RuneSlotState>());
-                RuneSlotStates[index].Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
-                RuneSlotStates[index].Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
-                RuneSlotStates[index].Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+                foreach (var (index, avatarState) in _avatarStates)
+                {
+                    RuneSlotStates.Add(index, new Dictionary<BattleType, RuneSlotState>());
+                    RuneSlotStates[index].Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
+                    RuneSlotStates[index].Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
+                    RuneSlotStates[index].Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
 
-                var addresses = new List<Address>
+                    var addresses = new List<Address>
                 {
                     RuneSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
                     RuneSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
                     RuneSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
                 };
-                var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
-                foreach (var value in stateBulk.Values)
-                {
-                    if (value is List list)
+                    var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
+                    foreach (var value in stateBulk.Values)
                     {
-                        var slotState = new RuneSlotState(list);
-                        RuneSlotStates[index][slotState.BattleType] = slotState;
-
-                        if (avatarState.address == CurrentAvatarState.address)
+                        if (value is List list)
                         {
-                            CurrentRuneSlotStates[slotState.BattleType] = slotState;
+                            var slotState = new RuneSlotState(list);
+                            RuneSlotStates[index][slotState.BattleType] = slotState;
+
+                            if (avatarState.address == CurrentAvatarState.address)
+                            {
+                                CurrentRuneSlotStates[slotState.BattleType] = slotState;
+                            }
                         }
                     }
                 }
             }
+            catch { }
         }
 
         public void UpdateRuneSlotState()
@@ -260,34 +264,39 @@ namespace Nekoyume.State
             CurrentItemSlotStates.Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
 
             ItemSlotStates.Clear();
-            foreach (var (index, avatarState) in _avatarStates)
+            try
             {
-                ItemSlotStates.Add(index, new Dictionary<BattleType, ItemSlotState>());
-                ItemSlotStates[index].Add(BattleType.Adventure, new ItemSlotState(BattleType.Adventure));
-                ItemSlotStates[index].Add(BattleType.Arena, new ItemSlotState(BattleType.Arena));
-                ItemSlotStates[index].Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
+                foreach (var (index, avatarState) in _avatarStates)
+                {
+                    ItemSlotStates.Add(index, new Dictionary<BattleType, ItemSlotState>());
+                    ItemSlotStates[index].Add(BattleType.Adventure, new ItemSlotState(BattleType.Adventure));
+                    ItemSlotStates[index].Add(BattleType.Arena, new ItemSlotState(BattleType.Arena));
+                    ItemSlotStates[index].Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
 
-                var addresses = new List<Address>
+                    var addresses = new List<Address>
                 {
                     ItemSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
                     ItemSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
                     ItemSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
                 };
-                var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
-                foreach (var value in stateBulk.Values)
-                {
-                    if (value is List list)
+                    var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
+                    foreach (var value in stateBulk.Values)
                     {
-                        var slotState = new ItemSlotState(list);
-                        var checkedState = GetVerifiedItemSlotState(slotState, avatarState);
-                        ItemSlotStates[index][checkedState.BattleType] = checkedState;
-                        if (avatarState.address == CurrentAvatarState.address)
+                        if (value is List list)
                         {
-                            CurrentItemSlotStates[checkedState.BattleType] = checkedState;
+                            var slotState = new ItemSlotState(list);
+                            var checkedState = GetVerifiedItemSlotState(slotState, avatarState);
+                            ItemSlotStates[index][checkedState.BattleType] = checkedState;
+                            if (avatarState.address == CurrentAvatarState.address)
+                            {
+                                CurrentItemSlotStates[checkedState.BattleType] = checkedState;
+                            }
                         }
                     }
                 }
             }
+            catch { }
+
         }
 
         private async UniTask InitItemSlotState(int slotIndex, AvatarState avatarState)

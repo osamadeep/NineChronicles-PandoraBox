@@ -63,7 +63,7 @@ namespace Nekoyume.UI
                     break;
                 }
             }
-            Widget.Find<Menu>().chronoButton.transform.Find("MarkImage").gameObject.SetActive(isNotify);
+            Widget.Find<Menu>().ChronoButton.transform.Find("MarkImage").gameObject.SetActive(isNotify);
         }
     }
 }

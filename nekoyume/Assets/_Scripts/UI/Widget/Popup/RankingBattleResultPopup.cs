@@ -56,7 +56,7 @@ namespace Nekoyume.UI
         public void Show(
             ArenaLog log,
             IReadOnlyList<ItemBase> rewardItems,
-            System.Action onClose,
+            System.Action onClose, System.Action onCloseToMenu,
             (int win, int defeat)? winDefeatCount = null)
         {
             base.Show();
@@ -117,33 +117,6 @@ namespace Nekoyume.UI
         {
             Close();
             _onCloseToMenu?.Invoke();
-
-            ////Game.Game.instance.Stage.KillAllCharacters();
-            //Game.Game.instance.Stage.objectPool.ReleaseAll();
-            //Game.Game.instance.IsInWorld = false;
-            //ActionCamera.instance.SetPosition(0f, 0f);
-            //ActionCamera.instance.Idle();
-            //Find<ArenaJoin>().Close();
-            //Find<ArenaBoard>().Close();
-            //Find<ArenaBattle>().Close();
-            //Close();
-            ////Find<Menu>().Show(false);
-            //Game.Event.OnRoomEnter.Invoke(true);
-        }
-
-        public void BackToArena()
-        {
-            return;
-            Game.Game.instance.Stage.objectPool.ReleaseAll();
-            Game.Game.instance.IsInWorld = false;
-            ActionCamera.instance.SetPosition(0f, 0f);
-            ActionCamera.instance.Idle();
-            AudioController.instance.PlayMusic(AudioController.MusicCode.Ranking);
-            //Find<RankingBoard>().waitingForLaodBlocker.SetActive(false);
-            Close();
-            //Find<RankingBoard>().gameObject.SetActive(true);
-            Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Battle);
-            Find<HeaderMenuStatic>().Show(true);
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
     }

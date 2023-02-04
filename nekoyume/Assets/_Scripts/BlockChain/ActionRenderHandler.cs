@@ -2334,7 +2334,7 @@ namespace Nekoyume.BlockChain
                 else
                 {
                     _disposableForBattleEnd = null;
-                    Premium.PVP_OnConfirmBattleEnd(enemyDigest.Value.NameWithHash, log.Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+                    Premium.PVP_OnConfirmBattleEnd(enemyDigest.Value.NameWithHash, logs[0].Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
                 }
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

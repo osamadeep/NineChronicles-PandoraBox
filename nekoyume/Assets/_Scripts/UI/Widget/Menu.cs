@@ -59,11 +59,11 @@ namespace Nekoyume.UI
         [SerializeField] private Transform shopCrystalChanges;
 
         //Extra UI Buttons
-        [SerializeField] private Button fastSwitchButton;
-        [SerializeField] private Button updateAvatarButton;
+        public Button ChronoButton;
         [SerializeField] private Button runnerButton;
-        [SerializeField] private Button labButton;
-        public Button chronoButton;
+        //[SerializeField] private Button fastSwitchButton;
+        //[SerializeField] private Button updateAvatarButton;
+        //[SerializeField] private Button labButton;
 
         private List<(int rank, ArenaInfo arenaInfo)> _weeklyCachedInfo = new List<(int rank, ArenaInfo arenaInfo)>();
         private ArenaInfoList _arenaInfoList = new ArenaInfoList();
@@ -183,11 +183,10 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
-            updateAvatarButton.onClick.AddListener(() => { UpdateAvatar(); });
+            //fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
             runnerButton.onClick.AddListener(() => { ShowRunner(); });
-            labButton.onClick.AddListener(() => { FastShowEvent(); });
-            chronoButton.onClick.AddListener(() => { Widget.Find<ChronoSlotsPopup>().Show(); });
+            //labButton.onClick.AddListener(() => { FastShowEvent(); });
+            ChronoButton.onClick.AddListener(() => { Widget.Find<ChronoSlotsPopup>().Show(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -747,7 +746,7 @@ namespace Nekoyume.UI
         }
 
 
-        public void PandoraShop()
+        public void ShowPandoraShop()
         {
             Widget.Find<PandoraShopPopup>().Show();
         }
@@ -759,17 +758,6 @@ namespace Nekoyume.UI
             //worldMap.ShowEventDungeonStage(RxProps.EventDungeonRow, false);
             Find<PandoraLab>().Show(PandoraLab.ToggleType.Information);
             AudioController.PlayClick();
-        }
-
-        public async void UpdateAvatar()
-        {
-            updateAvatarButton.interactable = false;
-            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Updating Avatar...", NotificationCell.NotificationType.Information);
-            await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
-            await States.Instance.SetCombinationSlotStatesAsync(States.Instance.CurrentAvatarState);
-            await ActionRenderHandler.Instance.UpdateCurrentAvatarStateAsync(States.Instance.CurrentAvatarState);
-            updateAvatarButton.interactable = true;
-            PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>

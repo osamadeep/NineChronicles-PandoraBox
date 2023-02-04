@@ -431,7 +431,9 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             var myAvatarState = States.Instance.CurrentAvatarState;
-            var itemSlotState = States.Instance.ItemSlotStates[battleType];
+            var avatarSlotIndex = States.Instance.AvatarStates
+                .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
+            var itemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][battleType];
             var myEquipments = itemSlotState.Equipments.Select(guid =>
                 myAvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null).ToList(); ;
             var myCostumes = itemSlotState.Costumes.Select(guid =>

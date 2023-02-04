@@ -720,7 +720,8 @@ namespace Nekoyume.Game
                     //get players
                     Premium.PANDORA_GetDatabase(currentLoginAddress);
                     Premium.PANDORA_UpdateDatabasePeriodly().Forget();
-                    GetPlayerConfiguration(callback);                   
+                    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+                    //GetPlayerConfiguration(callback);                   
                 }
             },
             failed =>
@@ -765,22 +766,6 @@ namespace Nekoyume.Game
                 {
                     Debug.LogError("Failed to getGameConfiguration!, " + failed.GenerateErrorReport());
                 });
-
-
-
-                
-                //Debug.LogError("9c: " + Widget.Find<VersionSystem>().Scan9cBlock + "  premium: " + int.Parse(PandoraMaster.PlayFabUserData["PremiumBlock"].Value));
-                //if (PandoraMaster.PlayFabUserData.ContainsKey("PremiumBlock")
-                //&& int.Parse(PandoraMaster.PlayFabUserData["PremiumBlock"].Value) > Widget.Find<VersionSystem>().Scan9cBlock)
-                //{
-                //    Debug.LogError("Player Premium");
-                    
-                //}
-                //else
-                //{
-                //    Debug.LogError("Player Not Premium");
-                //    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
-                //}
             },
             failed =>
             {

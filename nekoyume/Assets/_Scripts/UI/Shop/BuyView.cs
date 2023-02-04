@@ -52,7 +52,7 @@ namespace Nekoyume
         [SerializeField]
         private CartView cartView;
 
-        [SerializeField] private List<ToggleDropdown> toggleDropdowns = new List<ToggleDropdown>();
+        public List<ToggleDropdown> toggleDropdowns = new List<ToggleDropdown>(); // [SerializeField] private
 
         [SerializeField] private Button sortButton;
 
@@ -573,8 +573,8 @@ namespace Nekoyume
                     ? models.OrderBy(x => x.OrderDigest.CombatPoint).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.CombatPoint).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Price => _isAscending.Value
-                    ? models.OrderBy(x => x.OrderDigest.Price.RawValue / x.OrderDigest.ItemCount).ToList()
-                    : models.OrderByDescending(x => x.OrderDigest.Price.RawValue / x.OrderDigest.ItemCount).ToList(),
+                    ? models.OrderBy(x => ((int)x.OrderDigest.Price.RawValue/100f) / ((int)x.OrderDigest.ItemCount/100f)).ToList()
+                    : models.OrderByDescending(x => ((int)x.OrderDigest.Price.RawValue / 100f) / ((int)x.OrderDigest.ItemCount / 100f)).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Class => _isAscending.Value
                     ? models.OrderBy(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)

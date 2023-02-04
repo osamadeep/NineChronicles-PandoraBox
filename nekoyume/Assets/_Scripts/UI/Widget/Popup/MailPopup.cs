@@ -37,19 +37,20 @@ namespace Nekoyume.UI
             System
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button readAllButton = null;
-        [Space(50)]
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private MailTabState tabState = default;
 
-        [SerializeField] private MailTabState tabState = default;
+        [SerializeField]
+        private CategoryTabButton allButton = null;
 
-        [SerializeField] private CategoryTabButton allButton = null;
+        [SerializeField]
+        private CategoryTabButton workshopButton = null;
 
-        [SerializeField] private CategoryTabButton workshopButton = null;
+        [SerializeField]
+        private CategoryTabButton marketButton = null;
 
-        [SerializeField] private CategoryTabButton marketButton = null;
+        [SerializeField]
+        private CategoryTabButton systemButton = null;
 
         [SerializeField]
         private Button receiveAllButton;
@@ -60,15 +61,17 @@ namespace Nekoyume.UI
         [SerializeField]
         private MailScroll scroll = null;
 
-        [SerializeField] private MailScroll scroll = null;
+        [SerializeField]
+        private GameObject emptyImage = null;
 
-        [SerializeField] private GameObject emptyImage = null;
+        [SerializeField]
+        private TextMeshProUGUI emptyText = null;
 
-        [SerializeField] private TextMeshProUGUI emptyText = null;
+        [SerializeField]
+        private string emptyTextL10nKey = null;
 
-        [SerializeField] private string emptyTextL10nKey = null;
-
-        [SerializeField] private Button closeButton = null;
+        [SerializeField]
+        private Button closeButton = null;
 
         [SerializeField]
         private GameObject loading;
@@ -95,12 +98,6 @@ namespace Nekoyume.UI
             });
 
             receiveAllButton.onClick.AddListener(ReadAll);
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            readAllButton.onClick.AddListener(() =>
-            {
-                StartCoroutine(ReadAll());
-            });
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private async void ReadAll()
@@ -209,30 +206,6 @@ namespace Nekoyume.UI
                     break;
             }
         }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        System.Collections.IEnumerator ReadAll()
-        {
-            var blockIndex = Game.Game.instance.Agent.BlockIndex;
-            var list = GetAvailableMailList(blockIndex, tabState)?.ToList();
-            foreach (var item in list)
-            {
-                if (item.New)
-                    item.Read(this);
-                yield return new WaitForSeconds(0.2f);
-                if (Widget.Find<BuyItemInformationPopup>().IsActive())
-                    Widget.Find<BuyItemInformationPopup>().submitButton.onClick.Invoke();
-                yield return new WaitForSeconds(0.2f);
-            }
-        }
-
-        public async void UpdateAvatar()
-        {
-            await UpdateAvatarState(States.Instance.CurrentAvatarState, States.Instance.CurrentAvatarKey);
-        }
-        private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>
-        States.Instance.AddOrReplaceAvatarStateAsync(avatarState, index);
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         public override void Initialize()
         {
@@ -434,11 +407,8 @@ namespace Nekoyume.UI
         public async void Read(OrderSellerMail orderSellerMail)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
+            var agentAddress = States.Instance.AgentState.address;
             var order = await Util.GetOrder(orderSellerMail.OrderId);
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //Debug.LogError(order.);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var taxedPrice = order.Price - order.GetTax();
             LocalLayerModifier.ModifyAgentGoldAsync(agentAddress, taxedPrice).Forget();
             LocalLayerModifier.RemoveNewMail(avatarAddress, orderSellerMail.id);
@@ -502,7 +472,7 @@ namespace Nekoyume.UI
                 if (itemEnhanceMail.attachment is ItemEnhancement.ResultModel result)
                 {
                     await LocalLayerModifier.ModifyAgentCrystalAsync(
-                        States.Instance.CurrentAvatarState.agentAddress,
+                        States.Instance.AgentState.address,
                         result.CRYSTAL.MajorUnit);
                 }
 
