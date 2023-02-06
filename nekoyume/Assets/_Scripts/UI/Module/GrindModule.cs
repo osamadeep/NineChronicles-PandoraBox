@@ -89,7 +89,7 @@ namespace Nekoyume.UI.Module
                 (ItemType.Costume, _ => true),
             };
 
-        private const int LimitGrindingCount = 20;
+        private const int LimitGrindingCount = 30;
         private static readonly BigInteger MaximumCrystal = 100_000;
         private static readonly BigInteger MiddleCrystal = 1_000;
 
@@ -223,8 +223,10 @@ namespace Nekoyume.UI.Module
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 if (count <11)
                     grindButton.SetCost(CostType.ActionPoint, 5);
-                else
+                else if (count >= 11 && count < 21)
                     grindButton.SetCost(CostType.ActionPoint, 10);
+                else
+                    grindButton.SetCost(CostType.ActionPoint, 15);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 grindButton.Interactable = CanGrind;
@@ -249,7 +251,7 @@ namespace Nekoyume.UI.Module
             var isEquipment = model.ItemBase.ItemType == ItemType.Equipment;
             var isEquipped = model.Equipped.Value;
             var isValid =
-                _selectedItemsForGrind.Count < 10 && isEquipment
+                _selectedItemsForGrind.Count < LimitGrindingCount && isEquipment // < 10
                 || !isRegister;
 
             if (isValid)
@@ -456,43 +458,14 @@ namespace Nekoyume.UI.Module
             Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(true);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (equipments.Count < 11)
+            int batchSize = 10;
+
+            for (int i = 0; i < equipments.Count; i += batchSize)
             {
+                bool isChargeAp = i == 0 ? chargeAp : false;
+                List<Equipment> batch = equipments.GetRange(i, Math.Min(batchSize, equipments.Count - i));
                 ActionManager.Instance
-                    .Grinding(equipments, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
-                    .Subscribe(eval =>
-                    {
-                        Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
-                        if (eval.Exception != null)
-                        {
-                            Debug.LogException(eval.Exception.InnerException);
-                            OneLineSystem.Push(
-                                MailType.Grinding,
-                                L10nManager.Localize("ERROR_UNKNOWN"),
-                                NotificationCell.NotificationType.Alert);
-                        }
-                    });
-            }
-            else
-            {
-                var firstPatch = equipments.Take(10).ToList();
-                ActionManager.Instance
-                .Grinding(firstPatch, chargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
-                .Subscribe(eval =>
-                {
-                    Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
-                    if (eval.Exception != null)
-                    {
-                        Debug.LogException(eval.Exception.InnerException);
-                        OneLineSystem.Push(
-                            MailType.Grinding,
-                            L10nManager.Localize("ERROR_UNKNOWN"),
-                            NotificationCell.NotificationType.Alert);
-                    }
-                });
-                var secondPatch = equipments.Skip(10).Take(equipments.Count -10).ToList();
-                ActionManager.Instance
-                .Grinding(secondPatch, false,(int)_cachedGrindingRewardCrystal.MajorUnit) //we already charge it on prevoius patch
+                .Grinding(batch, isChargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
                 .Subscribe(eval =>
                 {
                     Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);

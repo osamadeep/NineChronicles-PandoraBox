@@ -10,6 +10,11 @@ namespace Nekoyume.UI.Module
 {
     public class EventBanner : Widget
     {
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")]
+        [SerializeField] private Button closeButton;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField] private RectTransform content = null;
 
         [SerializeField] private RectTransform indexContent = null;
@@ -21,6 +26,15 @@ namespace Nekoyume.UI.Module
         [SerializeField] private GameObject IndexOff;
 
         [SerializeField] private PageView pageView;
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        protected override void Awake()
+        {
+            base.Awake();
+            closeButton.onClick.AddListener(() => { Close(true); });
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         private IEnumerator Start()
         {
@@ -51,6 +65,9 @@ namespace Nekoyume.UI.Module
             }
 
             pageView.Set(content, indexImages);
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            closeButton.interactable = true;
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }
 }
