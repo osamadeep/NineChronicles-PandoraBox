@@ -62,8 +62,6 @@ namespace Nekoyume.PandoraBox
         public int CrystalOld;
         public int PremiumPrice;
         public int ShopFeaturePrice;
-        public float CrystalPremiumBouns;
-        //public List<PandoraPlayer> Players;
     }
 
     [System.Serializable]

@@ -205,18 +205,17 @@ namespace Nekoyume.PandoraBox
             PandoraUtil.ShowSystemNotification(600, NotificationCell.NotificationType.Information);
             ActionManager.Instance.ClaimStakeReward();
         }
-        public static void ACCOUNT_BuyCrystals(int ncg, int crystal)
+        public static void ACCOUNT_BuyCrystals(int ncgToSpend, int CrystalPerNCG, float bounsMultiplier)
         {
             Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
-            float totalCrystal = CurrentPandoraPlayer.IsPremium() ? (crystal * PandoraMaster.PanDatabase.CrystalPremiumBouns) * ncg : crystal * ncg;
-            string bounsMultiplier = CurrentPandoraPlayer.IsPremium() ? PandoraMaster.PanDatabase.CrystalPremiumBouns.ToString() : "1";
+            float totalCrystal = bounsMultiplier * ncgToSpend * CrystalPerNCG;
             var currency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
 
             ActionManager.Instance.TransferAsset(
                 States.Instance.CurrentAvatarState.agentAddress,
                 new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
-                new Libplanet.Assets.FungibleAssetValue(currency, ncg, 0),
-                $"Pandora Crystal: OR={crystal},TL={(int)totalCrystal},Bouns={bounsMultiplier})")
+                new Libplanet.Assets.FungibleAssetValue(currency, ncgToSpend, 0),
+                $"Pandora Crystal: OR={CrystalPerNCG},TL={(int)totalCrystal},Bouns={bounsMultiplier})")
             .Subscribe();
         }
         public static void ACCOUNT_ConfirmCrystalRequest(long blockIndex, string memo, int ncg)
