@@ -31,6 +31,7 @@ namespace Nekoyume.PandoraBox
                     PandoraMaster.Instance.ShowError(16);
                 }
             }
+            www.Dispose();
         }
 
         public static string URLAntiCacheRandomizer(string url)

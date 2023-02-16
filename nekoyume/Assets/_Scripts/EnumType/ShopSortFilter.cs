@@ -10,6 +10,7 @@ namespace Nekoyume.EnumType
         Crystal = 3,
         Time = 4,
         Level = 5,
+        PandoraScore = 6,
     }
 
     public static class ShopSortFilterExtension
@@ -26,6 +27,7 @@ namespace Nekoyume.EnumType
                     ShopSortFilter.Crystal,
                     ShopSortFilter.Time,
                     ShopSortFilter.Level,
+                    ShopSortFilter.PandoraScore,
                 };
             }
         }

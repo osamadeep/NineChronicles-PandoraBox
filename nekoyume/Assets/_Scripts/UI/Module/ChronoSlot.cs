@@ -146,7 +146,7 @@ namespace Nekoyume.UI.Module
             Widget.Find<ChronoSettingsPopup>().Show(currentAvatarState, _slotIndex);
         }
 
-        void LoadSettings()
+        async void LoadSettings()
         {
             if (IsPrefsLoded)
                 return;
@@ -215,8 +215,12 @@ namespace Nekoyume.UI.Module
 
             //those settings will set only on game start or setting changes once
             //general
-            AvatarNameText.text = "#" + (_slotIndex + 1) + " " + currentAvatarState.NameWithHash + " : " + currentAvatarState.address.ToString();
-
+            AvatarNameText.text = $"#{(_slotIndex + 1)} Lv.{currentAvatarState.level} {currentAvatarState.NameWithHash} : {currentAvatarState.address}";
+            if(currentAvatarState.agentAddress != States.Instance.AgentState.address)
+            {
+                var result = await GetAgentBalance();
+                AvatarNameText.text += result;
+            }
             //stage
             stageModule.SetActive(IsStage);
             if (IsStage)
@@ -291,7 +295,7 @@ namespace Nekoyume.UI.Module
             UpdateInformation();
         }
 
-        private void UpdateInformation()
+        async void UpdateInformation()
         {
             try
             {
@@ -337,7 +341,7 @@ namespace Nekoyume.UI.Module
                 stageNotification = IsStageNotify && (isFull || currentAvatarState.actionPoint > 5);
 
                 if (stageCooldown < currentBlockIndex)
-                    UpdateAvatar().Forget();
+                    await UpdateAvatar();
             }
 
             //CRAFT SECTION
@@ -350,7 +354,7 @@ namespace Nekoyume.UI.Module
                 craftCooldownImage.fillAmount = (updateCraftInterval - cooldownBar) * 1f / updateCraftInterval;
 
                 if (craftCooldown < currentBlockIndex)
-                    SetCombinationSlotStatesAsync().Forget();
+                    await SetCombinationSlotStatesAsync();
             }
 
             //Event
@@ -478,32 +482,69 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        async UniTaskVoid UpdateAvatar()
+        async UniTask<string> GetAgentBalance()
+        {
+                var ncgCurrency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+                var crystalCurrency = Libplanet.Assets.Currency.Legacy("CRYSTAL", 18, minters: null);
+                var goldbalance = await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, ncgCurrency);
+                var crystalbalance = await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, crystalCurrency);
+                return $", N:{PandoraUtil.ToLongNumberNotation(goldbalance.MajorUnit)} C:{PandoraUtil.ToLongNumberNotation(crystalbalance.MajorUnit)}";
+        }
+
+        async UniTask UpdateAvatar()
         {
             stageCooldown = currentBlockIndex + updateAvatarInterval;
             await States.Instance.AddOrReplaceAvatarStateAsync(currentAvatarState.address, _slotIndex);
 
             //check for prosperity
             var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1, 0, 1700);
-            if (IsAutoCollect && prosperityBlocks >= 1700 && currentAvatarState.actionPoint < 5)
+            if (currentAvatarState.actionPoint >= 5 && IsAutoSpend)
             {
-                try //in case actionManager is not ready yet
-                {CollectAP(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
-                catch { }
+                //check for sweep, we used else if to not doing twice 
+                if ( IsSweep && sweepStage != 0)
+                {
+                    try //in case actionManager is not ready yet
+                    {
+                        var result = await Premium.PVE_AutoStageSweep(currentAvatarState, sweepStage);
+                        if (string.IsNullOrEmpty(result))
+                            OneLineSystem.Push(MailType.System,
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!",
+                                NotificationCell.NotificationType.Information);
+                        else
+                            OneLineSystem.Push(MailType.System,
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} <b>Failed</b> to send Sweep because {result}",
+                                NotificationCell.NotificationType.Alert);
+                        stageCooldown = currentBlockIndex + urgentUpdateInterval;
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                }
+                //check for repeat, we used else if to not doing twice 
+                else if (!IsSweep)
+                {
+                    try //in case actionManager is not ready yet
+                    {
+                        var result = await Premium.PVE_AutoStageRepeat(currentAvatarState);
+                        if (string.IsNullOrEmpty(result))
+                            OneLineSystem.Push(MailType.System,
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!",
+                                NotificationCell.NotificationType.Information);
+                        else
+                            OneLineSystem.Push(MailType.System,
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} <b>Failed</b> to send Repeat because {result}",
+                                NotificationCell.NotificationType.Alert);
+                        stageCooldown = currentBlockIndex + urgentUpdateInterval;
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                }
             }
-            //check for sweep, we used else if to not doing twice 
-            else if (IsAutoSpend && IsSweep && sweepStage != 0 && currentAvatarState.actionPoint >= 5)
+            else
             {
-                try //in case actionManager is not ready yet
-                {Premium.PVE_AutoStageSweep(currentAvatarState, sweepStage).Forget(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
-                catch { }
-            }
-            //check for repeat, we used else if to not doing twice 
-            else if (IsAutoSpend && !IsSweep && currentAvatarState.actionPoint >= 5)
-            {
-                try //in case actionManager is not ready yet
-                { Premium.PVE_AutoStageRepeat(currentAvatarState).Forget(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
-                catch { }
+                if (IsAutoCollect && prosperityBlocks >= 1700 && currentAvatarState.actionPoint < 5)
+                {
+                    try //in case actionManager is not ready yet
+                    {CollectAP(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
+                    catch (Exception e) { Debug.LogError(e); }
+                }
             }
         }
 

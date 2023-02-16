@@ -45,6 +45,7 @@ namespace Nekoyume
         [SerializeField] private TMP_Dropdown IsLessDrop = null;
         [SerializeField] private TMP_Dropdown ItemElementType = null;
         [SerializeField] private TMP_Dropdown StarCountsDrop = null;
+        public GameObject PandoraLoading;
 
         public UnityEngine.UI.Toggle World6Toggle;
         [Space(50)]
@@ -589,6 +590,7 @@ namespace Nekoyume
                 Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Level).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),
+                Nekoyume.EnumType.ShopSortFilter.PandoraScore => PandoraBox.Premium.SHOP_PandoraScoreFilter(_isAscending, models),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

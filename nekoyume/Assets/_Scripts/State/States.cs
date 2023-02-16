@@ -120,7 +120,7 @@ namespace Nekoyume.State
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //Prime.AllOfAvatarStates().Forget();
+            //await Prime.GetAllCustomAvatars(state.address.ToString().ToLower());
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

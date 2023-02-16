@@ -98,7 +98,7 @@ namespace Nekoyume.UI
         }
 
 
-        private const int Timer = 10;
+        public int Timer = 10;
         private static readonly Vector3 VfxBattleWinOffset = new(-0.05f, 1.2f, 10f);
 
         [SerializeField]
@@ -782,6 +782,9 @@ namespace Nekoyume.UI
             var costumes = itemSlotState.Costumes;
             var equipments = itemSlotState.Equipments;
             var runeSlotInfos = States.Instance.CurrentRuneSlotStates[BattleType.Adventure].GetEquippedRuneSlotInfos();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //equipments = Prime.GetBestEquipments(equipments);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             yield return SharedModel.StageType switch
             {
                 StageType.HackAndSlash => Game.Game.instance.ActionManager

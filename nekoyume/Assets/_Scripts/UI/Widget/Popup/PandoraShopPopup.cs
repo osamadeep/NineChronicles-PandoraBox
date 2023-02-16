@@ -79,7 +79,7 @@ namespace Nekoyume.UI
             BuyCrystalBtn.interactable = true;
             BuyCrystalBtn.GetComponentInChildren<TextMeshProUGUI>().text = "BUY";
 
-            StartCoroutine(ChangeCrystalValue());
+            StartCoroutine(ChangeCrystalValue());           
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -122,14 +122,14 @@ namespace Nekoyume.UI
 
                 //slider
                 if (ncgToSpend >= 0 && ncgToSpend <= 50)
-                    BounsSlider.value = (ncgToSpend - 0) * 0.25f / 50;
+                    BounsSlider.value = (ncgToSpend) * 0.25f / 50;
                 else if (ncgToSpend > 50 && ncgToSpend <= 100)
                     BounsSlider.value = 0.25f + (ncgToSpend - 50) * 0.25f / 50;
-                else if (ncgToSpend > 100 && ncgToSpend <= 300)
-                    BounsSlider.value = 0.5f + (ncgToSpend - 100) * 0.25f / 200;
-                else if (ncgToSpend > 300 && ncgToSpend <= 500)
-                    BounsSlider.value = 0.75f + (ncgToSpend - 300) * 0.25f / 200;
-                else if (ncgToSpend > 500)
+                else if (ncgToSpend > 100 && ncgToSpend <= 150)
+                    BounsSlider.value = 0.5f + (ncgToSpend - 100) * 0.25f / 50;
+                else if (ncgToSpend > 150 && ncgToSpend <= 200)
+                    BounsSlider.value = 0.75f + (ncgToSpend - 150) * 0.25f / 50;
+                else if (ncgToSpend > 200)
                     BounsSlider.value = 1;
 
                 //visual slider
@@ -139,37 +139,37 @@ namespace Nekoyume.UI
                     item.color = new Color(item.color.r, item.color.g, item.color.b, 0.3f);
 
 
-                if (ncgToSpend >= 10 && ncgToSpend <= 49)
+                if (ncgToSpend >= 10 && ncgToSpend < 50)
                 {
                     BounsSliderNCGTexts[0].color = new Color(BounsSliderNCGTexts[0].color.r, BounsSliderNCGTexts[0].color.g, BounsSliderNCGTexts[0].color.b, 1);
                     BounsSliderRateTexts[0].color = new Color(BounsSliderNCGTexts[0].color.r, BounsSliderNCGTexts[0].color.g, BounsSliderNCGTexts[0].color.b, 1);
                 }
-                else if (ncgToSpend >= 50 && ncgToSpend <= 99)
+                else if (ncgToSpend >= 50 && ncgToSpend < 100)
                 {
                     BounsSliderNCGTexts[1].color = new Color(BounsSliderNCGTexts[1].color.r, BounsSliderNCGTexts[1].color.g, BounsSliderNCGTexts[1].color.b, 1);
                     BounsSliderRateTexts[1].color = new Color(BounsSliderNCGTexts[1].color.r, BounsSliderNCGTexts[1].color.g, BounsSliderNCGTexts[1].color.b, 1);
                     bounsFactor = 1.05f;
                 }
-                else if (ncgToSpend >= 100 && ncgToSpend <= 299)
+                else if (ncgToSpend >= 100 && ncgToSpend < 150)
                 {
                     BounsSliderNCGTexts[2].color = new Color(BounsSliderNCGTexts[2].color.r, BounsSliderNCGTexts[2].color.g, BounsSliderNCGTexts[2].color.b, 1);
                     BounsSliderRateTexts[2].color = new Color(BounsSliderNCGTexts[2].color.r, BounsSliderNCGTexts[2].color.g, BounsSliderNCGTexts[2].color.b, 1);
                     bounsFactor = 1.1f;
                 }
-                else if (ncgToSpend >= 300 && ncgToSpend <= 499)
+                else if (ncgToSpend >= 150 && ncgToSpend < 200)
                 {
                     BounsSliderNCGTexts[3].color = new Color(BounsSliderNCGTexts[3].color.r, BounsSliderNCGTexts[3].color.g, BounsSliderNCGTexts[3].color.b, 1);
                     BounsSliderRateTexts[3].color = new Color(BounsSliderNCGTexts[3].color.r, BounsSliderNCGTexts[3].color.g, BounsSliderNCGTexts[3].color.b, 1);
                     bounsFactor = 1.15f;
                 }
-                else if (ncgToSpend >= 500)
+                else if (ncgToSpend >= 200)
                 {
                     BounsSliderNCGTexts[4].color = new Color(BounsSliderNCGTexts[4].color.r, BounsSliderNCGTexts[4].color.g, BounsSliderNCGTexts[4].color.b, 1);
                     BounsSliderRateTexts[4].color = new Color(BounsSliderNCGTexts[4].color.r, BounsSliderNCGTexts[4].color.g, BounsSliderNCGTexts[4].color.b, 1);
                     bounsFactor = 1.2f;
                 }
 
-                totalCrystal = (CrystalPerNCG * bounsFactor) * ncgToSpend;
+                totalCrystal = CrystalPerNCG * bounsFactor * ncgToSpend;
                 CrystalInput.text = PandoraUtil.ToLongNumberNotation((System.Numerics.BigInteger)totalCrystal);
                 BonusGemsText.text = (ncgToSpend / 10).ToString();
                 PremiumBounsText.text = $"Your bouns : <color=#EF3DFF>+" +
@@ -189,16 +189,14 @@ namespace Nekoyume.UI
                 int sliderValue = 100;
                 CrystalPerNCG = Random.Range(PandoraMaster.PanDatabase.Crystal - 500, PandoraMaster.PanDatabase.Crystal);
                 EstimatedValueText.text = $"Estimated Price:   <b>1</b> <color=#FFCF2A>NCG</color> = <b>{CrystalPerNCG}</b> <color=#EF3DFF>CRYSTALS</color>";
-                totalCrystal = ncgToSpend * bounsFactor;
+                totalCrystal = ncgToSpend * CrystalPerNCG * bounsFactor;
                 CrystalInput.text = PandoraUtil.ToLongNumberNotation((System.Numerics.BigInteger)totalCrystal);
                 while (--sliderValue > 0)
                 {
                     yield return new WaitForSeconds(0.5f);
                     crystalPriceSlider.value = sliderValue;
                 } 
-            }
-
-           
+            }          
         }
     }
 }

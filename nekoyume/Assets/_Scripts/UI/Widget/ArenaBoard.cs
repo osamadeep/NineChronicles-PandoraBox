@@ -432,7 +432,7 @@ namespace Nekoyume.UI
                         ? _grandFinaleParticipants[index].AvatarState
                         : _boundedData[index].AvatarState;
 
-                    Find<FriendInfoPopupPandora>().ShowAsync(avatarState, BattleType.Arena,true);
+                    Find<FriendInfoPopupPandora>().ShowAsync(avatarState, BattleType.Arena,true).Forget();
                     //Find<FriendInfoPopup>().ShowAsync(avatarState, BattleType.Arena).Forget();
                 })
                 .AddTo(gameObject);

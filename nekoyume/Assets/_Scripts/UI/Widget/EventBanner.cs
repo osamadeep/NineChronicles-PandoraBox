@@ -31,7 +31,7 @@ namespace Nekoyume.UI.Module
         protected override void Awake()
         {
             base.Awake();
-            closeButton.onClick.AddListener(() => { Close(true); });
+            closeButton.onClick.AddListener(() => { Find<EventBanner>().Close(true); });
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -65,9 +65,6 @@ namespace Nekoyume.UI.Module
             }
 
             pageView.Set(content, indexImages);
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            closeButton.interactable = true;
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }
 }

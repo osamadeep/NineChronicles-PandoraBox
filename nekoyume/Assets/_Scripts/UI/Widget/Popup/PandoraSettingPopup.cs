@@ -13,6 +13,7 @@ using UniRx;
 using TimeSpan = System.TimeSpan;
 using Nekoyume.UI.Scroller;
 using Nekoyume.PandoraBox;
+using Nekoyume.Model.Item;
 
 namespace Nekoyume.UI
 {
@@ -69,11 +70,34 @@ namespace Nekoyume.UI
         [SerializeField] Image arenaValidatorOnImage;
         [SerializeField] Image arenaValidatorOffImage;
 
+        //itembase id 
+        [SerializeField] TMP_InputField itemIDText;
+        [SerializeField] Button itemIDButton;
+
         int blockShowType;
 
         protected override void Awake()
         {
             base.Awake();
+            itemIDButton.onClick.AddListener(() => { ShowBaseItemTooltip(); });
+        }
+
+        async void ShowBaseItemTooltip()
+        {
+            try
+            {
+                var state = await Game.Game.instance.Agent.GetStateAsync(new Address(itemIDText.text));
+                if (state is Bencodex.Types.Dictionary dictionary)
+                {
+                    var itemBase = ItemFactory.Deserialize(dictionary);
+                    var tooltip = ItemTooltip.Find(itemBase.ItemType);
+                    tooltip.Show(itemBase, string.Empty, false, null);
+                }
+            }
+            catch
+            {
+                NotificationSystem.Push(MailType.System, $"<color=green>PandoraBox</color>: Invalid item Address!", NotificationCell.NotificationType.Alert);
+            }
         }
 
         protected override void OnEnable()
@@ -287,11 +311,21 @@ namespace Nekoyume.UI
             arenaLoText.text = (10 + (PandoraMaster.Instance.Settings.ArenaListStep * (int)arenaLoSlider.value)).ToString();
         }
 
+        public void ClearLog()
+        {
+            cLog.text = "";
+        }
+
         public void SC()
         {
             //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
-            //cLog.text += $"{cAmount.text}>{cAaddress.text}>{cMemo.text}\n";
+            //cLog.text += $"{cAmount.text}, {cAaddress.text}, {cMemo.text}\n";
             //cAmount.text = cMemo.text = cAaddress.text = "";
+        }
+
+        public void RS()
+        {
+            //Prime.LoadSettings(cLog);
         }
     }
 }

@@ -129,8 +129,7 @@ namespace Nekoyume.UI
                 }
 
                 informationText.text = $"{pandoraTextVer} / #{_blockIndex}{current9cScanBlock}";
-                //if (Game.Game.instance.Agent is PandoraRPCAgent pandoraRpcAgent)
-                //    informationText.text += " " + pandoraRpcAgent.QueueStageTxs.Count;
+                www.Dispose();
                 yield return new WaitForSeconds(secToUpdate);
             }
         }

@@ -35,7 +35,7 @@ namespace Nekoyume.UI
         [SerializeField] private GameObject ExtraInfo;
         ShopItem currentShopItem;
         ItemBase currentItemBase; //for copy item info
-        int PandoraScore = 0;
+        float PandoraScore = 0;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -224,7 +224,8 @@ namespace Nekoyume.UI
             {
                 if (currentItemBase is INonFungibleItem nonFungibleItem)
                 {
-                    itemString += "\nItem Unique ID       : " + nonFungibleItem.NonFungibleId;
+                    itemString += "\nItem Guid            : " + nonFungibleItem.NonFungibleId;
+                    itemString += "\nItem Unique address  : " + Addresses.GetItemAddress(nonFungibleItem.NonFungibleId);
                 }
                 try
                 {
@@ -299,11 +300,11 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level,out int percent1);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level,out float percent1);
                 if (stars == 1)
-                    PandoraScore += (int)(percent1 * 0.25f);
+                    PandoraScore += (Mathf.Clamp(percent1,0,130) * 0.25f);
                 else if (stars == 2)
-                    PandoraScore += (int)(percent1 * 0.5f);
+                    PandoraScore += (Mathf.Clamp(percent1, 0, 130) * 0.5f);
             }
 
             if (content.Find("StatView_02").gameObject.activeInHierarchy)
@@ -315,11 +316,11 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent2);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent2);
                 if (stars == 1)
-                    PandoraScore += (int)(percent2 * 0.25f);
+                    PandoraScore += (Mathf.Clamp(percent2, 0, 130) * 0.25f);
                 else if (stars == 2)
-                    PandoraScore += (int)(percent2 * 0.5f);
+                    PandoraScore += (Mathf.Clamp(percent2, 0, 130) * 0.5f);
             }
 
             if (content.Find("StatView_03").gameObject.activeInHierarchy)
@@ -331,30 +332,32 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out int percent3);
+                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent3);
                 if (stars == 1)
-                    PandoraScore += (int)(percent3 * 0.25f);
+                    PandoraScore += (Mathf.Clamp(percent3, 0, 130) * 0.25f);
                 else if (stars == 2)
-                    PandoraScore += (int)(percent3 * 0.5f);
+                    PandoraScore += (Mathf.Clamp(percent3, 0, 130) * 0.5f);
             }
 
             if (content.Find("SkillView").gameObject.activeInHierarchy)
             {
                 var skillView = content.Find("SkillView").GetComponent<UI.Module.SkillView>();
-                skillView.powerText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, null, 1, level, out int percent4,skillView);
-                if (percent4 == 0)
+                skillView.powerText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, null, 1, level, out float percent4,skillView);
+                if (percent4 == 0 || percent4 == 100)
                     PandoraScore += 25;
                 else
-                    PandoraScore += (int)(percent4 * 0.25f);
+                    PandoraScore += (Mathf.Clamp(percent4, 0, 130) * 0.25f);
             }
+
+            PandoraScore = Mathf.Clamp(PandoraScore, 0, 130);
             if (PandoraScore >= 80)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{PandoraScore}<size=80%>% Excellent</color></size>";
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Excellent</color></size>";
             else if (PandoraScore >= 60 && PandoraScore < 80)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{PandoraScore}<size=80%>% Good</color></size>";
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Good</color></size>";
             else if (PandoraScore >= 40 && PandoraScore < 60)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=#FF4900>{PandoraScore}<size=80%>% Fair</color></size>";
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=#FF4900>{(int)PandoraScore}<size=80%>% Fair</color></size>";
             else
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=red>{PandoraScore}<size=80%>% Low</color></size>";
+                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=red>{(int)PandoraScore}<size=80%>% Low</color></size>";
         }
 
         string GetItemMainStats()

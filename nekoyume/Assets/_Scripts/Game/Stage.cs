@@ -329,6 +329,8 @@ namespace Nekoyume.Game
             {
                 yield return StartCoroutine(e.CoExecute(this));
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //if (Prime.IsStageProgress())
+                //    break;
                 if (IsSkip)
                     break;
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -470,8 +472,16 @@ namespace Nekoyume.Game
             Widget.Find<UI.Battle>().BossStatus.Close();
             if (isClear)
             {
-                yield return StartCoroutine(CoGuidedQuest(log.stageId));
-                yield return new WaitForSeconds(1f);
+
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                //if (Prime.IsStageProgress())
+                //{ }
+                //else
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                {
+                    yield return StartCoroutine(CoGuidedQuest(log.stageId));
+                    yield return new WaitForSeconds(1f);
+                }
             }
             else
             {
