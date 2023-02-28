@@ -19,8 +19,7 @@ namespace Nekoyume.UI
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        public TextMeshProUGUI PriceText;
+        [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
         [SerializeField] private GameObject premiumVFX;
         [SerializeField] private GameObject GuildObj;
         [SerializeField] private TextMeshProUGUI GuildText;
@@ -34,42 +33,35 @@ namespace Nekoyume.UI
 
         [SerializeField] private TextMeshProUGUI nicknameText;
 
-        [SerializeField]
-        private CategoryTabButton adventureButton;
+        [SerializeField] private CategoryTabButton adventureButton;
 
-        [SerializeField]
-        private CategoryTabButton arenaButton;
+        [SerializeField] private CategoryTabButton arenaButton;
 
-        [SerializeField]
-        private CategoryTabButton raidButton;
+        [SerializeField] private CategoryTabButton raidButton;
 
         [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private Toggle grindModeToggle;
+        [SerializeField] private Toggle grindModeToggle;
 
-        [SerializeField]
-        private GrindModule grindModule;
+        [SerializeField] private GrindModule grindModule;
 
-        [SerializeField]
-        private GameObject grindModePanel;
+        [SerializeField] private GameObject grindModePanel;
 
-        [SerializeField]
-        private GameObject statusObject;
+        [SerializeField] private GameObject statusObject;
 
-        [SerializeField]
-        private GameObject equipmentSlotObject;
+        [SerializeField] private GameObject equipmentSlotObject;
 
         private BattlePreparation _battlePreparation;
         private ArenaBattlePreparation _arenaPreparation;
         private RaidPreparation _raidPreparation;
         private Grind _grind;
         private readonly ToggleGroup _toggleGroup = new();
+
         private readonly Dictionary<BattleType, System.Action> _onToggleCallback = new()
         {
-            { BattleType.Adventure , null},
-            { BattleType.Arena , null},
-            { BattleType.Raid , null},
+            { BattleType.Adventure, null },
+            { BattleType.Arena, null },
+            { BattleType.Raid, null },
         };
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -78,6 +70,7 @@ namespace Nekoyume.UI
             PandoraBox.PandoraMaster.MarketPriceHelper = !PandoraBox.PandoraMaster.MarketPriceHelper;
             text.text = PandoraBox.PandoraMaster.MarketPriceHelper ? "Disable" : "Enable";
         }
+
         public void ShowGuild()
         {
             if (PandoraMaster.CurrentGuildPlayer is null)
@@ -93,22 +86,13 @@ namespace Nekoyume.UI
             _toggleGroup.RegisterToggleable(raidButton);
 
             adventureButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Adventure, _onToggleCallback[BattleType.Adventure]);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Adventure, _onToggleCallback[BattleType.Adventure]); })
                 .AddTo(gameObject);
             arenaButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Arena, _onToggleCallback[BattleType.Arena]);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Arena, _onToggleCallback[BattleType.Arena]); })
                 .AddTo(gameObject);
             raidButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Raid, _onToggleCallback[BattleType.Raid]);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Raid, _onToggleCallback[BattleType.Raid]); })
                 .AddTo(gameObject);
 
             closeButton.onClick.AddListener(() =>
@@ -160,13 +144,15 @@ namespace Nekoyume.UI
             HelpTooltip.HelpMe(100013, true);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            premiumVFX.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+            premiumVFX.SetActive(Premium.PandoraProfile.IsPremium());
             GuildObj.SetActive(!(PandoraMaster.CurrentGuildPlayer is null));
             if (!(PandoraMaster.CurrentGuildPlayer is null))
             {
-                var selectedGuild = PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
+                var selectedGuild =
+                    PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
                 GuildImage.sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + selectedGuild.Tag);
-                GuildText.text = $"<color=#8488BC>[</color><color=green>{selectedGuild.Tag}</color><color=#8488BC>]</color> {selectedGuild.Name}";
+                GuildText.text =
+                    $"<color=#8488BC>[</color><color=green>{selectedGuild.Tag}</color><color=#8488BC>]</color> {selectedGuild.Name}";
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }

@@ -20,98 +20,74 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI
 {
+    using System.Threading.Tasks;
     using UniRx;
+
     public class Rune : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button multiButton;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button multiButton;
+
         [SerializeField] private TextMeshProUGUI multiText;
         [SerializeField] private Slider multiSlider;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
         [SerializeField]
         private RuneOptionView currentOptions;
 
-        [SerializeField]
-        private List<RuneCostItem> costItems;
+        [SerializeField] private List<RuneCostItem> costItems;
 
-        [SerializeField]
-        private List<RuneEachCostItem> eachCostItems;
+        [SerializeField] private List<RuneEachCostItem> eachCostItems;
 
-        [SerializeField]
-        private Image runeImage;
+        [SerializeField] private Image runeImage;
 
-        [SerializeField]
-        private TextMeshProUGUI runeNameText;
+        [SerializeField] private TextMeshProUGUI runeNameText;
 
-        [SerializeField]
-        private TextMeshProUGUI gradeText;
+        [SerializeField] private TextMeshProUGUI gradeText;
 
-        [SerializeField]
-        private TextMeshProUGUI successRateText;
+        [SerializeField] private TextMeshProUGUI successRateText;
 
-        [SerializeField]
-        private TextMeshProUGUI loadingText;
+        [SerializeField] private TextMeshProUGUI loadingText;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private Button combineButton;
+        [SerializeField] private Button combineButton;
 
-        [SerializeField]
-        private Button levelUpButton;
+        [SerializeField] private Button levelUpButton;
 
-        [SerializeField]
-        private Button plusButton;
+        [SerializeField] private Button plusButton;
 
-        [SerializeField]
-        private Button minusButton;
+        [SerializeField] private Button minusButton;
 
-        [SerializeField]
-        private Button disableCombineButton;
+        [SerializeField] private Button disableCombineButton;
 
-        [SerializeField]
-        private Button disableLevelUpButton;
+        [SerializeField] private Button disableLevelUpButton;
 
-        [SerializeField]
-        private Button informationButton;
+        [SerializeField] private Button informationButton;
 
-        [SerializeField]
-        private SweepSlider slider;
+        [SerializeField] private SweepSlider slider;
 
-        [SerializeField]
-        private List<GameObject> activeButtons;
+        [SerializeField] private List<GameObject> activeButtons;
 
-        [SerializeField]
-        private GameObject content;
+        [SerializeField] private GameObject content;
 
-        [SerializeField]
-        private GameObject requirement;
+        [SerializeField] private GameObject requirement;
 
-        [SerializeField]
-        private GameObject successContainer;
+        [SerializeField] private GameObject successContainer;
 
-        [SerializeField]
-        private GameObject costContainer;
+        [SerializeField] private GameObject costContainer;
 
-        [SerializeField]
-        private List<GameObject> loadingObjects;
+        [SerializeField] private List<GameObject> loadingObjects;
 
-        [SerializeField]
-        private GameObject maxLevel;
+        [SerializeField] private GameObject maxLevel;
 
-        [SerializeField]
-        private GameObject sliderContainer;
+        [SerializeField] private GameObject sliderContainer;
 
-        [SerializeField]
-        private RuneListScroll scroll;
+        [SerializeField] private RuneListScroll scroll;
 
-        [SerializeField]
-        private Animator animator;
+        [SerializeField] private Animator animator;
 
         private static readonly int HashToCombine =
             Animator.StringToHash("Combine");
@@ -143,7 +119,7 @@ namespace Nekoyume.UI
             combineButton.onClick.AddListener(Enhancement);
             levelUpButton.onClick.AddListener(Enhancement);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            multiButton.onClick.AddListener(MultiEnhancement);
+            multiButton.onClick.AddListener(() => { MultiEnhancement().Forget(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             disableCombineButton.onClick.AddListener(() =>
             {
@@ -157,22 +133,17 @@ namespace Nekoyume.UI
                     L10nManager.Localize("UI_MESSAGE_NOT_ENOUGH_MATERIAL_2"),
                     NotificationCell.NotificationType.Alert);
             });
-            informationButton.onClick.AddListener(() =>
-            {
-                informationButton.gameObject.SetActive(false);
-            });
+            informationButton.onClick.AddListener(() => { informationButton.gameObject.SetActive(false); });
             plusButton.onClick.AddListener(() =>
             {
                 if (_maxTryCount <= 0)
                 {
                     return;
                 }
+
                 TryCount.Value = Math.Min(_maxTryCount, TryCount.Value + 1);
             });
-            minusButton.onClick.AddListener(() =>
-            {
-                TryCount.Value = Math.Max(1, TryCount.Value - 1);
-            });
+            minusButton.onClick.AddListener(() => { TryCount.Value = Math.Max(1, TryCount.Value - 1); });
             closeButton.onClick.AddListener(() =>
             {
                 base.Close(true);
@@ -186,8 +157,8 @@ namespace Nekoyume.UI
                 Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Combination);
             };
             LoadingHelper.RuneEnhancement
-                         .Subscribe(b => loadingObjects.ForEach(x => x.SetActive(b)))
-                         .AddTo(gameObject);
+                .Subscribe(b => loadingObjects.ForEach(x => x.SetActive(b)))
+                .AddTo(gameObject);
             TryCount.Subscribe(x =>
             {
                 slider.ForceMove(x);
@@ -309,14 +280,19 @@ namespace Nekoyume.UI
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        private void MultiEnhancement()
+        async UniTaskVoid MultiEnhancement()
         {
             var runeId = _selectedRuneItem.Row.Id;
             Animator.Play(HashToMaterialUse);
             for (int i = 0; i < multiSlider.value; i++)
-                ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
+            {
+                await ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
+                await Task.Delay(1000);
+            }
 
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {multiSlider.value} times Upgrade sent!", NotificationCell.NotificationType.Information);
+            OneLineSystem.Push(MailType.System,
+                $"<color=green>Pandora Box</color>: {multiSlider.value} times Upgrade sent!",
+                NotificationCell.NotificationType.Information);
             LoadingHelper.RuneEnhancement.Value = true;
         }
 
@@ -438,11 +414,11 @@ namespace Nekoyume.UI
                 if (item.OptionRow.LevelOptionMap.TryGetValue(nextLevel, out var nextStatInfo))
                 {
                     currentOptions.Set(
-                    item.Level,
-                    nextLevel,
-                    statInfo,
-                    nextStatInfo,
-                    (RuneUsePlace)item.Row.UsePlace);
+                        item.Level,
+                        nextLevel,
+                        statInfo,
+                        nextStatInfo,
+                        (RuneUsePlace)item.Row.UsePlace);
                 }
                 else
                 {
@@ -456,7 +432,7 @@ namespace Nekoyume.UI
             if (item.Cost is null)
             {
                 successRateText.text = String.Empty;
-                eachCostItems.ForEach(x=> x.Set(0));
+                eachCostItems.ForEach(x => x.Set(0));
                 _costItems[RuneCostType.RuneStone].Set(0, false, null);
                 _costItems[RuneCostType.Crystal].Set(0, false, null);
                 _costItems[RuneCostType.Ncg].Set(0, false, null);
@@ -483,7 +459,7 @@ namespace Nekoyume.UI
 
             foreach (var costItem in eachCostItems)
             {
-                switch(costItem.CostType)
+                switch (costItem.CostType)
                 {
                     case RuneCostType.RuneStone:
                         costItem.Set(item.Cost.RuneStoneQuantity);
@@ -504,6 +480,7 @@ namespace Nekoyume.UI
             {
                 return;
             }
+
             var headerMenu = Find<HeaderMenuStatic>();
             headerMenu.UpdateAssets(HeaderMenuStatic.AssetVisibleState.RuneStone);
             headerMenu.RuneStone.SetRuneStone(runeStoneIcon, runeStone.GetQuantityString());

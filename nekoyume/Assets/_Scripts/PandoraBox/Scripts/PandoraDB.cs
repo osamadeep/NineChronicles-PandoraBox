@@ -1,5 +1,7 @@
+using PlayFab.ClientModels;
 using System.Collections;
 using System.Collections.Generic;
+using System.Web;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -31,6 +33,7 @@ namespace Nekoyume.PandoraBox
                     PandoraMaster.Instance.ShowError(16);
                 }
             }
+
             www.Dispose();
         }
 
@@ -56,6 +59,8 @@ namespace Nekoyume.PandoraBox
         public List<NFTOwner> NFTOwners;
         public List<PandoraMembership> PandoraMemberships;
         public RunnerSettings RunnerSettings;
+        public string PremiumStats;
+        public string PremiumBuyFunction;
         public string AnalyzeKey;
         public int DiceRoll;
         public int TrialPremium;
@@ -68,6 +73,7 @@ namespace Nekoyume.PandoraBox
     [System.Serializable]
     public class PandoraPlayer
     {
+        public string Username;
         public string Address;
         public int PremiumEndBlock;
 
@@ -79,7 +85,8 @@ namespace Nekoyume.PandoraBox
                 bool result = false;
                 if (PremiumEndBlock >= currentBlock && PremiumEndBlock > 5263000)
                     result = true;
-                if (PandoraMaster.PanDatabase.TrialPremium > currentBlock && PandoraMaster.PanDatabase.TrialPremium > 5263000)
+                if (PandoraMaster.PanDatabase.TrialPremium > currentBlock &&
+                    PandoraMaster.PanDatabase.TrialPremium > 5263000)
                     result = true;
                 return result;
             }
@@ -89,6 +96,34 @@ namespace Nekoyume.PandoraBox
             }
         }
     }
+
+    [System.Serializable]
+    public class PandoraAccount
+    {
+        public List<StatisticValue> Statistics;
+        public List<ItemInstance> Inventory;
+        public PlayerProfileModel Profile;
+        public Dictionary<string, int> Currencies;
+
+        public bool IsPremium()
+        {
+            var currentBlock = Game.Game.instance.Agent?.BlockIndex ?? -1;
+
+            // Find the statistic with the name "PremiumV2"
+            var premiumStat = Statistics.Find(stat => stat.StatisticName == "PremiumV2");
+
+            // If the statistic exists and is of type List, retrieve the key from the first element
+            if (premiumStat != null && Statistics.Count > 0)
+            {
+                var premiumKey = Statistics[0].Value;
+                //Debug.Log("PremiumV2 key: " + premiumKey);
+                return premiumKey > (int)currentBlock;
+            }
+
+            return false;
+        }
+    }
+
 
     [System.Serializable]
     public class Guild

@@ -26,38 +26,31 @@ namespace Nekoyume.UI
     public class Status : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI PandoraStatus = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI PandoraStatus = null;
+
         [SerializeField] private Button guildButton;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private FramedCharacterView characterView = null;
 
-        [SerializeField]
-        private TextMeshProUGUI textLvName = null;
+        [SerializeField] private TextMeshProUGUI textLvName = null;
 
-        [SerializeField]
-        private TextMeshProUGUI textHp = null;
+        [SerializeField] private TextMeshProUGUI textHp = null;
 
-        [SerializeField]
-        private TextMeshProUGUI textExp = null;
+        [SerializeField] private TextMeshProUGUI textExp = null;
 
-        [SerializeField]
-        private Image hpBar = null;
+        [SerializeField] private Image hpBar = null;
 
-        [SerializeField]
-        private Image expBar = null;
+        [SerializeField] private Image expBar = null;
 
-        [SerializeField]
-        private BuffLayout buffLayout = null;
+        [SerializeField] private BuffLayout buffLayout = null;
 
-        [SerializeField]
-        private BuffTooltip buffTooltip = null;
+        [SerializeField] private BuffTooltip buffTooltip = null;
 
-        [SerializeField]
-        private BattleTimerView battleTimerView = null;
+        [SerializeField] private BattleTimerView battleTimerView = null;
 
         private Player _player;
 
@@ -182,14 +175,14 @@ namespace Nekoyume.UI
             textExp.text =
                 $"{_player.Model.Exp.Need - _player.EXPMax + _player.EXP} / {_player.Model.Exp.Need}";
 
-            var hpValue = _player.CurrentHP / (float) _player.HP;
+            var hpValue = _player.CurrentHP / (float)_player.HP;
             hpBar.gameObject.SetActive(hpValue > 0.0f);
             hpValue = Mathf.Min(Mathf.Max(hpValue, 0.1f), 1.0f);
             hpBar.fillAmount = hpValue;
 
             var expNeed = _player.Model.Exp.Need;
             var levelExp = _player.EXPMax - expNeed;
-            var expValue = (float) (_player.EXP - levelExp) / expNeed;
+            var expValue = (float)(_player.EXP - levelExp) / expNeed;
             expBar.gameObject.SetActive(expValue > 0.0f);
             expValue = Mathf.Min(Mathf.Max(expValue, 0.1f), 1.0f);
             expBar.fillAmount = expValue;
@@ -209,7 +202,8 @@ namespace Nekoyume.UI
             textLvName.text = $"<color=#B38271>LV. {avatarState.level}</color> {avatarState.NameWithHash}";
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (!(PandoraMaster.CurrentGuildPlayer is null))
-                textLvName.text = $"<color=#B38271>LV. {avatarState.level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
+                textLvName.text =
+                    $"<color=#B38271>LV. {avatarState.level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
                     $"</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -235,15 +229,18 @@ namespace Nekoyume.UI
         {
             try
             {
-                PandoraStatus.gameObject.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
+                PandoraStatus.gameObject.SetActive(Premium.PandoraProfile.IsPremium());
             }
-            catch { }
+            catch
+            {
+            }
 
             var level = _player.Level;
             textLvName.text = $"<color=#B38271>LV. {level}</color> {States.Instance.CurrentAvatarState.name}";
 
             if (!(PandoraMaster.CurrentGuildPlayer is null))
-                textLvName.text = $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
+                textLvName.text =
+                    $"<color=#B38271>LV. {level}</color> <color=#8488BC>[</color><color=green>{PandoraMaster.CurrentGuildPlayer.Guild}" +
                     $"</color><color=#8488BC>]</color> {States.Instance.CurrentAvatarState.name}";
         }
 
@@ -254,14 +251,19 @@ namespace Nekoyume.UI
                 try
                 {
                     //Debug.LogError("pre? " + Premium.CurrentPandoraPlayer.IsPremium());
-                    PandoraStatus.gameObject.SetActive(Premium.CurrentPandoraPlayer.IsPremium());
-                    if (Premium.CurrentPandoraPlayer.IsPremium())
+                    PandoraStatus.gameObject.SetActive(Premium.PandoraProfile.IsPremium());
+                    if (Premium.PandoraProfile.IsPremium())
                     {
-                        var timeR = Util.GetBlockToTime(Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex);
-                        PandoraStatus.text = $"{timeR} ({Premium.CurrentPandoraPlayer.PremiumEndBlock - (int)Game.Game.instance.Agent.BlockIndex})";
+                        int blocks = Premium.PandoraProfile.Statistics
+                            .FirstOrDefault(s => s.StatisticName == PandoraMaster.PanDatabase.PremiumStats)?.Value ?? 0;
+                        var timeR = Util.GetBlockToTime(blocks - (int)Game.Game.instance.Agent.BlockIndex);
+                        PandoraStatus.text = $"{timeR} ({blocks - (int)Game.Game.instance.Agent.BlockIndex})";
                     }
                 }
-                catch { }
+                catch
+                {
+                }
+
                 yield return new WaitForSeconds(10);
             }
         }

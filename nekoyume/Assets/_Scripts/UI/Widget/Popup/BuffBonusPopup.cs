@@ -20,16 +20,15 @@ namespace Nekoyume.UI
     public class BuffBonusPopup : PopupWidget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button resetBuffButton = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button resetBuffButton = null;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private ConditionalCostButton normalButton = null;
 
-        [SerializeField]
-        private ConditionalCostButton advancedButton = null;
+        [SerializeField] private ConditionalCostButton advancedButton = null;
 
         private BigInteger _normalCost;
 
@@ -37,20 +36,15 @@ namespace Nekoyume.UI
 
         private System.Action _onAttract;
 
-        [SerializeField]
-        private Button buffListButton = null;
+        [SerializeField] private Button buffListButton = null;
 
-        [SerializeField]
-        private GameObject buffListView = null;
+        [SerializeField] private GameObject buffListView = null;
 
-        [SerializeField]
-        private RectTransform cellContainer;
+        [SerializeField] private RectTransform cellContainer;
 
-        [SerializeField]
-        private BuffBonusTitleCell titlePrefab;
+        [SerializeField] private BuffBonusTitleCell titlePrefab;
 
-        [SerializeField]
-        private BuffBonusBuffCell buffPrefab;
+        [SerializeField] private BuffBonusBuffCell buffPrefab;
 
         protected override void Awake()
         {
@@ -89,7 +83,8 @@ namespace Nekoyume.UI
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         void ResetSimulationBuff()
         {
-            PandoraUtil.ShowSystemNotification(1001, NotificationCell.NotificationType.Information);
+            PandoraUtil.ShowSystemNotification("Custom Crystal Buff <color=red>removed</color>!",
+                NotificationCell.NotificationType.Information);
             PlayerPrefs.DeleteKey("_PandoraBox_PVE_SelectedCrystalBuff");
             PlayerPrefs.DeleteKey("_PandoraBox_PVE_SelectedCrystalBuffSkillId");
             Widget.Find<BattlePreparation>().UpdateSimulateBuff();
@@ -109,8 +104,8 @@ namespace Nekoyume.UI
             var sheet = Game.Game.instance.TableSheets.CrystalStageBuffGachaSheet;
             _normalCost = CrystalCalculator.CalculateBuffGachaCost(stageId, false, sheet).MajorUnit;
             _advancedCost = CrystalCalculator.CalculateBuffGachaCost(stageId, true, sheet).MajorUnit;
-            normalButton.SetCost(CostType.Crystal, (long) _normalCost);
-            advancedButton.SetCost(CostType.Crystal, (long) _advancedCost);
+            normalButton.SetCost(CostType.Crystal, (long)_normalCost);
+            advancedButton.SetCost(CostType.Crystal, (long)_advancedCost);
             normalButton.Interactable = hasEnoughStars;
             advancedButton.Interactable = hasEnoughStars;
             base.Show();
@@ -129,6 +124,7 @@ namespace Nekoyume.UI
                     _onAttract);
                 return false;
             }
+
             return true;
         }
 

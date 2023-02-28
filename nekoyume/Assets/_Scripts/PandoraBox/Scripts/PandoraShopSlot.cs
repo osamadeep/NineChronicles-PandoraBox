@@ -58,12 +58,14 @@ namespace Nekoyume.UI
             //check client-side if cost is enough
             if (CurrencySTR == "NCG" && States.Instance.GoldBalanceState.Gold.MajorUnit < ItemPrice)
             {
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System,"<color=green>Pandora Box</color>: no enough gold!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                    "<color=green>Pandora Box</color>: no enough gold!", NotificationCell.NotificationType.Alert);
                 return;
             }
-            else if (CurrencySTR != "NCG" && PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
+            else if (CurrencySTR != "NCG" && Premium.PandoraProfile.Currencies[CurrencySTR] < ItemPrice)
             {
-                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: No Enough Currency!" , NotificationCell.NotificationType.Alert);
+                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: No Enough Currency!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -102,108 +104,117 @@ namespace Nekoyume.UI
 
         void BuyPandoraGems(int gems)
         {
-            string content = $"Are you sure to spend <color=#FFCF2A><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#76F3FE><b>{ItemTitle}</b></color>?";
+            string content =
+                $"Are you sure to spend <color=#FFCF2A><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#76F3FE><b>{ItemTitle}</b></color>?";
             Widget.Find<TwoButtonSystem>().Show(content, "Yes", "No",
-            (() =>
-            {
-                Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
-                Premium.PANDORA_BuyGems(ItemPrice, gems);
-            }),
-            () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
+                (() =>
+                {
+                    Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
+                    Premium.PANDORA_BuyGems(ItemPrice, gems);
+                }),
+                () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
             );
         }
 
         void BuyMembership(int days)
         {
-            string content = $"Are you sure to spend <color=#00C3FF><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#EF3DFF><b>{(int)(days * 7300)}</b></color> Blocks (~{days} days)?";
+            string content =
+                $"Are you sure to spend <color=#00C3FF><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#EF3DFF><b>{(int)(days * 7300)}</b></color> Blocks (~{days} days)?";
             Widget.Find<TwoButtonSystem>().Show(content, "Yes", "No",
-            (() =>
-            {
-                Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
+                (() =>
+                {
+                    Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
 
-                PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
-                {
-                    FunctionName = "buyMembership",
-                    FunctionParameter = new
-                    {
-                        blocks = days * 7300,
-                        currentBlock = (int)Game.Game.instance.Agent.BlockIndex,
-                        currency = CurrencySTR,
-                        cost = ItemPrice
-                    }
-                },
-                success =>
-                {
-                    if (success.FunctionResult.ToString() == "Success")
-                    {
-                        //adding score success
-                        AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
-                        PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
-                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=green>Success!</color>", NotificationCell.NotificationType.Information);
-                        Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
-                        Widget.Find<PandoraShopPopup>().Close();
-
-                        //update database
-                        Premium.PANDORA_UpdateDatabase(10).Forget();
-                    }
-                    else
-                    {
-                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-                    }
-                },
-                failed =>
-                {
-                    Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
-                    Debug.LogError("buy Membership Not Sent!, " + failed.GenerateErrorReport());
-                });
-            })
-            ,() => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
+                    PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+                        {
+                            FunctionName = PandoraMaster.PanDatabase.PremiumBuyFunction,
+                            FunctionParameter = new
+                            {
+                                blocks = days * 7300,
+                            }
+                        },
+                        success =>
+                        {
+                            Debug.LogError(success.FunctionResult.ToString());
+                            if (success.FunctionResult.ToString() == "Success")
+                            {
+                                //adding score success
+                                AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
+                                Premium.PandoraProfile.Currencies[CurrencySTR] -=
+                                    ItemPrice; //just UI update instead of request new call
+                                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                                    "PandoraBox: Buy <color=green>Success!</color>",
+                                    NotificationCell.NotificationType.Information);
+                                Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
+                                Widget.Find<PandoraShopPopup>().Close();
+                            }
+                            else
+                            {
+                                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                                    "PandoraBox: Buy <color=red>Failed!</color>",
+                                    NotificationCell.NotificationType.Alert);
+                            }
+                        },
+                        failed =>
+                        {
+                            Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
+                            Debug.LogError("buy Membership Not Sent!, " + failed.GenerateErrorReport());
+                        });
+                })
+                , () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
             );
         }
 
         void BuyCoins(int newCoins)
         {
-            string content = $"Are you sure to spend <color=#00C3FF><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#FDB723><b>{ItemTitle}</b></color>?";
+            string content =
+                $"Are you sure to spend <color=#00C3FF><b>{ItemPrice}</b> {CurrencySTR}</color> to get <color=#FDB723><b>{ItemTitle}</b></color>?";
             Widget.Find<TwoButtonSystem>().Show(content, "Yes", "No",
-            (() =>
-            {
-                Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
+                (() =>
+                {
+                    Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
 
-                PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
-                {
-                    FunctionName = "buyCoins",
-                    FunctionParameter = new
-                    {
-                        premium = Premium.CurrentPandoraPlayer.IsPremium(),
-                        currentBlock = (int)Game.Game.instance.Agent.BlockIndex,
-                        address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-                        itemID = ItemID
-                    }
-                },
-                success =>
-                {
-                    if (success.FunctionResult.ToString() == "Success")
-                    {
-                        //adding score success
-                        AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
-                        PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] -= ItemPrice; //just UI update instead of request new call
-                        PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] += newCoins; //just UI update instead of request new call
-                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: <color=#FDB723><b>{ItemTitle}</b></color> added <color=green>Successfully!</color>", NotificationCell.NotificationType.Information);
-                        Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
-                        Widget.Find<PandoraShopPopup>().Close();
-                    }
-                    else
-                    {
-                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-                    }
-                },
-                failed =>
-                {
-                    Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
-                    Debug.LogError("buy Membership Not Sent!, " + failed.GenerateErrorReport());
-                });
-            })
-            , () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
+                    PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
+                        {
+                            FunctionName = "buyCoins",
+                            FunctionParameter = new
+                            {
+                                premium = Premium.PandoraProfile.IsPremium(),
+                                currentBlock = (int)Game.Game.instance.Agent.BlockIndex,
+                                address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                                itemID = ItemID
+                            }
+                        },
+                        success =>
+                        {
+                            if (success.FunctionResult.ToString() == "Success")
+                            {
+                                //adding score success
+                                AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
+                                Premium.PandoraProfile.Currencies[CurrencySTR] -=
+                                    ItemPrice; //just UI update instead of request new call
+                                Premium.PandoraProfile.Currencies["PC"] +=
+                                    newCoins; //just UI update instead of request new call
+                                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                                    $"PandoraBox: <color=#FDB723><b>{ItemTitle}</b></color> added <color=green>Successfully!</color>",
+                                    NotificationCell.NotificationType.Information);
+                                Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
+                                Widget.Find<PandoraShopPopup>().Close();
+                            }
+                            else
+                            {
+                                NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                                    "PandoraBox: Buy <color=red>Failed!</color>",
+                                    NotificationCell.NotificationType.Alert);
+                            }
+                        },
+                        failed =>
+                        {
+                            Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false);
+                            Debug.LogError("buy Membership Not Sent!, " + failed.GenerateErrorReport());
+                        });
+                })
+                , () => { Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(false); }
             );
         }
     }

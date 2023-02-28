@@ -48,11 +48,11 @@ namespace Nekoyume.UI
                                    blockPart[1] + addressPart[3] + blockPart[3];
 
             int extraRate = 0;
-            if (Premium.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+            if (Premium.PandoraProfile.IsPremium())
             {
                 idText.text = encryptedText;
-                int totalBlocks = Premium.CurrentPandoraPlayer.PremiumEndBlock -
-                                  (int)Game.Game.instance.Agent.BlockIndex;
+                int totalBlocks = 0; // Premium.CurrentPandoraPlayer.PremiumEndBlock -
+                //(int)Game.Game.instance.Agent.BlockIndex;
                 extraRate = Mathf.Clamp((int)(totalBlocks / 73000), 0, 3);
             }
             else
@@ -124,6 +124,7 @@ namespace Nekoyume.UI
             catch
             {
             }
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var playerSprite = SpriteHelper.GetItemIcon(playerFullCostumeOrArmorId);
             playerProfile.Set(playerLevel, playerName, playerSprite);

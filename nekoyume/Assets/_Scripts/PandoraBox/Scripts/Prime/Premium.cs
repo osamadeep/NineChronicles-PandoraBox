@@ -12,9 +12,10 @@ using UnityEngine.UI;
 using TMPro;
 using Nekoyume.Model.State;
 using Nekoyume.BlockChain;
+using Newtonsoft.Json;
 using Libplanet;
 using System;
-
+using Newtonsoft.Json.Linq;
 
 
 namespace Nekoyume.PandoraBox
@@ -35,9 +36,11 @@ namespace Nekoyume.PandoraBox
     using Nekoyume.TableData.Event;
     using Nekoyume.UI.Model;
     using Nekoyume.UI.Module;
+    using Org.BouncyCastle.Asn1.Mozilla;
     using PlayFab;
     using PlayFab.ClientModels;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Threading.Tasks;
     using UniRx;
     using UnityEditor;
@@ -46,9 +49,9 @@ namespace Nekoyume.PandoraBox
 
     public class Premium
     {
-        public static List<PandoraPlayer> Pandoraplayers { get; private set; } = new List<PandoraPlayer>();
-        public static PandoraPlayer CurrentPandoraPlayer { get; private set; } = new PandoraPlayer();
-        public static List<WebhookNotification> QueueWebHook = new List<WebhookNotification>();
+        public static PandoraAccount PandoraProfile = new PandoraAccount();
+        public static List<string> Pandoraplayers { get; private set; } = new List<string>();
+        public static ConcurrentQueue<WebhookNotification> QueueWebHook = new ConcurrentQueue<WebhookNotification>();
 
         public static int ArenaMaxBattleCount { get; private set; }
         public static int ArenaRemainsBattle { get; private set; }
@@ -63,80 +66,96 @@ namespace Nekoyume.PandoraBox
         static int ticket;
 
         #region PANDORA ACCOUNT METHODS
-        public static void PANDORA_Initialize(PandoraPlayer pandoraPlayer)
-        {
-            CurrentPandoraPlayer = pandoraPlayer;
-        }
+
         public static bool PANDORA_CheckPremium()
         {
-            if (CurrentPandoraPlayer.IsPremium())
+            if (PandoraProfile.IsPremium())
                 return true;
             else
             {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This is Premium Feature!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This is Premium Feature!",
+                    NotificationCell.NotificationType.Alert);
                 return false;
             }
         }
-        public static void PANDORA_GetDatabase(Address agentAddress)
-        {
-            //get players data
-            PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest
-            {
-                StatisticName = "PremiumEndBlock",
-                ProfileConstraints = new PlayerProfileViewConstraints() { ShowDisplayName = true, ShowLinkedAccounts = true, },
-                MaxResultsCount = 100,
-            }, success =>
-            {
-                Pandoraplayers = new List<PandoraPlayer>();
-                foreach (var player in success.Leaderboard)
-                {
-                    if (player.StatValue > Game.Game.instance.Agent.BlockIndex)
-                    {
-                        PandoraPlayer newPlayer = new PandoraPlayer()
-                        {
-                            Address = player.Profile.LinkedAccounts[0].PlatformUserId,
-                            PremiumEndBlock = player.StatValue
-                        };
-                        Pandoraplayers.Add(newPlayer);
-                    }
-                }
 
-                //check current player stats
-                var panplayer = Pandoraplayers.Find(x => x.Address.ToLower() == agentAddress.ToString().ToLower());
-                if (panplayer is null)
-                    PANDORA_Initialize(new PandoraPlayer());
-                else
-                    PANDORA_Initialize(panplayer);
-
-                //get player inventory
-                PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(),
-                succuss =>
-                {
-                    PandoraMaster.PlayFabInventory = succuss;
-                    try
-                    {
-                        //UI update, not optimal
-                        Widget.Find<PandoraShopPopup>().UpdateCurrency();
-                        Widget.Find<RunnerRankPopup>().UpdateCurrency();
-                    }
-                    catch (Exception e) { Debug.LogError(e); }
-                }, fail => { PandoraUtil.ShowSystemNotification(322, NotificationCell.NotificationType.Alert); });
-            },
-            fail => { PandoraUtil.ShowSystemNotification(362, NotificationCell.NotificationType.Alert); });
-        }
-        public static async UniTask PANDORA_UpdateDatabase(float time)
+        public static void GetPremiumPlayers()
         {
-            await Task.Delay(System.TimeSpan.FromSeconds(time));
-            PANDORA_GetDatabase(States.Instance.CurrentAvatarState.agentAddress);
-        }
-        public static async UniTask PANDORA_UpdateDatabasePeriodly()
-        {
-            while (true)
+            var request = new ExecuteCloudScriptRequest
             {
-                await Task.Delay(System.TimeSpan.FromSeconds(1800)); //30m
-                PANDORA_GetDatabase(States.Instance.AgentState.address);
-            }
+                FunctionName = "getPremiums",
+                GeneratePlayStreamEvent = true,
+                RevisionSelection = CloudScriptRevisionOption.Live,
+                FunctionParameter = new { }
+            };
+
+            PlayFabClientAPI.ExecuteCloudScript(request, OnGetPremiumsSuccess
+                    =>
+                {
+                    if (OnGetPremiumsSuccess.FunctionResult != null)
+                    {
+                        string json = (string)OnGetPremiumsSuccess.FunctionResult;
+                        JObject jsonObject = JObject.Parse(json);
+                        JArray premiumAddresses = (JArray)jsonObject["PremiumAddresses"];
+                        Pandoraplayers = premiumAddresses.Select(a => (string)a).ToList();
+                    }
+                },
+                OnGetPremiumsFailure =>
+                {
+                    PandoraUtil.ShowSystemNotification(OnGetPremiumsFailure.ErrorMessage,
+                        NotificationCell.NotificationType.Alert);
+                });
         }
+
+
+        public static void PANDORA_GetDatabase()
+        {
+            ////get players data
+            //PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest
+            //{
+            //    StatisticName = "PremiumEndBlock",
+            //    ProfileConstraints = new PlayerProfileViewConstraints() { ShowDisplayName = true, ShowLinkedAccounts = true, },
+            //    MaxResultsCount = 100,
+            //}, success =>
+            //{
+            //    Pandoraplayers = new List<PandoraPlayer>();
+            //    foreach (var player in success.Leaderboard)
+            //    {
+            //        if (player.StatValue > Game.Game.instance.Agent.BlockIndex)
+            //        {
+            //            PandoraPlayer newPlayer = new PandoraPlayer()
+            //            {
+            //                Address = player.Profile.LinkedAccounts[0].PlatformUserId,
+            //                PremiumEndBlock = player.StatValue
+            //            };
+            //            Pandoraplayers.Add(newPlayer);
+            //        }
+            //    }
+
+            //    //check current player stats
+            //    var panplayer = Pandoraplayers.Find(x => x.Address.ToLower() == agentAddress.ToString().ToLower());
+            //    if (panplayer is null)
+            //        PANDORA_Initialize(new PandoraPlayer());
+            //    else
+            //        PANDORA_Initialize(panplayer);
+
+            //    //get player inventory
+            //    PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(),
+            //    succuss =>
+            //    {
+            //        PandoraMaster.PlayFabInventory = succuss;
+            //        try
+            //        {
+            //            //UI update, not optimal
+            //            Widget.Find<PandoraShopPopup>().UpdateCurrency();
+            //            Widget.Find<RunnerRankPopup>().UpdateCurrency();
+            //        }
+            //        catch (Exception e) { Debug.LogError(e); }
+            //    }, fail => { PandoraUtil.ShowSystemNotification(322, NotificationCell.NotificationType.Alert); });
+            //},
+            //fail => { PandoraUtil.ShowSystemNotification(362, NotificationCell.NotificationType.Alert); });
+        }
+
         public static async UniTask PANDORA_SendWebhookT(string hook, string message)
         {
             WWWForm form = new WWWForm();
@@ -145,35 +164,39 @@ namespace Nekoyume.PandoraBox
             {
                 await www.SendWebRequest();
                 www.Dispose();
-            }            
+            }
         }
-        
+
         public static IEnumerator PANDORA_ProcessQueueWebHook()
         {
             while (true)
             {
-                yield return new WaitForSeconds(2f);
-                if (QueueWebHook.Count > 0)
-                {
-                    var currentNotification = QueueWebHook.First();
+                yield return new WaitForSeconds(1f);
+                //if (QueueWebHook.Count > 0)
+                //{
+                //    var currentNotification = QueueWebHook.First();
+                //    yield return PANDORA_SendWebhookT(currentNotification.Uri, currentNotification.Message);
+                //    QueueWebHook.RemoveAt(0);
+                //}
+                if (QueueWebHook.TryDequeue(out var currentNotification))
                     yield return PANDORA_SendWebhookT(currentNotification.Uri, currentNotification.Message);
-                    QueueWebHook.RemoveAt(0);
-                }
             }
         }
 
         public static void PANDORA_BuyGems(int ncg, int gems)
         {
-            var currency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+            var currency =
+                Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
 
             ActionManager.Instance
-            .TransferAsset(
-                States.Instance.CurrentAvatarState.agentAddress,
-                new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
-                new Libplanet.Assets.FungibleAssetValue(currency, ncg, 0),
-                $"Pandora Gems: {gems}")
-            .Subscribe();
+                .TransferAsset(
+                    States.Instance.CurrentAvatarState.agentAddress,
+                    new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
+                    new Libplanet.Assets.FungibleAssetValue(currency, ncg, 0),
+                    $"Pandora Gems: {gems}")
+                .Subscribe();
         }
+
         public static void PANDORA_ConfirmGemsRequest(long blockIndex, int gems, int ncg)
         {
             if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running
@@ -181,61 +204,67 @@ namespace Nekoyume.PandoraBox
 
             //auto fill
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
-            {
-                FunctionName = "buyGems2",
-                FunctionParameter = new
                 {
-                    premium = Premium.CurrentPandoraPlayer.IsPremium(),
-                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-                    gems = gems,
-                    currentBlock = blockIndex,
-                    cost = ncg,
-                    transaction = PandoraMaster.CrystalTransferTx
-                }
-            },
-            success =>
-            {
-                if (success.FunctionResult.ToString() == "Success")
+                    FunctionName = "buyGems2",
+                    FunctionParameter = new
+                    {
+                        premium = PandoraProfile.IsPremium(),
+                        address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                        gems = gems,
+                        currentBlock = blockIndex,
+                        cost = ncg,
+                        transaction = PandoraMaster.CrystalTransferTx
+                    }
+                },
+                success =>
                 {
-                    //adding score success
-                    AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
-                    PandoraMaster.PlayFabInventory.VirtualCurrency["PG"] += gems; //just UI update instead of request new call
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: <color=#76F3FE><b>{gems}Pandora Gems</b></color> added <color=green>Successfully!</color>", NotificationCell.NotificationType.Information);
-
-                    //update database
-                    PANDORA_UpdateDatabase(15).Forget();
-                }
-                else
-                {
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-                }
-            },
-            failed => { Debug.LogError("Process Failed!, " + failed.GenerateErrorReport()); });
+                    if (success.FunctionResult.ToString() == "Success")
+                    {
+                        //adding score success
+                        AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
+                        Premium.PandoraProfile.Currencies["PG"] += gems; //just UI update instead of request new call
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            $"PandoraBox: <color=#76F3FE><b>{gems}Pandora Gems</b></color> added <color=green>Successfully!</color>",
+                            NotificationCell.NotificationType.Information);
+                    }
+                    else
+                    {
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
+                    }
+                },
+                failed => { Debug.LogError("Process Failed!, " + failed.GenerateErrorReport()); });
             PandoraMaster.CrystalTransferTx = "";
         }
+
         #endregion
 
         #region ACCOUNT METHODS
+
         public static void ACCOUNT_CollectStakeRewards()
         {
             if (!PANDORA_CheckPremium())
                 return;
-            PandoraUtil.ShowSystemNotification(600, NotificationCell.NotificationType.Information);
+            PandoraUtil.ShowSystemNotification("Staking Rewards <color=green>Collected</color>!",
+                NotificationCell.NotificationType.Information);
             ActionManager.Instance.ClaimStakeReward();
         }
+
         public static void ACCOUNT_BuyCrystals(int ncgToSpend, int CrystalPerNCG, float bounsMultiplier)
         {
             Widget.Find<PandoraShopPopup>().WaitingImage.SetActive(true);
             float totalCrystal = bounsMultiplier * ncgToSpend * CrystalPerNCG;
-            var currency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+            var currency =
+                Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
 
             ActionManager.Instance.TransferAsset(
-                States.Instance.CurrentAvatarState.agentAddress,
-                new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
-                new Libplanet.Assets.FungibleAssetValue(currency, ncgToSpend, 0),
-                $"Pandora Crystal: OR={CrystalPerNCG},TL={(int)totalCrystal},Bouns={bounsMultiplier})")
-            .Subscribe();
+                    States.Instance.CurrentAvatarState.agentAddress,
+                    new Address("0x1012041FF2254f43d0a938aDF89c3f11867A2A58"),
+                    new Libplanet.Assets.FungibleAssetValue(currency, ncgToSpend, 0),
+                    $"Pandora Crystal: OR={CrystalPerNCG},TL={(int)totalCrystal},Bouns={bounsMultiplier})")
+                .Subscribe();
         }
+
         public static void ACCOUNT_ConfirmCrystalRequest(long blockIndex, string memo, int ncg)
         {
             if (string.IsNullOrEmpty(PandoraMaster.CrystalTransferTx)) //multi instanses is running?
@@ -243,50 +272,51 @@ namespace Nekoyume.PandoraBox
 
             //auto fill
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
-            {
-                FunctionName = "buyCrystals",
-                FunctionParameter = new
                 {
-                    memo = memo,
-                    currentBlock = blockIndex,
-                    cost = ncg,
-                    transaction = PandoraMaster.CrystalTransferTx,
-                    address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-                    bonus = (int)(ncg / 10)
-                }
-            },
-            success =>
-            {
-                if (success.FunctionResult.ToString() == "Success")
+                    FunctionName = "buyCrystals",
+                    FunctionParameter = new
+                    {
+                        memo = memo,
+                        currentBlock = blockIndex,
+                        cost = ncg,
+                        transaction = PandoraMaster.CrystalTransferTx,
+                        address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                        bonus = (int)(ncg / 10)
+                    }
+                },
+                success =>
                 {
-                    //adding score success
-                    AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
-                    PandoraMaster.PlayFabInventory.VirtualCurrency["PG"] += (int)(ncg / 10); //just UI update instead of request new call
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: Crystel Request <color=green>Success!</color>, " +
-                        $"{(int)(ncg / 10)} PG added to your Account!", NotificationCell.NotificationType.Information);
-
-                    //update database
-                    PANDORA_UpdateDatabase(15).Forget();
-                }
-                else
-                {
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-                }
-            },
-            failed =>
-            {
-                Debug.LogError("Process Failed!, " + failed.GenerateErrorReport());
-            });
+                    if (success.FunctionResult.ToString() == "Success")
+                    {
+                        //adding score success
+                        AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
+                        Premium.PandoraProfile.Currencies["PG"] +=
+                            (int)(ncg / 10); //just UI update instead of request new call
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            $"PandoraBox: Crystel Request <color=green>Success!</color>, " +
+                            $"{(int)(ncg / 10)} PG added to your Account!",
+                            NotificationCell.NotificationType.Information);
+                    }
+                    else
+                    {
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            "PandoraBox: Buy <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
+                    }
+                },
+                failed => { Debug.LogError("Process Failed!, " + failed.GenerateErrorReport()); });
 
 
             PandoraMaster.CrystalTransferTx = "";
         }
+
         #endregion
 
         #region CRAFT METHODS
-        public static void CRAFT_AutoCraftConsumable(AvatarState currentAvatarState, int slotIndex, ConsumableItemRecipeSheet.Row consRow)
+
+        public static void CRAFT_AutoCraftConsumable(AvatarState currentAvatarState, int slotIndex,
+            ConsumableItemRecipeSheet.Row consRow)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             Dictionary<int, int> materialMap = new Dictionary<int, int>();
@@ -297,13 +327,18 @@ namespace Nekoyume.PandoraBox
             int missingParts = 999;
             try //in case States.Instance.CurrentAvatarState.inventory not ready
             {
-                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
+                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState, materialMap).Count;
             }
-            catch (Exception e) { Debug.LogError(e); return;}
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                return;
+            }
 
             if (missingParts > 0)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
                     $"missing <color=green>{missingParts + 1}</color> Material parts!"
                     , NotificationCell.NotificationType.Alert);
                 return;
@@ -311,7 +346,6 @@ namespace Nekoyume.PandoraBox
 
             try //in case actionManager is not ready yet
             {
-
                 var itemName = L10nManager.Localize($"ITEM_NAME_{consRow.ResultConsumableItemId}");
                 string analyzeText = $"CombinationConsumable > {itemName} > {slotIndex} ";
 
@@ -321,13 +355,15 @@ namespace Nekoyume.PandoraBox
                     {
                         RecipeId = consRow.Id,
                         Materials = materialMap,
-                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap),
+                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState, materialMap),
                     };
 
                     ActionManager.Instance.CombinationConsumable(recipeInfo, slotIndex).Subscribe();
                     //analyze actions
-                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    string message =
+                        $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                        analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
                 else
@@ -343,15 +379,21 @@ namespace Nekoyume.PandoraBox
                 }
 
                 Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
-                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
-                NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
+                    $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
+                    NotificationCell.NotificationType.Information);
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
-        public static void CRAFT_AutoCraftEventConsumable(AvatarState currentAvatarState, int slotIndex, EventConsumableItemRecipeSheet.Row consRow)
+
+        public static void CRAFT_AutoCraftEventConsumable(AvatarState currentAvatarState, int slotIndex,
+            EventConsumableItemRecipeSheet.Row consRow)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             Dictionary<int, int> materialMap = new Dictionary<int, int>();
@@ -362,13 +404,18 @@ namespace Nekoyume.PandoraBox
             int missingParts = 999;
             try //in case States.Instance.CurrentAvatarState.inventory not ready
             {
-                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
+                missingParts = CRAFT_GetReplacedMaterials(currentAvatarState, materialMap).Count;
             }
-            catch (Exception e) { Debug.LogError(e); return;}
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                return;
+            }
 
             if (missingParts > 0)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
                     $"missing <color=green>{missingParts + 1}</color> Material parts!"
                     , NotificationCell.NotificationType.Alert);
                 return;
@@ -376,7 +423,6 @@ namespace Nekoyume.PandoraBox
 
             try //in case actionManager is not ready yet
             {
-
                 var itemName = L10nManager.Localize($"ITEM_NAME_{consRow.ResultConsumableItemId}");
                 string analyzeText = $"CombinationConsumable > {itemName} > {slotIndex} ";
 
@@ -386,12 +432,16 @@ namespace Nekoyume.PandoraBox
                     {
                         RecipeId = consRow.Id,
                         Materials = materialMap,
-                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState,materialMap),
+                        ReplacedMaterials = CRAFT_GetReplacedMaterials(currentAvatarState, materialMap),
                     };
-                    ActionManager.Instance.EventConsumableItemCrafts(RxProps.EventScheduleRowForRecipe.Value.Id,recipeInfo,slotIndex).Subscribe();
+                    ActionManager.Instance
+                        .EventConsumableItemCrafts(RxProps.EventScheduleRowForRecipe.Value.Id, recipeInfo, slotIndex)
+                        .Subscribe();
                     //analyze actions
-                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    string message =
+                        $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                        analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
                 else
@@ -407,28 +457,36 @@ namespace Nekoyume.PandoraBox
                 }
 
                 Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
-                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
-                NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
+                    $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color>!",
+                    NotificationCell.NotificationType.Information);
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
-        public static async UniTask CRAFT_AutoCraftEquipment(AvatarState currentAvatarState, int slotIndex, EquipmentItemRecipeSheet.Row recipeRow, bool payByCrystal, bool isBasic)
+
+        public static async UniTask CRAFT_AutoCraftEquipment(AvatarState currentAvatarState, int slotIndex,
+            EquipmentItemRecipeSheet.Row recipeRow, bool payByCrystal, bool isPremium)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             //get sub id
             var tableSheets = Game.TableSheets.Instance;
             var itemSubSheet = tableSheets.EquipmentItemSubRecipeSheetV2;
-            int indexSub = isBasic ? 0 : 1;
+            int indexSub = isPremium ? 1 : 0;
             var itemSub = itemSubSheet.First(x => x.Value.Id == recipeRow.SubRecipeIds[indexSub]).Value;
 
             //check if there is supercraft
             bool isHammerCraft = false;
             var hammerAddress = Addresses.GetHammerPointStateAddress(currentAvatarState.address, recipeRow.Id);
             var hammerState = await Game.Game.instance.Agent.GetStateAsync(hammerAddress);
-            var hammerData = hammerState is List list ? new HammerPointState(hammerAddress, list) : new HammerPointState(hammerAddress, recipeRow.Id);
+            var hammerData = hammerState is List list
+                ? new HammerPointState(hammerAddress, list)
+                : new HammerPointState(hammerAddress, recipeRow.Id);
 
             var max = Game.TableSheets.Instance.CrystalHammerPointSheet[recipeRow.Id].MaxPoint;
             isHammerCraft = hammerData.HammerPoint == max;
@@ -439,9 +497,11 @@ namespace Nekoyume.PandoraBox
             }
 
             //check if supercraft has crystal cost
-            if (isHammerCraft && States.Instance.CrystalBalance.MajorUnit < Game.TableSheets.Instance.CrystalHammerPointSheet[recipeRow.Id].CRYSTAL)
+            if (isHammerCraft && States.Instance.CrystalBalance.MajorUnit <
+                Game.TableSheets.Instance.CrystalHammerPointSheet[recipeRow.Id].CRYSTAL)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> don't have enough Crystals for SuperCraft!"
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> don't have enough Crystals for SuperCraft!"
                     , NotificationCell.NotificationType.Alert);
                 return;
             }
@@ -453,14 +513,19 @@ namespace Nekoyume.PandoraBox
                 int missingParts = 999;
                 try //in case States.Instance.CurrentAvatarState.inventory not ready
                 {
-                    missingParts = CRAFT_IsEnoughMaterials(currentAvatarState,recipeRow.Id, itemSub.Id);
+                    missingParts = CRAFT_IsEnoughMaterials(currentAvatarState, recipeRow.Id, itemSub.Id);
                 }
-                catch (Exception e) { Debug.LogError(e); return;}
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                    return;
+                }
 
                 if (missingParts > 0)
                 {
-                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
-                        $"missing <color=green>{missingParts+1}</color> Material parts!"
+                    OneLineSystem.Push(MailType.System,
+                        $"<color=green>Pandora Box</color>: <color=green>{currentAvatarState.name}</color> " +
+                        $"missing <color=green>{missingParts + 1}</color> Material parts!"
                         , NotificationCell.NotificationType.Alert);
                     return;
                 }
@@ -472,33 +537,36 @@ namespace Nekoyume.PandoraBox
             try //in case actionManager is not ready yet
             {
                 var itemName = L10nManager.Localize($"ITEM_NAME_{recipeRow.ResultEquipmentId}");
-                string basicCraft = indexSub ==0 ? "Basic" : "Premium";
+                string basicCraft = indexSub == 0 ? "Basic" : "Premium";
                 string hammerCraft = isHammerCraft ? "Super Craft" : "";
                 string crystal = payByCrystal ? ", With Crystal!" : "";
-                string analyzeText = $"CombinationEquipment > **{hammerCraft} {basicCraft}** {itemName} > {slotIndex}{crystal} " +
+                string analyzeText =
+                    $"CombinationEquipment > **{hammerCraft} {basicCraft}** {itemName} > {slotIndex}{crystal} " +
                     $"> hammer:{hammerData.HammerPoint + 1}/{max}";
 
                 if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                 {
                     ActionManager.Instance
-                    .CombinationEquipment(
-                        new RecipeInfo
-                        {
-                            RecipeId = recipeRow.Id,
-                            SubRecipeId = itemSub.Id,
-                            CostNCG = default,
-                            CostCrystal = default,
-                            CostAP = 0,
-                            Materials = default,
-                            ReplacedMaterials = null,
-                        },
-                        slotIndex,
-                        payByCrystal,
-                        isHammerCraft)
-                    .Subscribe();
+                        .CombinationEquipment(
+                            new RecipeInfo
+                            {
+                                RecipeId = recipeRow.Id,
+                                SubRecipeId = itemSub.Id,
+                                CostNCG = default,
+                                CostCrystal = default,
+                                CostAP = 0,
+                                Materials = default,
+                                ReplacedMaterials = null,
+                            },
+                            slotIndex,
+                            payByCrystal,
+                            isHammerCraft)
+                        .Subscribe();
                     //analyze actions
-                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    string message =
+                        $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                        analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
                 else
@@ -516,12 +584,17 @@ namespace Nekoyume.PandoraBox
                 }
 
                 Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
-                $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint + 1}</color>/{max}!",
-                NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
+                    $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint + 1}</color>/{max}!",
+                    NotificationCell.NotificationType.Information);
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
+
         static int CRAFT_IsEnoughMaterials(AvatarState currentAvatarState, int itemID, int itemSubID)
         {
             var tableSheets = Game.TableSheets.Instance;
@@ -530,16 +603,19 @@ namespace Nekoyume.PandoraBox
             var itemRow = itemSheet.First(x => x.Value.Id == itemID).Value;
             var itemSub = itemSubSheet.First(x => x.Value.Id == itemSubID).Value;
 
-            var baseMaterialInfo = new EquipmentItemSubRecipeSheet.MaterialInfo(itemRow.MaterialId, itemRow.MaterialCount);
+            var baseMaterialInfo =
+                new EquipmentItemSubRecipeSheet.MaterialInfo(itemRow.MaterialId, itemRow.MaterialCount);
 
             Dictionary<int, int> materialMap = new Dictionary<int, int>();
             materialMap.Add(itemRow.MaterialId, itemRow.MaterialCount); // Add base material
             foreach (var material in itemSub.Materials) // Add other materials
                 materialMap.Add(material.Id, material.Count);
 
-            return CRAFT_GetReplacedMaterials(currentAvatarState,materialMap).Count;
+            return CRAFT_GetReplacedMaterials(currentAvatarState, materialMap).Count;
         }
-        static Dictionary<int, int> CRAFT_GetReplacedMaterials(AvatarState currentAvatarState,Dictionary<int, int> required)
+
+        static Dictionary<int, int> CRAFT_GetReplacedMaterials(AvatarState currentAvatarState,
+            Dictionary<int, int> required)
         {
             var replacedMaterialMap = new Dictionary<int, int>();
             var inventory = currentAvatarState.inventory;
@@ -562,33 +638,36 @@ namespace Nekoyume.PandoraBox
                     replacedMaterialMap.Add(row.Id, count - itemCount);
                 }
             }
+
             return replacedMaterialMap;
         }
+
         #endregion
 
         #region PVE METHODS
-        public static async UniTaskVoid PVE_AutoWorldBoss(AvatarState currentAvatarState, RaiderState raider)
+
+        public static async UniTask PVE_AutoWorldBoss(AvatarState currentAvatarState, RaiderState raider)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             var currentBlockIndex = Game.Game.instance.Agent.BlockIndex;
             var curStatus = WorldBossFrontHelper.GetStatus(currentBlockIndex);
             if (curStatus != UI.Module.WorldBoss.WorldBossStatus.Season)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Boss Season Found!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Boss Season Found!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
             try //in case actionManager is not ready yet
             {
-
                 var (itemSlotStates, runeSlotStates) = await currentAvatarState.GetSlotStatesAsync();
 
-                string analyzeText = $"**Raid** > {3 - (WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex)-1)}/3";
+                string analyzeText =
+                    $"**Raid** > {3 - (WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) - 1)}/3";
                 if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                 {
-
                     ActionManager.Instance.Raid(itemSlotStates[2].Costumes,
                         itemSlotStates[2].Equipments,
                         new List<Guid>(),
@@ -596,8 +675,10 @@ namespace Nekoyume.PandoraBox
                         false).Subscribe();
 
                     //analyze actions
-                    string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                    string message =
+                        $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                        $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                        analyzeText;
                     ActionManager.Instance.AnalyzeActions(message).Forget();
                 }
                 else
@@ -616,15 +697,23 @@ namespace Nekoyume.PandoraBox
                 }
 
 
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent World Boss Fight!",
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent World Boss Fight!",
                     NotificationCell.NotificationType.Information);
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                PandoraUtil.ShowSystemNotification(
+                    currentAvatarState.name + " Fight Sets is not register all, you should have 3 sets!",
+                    NotificationCell.NotificationType.Alert);
+            }
         }
-        public static StageSimulator PVE_StageSimulator(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
+
+        public static StageSimulator PVE_StageSimulator(int _worldId, int _stageId, List<Guid> consumables,
+            int skillId = -1)
         {
             var avatarSlotIndex = States.Instance.AvatarStates
-                    .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+                .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
             var itemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Adventure];
             var equipments = itemSlotState.Equipments;
             var costumes = itemSlotState.Costumes;
@@ -636,7 +725,7 @@ namespace Nekoyume.PandoraBox
             items.AddRange(costumes);
             avatarState.EquipItems(items);
             List<Model.Skill.Skill> buffSkills = new List<Model.Skill.Skill>();
-            if (skillId != -1 && CurrentPandoraPlayer.IsPremium())
+            if (skillId != -1 && PandoraProfile.IsPremium())
             {
                 var skill = CrystalRandomSkillState.GetSkill(
                     skillId,
@@ -646,32 +735,35 @@ namespace Nekoyume.PandoraBox
             }
 
             return new StageSimulator(
-                    new Cheat.DebugRandom(),
-                    avatarState,
-                    consumables,
-                    runeStates,
-                    buffSkills,
-                    _worldId,
-                    _stageId,
-                    tableSheets.StageSheet[_stageId],
-                    tableSheets.StageWaveSheet[_stageId],
-                    avatarState.worldInformation.IsStageCleared(_stageId),
-                    StageRewardExpHelper.GetExp(avatarState.level, _stageId),
-                    tableSheets.GetStageSimulatorSheets(),
-                    tableSheets.EnemySkillSheet,
-                    tableSheets.CostumeStatSheet,
-                    StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId], tableSheets.MaterialItemSheet),
-                    PandoraMaster.IsHackAndSlashSimulate
-                );
+                new Cheat.DebugRandom(),
+                avatarState,
+                consumables,
+                runeStates,
+                buffSkills,
+                _worldId,
+                _stageId,
+                tableSheets.StageSheet[_stageId],
+                tableSheets.StageWaveSheet[_stageId],
+                avatarState.worldInformation.IsStageCleared(_stageId),
+                StageRewardExpHelper.GetExp(avatarState.level, _stageId),
+                tableSheets.GetStageSimulatorSheets(),
+                tableSheets.EnemySkillSheet,
+                tableSheets.CostumeStatSheet,
+                StageSimulator.GetWaveRewards(new Cheat.DebugRandom(), tableSheets.StageSheet[_stageId],
+                    tableSheets.MaterialItemSheet),
+                PandoraMaster.IsHackAndSlashSimulate
+            );
         }
-        public static async UniTaskVoid PVE_AutoEventDungeon(AvatarState currentAvatarState, int eventDungeonId, int count)
+
+        public static async UniTask PVE_AutoEventDungeon(AvatarState currentAvatarState, int eventDungeonId, int count)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             if (RxProps.EventScheduleRowForDungeon.Value is null)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Event Found!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: No Event Found!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -685,18 +777,20 @@ namespace Nekoyume.PandoraBox
                     if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                     {
                         ActionManager.Instance.EventDungeonBattle(
-                        RxProps.EventScheduleRowForDungeon.Value.Id,
-                        10030001,
-                        eventDungeonId,
-                        itemSlotStates[0].Equipments,
-                        itemSlotStates[0].Costumes,
-                        null,
-                        runeSlotStates[0].GetEquippedRuneSlotInfos(),
-                        false).Subscribe();
+                            RxProps.EventScheduleRowForDungeon.Value.Id,
+                            10030001,
+                            eventDungeonId,
+                            itemSlotStates[0].Equipments,
+                            itemSlotStates[0].Costumes,
+                            null,
+                            runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                            false).Subscribe();
 
                         //analyze actions
-                        string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                        string message =
+                            $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                            analyzeText;
                         ActionManager.Instance.AnalyzeActions(message).Forget();
                     }
                     else
@@ -715,21 +809,26 @@ namespace Nekoyume.PandoraBox
                         };
                         ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                     }
-
                 }
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent {count} Event tickets!",
+
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: <color=red>{currentAvatarState.name}</color> sent {count} Event tickets!",
                     NotificationCell.NotificationType.Information);
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
+
         public static async UniTask<string> PVE_AutoStageRepeat(AvatarState currentAvatarState)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return "This is not <b>Premium</b> account!";
 
             int _stageId = 1;
             currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);
-            _stageId = Math.Clamp(_stageId+1, 1, 300);
+            _stageId = Math.Clamp(_stageId + 1, 1, 300);
 
             int worldID = 0;
             if (_stageId < 51)
@@ -762,17 +861,19 @@ namespace Nekoyume.PandoraBox
                     if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                     {
                         ActionManager.Instance.HackAndSlash(
-                        itemSlotStates[0].Costumes,
-                        itemSlotStates[0].Equipments,
-                        new List<Consumable>(),
-                        runeSlotStates[0].GetEquippedRuneSlotInfos(),
-                        worldID,
-                        _stageId,
-                        playCount).Subscribe();
+                            itemSlotStates[0].Costumes,
+                            itemSlotStates[0].Equipments,
+                            new List<Consumable>(),
+                            runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                            worldID,
+                            _stageId,
+                            playCount).Subscribe();
 
                         //analyze actions
-                        string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                        string message =
+                            $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                            analyzeText;
                         ActionManager.Instance.AnalyzeActions(message).Forget();
                         return "";
                     }
@@ -798,11 +899,16 @@ namespace Nekoyume.PandoraBox
                     return "ActionManager or States not <b>Ready</b>!";
                 }
             }
-            catch (Exception e) { Debug.LogError(e); return e.Message; }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                return e.Message;
+            }
         }
+
         public static async UniTask<string> PVE_AutoStageSweep(AvatarState currentAvatarState, int sweepStage)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return "This is not <b>Premium</b> account!";
 
             int worldID = 0;
@@ -830,17 +936,19 @@ namespace Nekoyume.PandoraBox
                     if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
                     {
                         Game.Game.instance.ActionManager.HackAndSlashSweep(
-                        itemSlotStates[0].Costumes,
-                        itemSlotStates[0].Equipments,
-                        runeSlotStates[0].GetEquippedRuneSlotInfos(),
-                        0,
-                        currentAvatarState.actionPoint,
-                        worldID,
-                        sweepStage,
-                        currentAvatarState.actionPoint).Subscribe();
+                            itemSlotStates[0].Costumes,
+                            itemSlotStates[0].Equipments,
+                            runeSlotStates[0].GetEquippedRuneSlotInfos(),
+                            0,
+                            currentAvatarState.actionPoint,
+                            worldID,
+                            sweepStage,
+                            currentAvatarState.actionPoint).Subscribe();
                         //analyze actions
-                        string message = $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
-                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " + analyzeText;
+                        string message =
+                            $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +
+                            $"<:NCG:1009757564256407592>**{States.Instance.GoldBalanceState.Gold.MajorUnit}** > {currentAvatarState.agentAddress}, " +
+                            analyzeText;
                         ActionManager.Instance.AnalyzeActions(message).Forget();
                         return "";
                     }
@@ -866,9 +974,15 @@ namespace Nekoyume.PandoraBox
                     return "ActionManager or States not <b>Ready</b>!";
                 }
             }
-            catch (Exception e) { Debug.LogError(e); return e.Message; }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+                return e.Message;
+            }
         }
-        public static bool PVE_SweepMoreStones(int apStoneCount, List<Guid> _costumes, List<Guid> _equipments, List<RuneSlotInfo> _runes
+
+        public static bool PVE_SweepMoreStones(int apStoneCount, List<Guid> _costumes, List<Guid> _equipments,
+            List<RuneSlotInfo> _runes
             , int worldId, StageSheet.Row stageRow)
         {
             if (!PANDORA_CheckPremium())
@@ -878,24 +992,27 @@ namespace Nekoyume.PandoraBox
             apStoneCount -= extraApStoneCount * 10;
 
             var (apPlayCount, apStonePlayCount)
-            = PandoraUtil.GetPlayCount(stageRow, apStoneCount, 0, States.Instance.StakingLevel);
+                = PandoraUtil.GetPlayCount(stageRow, apStoneCount, 0, States.Instance.StakingLevel);
             var totalPlayCount = apPlayCount + apStonePlayCount;
 
             for (int i = 0; i < extraApStoneCount; i++)
             {
                 Game.Game.instance.ActionManager.HackAndSlashSweep(
-                _costumes,
-                _equipments,
-                _runes,
-                10,
-                0,
-                worldId,
-                stageRow.Id, totalPlayCount);
+                    _costumes,
+                    _equipments,
+                    _runes,
+                    10,
+                    0,
+                    worldId,
+                    stageRow.Id, totalPlayCount);
             }
+
             return true;
         }
+
         public static async void PVE_MultiRepeat(Action<StageType, int, int, bool> _repeatBattleAction
-            , ReactiveProperty<int> _ap, StageSheet.Row _stageRow, int _costAp, int iteration, Model.Item.Material apStone)
+            , ReactiveProperty<int> _ap, StageSheet.Row _stageRow, int _costAp, int iteration,
+            Model.Item.Material apStone)
         {
             if (!PANDORA_CheckPremium())
                 return;
@@ -903,8 +1020,8 @@ namespace Nekoyume.PandoraBox
             if (PandoraMaster.CurrentAction != PandoraUtil.ActionType.Idle)
             {
                 OneLineSystem.Push(MailType.System,
-                "<color=green>Pandora Box</color>: Other actions in progress, please wait!",
-                NotificationCell.NotificationType.Alert);
+                    "<color=green>Pandora Box</color>: Other actions in progress, please wait!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
 
@@ -914,40 +1031,43 @@ namespace Nekoyume.PandoraBox
             if (_ap.Value >= _stageRow.CostAP)
             {
                 _repeatBattleAction(
-                StageType.HackAndSlash,
-                _ap.Value / _costAp,
-                0,
-                false);
+                    StageType.HackAndSlash,
+                    _ap.Value / _costAp,
+                    0,
+                    false);
 
                 if (iteration > 0)
                     OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Sending repeat by AP bar!",
-                    NotificationCell.NotificationType.Information);
+                        "<color=green>Pandora Box</color>: Sending repeat by AP bar!",
+                        NotificationCell.NotificationType.Information);
             }
 
             //repeat the stones
             for (int i = 0; i < iteration; i++)
             {
                 ActionManager.Instance.ChargeActionPoint(apStone)
-                .Subscribe();
+                    .Subscribe();
                 await Task.Delay(System.TimeSpan.FromSeconds(2));
                 OneLineSystem.Push(MailType.System,
-                $"<color=green>Pandora Box</color>: Sending Repeat using AP Stone {i + 1}/{iteration}",
-                NotificationCell.NotificationType.Information);
+                    $"<color=green>Pandora Box</color>: Sending Repeat using AP Stone {i + 1}/{iteration}",
+                    NotificationCell.NotificationType.Information);
                 _repeatBattleAction(
-                StageType.HackAndSlash,
-                120 / _costAp,
-                0,
-                false);
+                    StageType.HackAndSlash,
+                    120 / _costAp,
+                    0,
+                    false);
                 await Task.Delay(System.TimeSpan.FromSeconds(2));
             }
 
             Widget.Find<SweepPopup>().Close();
         }
-        public static StageSimulator PVE_SoloSimulate(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
+
+        public static StageSimulator PVE_SoloSimulate(int _worldId, int _stageId, List<Guid> consumables,
+            int skillId = -1)
         {
             return PVE_StageSimulator(_worldId, _stageId, consumables, skillId);
         }
+
         public static async void PVE_MultiSimulate(int _worldId, int _stageId, List<Guid> consumables, int skillId = -1)
         {
             if (!PANDORA_CheckPremium())
@@ -1005,10 +1125,13 @@ namespace Nekoyume.PandoraBox
             preparePVE.MultipleSimulateButton.interactable = true;
             preparePVE.MultipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "100 X Simulate";
         }
+
         #endregion
 
         #region PVP METHODS
+
         static int myLastPushBattle = 0;
+
         static string PVP_MultiWinRate(ArenaPlayerDigest mD, ArenaPlayerDigest eD, int iterations)
         {
             string result = "";
@@ -1041,6 +1164,7 @@ namespace Nekoyume.PandoraBox
 
             return result;
         }
+
         public static void PVP_CancelPendingFights()
         {
             int totalSpent = ArenaMaxBattleCount - ArenaRemainsBattle + 1;
@@ -1049,13 +1173,14 @@ namespace Nekoyume.PandoraBox
 
             Widget.Find<ArenaBoard>().MultipleSlider.gameObject.SetActive(false);
             OneLineSystem.Push(MailType.System,
-            $"<color=green>Pandora Box</color>: Multi Arena Canceled, <color=green>" +
-            $"{totalSpent}</color>/{ArenaMaxBattleCount} Used!",
-            NotificationCell.NotificationType.Information);
+                $"<color=green>Pandora Box</color>: Multi Arena Canceled, <color=green>" +
+                $"{totalSpent}</color>/{ArenaMaxBattleCount} Used!",
+                NotificationCell.NotificationType.Information);
             ArenaBattleInProgress = false;
             ArenaRemainsBattle = 0;
             ArenaMaxBattleCount = 0;
         }
+
         public static void PVP_ChangeTicketsCount(float SliderValue, ArenaSheet.RoundData _roundData)
         {
             var arena = Widget.Find<ArenaBattlePreparation>();
@@ -1071,9 +1196,9 @@ namespace Nekoyume.PandoraBox
             {
                 var gold = States.Instance.GoldBalanceState.Gold;
                 var startPrice = ArenaHelper.GetTicketPrice(
-                _roundData,
-                RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo,
-                gold.Currency);
+                    _roundData,
+                    RxProps.PlayersArenaParticipant.Value.CurrentArenaInfo,
+                    gold.Currency);
 
                 var finalNeeded = SliderValue - RxProps.ArenaTicketsProgress.Value.currentTickets;
                 var finalCost = new Libplanet.Assets.FungibleAssetValue(gold.Currency, 0, 0);
@@ -1085,14 +1210,17 @@ namespace Nekoyume.PandoraBox
                     else
                     {
                         var toInt = (int)(increment / 100);
-                        finalCost += startPrice + new Libplanet.Assets.FungibleAssetValue(gold.Currency, toInt, increment % 100);
+                        finalCost += startPrice +
+                                     new Libplanet.Assets.FungibleAssetValue(gold.Currency, toInt, increment % 100);
                     }
                 }
-                arena.ExpectedCostText.text = finalCost.MajorUnit + "." + finalCost.MinorUnit + " NCG";
 
+                arena.ExpectedCostText.text = finalCost.MajorUnit + "." + finalCost.MinorUnit + " NCG";
             }
+
             arena.ExpectedBlockText.text = "#" + (Game.Game.instance.Agent.BlockIndex + (SliderValue * 4));
         }
+
         public static void PVP_ExpectedTicketsToReach(TextMeshProUGUI tickets, TextMeshProUGUI ranks)
         {
             if (!PANDORA_CheckPremium() || Widget.Find<ArenaBoard>()._useGrandFinale)
@@ -1130,6 +1258,7 @@ namespace Nekoyume.PandoraBox
             tickets.text = ticketsTxt;
             ranks.text = ranksTxt;
         }
+
         public static void PVP_OnConfirmBattleEnd(string enemyName, string result, string score, long blockIndex)
         {
             Game.Game.instance.Arena.IsAvatarStateUpdatedAfterBattle = true;
@@ -1137,21 +1266,22 @@ namespace Nekoyume.PandoraBox
             ActionRenderHandler.Instance.Pending = false;
             ArenaRemainsBattle--;
             string message = $"You <color=green>{result}</color> against " +
-            $"({enemyName}) and got <color=green>{score}</color> points!";
+                             $"({enemyName}) and got <color=green>{score}</color> points!";
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: " + message,
-            NotificationCell.NotificationType.Information);
+                NotificationCell.NotificationType.Information);
             Widget.Find<ArenaBoard>().LastFightText.text = $"[<color=green>{blockIndex}</color>] {message}";
             Widget.Find<UI.Module.EventBanner>().Close(true);
             Widget.Find<ArenaBoard>().ShowPandora();
         }
+
         public static bool PVP_MultiConfirmBattles(float count, Address _chooseAvatarStateAddress,
-        int roundDataChampionshipId, int _roundDataRound, int _ticketCountToUse)
+            int roundDataChampionshipId, int _roundDataRound, int _ticketCountToUse)
         {
             if (!PANDORA_CheckPremium())
                 return false;
 
             var avatarSlotIndex = States.Instance.AvatarStates
-            .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+                .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
 
             ArenaMaxBattleCount = (int)count;
             ArenaRemainsBattle = ArenaMaxBattleCount;
@@ -1164,9 +1294,10 @@ namespace Nekoyume.PandoraBox
             ticket = _ticketCountToUse;
             return true;
         }
+
         public static async void PVP_CheckPendingConfirmFights()
         {
-            if (!CurrentPandoraPlayer.IsPremium() || ArenaBattleInProgress)
+            if (!PandoraProfile.IsPremium() || ArenaBattleInProgress)
                 return;
 
             if (ArenaRemainsBattle > 0)
@@ -1179,7 +1310,9 @@ namespace Nekoyume.PandoraBox
 
                 var blocksBetweenBattles = 4; // Fixed Planet Policy
                 var versionWidget = Widget.Find<VersionSystem>();
-                var nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator ? versionWidget.NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
+                var nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator
+                    ? versionWidget.NodeBlockIndex
+                    : Game.Game.instance.Agent.BlockIndex;
                 var lastArenaBattle = Widget.Find<ArenaBoard>().myLastBattle; //last commited arena fight
                 while (nodeBlockValidator < lastArenaBattle + blocksBetweenBattles)
                 {
@@ -1189,19 +1322,23 @@ namespace Nekoyume.PandoraBox
 
                     //update values
                     lastArenaBattle = Widget.Find<ArenaBoard>().myLastBattle;
-                    nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator? versionWidget.NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
+                    nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator
+                        ? versionWidget.NodeBlockIndex
+                        : Game.Game.instance.Agent.BlockIndex;
                 }
 
 
                 ActionRenderHandler.Instance.Pending = true;
                 ArenaBattleInProgress = true;
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Fight " +
-                    $"{(ArenaMaxBattleCount - ArenaRemainsBattle + 1)}/{ArenaMaxBattleCount} Sent!",
-                NotificationCell.NotificationType.Information);
+                                                    $"{(ArenaMaxBattleCount - ArenaRemainsBattle + 1)}/{ArenaMaxBattleCount} Sent!",
+                    NotificationCell.NotificationType.Information);
                 ActionRenderHandler.Instance.Pending = true;
-                ActionManager.Instance.BattleArena(enemyAvatarAddress, costumes, equipments, runeInfos, championshipId, round, ticket).Subscribe();
+                ActionManager.Instance.BattleArena(enemyAvatarAddress, costumes, equipments, runeInfos, championshipId,
+                    round, ticket).Subscribe();
             }
         }
+
         public static async void PVP_SoloSimulate(AvatarState myAvatarState, AvatarState enemyAvatarState)
         {
             if (!PANDORA_CheckPremium())
@@ -1215,7 +1352,8 @@ namespace Nekoyume.PandoraBox
                 .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
             var myItemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena];
             var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
-            var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes, myRuneStates);
+            var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes,
+                myRuneStates);
 
             //enemy data
             var (enemyItemSlotStates, enemyRuneSlotStates) = await enemyAvatarState.GetSlotStatesAsync();
@@ -1229,7 +1367,8 @@ namespace Nekoyume.PandoraBox
                 enemyRuneSlotState = new RuneSlotState(BattleType.Arena);
 
             var enemyRuneStates = await enemyAvatarState.GetRuneStatesAsync();
-            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState, enemyItemSlotState.Equipments, enemyItemSlotState.Costumes, enemyRuneStates);
+            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState, enemyItemSlotState.Equipments,
+                enemyItemSlotState.Costumes, enemyRuneStates);
 
             var tableSheets = Game.Game.instance.TableSheets;
             var simulator = new ArenaSimulator(new Cheat.DebugRandom());
@@ -1255,11 +1394,12 @@ namespace Nekoyume.PandoraBox
                 myDigest,
                 enemyDigest);
             Widget.Find<ArenaBoard>().Close();
-
         }
-        public static async Task<string> PVP_WinRate(AvatarState myAvatarState, AvatarState enemyAvatarState, int iterations)
+
+        public static async Task<string> PVP_WinRate(AvatarState myAvatarState, AvatarState enemyAvatarState,
+            int iterations)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return "";
 
             //my data
@@ -1267,7 +1407,8 @@ namespace Nekoyume.PandoraBox
                 .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
             var myItemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][BattleType.Arena];
             var myRuneStates = States.Instance.GetEquippedRuneStates(BattleType.Arena);
-            var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes, myRuneStates);
+            var myDigest = new ArenaPlayerDigest(myAvatarState, myItemSlotState.Equipments, myItemSlotState.Costumes,
+                myRuneStates);
 
             //enemy data
             var (enemyItemSlotStates, enemyRuneSlotStates) = await enemyAvatarState.GetSlotStatesAsync();
@@ -1281,24 +1422,34 @@ namespace Nekoyume.PandoraBox
                 enemyRuneSlotState = new RuneSlotState(BattleType.Arena);
 
             var enemyRuneStates = await enemyAvatarState.GetRuneStatesAsync();
-            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState, enemyItemSlotState.Equipments, enemyItemSlotState.Costumes, enemyRuneStates);
+            var enemyDigest = new ArenaPlayerDigest(enemyAvatarState, enemyItemSlotState.Equipments,
+                enemyItemSlotState.Costumes, enemyRuneStates);
 
             return PVP_MultiWinRate(myDigest, enemyDigest, iterations);
         }
-        public static (Address avatarAddr, int score, int rank)[] PVP_GetListRange(
-        (Address avatarAddr, int score, int rank)[] tuples,ArenaType arenaType,int playerScore, int currentPlayerRank)
-        {
-            int upper = 10 + (PandoraMaster.Instance.Settings.ArenaListUpper * PandoraMaster.Instance.Settings.ArenaListStep);
-            int lower = 10 + (PandoraMaster.Instance.Settings.ArenaListLower * PandoraMaster.Instance.Settings.ArenaListStep);
 
-            if (CurrentPandoraPlayer.IsPremium())
-                return tuples.Where(tuple => tuple.rank <= 300 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
+        public static (Address avatarAddr, int score, int rank)[] PVP_GetListRange(
+            (Address avatarAddr, int score, int rank)[] tuples, ArenaType arenaType, int playerScore,
+            int currentPlayerRank)
+        {
+            int upper = 10 + (PandoraMaster.Instance.Settings.ArenaListUpper *
+                              PandoraMaster.Instance.Settings.ArenaListStep);
+            int lower = 10 + (PandoraMaster.Instance.Settings.ArenaListLower *
+                              PandoraMaster.Instance.Settings.ArenaListStep);
+
+            if (PandoraProfile.IsPremium())
+                return tuples.Where(tuple =>
+                    tuple.rank <= 300 || (tuple.rank >= currentPlayerRank - upper &&
+                                          tuple.rank <= currentPlayerRank + lower)).ToArray();
             else
-                return tuples.Where(tuple => tuple.rank <= 200 || (tuple.rank >= currentPlayerRank - upper && tuple.rank <= currentPlayerRank + lower)).ToArray();
+                return tuples.Where(tuple =>
+                    tuple.rank <= 200 || (tuple.rank >= currentPlayerRank - upper &&
+                                          tuple.rank <= currentPlayerRank + lower)).ToArray();
         }
+
         public static async void PVP_PushFight()
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return;
 
             if (ArenaRemainsBattle > 0)
@@ -1311,7 +1462,9 @@ namespace Nekoyume.PandoraBox
 
                 var blocksBetweenBattles = PandoraMaster.Instance.Settings.ArenaPushStep;
                 var versionWidget = Widget.Find<VersionSystem>();
-                var nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator ? versionWidget.NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
+                var nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator
+                    ? versionWidget.NodeBlockIndex
+                    : Game.Game.instance.Agent.BlockIndex;
 
                 while (nodeBlockValidator < myLastPushBattle + blocksBetweenBattles)
                 {
@@ -1320,15 +1473,18 @@ namespace Nekoyume.PandoraBox
                         return;
 
                     //update values
-                    nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator ? versionWidget.NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
+                    nodeBlockValidator = PandoraMaster.Instance.Settings.ArenaValidator
+                        ? versionWidget.NodeBlockIndex
+                        : Game.Game.instance.Agent.BlockIndex;
                 }
 
                 myLastPushBattle = (int)nodeBlockValidator; // 2 = this is the estimation block needed to send the tx 
                 OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Fight " +
-                    $"{(ArenaMaxBattleCount - ArenaRemainsBattle + 1)}/{ArenaMaxBattleCount} Sent!",
-                NotificationCell.NotificationType.Information);
+                                                    $"{(ArenaMaxBattleCount - ArenaRemainsBattle + 1)}/{ArenaMaxBattleCount} Sent!",
+                    NotificationCell.NotificationType.Information);
 
-                ActionManager.Instance.BattleArena(enemyAvatarAddress, costumes, equipments, runeInfos, championshipId, round, ticket).Subscribe();
+                ActionManager.Instance.BattleArena(enemyAvatarAddress, costumes, equipments, runeInfos, championshipId,
+                    round, ticket).Subscribe();
 
                 Game.Game.instance.Arena.IsAvatarStateUpdatedAfterBattle = true;
                 ArenaBattleInProgress = true;
@@ -1338,46 +1494,54 @@ namespace Nekoyume.PandoraBox
                 Widget.Find<ArenaBoard>().ShowPandora();
             }
         }
+
         #endregion
 
         #region SHOP METHODS
+
         public static void SHOP_FeatureItem(string itemID)
         {
             //request buyMarketFeature cloud
             PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest
-            {
-                FunctionName = "buyMarketFeature",
-                FunctionParameter = new
                 {
-                    itemID = itemID,
-                    currentBlock = Game.Game.instance.Agent.BlockIndex,
-                    address = States.Instance.CurrentAvatarState.agentAddress.ToString()
-                }
-            },
-            success =>
-            {
-                if (success.FunctionResult.ToString() == "Success")
+                    FunctionName = "buyMarketFeature",
+                    FunctionParameter = new
+                    {
+                        itemID = itemID,
+                        currentBlock = Game.Game.instance.Agent.BlockIndex,
+                        address = States.Instance.CurrentAvatarState.agentAddress.ToString()
+                    }
+                },
+                success =>
                 {
-                    //adding score success
-                    AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
-                    PandoraMaster.PlayFabInventory.VirtualCurrency["PG"] -= PandoraMaster.PanDatabase.ShopFeaturePrice; //just UI update instead of request new call
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: Feature Item Request <color=green>Sent!</color>",
-                        NotificationCell.NotificationType.Information);
-                }
-                else
-                {
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: Feature Item Request <color=red>Failed!</color>", NotificationCell.NotificationType.Alert);
-                }
-            },
-            failed => { Debug.LogError("Process Failed!, " + failed.GenerateErrorReport()); });
+                    if (success.FunctionResult.ToString() == "Success")
+                    {
+                        //adding score success
+                        AudioController.instance.PlaySfx(AudioController.SfxCode.BuyItem);
+                        Premium.PandoraProfile.Currencies["PG"] -=
+                            PandoraMaster.PanDatabase.ShopFeaturePrice; //just UI update instead of request new call
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            $"PandoraBox: Feature Item Request <color=green>Sent!</color>",
+                            NotificationCell.NotificationType.Information);
+                    }
+                    else
+                    {
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            "PandoraBox: Feature Item Request <color=red>Failed!</color>",
+                            NotificationCell.NotificationType.Alert);
+                    }
+                },
+                failed => { Debug.LogError("Process Failed!, " + failed.GenerateErrorReport()); });
         }
+
         public static void SHOP_CancelAll(SellView view)
         {
             if (!PANDORA_CheckPremium())
                 return;
 
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cancel All items Process Started...",
-            NotificationCell.NotificationType.Information);
+            OneLineSystem.Push(MailType.System,
+                $"<color=green>Pandora Box</color>: Cancel All items Process Started...",
+                NotificationCell.NotificationType.Information);
 
             var digests = ReactiveShopState.SellDigest.Value;
             var orderDigests = digests.ToList();
@@ -1395,6 +1559,7 @@ namespace Nekoyume.PandoraBox
                 {
                     continue;
                 }
+
                 var avatarAddress = States.Instance.CurrentAvatarState.address;
                 var tradableId = tradableItem.TradableId;
                 var requiredBlockIndex = tradableItem.RequiredBlockIndex;
@@ -1405,12 +1570,13 @@ namespace Nekoyume.PandoraBox
                 var digest = ReactiveShopState.GetSellDigest(tradableId, requiredBlockIndex, price, count);
 
                 Game.Game.instance.ActionManager.SellCancellation(
-                avatarAddress,
-                digest.OrderId,
-                digest.TradableId,
-                subType).Subscribe();
+                    avatarAddress,
+                    digest.OrderId,
+                    digest.TradableId,
+                    subType).Subscribe();
             }
         }
+
         public static void SHOP_CancelLast()
         {
             if (!PANDORA_CheckPremium())
@@ -1423,46 +1589,55 @@ namespace Nekoyume.PandoraBox
             try
             {
                 Game.Game.instance.ActionManager.SellCancellation(
-                States.Instance.CurrentAvatarState.address,
-                Widget.Find<ShopSell>().LastItemSoldOrderID,
-                (item as ITradableItem).TradableId,
-                item.ItemSubType).Subscribe();
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: {item.GetLocalizedName()} Order Canceled!",
-                NotificationCell.NotificationType.Alert);
+                    States.Instance.CurrentAvatarState.address,
+                    Widget.Find<ShopSell>().LastItemSoldOrderID,
+                    (item as ITradableItem).TradableId,
+                    item.ItemSubType).Subscribe();
+                OneLineSystem.Push(MailType.System,
+                    $"<color=green>Pandora Box</color>: {item.GetLocalizedName()} Order Canceled!",
+                    NotificationCell.NotificationType.Alert);
 
                 Widget.Find<ShopSell>().LastItemSold = null;
                 Widget.Find<ShopSell>().LastSoldTxt.text = "";
             }
-            catch (Exception e) { Debug.LogError(e); }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
+
         public static void SHOP_FirstFilter(ReactiveProperty<Nekoyume.EnumType.ShopSortFilter> _selectedSortFilter)
         {
-            if (CurrentPandoraPlayer.IsPremium())
+            if (PandoraProfile.IsPremium())
                 _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Time);
             else
                 _selectedSortFilter.SetValueAndForceNotify(Nekoyume.EnumType.ShopSortFilter.Class);
         }
+
         public static IEnumerable<ShopItem> SHOP_TimeFilter(ReactiveProperty<bool> _isAscending, List<ShopItem> models)
         {
             if (!PANDORA_CheckPremium())
                 return new List<ShopItem>();
 
             return _isAscending.Value
-                    ? models.OrderBy(x => x.OrderDigest.StartedBlockIndex).ToList()
-                    : models.OrderByDescending(x => x.OrderDigest.StartedBlockIndex).ToList();
+                ? models.OrderBy(x => x.OrderDigest.StartedBlockIndex).ToList()
+                : models.OrderByDescending(x => x.OrderDigest.StartedBlockIndex).ToList();
         }
-        public static IEnumerable<ShopItem> SHOP_PandoraScoreFilter(ReactiveProperty<bool> _isAscending, List<ShopItem> models)
+
+        public static IEnumerable<ShopItem> SHOP_PandoraScoreFilter(ReactiveProperty<bool> _isAscending,
+            List<ShopItem> models)
         {
             if (!PANDORA_CheckPremium())
                 return new List<ShopItem>();
 
             return _isAscending.Value
-                    ? models.OrderBy(x => SHOP_GetPandoraScore(x.ItemBase)).ToList()
-                    : models.OrderByDescending(x => SHOP_GetPandoraScore(x.ItemBase)).ToList();
+                ? models.OrderBy(x => SHOP_GetPandoraScore(x.ItemBase)).ToList()
+                : models.OrderByDescending(x => SHOP_GetPandoraScore(x.ItemBase)).ToList();
         }
+
         public static async Task<string> SHOP_GetItemOwnerName(Guid guid)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return "<size=120%><color=green>PREMIUM FEATURE!</color>";
 
 
@@ -1478,23 +1653,28 @@ namespace Nekoyume.PandoraBox
 #endif
                 PandoraMaster.CurrentShopSellerAvatar = avatarState;
                 //Widget.Find<EquipmentTooltip>().currentSellerAvatar = avatarState;
-                PandoraPlayer currentSeller = PandoraMaster.GetPandoraPlayer(avatarState.agentAddress.ToString());
 
-                if (CurrentPandoraPlayer.IsPremium())
-                    if (!currentSeller.IsPremium())
-                        return "<size=120%>" + avatarState.NameWithHash;
+                if (PandoraProfile.IsPremium())
+                    if (!CheckPremium(avatarState.agentAddress))
+                        return $"<size=120%>{avatarState.NameWithHash}";
                     else
-                        return "<size=120%><color=green>[P]</color>" + avatarState.NameWithHash;
+                        return "<size=120%>" + avatarState.NameWithHash + "  <sprite name=UI_main_icon_star>";
                 else
                     return "<size=120%><color=green>PREMIUM FEATURE!</color>";
             }
         }
+
+        public static bool CheckPremium(Address agentAddress)
+        {
+            return Pandoraplayers.Contains(agentAddress.ToString().Substring(2, 20).ToLower());
+        }
+
         public static async void SHOP_Refresh(Action<ShopItem> clickItem)
         {
             var shopBuy = Widget.Find<ShopBuy>();
             int cooldown = 50;
 
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
             {
                 foreach (var item in shopBuy.EquipmentToggles)
                     item.isOn = true;
@@ -1504,10 +1684,8 @@ namespace Nekoyume.PandoraBox
             else
             {
                 ReactiveShopState._buyDigest.Clear();
-
             }
 
-            Widget.Find<ShopBuy>().view.PandoraLoading.SetActive(true);
             var initWeaponTask = Task.Run(async () =>
             {
                 var list = new List<ItemSubType>();
@@ -1524,7 +1702,6 @@ namespace Nekoyume.PandoraBox
                 //base.Show(ignoreShowAnimation);
                 shopBuy.view.Show(ReactiveShopState.BuyDigest, clickItem);
             }
-
 
 
             CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -1544,57 +1721,59 @@ namespace Nekoyume.PandoraBox
                     list.Add(ItemSubType.Food);
 
                 if (shopBuy.MainToggles[1].isOn)
-                    list.AddRange(new List<ItemSubType>{
-                    ItemSubType.Hourglass,
-                    ItemSubType.ApStone,
-                });
+                    list.AddRange(new List<ItemSubType>
+                    {
+                        ItemSubType.Hourglass,
+                        ItemSubType.ApStone,
+                    });
 
                 if (shopBuy.MainToggles[2].isOn)
-                    list.AddRange(new List<ItemSubType>{
-                    ItemSubType.FullCostume,
-                    ItemSubType.HairCostume,
-                    ItemSubType.EarCostume,
-                    ItemSubType.EyeCostume,
-                    ItemSubType.TailCostume,
-                    ItemSubType.Title
-                });
+                    list.AddRange(new List<ItemSubType>
+                    {
+                        ItemSubType.FullCostume,
+                        ItemSubType.HairCostume,
+                        ItemSubType.EarCostume,
+                        ItemSubType.EyeCostume,
+                        ItemSubType.TailCostume,
+                        ItemSubType.Title
+                    });
 
 
                 await ReactiveShopState.SetBuyDigestsAsync(list);
-                Widget.Find<ShopBuy>().view.PandoraLoading.SetActive(false);
                 return true;
             }, _cancellationTokenSource.Token);
 
             if (initOthersTask.IsCanceled)
             {
-                Widget.Find<ShopBuy>().view.PandoraLoading.SetActive(false);
                 return;
             }
 
             var initOthersResult = await initOthersTask;
             if (!initOthersResult)
             {
-                Widget.Find<ShopBuy>().view.PandoraLoading.SetActive(false);
                 return;
             }
 
             shopBuy.view.IsDoneLoadItem = true;
 
             cooldown = 5;
-            if (CurrentPandoraPlayer.IsPremium())
+            if (PandoraProfile.IsPremium())
                 cooldown = 0;
 
             Button refreshButton = Widget.Find<ShopBuy>().RefreshButton;
-            
+
             for (int i = cooldown; i > 0; i--)
             {
                 refreshButton.GetComponentInChildren<TextMeshProUGUI>().text = i.ToString();
                 await Task.Delay(1000);
             }
+
             refreshButton.GetComponentInChildren<TextMeshProUGUI>().text = "Refresh";
             refreshButton.interactable = true;
         }
-        public static string SHOP_GetStatePercentage(int itemID, StatView statView, int starCount, int level, out float percent100, UI.Module.SkillView skillView = null)
+
+        public static string SHOP_GetStatePercentage(int itemID, StatView statView, int starCount, int level,
+            out float percent100, UI.Module.SkillView skillView = null)
         {
             percent100 = 0;
             var tableSheets = Game.TableSheets.Instance;
@@ -1620,8 +1799,8 @@ namespace Nekoyume.PandoraBox
                 var optionInfos = itemSub.Options;
 
                 var options = optionInfos
-                .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
-                .ToList();
+                    .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                    .ToList();
 
                 var statOptions = optionInfos
                     .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
@@ -1645,8 +1824,12 @@ namespace Nekoyume.PandoraBox
                     {
                         if (option.StatType == statType)
                         {
-                            float newMin = statType == StatType.SPD || statType == StatType.DRR ? (option.StatMin / 100f) : option.StatMin;
-                            float newMax = statType == StatType.SPD || statType == StatType.DRR ? (option.StatMax / 100f) : option.StatMax;
+                            float newMin = statType == StatType.SPD || statType == StatType.DRR
+                                ? (option.StatMin / 100f)
+                                : option.StatMin;
+                            float newMax = statType == StatType.SPD || statType == StatType.DRR
+                                ? (option.StatMax / 100f)
+                                : option.StatMax;
                             if (statMax == 0)
                             {
                                 statMax = newMax;
@@ -1656,6 +1839,7 @@ namespace Nekoyume.PandoraBox
                             {
                                 statMax += newMax;
                             }
+
                             if (newMin > statMin)
                                 statMin = newMin;
                         }
@@ -1688,7 +1872,6 @@ namespace Nekoyume.PandoraBox
                                 return "";
                             }
                         }
-
                     }
                 }
 
@@ -1710,15 +1893,15 @@ namespace Nekoyume.PandoraBox
             }
             else
                 return "";
-
         }
+
         public static void SHOP_RelistAll(SellView view)
         {
             if (!PANDORA_CheckPremium())
                 return;
 
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Relisting items Process Started...",
-            NotificationCell.NotificationType.Information);
+                NotificationCell.NotificationType.Information);
 
             var digests = ReactiveShopState.SellDigest.Value;
             var orderDigests = digests.ToList();
@@ -1729,6 +1912,7 @@ namespace Nekoyume.PandoraBox
                     NotificationCell.NotificationType.Alert);
                 return;
             }
+
             view.SetLoading(orderDigests);
 
             var updateSellInfos = new List<UpdateSellInfo>();
@@ -1739,6 +1923,7 @@ namespace Nekoyume.PandoraBox
                 {
                     return;
                 }
+
                 var currentprice = orderDigest.Price;
                 //if (itemBase.Id == 201020)
                 //{
@@ -1747,13 +1932,13 @@ namespace Nekoyume.PandoraBox
                 //}
 
                 var updateSellInfo = new UpdateSellInfo(
-                  orderDigest.OrderId,
-                  Guid.NewGuid(),
-                  orderDigest.TradableId,
-                  itemBase.ItemSubType,
-                  //orderDigest.Price,
-                  currentprice,
-                  orderDigest.ItemCount
+                    orderDigest.OrderId,
+                    Guid.NewGuid(),
+                    orderDigest.TradableId,
+                    itemBase.ItemSubType,
+                    //orderDigest.Price,
+                    currentprice,
+                    orderDigest.ItemCount
                 );
                 updateSellInfos.Add(updateSellInfo);
                 oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
@@ -1764,7 +1949,7 @@ namespace Nekoyume.PandoraBox
 
         public static int SHOP_GetPandoraScore(ItemBase itemBase)
         {
-            if (!CurrentPandoraPlayer.IsPremium())
+            if (!PandoraProfile.IsPremium())
                 return -1;
             if (!(itemBase is Equipment equipment))
                 return -1;
@@ -1796,8 +1981,8 @@ namespace Nekoyume.PandoraBox
             var optionInfos = itemSub.Options;
 
             var options = optionInfos
-            .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
-            .ToList();
+                .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                .ToList();
 
             var statOptions = optionInfos
                 .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
@@ -1829,9 +2014,9 @@ namespace Nekoyume.PandoraBox
                         {
                             statMax += (rawOption.option.StatMax);
                         }
-
                     }
                 }
+
                 statMin *= levelStatsMultiply;
                 statMax *= levelStatsMultiply;
                 float percent = (stateValue - statMin) / (statMax - statMin) * 100f;
@@ -1866,15 +2051,27 @@ namespace Nekoyume.PandoraBox
                         finalPercentage += 25;
                     }
                 }
-                catch (Exception e) { Debug.LogError(e); }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
             }
+
             return (int)(Mathf.Clamp(finalPercentage, 0, 130));
         }
+
         #endregion
     }
+
     public class WebhookNotification
     {
         public string Uri;
         public string Message;
+    }
+
+    [System.Serializable]
+    public class UsernamesData
+    {
+        public string[] usernames;
     }
 }

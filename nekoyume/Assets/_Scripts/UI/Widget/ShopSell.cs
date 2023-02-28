@@ -45,6 +45,7 @@ namespace Nekoyume.UI
 
         public ItemBase LastItemSold = null;
         public Guid LastItemSoldOrderID = new Guid();
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -54,11 +55,9 @@ namespace Nekoyume.UI
 
         [SerializeField] private SpeechBubble speechBubble = null;
 
-        [SerializeField]
-        private Button reregistrationButton;
+        [SerializeField] private Button reregistrationButton;
 
-        [SerializeField]
-        private Button buyButton = null;
+        [SerializeField] private Button buyButton = null;
 
         [SerializeField] private Button closeButton = null;
 
@@ -320,6 +319,7 @@ namespace Nekoyume.UI
 
                 return;
             }
+
             view.SetLoading(orderDigests);
 
             var updateSellInfos = new List<UpdateSellInfo>();
@@ -346,7 +346,8 @@ namespace Nekoyume.UI
                 if (orderDigest.OrderId == orderDigests.Last().OrderId)
                 {
                     LastItemSold = itemBase;
-                    LastSoldTxt.text = LastItemSold.GetLocalizedName() + "><b><color=#FFCF2A>" + orderDigest.Price.MajorUnit + "</color></b>NCG";
+                    LastSoldTxt.text = LastItemSold.GetLocalizedName() + "><b><color=#FFCF2A>" +
+                                       orderDigest.Price.MajorUnit + "</color></b>NCG";
                 }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
@@ -439,8 +440,8 @@ namespace Nekoyume.UI
             var itemSubType = data.Item.Value.ItemBase.Value.ItemSubType;
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             LastItemSold = data.Item.Value.ItemBase.Value;
-            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
-            //Prime.IsSellDebugAnalyze = Find<ItemCountableAndPricePopup>().SellActionDebug.isOn;
+            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" +
+                               totalPrice.MajorUnit + "</color></b>NCG";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             Game.Game.instance.ActionManager.Sell(tradableItem, count, totalPrice, itemSubType)
                 .Subscribe();
@@ -491,9 +492,10 @@ namespace Nekoyume.UI
             );
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             LastItemSold = data.Item.Value.ItemBase.Value;
-            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" + totalPrice.MajorUnit + "</color></b>NCG";
+            LastSoldTxt.text = data.Item.Value.ItemBase.Value.GetLocalizedName() + "><b><color=#FFCF2A>" +
+                               totalPrice.MajorUnit + "</color></b>NCG";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-            Game.Game.instance.ActionManager.UpdateSell(new List<UpdateSellInfo> {updateSellInfo}).Subscribe();
+            Game.Game.instance.ActionManager.UpdateSell(new List<UpdateSellInfo> { updateSellInfo }).Subscribe();
             ResponseSell();
         }
 

@@ -208,8 +208,8 @@ MonoBehaviour:
   CraftFillCrystalOffImage: {fileID: 3945192262050490926}
   craftIDInput: {fileID: 2499088356550524056}
   CraftIconIDImage: {fileID: 2683253423150997691}
-  BasicCraftOnImage: {fileID: 1520204203447040727}
-  BasicCraftOffImage: {fileID: 5077406376068622806}
+  PremiumCraftOnImage: {fileID: 1520204203447040727}
+  PremiumCraftOffImage: {fileID: 5077406376068622806}
   eventModule: {fileID: 7942195345694710592}
   eventOnImage: {fileID: 2661835468360354059}
   eventOffImage: {fileID: 4271979595519262278}
@@ -268,19 +268,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 7407895453931944160}
-        m_TargetAssemblyTypeName: Nekoyume.UI.Widget, Nekoyume
-        m_MethodName: Close
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!95 &3210077395262828308
 Animator:
   serializedVersion: 4
@@ -9433,7 +9421,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 7407895453931944160}
         m_TargetAssemblyTypeName: Nekoyume.UI.ChronoSettingsPopup, Nekoyume
-        m_MethodName: ChangeBasicCraft
+        m_MethodName: ChangePremiumCraft
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -14674,7 +14662,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 7407895453931944160}
         m_TargetAssemblyTypeName: Nekoyume.UI.ChronoSettingsPopup, Nekoyume
-        m_MethodName: ChangeBasicCraft
+        m_MethodName: ChangePremiumCraft
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17500,6 +17488,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Blur
       objectReference: {fileID: 0}
+    - target: {fileID: 1907849136098932, guid: 087d608eb50946b409525e83801de9d2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 224898616830980190, guid: 087d608eb50946b409525e83801de9d2,
         type: 3}
       propertyPath: m_Pivot.x
@@ -17604,6 +17596,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3884162830784972699, guid: 087d608eb50946b409525e83801de9d2,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6247512147125464575, guid: 087d608eb50946b409525e83801de9d2,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 087d608eb50946b409525e83801de9d2, type: 3}

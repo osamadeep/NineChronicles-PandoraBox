@@ -13,16 +13,18 @@ namespace Nekoyume.UI
     public class VersionSystem : SystemWidget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI nodeText;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI nodeText;
+
         [SerializeField] private TextMeshProUGUI queueCountTxt;
         string pandoraTextVer = "";
         string current9cScanBlock = "";
         public long NodeBlockIndex;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         public TextMeshProUGUI informationText;
+
         private int _version;
         private long _blockIndex;
         private BlockHash _hash;
@@ -38,9 +40,9 @@ namespace Nekoyume.UI
             //    int.Parse(PandoraBoxMaster.VersionId.Substring(4, 2)));
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             pandoraTextVer = string.Format("PandoraBox v{0}.{2}",
-                            int.Parse(PandoraMaster.VersionId.Substring(0, 2)),
-                            int.Parse(PandoraMaster.VersionId.Substring(2, 2)),
-                            int.Parse(PandoraMaster.VersionId.Substring(4, 2)));
+                int.Parse(PandoraMaster.VersionId.Substring(0, 2)),
+                int.Parse(PandoraMaster.VersionId.Substring(2, 2)),
+                int.Parse(PandoraMaster.VersionId.Substring(4, 2)));
             if (PandoraMaster.VersionId.Length > 6)
                 pandoraTextVer += "<color=green>A</color>";
             StartCoroutine(Get9cBlock());
@@ -85,13 +87,14 @@ namespace Nekoyume.UI
                 {
                     queueCountTxt.text = "0";
                 }
+
                 yield return new WaitForSeconds(0.5f);
             }
         }
 
         IEnumerator Get9cBlock()
         {
-            int secToUpdate = 6;
+            int secToUpdate = 10;
 
             while (true)
             {
@@ -101,7 +104,7 @@ namespace Nekoyume.UI
 
                 if (www.result != UnityWebRequest.Result.Success)
                 {
-                    current9cScanBlock = "?";
+                    current9cScanBlock = "<color=red>X</color>";
                 }
                 else
                 {
@@ -122,10 +125,18 @@ namespace Nekoyume.UI
                             //Debug.LogError(block + "  " +  _blockIndex);
 
                             try
-                            { nodeText.text = "<color=green>" + Game.Game.instance._options.RpcServerHost + "</color>"; }
-                            catch { }
+                            {
+                                nodeText.text = "<color=green>" + Game.Game.instance._options.RpcServerHost +
+                                                "</color>";
+                            }
+                            catch
+                            {
+                            }
                         }
-                        catch { current9cScanBlock = "(?)"; }
+                        catch
+                        {
+                            current9cScanBlock = "<color=red>X</color>";
+                        }
                 }
 
                 informationText.text = $"{pandoraTextVer} / #{_blockIndex}{current9cScanBlock}";

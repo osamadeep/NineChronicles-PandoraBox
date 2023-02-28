@@ -45,6 +45,7 @@ namespace Nekoyume.UI
 
     public class RunnerTown : Widget
     {
+        [SerializeField] RunnerInventory inventory;
         [SerializeField] TextMeshProUGUI nameTxt;
         [SerializeField] TextMeshProUGUI pgTxt;
         [SerializeField] TextMeshProUGUI pcTxt;
@@ -74,9 +75,9 @@ namespace Nekoyume.UI
             AudioController.instance.PlayMusic(AudioController.MusicCode.RunnerTown);
 
             nameTxt.text = PandoraMaster.PlayFabPlayerProfile.DisplayName;
-            pgTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PG"]).ToString();
-            pcTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PC"]).ToString();
-            prTxt.text = PandoraUtil.ToLongNumberNotation(PandoraMaster.PlayFabInventory.VirtualCurrency["PR"]).ToString();
+            pgTxt.text = PandoraUtil.ToLongNumberNotation(Premium.PandoraProfile.Currencies["PG"]).ToString();
+            pcTxt.text = PandoraUtil.ToLongNumberNotation(Premium.PandoraProfile.Currencies["PC"]).ToString();
+            prTxt.text = PandoraUtil.ToLongNumberNotation(Premium.PandoraProfile.Currencies["PR"]).ToString();
 
             base.Show(ignoreShowAnimation);
         }
@@ -98,12 +99,17 @@ namespace Nekoyume.UI
             Close(true);
         }
 
+        public void ShowInventory()
+        {
+            AudioController.PlayClick();
+            inventory.gameObject.SetActive(!inventory.gameObject.activeInHierarchy);
+        }
 
         public void ComingSoon()
         {
             OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Coming Soon!",
                 NotificationCell.NotificationType.Information);
             return;
-        }    
+        }
     }
 }

@@ -14,7 +14,16 @@ namespace Nekoyume.PandoraBox
 {
     public static class PandoraUtil
     {
-        public enum ActionType { Idle,HackAndSlash,Ranking,Event}
+        public enum ActionType
+        {
+            Idle,
+            HackAndSlash,
+            Ranking,
+            Event
+        }
+
+        // Define the encryption key
+        private const int ENCRYPTION_KEY = 98737654;
 
         public static void PandoraDebug(string message)
         {
@@ -28,13 +37,19 @@ namespace Nekoyume.PandoraBox
                 case ActionType.Idle:
                     return false;
                 case ActionType.Ranking:
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Arena fight in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Arena fight in-progress! Please wait ...",
+                        NotificationCell.NotificationType.Alert);
                     return true;
                 case ActionType.HackAndSlash:
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage fight in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Stage fight in-progress! Please wait ...",
+                        NotificationCell.NotificationType.Alert);
                     return true;
                 case ActionType.Event:
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Event fight in-progress! Please wait ...", NotificationCell.NotificationType.Alert);
+                    OneLineSystem.Push(MailType.System,
+                        "<color=green>Pandora Box</color>: Event fight in-progress! Please wait ...",
+                        NotificationCell.NotificationType.Alert);
                     return true;
                 default:
                     return false;
@@ -42,14 +57,38 @@ namespace Nekoyume.PandoraBox
         }
 
         static Color32[] gradeColors = new Color32[6]
-        {       
-                Color.white,
-                new Color(0, 193f/256f, 18f/256f),
-                new Color(80f/256f, 106f/256f, 253f/256f),
-                new Color(243f/256f, 68f/256f, 201f/256f),
-                new Color(246f/256f, 153f/256f, 36f/256f),
-                Color.red
+        {
+            Color.white,
+            new Color(0, 193f / 256f, 18f / 256f),
+            new Color(80f / 256f, 106f / 256f, 253f / 256f),
+            new Color(243f / 256f, 68f / 256f, 201f / 256f),
+            new Color(246f / 256f, 153f / 256f, 36f / 256f),
+            Color.red
         };
+
+        // Encrypt a string using a simple XOR operation
+        public static string SimpleEncrypt(string input)
+        {
+            char[] inputChars = input.ToCharArray();
+            for (int i = 0; i < inputChars.Length; i++)
+            {
+                inputChars[i] = (char)(inputChars[i] ^ ENCRYPTION_KEY);
+            }
+
+            return new string(inputChars);
+        }
+
+        // Decrypt a string that was encrypted using the above method
+        public static string SimpleDecrypt(string input)
+        {
+            char[] inputChars = input.ToCharArray();
+            for (int i = 0; i < inputChars.Length; i++)
+            {
+                inputChars[i] = (char)(inputChars[i] ^ ENCRYPTION_KEY);
+            }
+
+            return new string(inputChars);
+        }
 
 
         public static PandoraItem GetPandoraItem(string itemName)
@@ -57,7 +96,8 @@ namespace Nekoyume.PandoraBox
             //0 01 4 0002
             PandoraItem item = new PandoraItem();
             item.IsBlockchain = System.Convert.ToBoolean(int.Parse(itemName.Substring(0, 1)));
-            item.Type = int.Parse(itemName.Substring(1,2)); //decide what kind of items its, for arena banner it should be 01
+            item.Type = int.Parse(itemName.Substring(1,
+                2)); //decide what kind of items its, for arena banner it should be 01
             item.Grade = (Grade)int.Parse(itemName.Substring(3, 1)); // banner grade and color
             item.ID = itemName.Substring(4, 4); // item ID is different on the NFT ItemID
             //Debug.LogError(arenaBanner.IsBlockchain + " " + arenaBanner.Type + " " + arenaBanner.Grade + " " + arenaBanner.ID);
@@ -66,7 +106,7 @@ namespace Nekoyume.PandoraBox
             return item;
         }
 
-        public static (int, int) GetPlayCount(StageSheet.Row row,int apStoneCount,int ap,int stakingLevel)
+        public static (int, int) GetPlayCount(StageSheet.Row row, int apStoneCount, int ap, int stakingLevel)
         {
             if (row is null)
             {
@@ -115,9 +155,16 @@ namespace Nekoyume.PandoraBox
             return num.ToString();
         }
 
-        public static void ShowSystemNotification(int messageCode,NotificationCell.NotificationType type)
+        public static void ShowSystemNotification(string message, NotificationCell.NotificationType type)
         {
-            NotificationSystem.Push(MailType.System, $"<color=green><b>PandoraBox</b></color>: {GetNotificationText(messageCode)}",type);
+            NotificationSystem.Push(MailType.System, $"<color=green><b>PandoraBox</b></color>: {message}", type);
+        }
+
+        public static void ShowSystemNotification(int messageCode, NotificationCell.NotificationType type,
+            string message = "")
+        {
+            //handle all pandora Notification
+            NotificationSystem.Push(MailType.System, $"<color=green><b>PandoraBox</b></color>: {message}", type);
         }
 
         public static string GetNotificationText(int messageCode)
@@ -140,22 +187,17 @@ namespace Nekoyume.PandoraBox
                 case 404:
                     messageText = "Cannot connect to Pandora Server, please visit us for more information!";
                     break;
+                case 405:
+                    messageText = "Game stuck while trying Avatar States, your avatar may lake of items or stones!";
+                    break;
                 case 322:
                     messageText = "cannot read Player Inventory!";
                     break;
                 case 362:
                     messageText = "cannot read Players database!";
                     break;
-                case 1001:
-                    messageText = "Custom Crystal Buff <color=red>removed</color>!";
-                    break;
-                case 1002:
-                    messageText = "Custom Crystal Buff <color=green>Selected</color>!";
-                    break;
-                case 600:
-                    messageText = "Staking Rewards <color=green>Collected</color>!";
-                    break;
             }
+
             return messageText;
         }
     }

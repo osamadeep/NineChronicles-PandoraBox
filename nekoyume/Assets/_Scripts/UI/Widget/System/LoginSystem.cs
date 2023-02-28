@@ -16,6 +16,11 @@ namespace Nekoyume.UI
     using Nekoyume.Game.Controller;
     using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
+    using PlayFab;
+    using PlayFab.ClientModels;
+    using System.Collections.Generic;
+    using System.Net.Mail;
+    using System.Text.RegularExpressions;
     using UniRx;
 
     public class LoginSystem : SystemWidget
@@ -35,8 +40,7 @@ namespace Nekoyume.UI
         public IKeyStore KeyStore = Web3KeyStore.DefaultKeyStore;
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
-        private Transform ProfilesHolder;
+        [Header("PANDORA CUSTOM FIELDS")] public PandoraLogin pandoraLogin;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -75,12 +79,13 @@ namespace Nekoyume.UI
         public bool Login { get; private set; }
         private string _privateKeyString;
         private PrivateKey _privateKey;
+
         private States _prevState;
-        private CapturedImage _capturedImage;
+        //private CapturedImage _capturedImage;
 
         protected override void Awake()
         {
-            _capturedImage = GetComponentInChildren<CapturedImage>();
+            //_capturedImage = GetComponentInChildren<CapturedImage>();
             State.Value = States.Show;
             State.Subscribe(SubscribeState).AddTo(gameObject);
             strongText.gameObject.SetActive(false);
@@ -103,6 +108,43 @@ namespace Nekoyume.UI
             base.Awake();
             SubmitWidget = Submit;
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+        public void Update9cLoginInfo(string address, string password, bool isAutoLogin)
+        {
+            accountAddressText.text = address;
+            loginField.text = password;
+            if (isAutoLogin)
+            {
+                PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
+                                                                       + "_IsAutoLogin",
+                    System.Convert.ToInt32(isAutoLogin));
+                Login9cAccount();
+            }
+        }
+
+        void Login9cAccount()
+        {
+            _privateKey = pandoraLogin.GetKey(loginField.text);
+            if (!(_privateKey is null))
+            {
+                //save address password
+                PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
+                                                                          + "_AddressPassword",
+                    PandoraUtil.SimpleEncrypt(loginField.text));
+
+                //if everything is ok
+                Login = true;
+                Close();
+            }
+            else
+            {
+                PandoraUtil.ShowSystemNotification("9c Account Password is not Correct!",
+                    NotificationCell.NotificationType.Information);
+            }
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
         private void SubscribeState(States states)
         {
@@ -252,10 +294,12 @@ namespace Nekoyume.UI
                 return;
             }
 
-            Login = !(_privateKey is null);
-            if (Login)
+            //Login = !(_privateKey is null);
+            var finalCheck = !(_privateKey is null);
+            if (finalCheck)
             {
-                Close();
+                Login9cAccount();
+                //Close();
             }
             else
             {
@@ -332,139 +376,23 @@ namespace Nekoyume.UI
             SetState(States.Login);
         }
 
+
         public void Show(string path, string privateKeyString)
         {
-            if (_capturedImage != null)
-            {
-                _capturedImage.Show();
-            }
-
             KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
-            _privateKeyString = privateKeyString;
-            //Auto login for miner, seed, launcher
-            if ((!string.IsNullOrEmpty(_privateKeyString) || (Application.isBatchMode)) &&
-                !PandoraMaster.Instance.Settings.IsMultipleLogin)
-            {
-                CreatePrivateKey();
-                Login = true;
-                Close();
-            }
+            _privateKeyString = privateKeyString; //no launcher fast login because we dont use it
+
+            //only allow login
+            if (KeyStore.ListIds().Any())
+                SetState(States.Login);
             else
-            {
-                var state = KeyStore.ListIds().Any() ? States.Login : States.Show;
-                SetState(state);
-                Login = false;
+                PandoraUtil.ShowSystemNotification("No Keystore files Found! Create some from Original Launcher",
+                    NotificationCell.NotificationType.Information);
 
-                if (state == States.Login)
-                {
-                    // 키 고르는 게 따로 없으니 갖고 있는 키 중에서 아무거나 보여줘야 함...
-                    // FIXME: 역시 키 고르는 단계가 있어야 할 것 같음
-                    //SetImage(KeyStore.List().First().Item2.Address);
-
-                    //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                    foreach (Transform item in ProfilesHolder)
-                        item.gameObject.SetActive(false);
-
-                    int NumberOfProfiles = 5; //PandoraBoxMaster.Instance.Settings.IsPremiumLogin ? 5 : 2;
-                    for (int i = 0;
-                         i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, NumberOfProfiles);
-                         i++)
-                    {
-                        ProfilesHolder.GetChild(i).gameObject.SetActive(true);
-                        string tmp = "_PandoraBox_Account_LoginProfile0" + i + "_Name";
-                        ProfilesHolder.GetChild(i).Find("AccountNameText").GetComponent<TextMeshProUGUI>().text
-                            = PlayerPrefs.GetString(tmp, "Profile " + (i + 1).ToString());
-                    }
-
-
-                    SetImage(KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address);
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                }
-
-                switch (State.Value)
-                {
-                    case States.CreateAccount:
-                    case States.ResetPassphrase:
-                    case States.CreatePassword:
-                    {
-                        {
-                            if (passPhraseField.isFocused)
-                            {
-                                retypeField.Select();
-                            }
-                            else
-                            {
-                                passPhraseField.Select();
-                            }
-                        }
-                        break;
-                    }
-                    case States.Login:
-                        loginField.Select();
-                        break;
-                    case States.FindPassphrase:
-                        findPassphraseField.Select();
-                        break;
-                    case States.Show:
-                    case States.Failed:
-                        break;
-                }
-
-                base.Show();
-                StartCoroutine(ForceSelect()); //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            }
-        }
-
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        System.Collections.IEnumerator ForceSelect()
-        {
-            yield return new WaitForSeconds(0.5f);
-            loginField.ActivateInputField();
-            loginField.Select();
-        }
-
-        public void SetProfileIndex(int value)
-        {
-            PandoraMaster.LoginIndex = value;
-            AudioController.instance.PlaySfx(AudioController.SfxCode.Click);
-            SetImage(KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address);
-
-            //VFX
-            int NumberOfProfiles = 5;
-            for (int i = 0; i < Mathf.Clamp(KeyStore.ListIds().Count(), 1, NumberOfProfiles); i++)
-            {
-                Color tmp = i == value ? Color.white : new Color(100f / 255f, 100f / 255f, 100f / 255f);
-                ProfilesHolder.GetChild(i).Find("icon").GetComponent<Image>().color = tmp;
-                ProfilesHolder.GetChild(i).Find("Image").gameObject.SetActive(i == value);
-            }
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-        private void CreatePrivateKey()
-        {
-            PrivateKey privateKey = null;
-
-            if (string.IsNullOrEmpty(_privateKeyString))
-            {
-                privateKey = CheckPrivateKey(KeyStore, passPhraseField.text);
-            }
-            else
-            {
-                privateKey = new PrivateKey(ByteUtil.ParseHex(_privateKeyString));
-                Debug.LogWarningFormat(
-                    "As --private-key option is used, keystore files are ignored.\n" +
-                    "Loaded key (address): {0}",
-                    privateKey.PublicKey.ToAddress()
-                );
-            }
-
-            if (privateKey is null)
-            {
-                privateKey = new PrivateKey();
-                CreateProtectedPrivateKey(privateKey);
-            }
-
-            _privateKey = privateKey;
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            pandoraLogin.Initilize(path);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+            base.Show();
         }
 
         private static PrivateKey CheckPrivateKey(IKeyStore keyStore, string passphrase)
@@ -476,42 +404,24 @@ namespace Nekoyume.UI
             // 그런 케이스에서 이용자에게는 버그처럼 여겨지는 동작일지도.
             // FIXME: 따라서 UI에서 키 여러 개 중 뭘 쓸지 선택하는 걸 두는 게 좋을 듯.
             PrivateKey privateKey = null;
-
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            keyStore.List().ElementAt(PandoraMaster.LoginIndex)
-                .Deconstruct(out Guid keyId, out ProtectedPrivateKey ppk);
-            try
+            foreach (var pair in keyStore.List())
             {
-                privateKey = ppk.Unprotect(passphrase: passphrase);
-            //foreach (var pair in keyStore.List())
-            //{
-            //    pair.Deconstruct(out _, out var ppk);
-            //    try
-            //    {
-            //        privateKey = ppk.Unprotect(passphrase: passphrase);
-            //    }
-            //    catch (IncorrectPassphraseException)
-            //    {
-            //        Debug.LogWarningFormat(
-            //            "The key {0} cannot unprotected with a passphrase; failed to load",
-            //            ppk.Address
-            //        );
-            //    }
+                pair.Deconstruct(out _, out var ppk);
+                try
+                {
+                    privateKey = ppk.Unprotect(passphrase: passphrase);
+                }
+                catch (IncorrectPassphraseException)
+                {
+                    Debug.LogWarningFormat(
+                        "The key {0} cannot unprotected with a passphrase; failed to load",
+                        ppk.Address
+                    );
+                }
 
-            //    Debug.LogFormat("The key {0} was successfully loaded", ppk.Address);
-            //    break;
+                Debug.LogFormat("The key {0} was successfully loaded", ppk.Address);
+                break;
             }
-            catch (IncorrectPassphraseException)
-            {
-                Debug.LogWarningFormat(
-                    "The key {0} is protected with a passphrase; failed to load: {1}",
-                    ppk.Address,
-                    keyId
-                );
-            }
-
-            Debug.LogFormat("The key {0} was successfully loaded using passphrase: {1}", ppk.Address, keyId);
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             return privateKey;
         }

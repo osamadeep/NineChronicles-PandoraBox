@@ -37,14 +37,14 @@ namespace Nekoyume
         {
             itemImg.sprite = itemIcon;
             itemPrice.text = ItemPrice.ToString();
-            currencyImg.sprite = CurrencySTR == "PC"? itemCurrencies[0]: currencyImg.sprite = itemCurrencies[1];
+            currencyImg.sprite = CurrencySTR == "PC" ? itemCurrencies[0] : currencyImg.sprite = itemCurrencies[1];
             CheckAvailability();
         }
 
         public void SelectBoosterItem(string buyID)
         {
             //check client-side if cost is enough
-            if (PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice)
+            if (Premium.PandoraProfile.Currencies[CurrencySTR] < ItemPrice)
                 return;
 
             Game.Game.instance.Runner.SelectedUtilitie = this;
@@ -53,7 +53,7 @@ namespace Nekoyume
 
         public void CheckAvailability()
         {
-            if (PandoraMaster.PlayFabInventory.VirtualCurrency[CurrencySTR] < ItemPrice || IsLocked)
+            if (Premium.PandoraProfile.Currencies[CurrencySTR] < ItemPrice || IsLocked)
             {
                 selectBtn.interactable = false;
                 itemImg.color = new Color(1, 1, 1, 0.5f);

@@ -50,8 +50,9 @@ namespace Nekoyume.UI.Module.Arena.Board
         : FancyScrollRectCell<ArenaBoardPlayerItemData, ArenaBoardPlayerScrollContext>
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private GameObject cannotAttackImg = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private GameObject cannotAttackImg = null;
+
         [SerializeField] private TextMeshProUGUI extraInfoText = null;
         [SerializeField] private TextMeshProUGUI rateText = null;
 
@@ -79,42 +80,30 @@ namespace Nekoyume.UI.Module.Arena.Board
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private Image _rankImage;
 
-        [SerializeField]
-        private GameObject _rankImageContainer;
+        [SerializeField] private GameObject _rankImageContainer;
 
-        [SerializeField]
-        private TextMeshProUGUI _rankText;
+        [SerializeField] private TextMeshProUGUI _rankText;
 
-        [SerializeField]
-        private GameObject _rankTextContainer;
+        [SerializeField] private GameObject _rankTextContainer;
 
-        [SerializeField]
-        private DetailedCharacterView _characterView;
+        [SerializeField] private DetailedCharacterView _characterView;
 
-        [SerializeField]
-        private TextMeshProUGUI _nameText;
+        [SerializeField] private TextMeshProUGUI _nameText;
 
-        [SerializeField]
-        private TextMeshProUGUI _ratingText;
+        [SerializeField] private TextMeshProUGUI _ratingText;
 
-        [SerializeField]
-        private TextMeshProUGUI _cpText;
+        [SerializeField] private TextMeshProUGUI _cpText;
 
-        [SerializeField]
-        private TextMeshProUGUI _plusRatingText;
+        [SerializeField] private TextMeshProUGUI _plusRatingText;
 
-        [SerializeField]
-        private ConditionalButton _choiceButton;
+        [SerializeField] private ConditionalButton _choiceButton;
 
-        [SerializeField]
-        private GameObject winObject;
+        [SerializeField] private GameObject winObject;
 
-        [SerializeField]
-        private GameObject loseObject;
+        [SerializeField] private GameObject loseObject;
 
         private ArenaBoardPlayerItemData _currentData;
 
@@ -135,6 +124,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                     {
                         item.GetComponent<ArenaBoardPlayerCell>().BlinkSelected.SetActive(false);
                     }
+
                     BlinkSelected.SetActive(true);
                 })
                 .AddTo(gameObject);
@@ -157,7 +147,6 @@ namespace Nekoyume.UI.Module.Arena.Board
             _nameText.text = _currentData.name;
             _cpText.text =
                 _currentData.cp.ToString("N0", CultureInfo.CurrentCulture);
-
 
 
             _ratingText.text =
@@ -185,7 +174,7 @@ namespace Nekoyume.UI.Module.Arena.Board
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             _cpText.text = PandoraUtil.ToLongNumberNotation(_currentData.cp);
             var arenaBoard = Widget.Find<ArenaBoard>();
-            
+
             if (arenaBoard._useGrandFinale)
             {
                 selectedEnemyAvatarState = Widget.Find<ArenaBoard>()._grandFinaleParticipants[Index].AvatarState;
@@ -197,17 +186,20 @@ namespace Nekoyume.UI.Module.Arena.Board
             //meAP = PlayersArenaParticipant.Value;
 
             //selectedPan = PandoraMaster.GetPandoraPlayer(selectedEnemyAvatarState.agentAddress.ToString());
-            enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x => x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
+            enemyGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x =>
+                x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
             GuildButton.SetActive(!(enemyGuildPlayer is null));
             if (!(enemyGuildPlayer is null))
             {
-                GuildButton.GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + enemyGuildPlayer.Guild);
+                GuildButton.GetComponent<Image>().sprite =
+                    Resources.Load<Sprite>("UI/Textures/PandoraGuilds/" + enemyGuildPlayer.Guild);
             }
 
             if (Widget.Find<FriendInfoPopupPandora>()._avatarState is null)
                 BlinkSelected.SetActive(false);
             else
-                BlinkSelected.SetActive(selectedEnemyAvatarState.address == Widget.Find<FriendInfoPopupPandora>()._avatarState.address);
+                BlinkSelected.SetActive(selectedEnemyAvatarState.address ==
+                                        Widget.Find<FriendInfoPopupPandora>()._avatarState.address);
             FavTarget.SetActive(PandoraMaster.ArenaFavTargets.Contains(selectedEnemyAvatarState.address.ToString()));
 
             if (bannerHolder.childCount > 0)
@@ -219,14 +211,10 @@ namespace Nekoyume.UI.Module.Arena.Board
             SetBanner();
             SetArenaInfo();
             SetWinRate();
-            
 
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-         }
-
-
-
+        }
 
 
         protected override void UpdatePosition(float normalizedPosition, float localPosition)
@@ -264,8 +252,9 @@ namespace Nekoyume.UI.Module.Arena.Board
         async void SetWinRate()
         {
             rateText.text = "..."; //prevent old value
-            if (Premium.CurrentPandoraPlayer.IsPremium())
-                rateText.text = await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 15);
+            if (Premium.PandoraProfile.IsPremium())
+                rateText.text =
+                    await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, selectedEnemyAvatarState, 15);
         }
 
         public void GetGuildInfo()
@@ -321,7 +310,6 @@ namespace Nekoyume.UI.Module.Arena.Board
             _cpText.color = selectedColor;
 
 
-
             var arenaSheet = TableSheets.Instance.ArenaSheet;
             var currentBlockIndex = Game.instance.Agent.BlockIndex;
             if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
@@ -345,7 +333,8 @@ namespace Nekoyume.UI.Module.Arena.Board
 
             NFTOwner currentNFTOwner = new NFTOwner();
             //Debug.LogError(avatarAddress);
-            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x => x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
+            currentNFTOwner = PandoraMaster.PanDatabase.NFTOwners.Find(x =>
+                x.AvatarAddress.ToLower() == selectedEnemyAvatarState.address.ToString().ToLower());
 
             try
             {
@@ -355,10 +344,13 @@ namespace Nekoyume.UI.Module.Arena.Board
                     transperentBlackText.SetActive(true);
                     if (currentNFTOwner.CurrentArenaBanner != "")
                     {
-                        NFTItem arenaBanner = PandoraMaster.PanDatabase.NFTItems.Find(x => x.ItemID == currentNFTOwner.CurrentArenaBanner);
+                        NFTItem arenaBanner =
+                            PandoraMaster.PanDatabase.NFTItems.Find(x =>
+                                x.ItemID == currentNFTOwner.CurrentArenaBanner);
                         if (bannerHolder.childCount > 0)
                         {
-                            PandoraArenaBanner currentBanner = bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
+                            PandoraArenaBanner currentBanner =
+                                bannerHolder.GetChild(0).GetComponent<PandoraArenaBanner>();
                             if (currentBanner.ItemName != arenaBanner.ItemName)
                             {
                                 Destroy(bannerHolder.GetChild(0).gameObject);
@@ -386,7 +378,9 @@ namespace Nekoyume.UI.Module.Arena.Board
                         Destroy(bannerHolder.GetChild(0).gameObject);
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         async void SetArenaInfo()
@@ -397,14 +391,16 @@ namespace Nekoyume.UI.Module.Arena.Board
             var arenaBoard = Widget.Find<ArenaBoard>();
             if (arenaBoard._useGrandFinale)
             {
-                var _grandFinaleScheduleRow = TableSheets.Instance.GrandFinaleScheduleSheet?.GetRowByBlockIndex(currentBlockIndex);
+                var _grandFinaleScheduleRow =
+                    TableSheets.Instance.GrandFinaleScheduleSheet?.GetRowByBlockIndex(currentBlockIndex);
                 extraInfoText.text = $"<color=#50A931>{"?"}</color>/<color=#59514B>{"?"}</color>\n{"?"}\n{"?"}";
             }
             else
             {
                 if (arenaSheet.TryGetCurrentRound(currentBlockIndex, out var currentRoundData))
                 {
-                    var arenaInformationAddr = ArenaInformation.DeriveAddress(selectedEnemyAvatarState.address, currentRoundData.ChampionshipId, currentRoundData.Round);
+                    var arenaInformationAddr = ArenaInformation.DeriveAddress(selectedEnemyAvatarState.address,
+                        currentRoundData.ChampionshipId, currentRoundData.Round);
                     var agent = Game.instance.Agent;
 
                     var sa = await agent.GetStateAsync(arenaInformationAddr);
@@ -420,13 +416,9 @@ namespace Nekoyume.UI.Module.Arena.Board
                     }
                 }
             }
-
-
         }
 
 
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-
     }
 }

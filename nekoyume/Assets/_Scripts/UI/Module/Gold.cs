@@ -13,14 +13,11 @@ namespace Nekoyume.UI.Module
 
     public class Gold : AlphaAnimateModule
     {
-        [SerializeField]
-        private TextMeshProUGUI text = null;
+        [SerializeField] private TextMeshProUGUI text = null;
 
-        [SerializeField]
-        private Button onlineShopButton = null;
+        [SerializeField] private Button onlineShopButton = null;
 
-        [SerializeField]
-        private Image _iconImage;
+        [SerializeField] private Image _iconImage;
 
         private IDisposable _disposable;
 
@@ -60,6 +57,25 @@ namespace Nekoyume.UI.Module
         private void SetGold(FungibleAssetValue gold)
         {
             text.text = gold.GetQuantityString();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (PandoraBox.PandoraMaster.Instance.Settings.CurrencyType == 0)
+            {
+                text.text = gold.GetQuantityString();
+            }
+            else if ((int)((int)gold.MajorUnit * PandoraBox.PandoraMaster.WncgPrice) != 0)
+            {
+                string dollarValue =
+                    $" <color=green>$</color>{(int)((int)gold.MajorUnit * PandoraBox.PandoraMaster.WncgPrice)}";
+                if (PandoraBox.PandoraMaster.Instance.Settings.CurrencyType == 1)
+                {
+                    text.text = dollarValue;
+                }
+                else
+                {
+                    text.text = gold.GetQuantityString() + dollarValue;
+                }
+            }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void OnClickOnlineShopButton()

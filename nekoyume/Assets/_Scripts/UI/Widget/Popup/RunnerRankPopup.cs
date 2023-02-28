@@ -37,7 +37,7 @@ namespace Nekoyume.UI
             base.Awake();
             for (int i = 1; i < TotalLeaderboarCount; i++)
             {
-                Transform ob =  Instantiate(ScrollContent.GetChild(0), ScrollContent);
+                Transform ob = Instantiate(ScrollContent.GetChild(0), ScrollContent);
                 ob.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, (-i * 68) - 34);
             }
             //ScrollContent.anchoredPosition = new Vector2(0, 68 * TotalLeaderboarCount);
@@ -65,8 +65,8 @@ namespace Nekoyume.UI
 
         public void UpdateCurrency()
         {
-            GemsText.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
-            CoinsText.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
+            GemsText.text = Premium.PandoraProfile.Currencies["PG"].ToString();
+            CoinsText.text = Premium.PandoraProfile.Currencies["PC"].ToString();
         }
 
         public void StartRunner()
@@ -104,7 +104,7 @@ namespace Nekoyume.UI
                 RunnerCellContent pContent = new RunnerCellContent()
                 {
                     PlayFabID = result.Leaderboard[i].PlayFabId,
-                    Position = result.Leaderboard[i].Position ,
+                    Position = result.Leaderboard[i].Position,
                     PlayerName = result.Leaderboard[i].DisplayName,
                     Score = result.Leaderboard[i].StatValue
                 };
@@ -117,7 +117,8 @@ namespace Nekoyume.UI
             ResetDateText.text = "Reset Date: <color=red>" + remains;
             LeaderboardLoading.SetActive(false);
 
-            var request = new GetLeaderboardAroundPlayerRequest { StatisticName = PandoraMaster.PanDatabase.RunnerSettings.Name, MaxResultsCount = 1 };
+            var request = new GetLeaderboardAroundPlayerRequest
+                { StatisticName = PandoraMaster.PanDatabase.RunnerSettings.Name, MaxResultsCount = 1 };
             PlayFabClientAPI.GetLeaderboardAroundPlayer(request, OnLeaderboardAroundPlayerSuccess, OnLeaderboardError);
         }
 
@@ -134,6 +135,7 @@ namespace Nekoyume.UI
                 };
                 BestScoreText.text = $"Best Score\n<size=200%><color=green>{item.StatValue} m</color></size>";
             }
+
             if (result.Leaderboard.Count != 0)
                 CurrentPlayerCell.UpdateContent(currentPlayer);
             //else

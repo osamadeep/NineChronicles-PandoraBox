@@ -19,7 +19,16 @@ namespace Nekoyume.PandoraBox
 {
     public class PandoraRunner : MonoBehaviour
     {
-        public enum RunnerState { NewRound, Playing, Dead, GotHit, Pause,Town }
+        public enum RunnerState
+        {
+            NewRound,
+            Playing,
+            Dead,
+            GotHit,
+            Pause,
+            Town
+        }
+
         public RunnerController player;
         public Transform runnerBoss;
         public Transform runnerLevel;
@@ -44,8 +53,8 @@ namespace Nekoyume.PandoraBox
         float dieSpeed = 1;
 
         //for statistics
-        float playTimer=0;
-        float idleTimer=0;
+        float playTimer = 0;
+        float idleTimer = 0;
         int sectionsPassed;
         int gameSeed = 0;
         int avoidMissiles = 0;
@@ -123,25 +132,27 @@ namespace Nekoyume.PandoraBox
                 player.transform.position += new Vector3(0.04f, 0);
                 runnerBoss.position += new Vector3(0.04f, 0);
             }
+
             AudioController.instance.PlaySfx(AudioController.SfxCode.RunnerBoss);
 
             RunnerUI.Show();
-            yield return StartCoroutine(RunnerUI.ShowStartBooster()); 
+            yield return StartCoroutine(RunnerUI.ShowStartBooster());
 
-            if(SelectedUtilitie != null)
+            if (SelectedUtilitie != null)
                 AudioController.instance.PlaySfx(AudioController.SfxCode.BgmGreatSuccess);
             //prepare StartFeatures Function
-            object FuncParam = new {
-                premium = Premium.CurrentPandoraPlayer.IsPremium(),
+            object FuncParam = new
+            {
+                premium = Premium.PandoraProfile.IsPremium(),
                 address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                 block = Game.Game.instance.Agent.BlockIndex,
-                utilitie = SelectedUtilitie != null? SelectedUtilitie.ItemID: "None",
-                currency = SelectedUtilitie != null? SelectedUtilitie.CurrencySTR:"XX",
+                utilitie = SelectedUtilitie != null ? SelectedUtilitie.ItemID : "None",
+                currency = SelectedUtilitie != null ? SelectedUtilitie.CurrencySTR : "XX",
             };
 
             //Get Greenlight from Server
             PlayFabClientAPI.ExecuteCloudScript(
-                new ExecuteCloudScriptRequest {FunctionName = "StartFeatures",FunctionParameter = FuncParam},
+                new ExecuteCloudScriptRequest { FunctionName = "StartFeatures", FunctionParameter = FuncParam },
                 success =>
                 {
                     JsonObject jsonResult = (JsonObject)success.FunctionResult;
@@ -178,14 +189,12 @@ namespace Nekoyume.PandoraBox
                     }
                     else
                     {
-                        PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] -= SelectedUtilitie.ItemPrice; //just UI update instead of request new call
+                        Premium.PandoraProfile.Currencies["PC"] -=
+                            SelectedUtilitie.ItemPrice; //just UI update instead of request new call
                         StartCoroutine(FinishStartAnimation(true));
                     }
                 },
-                failed =>
-                {
-                    Debug.LogError("Failed to StartFeatures!, " + failed.GenerateErrorReport());
-                });
+                failed => { Debug.LogError("Failed to StartFeatures!, " + failed.GenerateErrorReport()); });
         }
 
 
@@ -235,12 +244,12 @@ namespace Nekoyume.PandoraBox
             {
                 learp += Time.deltaTime / 1;
                 yield return new WaitForSeconds(0);
-                LevelSpeed = Mathf.Lerp(1, boostSpeed, learp);// Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
+                LevelSpeed = Mathf.Lerp(1, boostSpeed, learp); // Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
                 SpeedChange();
             }
 
 
-            while (scoreDistance - gameSeed < targetDistance )
+            while (scoreDistance - gameSeed < targetDistance)
             {
                 yield return new WaitForSeconds(0.05f);
                 scoreDistance += 9;
@@ -251,7 +260,7 @@ namespace Nekoyume.PandoraBox
             {
                 learp += Time.deltaTime / 1;
                 yield return new WaitForSeconds(0);
-                LevelSpeed = Mathf.Lerp(boostSpeed,1 , learp);// Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
+                LevelSpeed = Mathf.Lerp(boostSpeed, 1, learp); // Mathf.Clamp(LevelSpeed + boostSpeed, 1, boostSpeed);
                 SpeedChange();
             }
 
@@ -268,7 +277,7 @@ namespace Nekoyume.PandoraBox
         public void CollectCoins(Transform currentCoin)
         {
             UpdateScore(1, 1);
-            AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem,0.3f);
+            AudioController.instance.PlaySfx(AudioController.SfxCode.RewardItem, 0.3f);
             GameObject ob = PickupPooler.instance.GetpooledObject();
             ob.transform.SetParent(transform.Find("PooledObj"));
             ob.transform.position = currentCoin.transform.position;
@@ -277,11 +286,12 @@ namespace Nekoyume.PandoraBox
             ob.SetActive(true);
             currentCoin.gameObject.SetActive(false);
         }
+
         IEnumerator IncreaseSpeed()
         {
             while (true)
             {
-                yield return new WaitForSeconds(20f/ LevelSpeed);
+                yield return new WaitForSeconds(20f / LevelSpeed);
                 if (currentRunnerState == RunnerState.Playing)
                 {
                     LevelSpeed += 0.05f;
@@ -322,21 +332,23 @@ namespace Nekoyume.PandoraBox
                         missileEnemy.WarningSprite.gameObject.SetActive(isVisible);
                         yield return new WaitForSeconds(0.1f);
                     }
+
                     missileEnemy.WarningSprite.gameObject.SetActive(false);
 
                     if (currentRunnerState == RunnerState.Playing)
                     {
-                        missileEnemy.Missile.transform.position = new Vector3(10, missileEnemy.WarningSprite.transform.position.y);
+                        missileEnemy.Missile.transform.position =
+                            new Vector3(10, missileEnemy.WarningSprite.transform.position.y);
                         missileEnemy.Missile.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
                         AudioController.instance.PlaySfx(AudioController.SfxCode.FailedEffect);
                         missileEnemy.Missile.gameObject.SetActive(true);
                     }
-
                 }
             }
 
             //yield return new WaitForSeconds(0);
         }
+
         IEnumerator EnemySpawn()
         {
             bool isCoin = true;
@@ -356,6 +368,7 @@ namespace Nekoyume.PandoraBox
                         {
                             item.gameObject.SetActive(true);
                         }
+
                         currentCoin.position = new Vector3(4, currentCoin.position.y);
                         currentCoin.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
                         currentCoin.gameObject.SetActive(true);
@@ -369,8 +382,8 @@ namespace Nekoyume.PandoraBox
                         currentEnemy.GetComponent<RunnerUnitMovements>().TimeScale = LevelSpeed;
                         currentEnemy.gameObject.SetActive(true);
                     }
-
                 }
+
                 yield return new WaitForSeconds(Random.Range(7f, 10f) / LevelSpeed);
             }
         }
@@ -384,7 +397,6 @@ namespace Nekoyume.PandoraBox
 
         IEnumerator GotRecover(bool DoReduce)
         {
-
             if (DoReduce)
                 life--;
             else
@@ -436,7 +448,7 @@ namespace Nekoyume.PandoraBox
                     {
                         //core
                         block = Game.Game.instance.Agent.BlockIndex,
-                        premium = Premium.CurrentPandoraPlayer.IsPremium(),
+                        premium = Premium.PandoraProfile.IsPremium(),
                         address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
                         //Special
                         utilitie = SelectedUtilitie != null ? SelectedUtilitie.ItemID : "None",
@@ -451,25 +463,23 @@ namespace Nekoyume.PandoraBox
                     };
 
                     PlayFabClientAPI.ExecuteCloudScript(
-                    new ExecuteCloudScriptRequest { FunctionName = "EndFeatures", FunctionParameter = FuncParam },
-                    success =>
-                    {
-                        if (success.FunctionResult.ToString() == "Success")
+                        new ExecuteCloudScriptRequest { FunctionName = "EndFeatures", FunctionParameter = FuncParam },
+                        success =>
                         {
-                            life = gameSeed + 1;
-                            livesBought++;
+                            if (success.FunctionResult.ToString() == "Success")
+                            {
+                                life = gameSeed + 1;
+                                livesBought++;
 
-                            int newPrice = (SelectedUtilitie.ItemPrice * (livesBought - gameSeed));
-                            PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] -= newPrice; //just UI update instead of request new call
-                            StartCoroutine(GotRecover(false));
-                        }
-                        else
-                            EndGame();
-                    },
-                    failed =>
-                    {
-                        Debug.LogError("Score Not Sent!, " + failed.GenerateErrorReport());
-                    });
+                                int newPrice = (SelectedUtilitie.ItemPrice * (livesBought - gameSeed));
+                                Premium.PandoraProfile.Currencies["PC"] -=
+                                    newPrice; //just UI update instead of request new call
+                                StartCoroutine(GotRecover(false));
+                            }
+                            else
+                                EndGame();
+                        },
+                        failed => { Debug.LogError("Score Not Sent!, " + failed.GenerateErrorReport()); });
                 }
                 else
                     EndGame();
@@ -526,7 +536,7 @@ namespace Nekoyume.PandoraBox
                 {
                     //core
                     block = Game.Game.instance.Agent.BlockIndex,
-                    premium = Premium.CurrentPandoraPlayer.IsPremium(),
+                    premium = Premium.PandoraProfile.IsPremium(),
                     address = States.Instance.CurrentAvatarState.agentAddress.ToString(),
 
                     //Special
@@ -549,21 +559,22 @@ namespace Nekoyume.PandoraBox
                 success =>
                 {
                     if (success.FunctionResult.ToString() == "Success")
-                        PandoraMaster.PlayFabInventory.VirtualCurrency["PC"] += scoreCoins - gameSeed; //just UI update instead of request new call
+                        Premium.PandoraProfile.Currencies["PC"] +=
+                            scoreCoins - gameSeed; //just UI update instead of request new call
                     else
-                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, "PandoraBox: sending score <color=red>Failed!</color>",
+                        NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                            "PandoraBox: sending score <color=red>Failed!</color>",
                             NotificationCell.NotificationType.Alert);
 
                     RunnerUI.centerText.gameObject.SetActive(false);
                     RunnerUI.UIElement.SetActive(false);
-                    RunnerUI.FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = (scoreDistance - gameSeed) + "<size=60%>M</size>";
-                    RunnerUI.FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = (scoreCoins - gameSeed).ToString();
+                    RunnerUI.FinalResult.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text =
+                        (scoreDistance - gameSeed) + "<size=60%>M</size>";
+                    RunnerUI.FinalResult.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text =
+                        (scoreCoins - gameSeed).ToString();
                     RunnerUI.FinalResult.SetActive(true);
                 },
-                failed =>
-                {
-                    Debug.LogError("Failed to StartFeatures!, " + failed.GenerateErrorReport());
-                });
+                failed => { Debug.LogError("Failed to StartFeatures!, " + failed.GenerateErrorReport()); });
         }
 
         //IEnumerator CrystalSpawner()
@@ -604,7 +615,7 @@ namespace Nekoyume.PandoraBox
         {
             while (true)
             {
-                yield return new WaitForSeconds(0.1f/LevelSpeed);
+                yield return new WaitForSeconds(0.1f / LevelSpeed);
                 if (currentRunnerState == RunnerState.Playing)
                     UpdateScore(1, 0);
             }

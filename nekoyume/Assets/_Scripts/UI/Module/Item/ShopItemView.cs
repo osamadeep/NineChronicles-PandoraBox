@@ -60,7 +60,8 @@ namespace Nekoyume.UI.Module
             }
 
             // my item
-            baseItemView.myItem.SetActive(model.OrderDigest.SellerAgentAddress ==States.Instance.CurrentAvatarState.agentAddress);
+            baseItemView.myItem.SetActive(model.OrderDigest.SellerAgentAddress ==
+                                          States.Instance.CurrentAvatarState.agentAddress);
 
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -97,14 +98,35 @@ namespace Nekoyume.UI.Module
             baseItemView.CountText.gameObject.SetActive(model.ItemBase.ItemType == ItemType.Material);
             baseItemView.CountText.text = model.OrderDigest.ItemCount.ToString();
 
-            if (model.OrderDigest.ItemCount > 1 && decimal.TryParse(model.OrderDigest.Price.GetQuantityString(), out var price))
+            if (model.OrderDigest.ItemCount > 1 &&
+                decimal.TryParse(model.OrderDigest.Price.GetQuantityString(), out var price))
             {
                 var priceText = decimal.Round(price / model.OrderDigest.ItemCount, 3);
+                //baseItemView.PriceText.text = $"{model.OrderDigest.Price.GetQuantityString()}({priceText})";               
                 baseItemView.PriceText.text = $"{model.OrderDigest.Price.GetQuantityString()}({priceText})";
             }
             else
             {
                 baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if (PandoraBox.PandoraMaster.Instance.Settings.CurrencyType == 0)
+                {
+                    baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString();
+                }
+                else if ((int)((int)model.OrderDigest.Price.MajorUnit * PandoraMaster.WncgPrice) != 0)
+                {
+                    string dollarValue =
+                        $" <color=green>$</color>{(int)((int)model.OrderDigest.Price.MajorUnit * PandoraBox.PandoraMaster.WncgPrice)}";
+                    if (PandoraBox.PandoraMaster.Instance.Settings.CurrencyType == 1)
+                    {
+                        baseItemView.PriceText.text = dollarValue;
+                    }
+                    else
+                    {
+                        baseItemView.PriceText.text = model.OrderDigest.Price.GetQuantityString() + dollarValue;
+                    }
+                }
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 
             model.Selected.Subscribe(b => baseItemView.SelectObject.SetActive(b)).AddTo(_disposables);

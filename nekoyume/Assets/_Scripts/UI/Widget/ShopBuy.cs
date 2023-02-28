@@ -25,18 +25,16 @@ namespace Nekoyume.UI
     public class ShopBuy : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        public Button RefreshButton;
+        [Header("PANDORA CUSTOM FIELDS")] public Button RefreshButton;
         public List<Toggle> EquipmentToggles;
         public List<Toggle> MainToggles;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private Button sellButton;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private Button closeButton;
 
         public BuyView view;
 
@@ -69,7 +67,7 @@ namespace Nekoyume.UI
 
             view.SetAction(ShowBuyPopup);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            RefreshButton.onClick.AddListener(() => { Refresh();});
+            RefreshButton.onClick.AddListener(() => { Refresh(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -98,7 +96,7 @@ namespace Nekoyume.UI
             Find<DataLoadingScreen>().Show();
             Game.Game.instance.Stage.GetPlayer().gameObject.SetActive(false);
 
-            if (!Premium.CurrentPandoraPlayer.IsPremium())
+            if (!Premium.PandoraProfile.IsPremium())
             {
                 foreach (var item in EquipmentToggles)
                     item.isOn = true;
@@ -145,20 +143,22 @@ namespace Nekoyume.UI
                     list.Add(ItemSubType.Food);
 
                 if (MainToggles[1].isOn)
-                    list.AddRange(new List<ItemSubType>{
-                    ItemSubType.Hourglass,
-                    ItemSubType.ApStone,
-                });
+                    list.AddRange(new List<ItemSubType>
+                    {
+                        ItemSubType.Hourglass,
+                        ItemSubType.ApStone,
+                    });
 
                 if (MainToggles[2].isOn)
-                    list.AddRange(new List<ItemSubType>{
-                    ItemSubType.FullCostume,
-                    ItemSubType.HairCostume,
-                    ItemSubType.EarCostume,
-                    ItemSubType.EyeCostume,
-                    ItemSubType.TailCostume,
-                    ItemSubType.Title
-                });
+                    list.AddRange(new List<ItemSubType>
+                    {
+                        ItemSubType.FullCostume,
+                        ItemSubType.HairCostume,
+                        ItemSubType.EarCostume,
+                        ItemSubType.EyeCostume,
+                        ItemSubType.TailCostume,
+                        ItemSubType.Title
+                    });
 
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 //var list = new List<ItemSubType>

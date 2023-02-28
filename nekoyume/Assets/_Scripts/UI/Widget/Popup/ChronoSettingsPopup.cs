@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using Cysharp.Threading.Tasks;
 using Nekoyume.Action;
 using Nekoyume.BlockChain;
 using Nekoyume.Game;
@@ -27,19 +29,13 @@ namespace Nekoyume.UI
 {
     public class ChronoSettingsPopup : PopupWidget
     {
-        [Header("GENERAL")]
-        [SerializeField] List<Image> settingsTabs;
+        [Header("GENERAL")] [SerializeField] List<Image> settingsTabs;
         [SerializeField] List<GameObject> settingsTabsArea;
         [SerializeField] TextMeshProUGUI AvatarNameText;
 
-        AvatarState currentAvatarState;
-        string addressKey;
-        int index;
+        [Space(5)] [Header("STAGE")] [SerializeField]
+        GameObject stageModule;
 
-        [Space(5)]
-
-        [Header("STAGE")]
-        [SerializeField] GameObject stageModule;
         [SerializeField] Image stageOnImage;
         [SerializeField] Image stageOffImage;
 
@@ -57,18 +53,9 @@ namespace Nekoyume.UI
 
         [SerializeField] TMP_InputField sweepStageInput;
 
-        bool IsStage;
-        bool IsStageNotify;
-        bool IsAutoCollect;
-        bool IsAutoSpend;
-        bool IsSweep;
-        int sweepStage;
-        [Space(5)]
+        [Space(5)] [Header("CRAFT")] [SerializeField]
+        GameObject craftModule;
 
-
-
-        [Header("CRAFT")]
-        [SerializeField] GameObject craftModule;
         [SerializeField] Image craftOnImage;
         [SerializeField] Image craftOffImage;
 
@@ -84,21 +71,12 @@ namespace Nekoyume.UI
         [SerializeField] TMP_InputField craftIDInput;
         [SerializeField] Image CraftIconIDImage;
 
-        [SerializeField] Image BasicCraftOnImage;
-        [SerializeField] Image BasicCraftOffImage;
+        [SerializeField] Image PremiumCraftOnImage;
+        [SerializeField] Image PremiumCraftOffImage;
 
-        bool IsCraft;
-        bool IsCraftNotify;
-        bool IsAutoCraft;
-        bool IsCraftFillCrystal;
-        bool IsBasicCraft;
-        int craftID;
-        [Space(5)]
+        [Space(5)] [Header("EVENT")] [SerializeField]
+        GameObject eventModule;
 
-
-
-        [Header("EVENT")]
-        [SerializeField] GameObject eventModule;
         [SerializeField] Image eventOnImage;
         [SerializeField] Image eventOffImage;
 
@@ -109,14 +87,10 @@ namespace Nekoyume.UI
         [SerializeField] Image eventFightOffImage;
 
         [SerializeField] TMP_InputField eventLevelInput;
-        bool IsEvent;
-        bool IsEventNotify;
-        bool IsAutoEvent;
-        int eventLevel;
-        [Space(5)]
 
-        [Header("World Boss")]
-        [SerializeField] GameObject bossModule;
+        [Space(5)] [Header("World Boss")] [SerializeField]
+        GameObject bossModule;
+
         [SerializeField] Image bossOnImage;
         [SerializeField] Image bossOffImage;
 
@@ -125,9 +99,11 @@ namespace Nekoyume.UI
 
         [SerializeField] Image bossFightOnImage;
         [SerializeField] Image bossFightOffImage;
-        bool IsBoss;
-        bool IsBossNotify;
-        bool IsAutoBoss;
+
+
+        AvatarState currentAvatarState;
+        int index;
+        ChronoAvatarSetting currentChronoAvatarSetting;
 
         protected override void Awake()
         {
@@ -138,198 +114,120 @@ namespace Nekoyume.UI
         {
             for (int i = 0; i < settingsTabs.Count; i++)
             {
-                settingsTabs[i].color = i == index? new Color(1, 1, 1, 1): new Color(1, 1, 1, 0.5f);
+                settingsTabs[i].color = i == index ? new Color(1, 1, 1, 1) : new Color(1, 1, 1, 0.5f);
                 settingsTabsArea[i].SetActive(i == index);
             }
         }
 
         public void SaveSettings()
         {
-            PlayerPrefs.SetInt(addressKey, index);
-            //STAGE
-            PlayerPrefs.SetInt(addressKey + "_IsStage", System.Convert.ToInt32(IsStage));
-            PlayerPrefs.SetInt(addressKey + "_IsStageNotify", System.Convert.ToInt32(IsStageNotify));
-            PlayerPrefs.SetInt(addressKey + "_IsAutoCollect", System.Convert.ToInt32(IsAutoCollect));
-            PlayerPrefs.SetInt(addressKey + "_IsAutoSpend", System.Convert.ToInt32(IsAutoSpend));
-            PlayerPrefs.SetInt(addressKey + "_IsSweep", System.Convert.ToInt32(IsSweep));
-            PlayerPrefs.SetInt(addressKey + "_SweepStage", sweepStage);
-
-            //CRAFT
-            PlayerPrefs.SetInt(addressKey + "_IsCraft", System.Convert.ToInt32(IsCraft));
-            PlayerPrefs.SetInt(addressKey + "_IsCraftNotify", System.Convert.ToInt32(IsCraftNotify));
-            PlayerPrefs.SetInt(addressKey + "_IsAutoCraft", System.Convert.ToInt32(IsAutoCraft));
-            PlayerPrefs.SetInt(addressKey + "_IsCraftFillCrystal", System.Convert.ToInt32(IsCraftFillCrystal));
-            PlayerPrefs.SetInt(addressKey + "_IsBasicCraft", System.Convert.ToInt32(IsBasicCraft));
-            PlayerPrefs.SetInt(addressKey + "_CraftID", craftID);
-
-            //EVENT
-            PlayerPrefs.SetInt(addressKey + "_IsEvent", System.Convert.ToInt32(IsEvent));
-            PlayerPrefs.SetInt(addressKey + "_IsEventNotify", System.Convert.ToInt32(IsEventNotify));
-            PlayerPrefs.SetInt(addressKey + "_IsAutoEvent", System.Convert.ToInt32(IsAutoEvent));
-            PlayerPrefs.SetInt(addressKey + "_EventLevel", eventLevel);
-
-            //BOSS
-            PlayerPrefs.SetInt(addressKey + "_IsBoss", System.Convert.ToInt32(IsBoss));
-            PlayerPrefs.SetInt(addressKey + "_IsBossNotify", System.Convert.ToInt32(IsBossNotify));
-            PlayerPrefs.SetInt(addressKey + "_IsAutoBoss", System.Convert.ToInt32(IsAutoBoss));
-
+            var settings = new ChronoAvatarSettings();
+            settings.LoadSettings();
+            settings.SaveSettings(currentChronoAvatarSetting);
+            PandoraUtil.ShowSystemNotification(
+                $"<color=red>{currentAvatarState.name}</color> Chrono settings saved Successfully!",
+                NotificationCell.NotificationType.Information);
             AudioController.PlayClick();
-            Widget.Find<ChronoSlotsPopup>().slots[index].CheckNowSlot();
+            Widget.Find<ChronoSlotsPopup>().slots[index].CheckNowSlot().Forget();
             Close();
         }
 
-        public void Show(AvatarState avatarState,int _index)
+        public void Show(AvatarState avatarState, int _index)
         {
             currentAvatarState = avatarState;
-            addressKey = "_PandoraBox_Chrono_" + currentAvatarState.address;
             index = _index;
 
-            if (PlayerPrefs.HasKey(addressKey))
-            {
-                //STAGE
-                IsStage = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStage", 1));
-                IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
-                IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
-                IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
-                IsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsSweep", 1));
-                sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
-
-                //CRAFT
-                IsCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraft", 0));
-                IsCraftNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftNotify", 1));
-                IsAutoCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCraft", 0));
-                IsCraftFillCrystal = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftFillCrystal", 0));
-                IsBasicCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBasicCraft", 1));
-                craftID = PlayerPrefs.GetInt(addressKey + "_CraftID", 0);
-
-                //EVENT
-                IsEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEvent", 0));
-                IsEventNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEventNotify", 1));
-                IsAutoEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoEvent", 0));
-                eventLevel = PlayerPrefs.GetInt(addressKey + "_EventLevel", 0);
-
-                //BOSS
-                IsBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBoss", 0));
-                IsBossNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBossNotify", 1));
-                IsAutoBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoBoss", 0));
-            }
-            else
-            {
-                //register STAGE variables
-                IsStage = true;
-                IsStageNotify = true;
-                IsAutoCollect = true;
-                IsAutoSpend = false;
-                IsSweep = true;
-                sweepStage = 0;
-
-                //register CRAFT variables
-                IsCraft = false;
-                IsCraftNotify = true;
-                IsAutoCraft = false;
-                IsCraftFillCrystal = false;
-                IsBasicCraft = true;
-                craftID =0;
-
-                //register EVENT variables
-                IsEvent = false;
-                IsEventNotify = true;
-                IsAutoEvent = false;
-                eventLevel = 1;
-
-                //register BOSS variables
-                IsBoss = false;
-                IsBossNotify = true;
-                IsAutoBoss = false;
-            }
+            var settings = new ChronoAvatarSettings();
+            settings.LoadSettings();
+            currentChronoAvatarSetting = settings.GetSettings(currentAvatarState.address.ToString());
 
             //reflect on UI
             AvatarNameText.text = currentAvatarState.NameWithHash + " : " + currentAvatarState.address.ToString();
             SelectTab(0);
 
             //STAGE
-            LoadStage();
-            LoadAutoCollect();
-            LoadAutoSpend();
-            LoadSweep();
-            LoadSweepStage();
-            LoadStageNotify();
+            LoadStage(Convert.ToBoolean(currentChronoAvatarSetting.Stage));
+            LoadStageNotify(Convert.ToBoolean(currentChronoAvatarSetting.StageNotification));
+            LoadAutoCollect(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoCollectProsperity));
+            LoadAutoSpend(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoSpendProsperity));
+            LoadSweep(Convert.ToBoolean(currentChronoAvatarSetting.StageIsSweepAP));
+            LoadSweepStage(currentChronoAvatarSetting.StageSweepLevelIndex);
 
             //CRAFT
-            LoadCraft();
-            LoadCraftNotify();
-            LoadAutoCraft();
-            LoadCraftFillCrystal();
-            LoadCraftID();
-            LoadBasicCraft();
+            LoadCraft(Convert.ToBoolean(currentChronoAvatarSetting.Craft));
+            LoadCraftNotify(Convert.ToBoolean(currentChronoAvatarSetting.CraftNotification));
+            LoadAutoCraft(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine));
+            LoadCraftFillCrystal(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsUseCrystal));
+            LoadCraftID(currentChronoAvatarSetting.CraftItemID);
+            LoadPremiumCraft(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsPremium));
 
             //EVENT
-            LoadEvent();
-            LoadEventAutoFight();
-            LoadEventNotify();
-            LoadEventLevel();
+            LoadEvent(Convert.ToBoolean(currentChronoAvatarSetting.Event));
+            LoadEventAutoFight(Convert.ToBoolean(currentChronoAvatarSetting.EventIsAutoSpendTickets));
+            LoadEventNotify(Convert.ToBoolean(currentChronoAvatarSetting.EventNotification));
+            LoadEventLevel(currentChronoAvatarSetting.EventLevelIndex.ToString());
 
             //EVENT
-            LoadBoss();
-            LoadBossAutoFight();
-            LoadBossNotify();
+            LoadBoss(Convert.ToBoolean(currentChronoAvatarSetting.Boss));
+            LoadBossAutoFight(Convert.ToBoolean(currentChronoAvatarSetting.BosstIsAutoSpendTickets));
+            LoadBossNotify(Convert.ToBoolean(currentChronoAvatarSetting.BossNotification));
 
             base.Show();
         }
 
-        void LoadBoss()
+        void LoadBoss(bool boss)
         {
-            bossOnImage.color = IsBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            bossOffImage.color = !IsBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            bossModule.SetActive(IsBoss);
+            bossOnImage.color = boss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossOffImage.color = !boss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossModule.SetActive(boss);
         }
 
         public void ChangeBoss(bool value)
         {
-            IsBoss = value;
-            LoadBoss();
+            currentChronoAvatarSetting.Boss = Convert.ToInt32(value);
+            LoadBoss(value);
         }
 
-        void LoadBossAutoFight()
+        void LoadBossAutoFight(bool IsAuto)
         {
-            bossFightOnImage.color = IsAutoBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            bossFightOffImage.color = !IsAutoBoss ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossFightOnImage.color = IsAuto ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossFightOffImage.color = !IsAuto ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeBossAutoFight(bool value)
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            IsAutoBoss = value;
-            LoadBossAutoFight();
+            currentChronoAvatarSetting.BosstIsAutoSpendTickets = Convert.ToInt32(value);
+            LoadBossAutoFight(value);
         }
 
-        void LoadBossNotify()
+        void LoadBossNotify(bool notify)
         {
-            bossNotifyOnImage.color = IsBossNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            bossNotifyOffImage.color = !IsBossNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossNotifyOnImage.color = notify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossNotifyOffImage.color = !notify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
         public void ChangeBossNotify(bool value)
         {
-            IsBossNotify = value;
-            LoadBossNotify();
+            currentChronoAvatarSetting.BossNotification = Convert.ToInt32(value);
+            LoadBossNotify(value);
         }
 
-        void LoadEvent()
+        void LoadEvent(bool isEvent)
         {
-            eventOnImage.color = IsEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            eventOffImage.color = !IsEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            eventModule.SetActive(IsEvent);
+            eventOnImage.color = isEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventOffImage.color = !isEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            eventModule.SetActive(isEvent);
         }
 
         public void ChangeEvent(bool value)
         {
-            IsEvent = value;
-            LoadEvent();
+            currentChronoAvatarSetting.Event = Convert.ToInt32(value);
+            LoadEvent(value);
         }
 
-        void LoadEventAutoFight()
+        void LoadEventAutoFight(bool IsAutoEvent)
         {
             eventFightOnImage.color = IsAutoEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             eventFightOffImage.color = !IsAutoEvent ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -339,11 +237,11 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            IsAutoEvent = value;
-            LoadEventAutoFight();
+            currentChronoAvatarSetting.EventIsAutoSpendTickets = Convert.ToInt32(value);
+            LoadEventAutoFight(value);
         }
 
-        void LoadEventNotify()
+        void LoadEventNotify(bool IsEventNotify)
         {
             eventNotifyOnImage.color = IsEventNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             eventNotifyOffImage.color = !IsEventNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -351,13 +249,13 @@ namespace Nekoyume.UI
 
         public void ChangeEventNotify(bool value)
         {
-            IsEventNotify = value;
-            LoadEventNotify();
+            currentChronoAvatarSetting.EventNotification = Convert.ToInt32(value);
+            LoadEventNotify(value);
         }
 
-        void LoadEventLevel()
+        void LoadEventLevel(string eventLevel)
         {
-            eventLevelInput.text = eventLevel.ToString();
+            eventLevelInput.text = eventLevel;
         }
 
         public void ChangeEventLevel()
@@ -368,13 +266,15 @@ namespace Nekoyume.UI
             int newLevel = int.Parse(eventLevelInput.text);
             if (newLevel < 0 || newLevel > 20)
             {
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Event Stage Not Correct!", NotificationCell.NotificationType.Alert);
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Event Stage Not Correct!",
+                    NotificationCell.NotificationType.Alert);
                 return;
             }
-            eventLevel = newLevel;
+
+            currentChronoAvatarSetting.EventLevelIndex = newLevel;
         }
 
-        void LoadCraftID()
+        void LoadCraftID(int craftID)
         {
             craftIDInput.text = craftID.ToString();
             var tableSheets = Game.TableSheets.Instance;
@@ -400,38 +300,41 @@ namespace Nekoyume.UI
                     {
                         if (currentAvatarState.worldInformation.IsStageCleared(equipRow.UnlockStage))
                         {
-                            craftID = tempCraftID; //equip
+                            currentChronoAvatarSetting.CraftItemID = tempCraftID; //equip
                             CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
                         }
                     }
                     else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(tempCraftID, out var consumableRow))
                     {
-                        craftID = tempCraftID; //consumable
+                        currentChronoAvatarSetting.CraftItemID = tempCraftID; //consumable
                         CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
                     }
-                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(tempCraftID, out var eventConsumableRow))
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(tempCraftID,
+                                 out var eventConsumableRow))
                     {
-                        craftID = tempCraftID; //event consumable
+                        currentChronoAvatarSetting.CraftItemID = tempCraftID; //event consumable
                         CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
-        void LoadBasicCraft()
+        void LoadPremiumCraft(bool IsPremium)
         {
-            BasicCraftOnImage.color = IsBasicCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            BasicCraftOffImage.color = !IsBasicCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            PremiumCraftOnImage.color = IsPremium ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            PremiumCraftOffImage.color = !IsPremium ? Color.white : new Color(0.5f, 0.5f, 0.5f);
         }
 
-        public void ChangeBasicCraft(bool value)
+        public void ChangePremiumCraft(bool value)
         {
-            IsBasicCraft = value;
-            LoadBasicCraft();
+            currentChronoAvatarSetting.CraftIsPremium = Convert.ToInt32(value);
+            LoadPremiumCraft(value);
         }
 
-        void LoadCraftFillCrystal()
+        void LoadCraftFillCrystal(bool IsCraftFillCrystal)
         {
             CraftFillCrystalOnImage.color = IsCraftFillCrystal ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             CraftFillCrystalOffImage.color = !IsCraftFillCrystal ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -439,11 +342,11 @@ namespace Nekoyume.UI
 
         public void ChangeCraftFillCrystal(bool value)
         {
-            IsCraftFillCrystal = value;
-            LoadCraftFillCrystal();
+            currentChronoAvatarSetting.CraftIsUseCrystal = Convert.ToInt32(value);
+            LoadCraftFillCrystal(value);
         }
 
-        void LoadAutoCraft()
+        void LoadAutoCraft(bool IsAutoCraft)
         {
             AutoCraftOnImage.color = IsAutoCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             AutoCraftOffImage.color = !IsAutoCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -453,24 +356,24 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            IsAutoCraft = value;
-            LoadAutoCraft();
+            currentChronoAvatarSetting.CraftIsAutoCombine = Convert.ToInt32(value);
+            LoadAutoCraft(value);
         }
 
-        void LoadStage()
+        void LoadStage(bool Stage)
         {
-            stageOnImage.color = IsStage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            stageOffImage.color = !IsStage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            stageModule.SetActive(IsStage);
+            stageOnImage.color = Stage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            stageOffImage.color = !Stage ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            stageModule.SetActive(Stage);
         }
 
         public void ChangeStage(bool value)
         {
-            IsStage = value;
-            LoadStage();
+            currentChronoAvatarSetting.Stage = Convert.ToInt32(value);
+            LoadStage(value);
         }
 
-        void LoadStageNotify()
+        void LoadStageNotify(bool IsStageNotify)
         {
             stageNotifyOnImage.color = IsStageNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             stageNotifyOffImage.color = !IsStageNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -478,11 +381,11 @@ namespace Nekoyume.UI
 
         public void ChangeStageNotify(bool value)
         {
-            IsStageNotify = value;
-            LoadStageNotify();
+            currentChronoAvatarSetting.StageNotification = Convert.ToInt32(value);
+            LoadStageNotify(value);
         }
 
-        void LoadCraft()
+        void LoadCraft(bool IsCraft)
         {
             craftOnImage.color = IsCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             craftOffImage.color = !IsCraft ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -491,11 +394,11 @@ namespace Nekoyume.UI
 
         public void ChangeCraft(bool value)
         {
-            IsCraft = value;
-            LoadCraft();
+            currentChronoAvatarSetting.Craft = Convert.ToInt32(value);
+            LoadCraft(value);
         }
 
-        void LoadCraftNotify()
+        void LoadCraftNotify(bool IsCraftNotify)
         {
             craftNotifyOnImage.color = IsCraftNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             craftNotifyOffImage.color = !IsCraftNotify ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -503,11 +406,11 @@ namespace Nekoyume.UI
 
         public void ChangeCraftNotify(bool value)
         {
-            IsCraftNotify = value;
-            LoadCraftNotify();
+            currentChronoAvatarSetting.CraftNotification = Convert.ToInt32(value);
+            LoadCraftNotify(value);
         }
 
-        void LoadAutoCollect()
+        void LoadAutoCollect(bool IsAutoCollect)
         {
             collectOnImage.color = IsAutoCollect ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             collectOffImage.color = !IsAutoCollect ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -515,11 +418,11 @@ namespace Nekoyume.UI
 
         public void ChangeAutoCollect(bool value)
         {
-            IsAutoCollect = value;
-            LoadAutoCollect();
+            currentChronoAvatarSetting.StageIsAutoCollectProsperity = Convert.ToInt32(value);
+            LoadAutoCollect(value);
         }
 
-        void LoadSweep()
+        void LoadSweep(bool IsSweep)
         {
             sweepOnImage.color = IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             sweepOffImage.color = !IsSweep ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -530,12 +433,12 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            IsSweep = value;
-            sweepStageInput.transform.parent.gameObject.SetActive(IsSweep);
-            LoadSweep();
+            currentChronoAvatarSetting.StageIsSweepAP = Convert.ToInt32(value);
+            sweepStageInput.transform.parent.gameObject.SetActive(value);
+            LoadSweep(value);
         }
 
-        void LoadAutoSpend()
+        void LoadAutoSpend(bool IsAutoSpend)
         {
             spendOnImage.color = IsAutoSpend ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             spendOffImage.color = !IsAutoSpend ? Color.white : new Color(0.5f, 0.5f, 0.5f);
@@ -545,11 +448,11 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            IsAutoSpend = value;
-            LoadAutoSpend();
+            currentChronoAvatarSetting.StageIsAutoSpendProsperity = Convert.ToInt32(value);
+            LoadAutoSpend(value);
         }
 
-        void LoadSweepStage()
+        void LoadSweepStage(int sweepStage)
         {
             sweepStageInput.text = sweepStage.ToString();
         }
@@ -557,10 +460,10 @@ namespace Nekoyume.UI
         public void ChangeSweepStage()
         {
             if (!string.IsNullOrEmpty(sweepStageInput.text))
-                sweepStage = int.Parse(sweepStageInput.text);
-            if (!currentAvatarState.worldInformation.IsStageCleared(sweepStage))
-                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage Not Cleared!", NotificationCell.NotificationType.Alert);
+                currentChronoAvatarSetting.StageSweepLevelIndex = int.Parse(sweepStageInput.text);
+            if (!currentAvatarState.worldInformation.IsStageCleared(currentChronoAvatarSetting.StageSweepLevelIndex))
+                OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Stage Not Cleared!",
+                    NotificationCell.NotificationType.Alert);
         }
-
     }
 }

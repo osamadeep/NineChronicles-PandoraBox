@@ -11,6 +11,8 @@ using Lib9c.Model.Order;
 using Nekoyume.State;
 using System.Threading.Tasks;
 using Nekoyume.Helper;
+using System.Web;
+using Libplanet;
 
 namespace Nekoyume.PandoraBox
 {
@@ -126,19 +128,12 @@ namespace Nekoyume.PandoraBox
             CountTxt.text = $"Members {selectedGuildPlayers.Count}/{maxCount}";
 
             //boosters
-            List<PandoraPlayer> selectedGuildPlayersPandoraProfile = new List<PandoraPlayer>();
+            int boosters = 0;
             foreach (GuildPlayer selectedGuildPlayer in selectedGuildPlayers)
-            {
-                PandoraPlayer tmp = Premium.Pandoraplayers.Find(y =>
-                    y.Address.ToLower() == selectedGuildPlayer.Address.ToLower());
-                if (tmp is null)
-                    continue;
-                else
-                    selectedGuildPlayersPandoraProfile.Add(tmp);
-            }
+                if (Premium.CheckPremium(new Address(selectedGuildPlayer.Address)))
+                    boosters++;
 
-            BoostTxt.text =
-                $"<color=green>+{selectedGuildPlayersPandoraProfile.FindAll(x => x.IsPremium()).Count}</color>";
+            BoostTxt.text = $"<color=green>+{boosters}</color>";
 
             //members details
             GG(selectedGuildPlayers);
@@ -192,7 +187,8 @@ namespace Nekoyume.PandoraBox
                 if (string.IsNullOrEmpty(member.AvatarAddress))
                 {
                     gList.Add(new playerRecord(member.Rank, 0, 0,
-                        "(<color=red>!</color>)" + member.Address.Substring(0, 6).ToLower()));
+                        "(<color=red>!</color>)" + member.Address.Substring(0, 6).ToLower(),
+                        new Address(member.Address)));
                     continue;
                 }
 
@@ -201,10 +197,12 @@ namespace Nekoyume.PandoraBox
                         new Libplanet.Address(member.AvatarAddress.Substring(2).ToLower()));
                 if (!exist)
                     gList.Add(new playerRecord(member.Rank, 0, 0,
-                        "(<color=red>!</color>)" + member.Address.Substring(0, 6).ToLower()));
+                        "(<color=red>!</color>)" + member.Address.Substring(0, 6).ToLower(),
+                        new Address(member.Address)));
                 else
                 {
-                    gList.Add(new playerRecord(member.Rank, avatarState.level, 100, avatarState.name)); //avatarState.GetCP()
+                    gList.Add(new playerRecord(member.Rank, avatarState.level, 100, avatarState.name,
+                        new Address(member.Address))); //avatarState.GetCP()
                     totalCP += 100;
                     totalLevel += avatarState.level;
                 }
@@ -216,7 +214,7 @@ namespace Nekoyume.PandoraBox
             //fill leader
             playerRecord leader = gList.Find(x => x.Rank == 100);
             membersText += "-= <color=green> LEADER </color> =-";
-            membersText += $"\n<color=green>{leader.Level}</color> " + leader.Name + "\n";
+            membersText += GetMemberName(leader);
             gList.Remove(leader);
 
             //Officers
@@ -230,7 +228,7 @@ namespace Nekoyume.PandoraBox
                 Officers.Sort((a, b) => b.Level.CompareTo(a.Level));
                 foreach (playerRecord member in Officers)
                 {
-                    membersText += $"\n<color=green>{member.Level}</color> " + member.Name;
+                    membersText += GetMemberName(member);
                 }
 
                 gList.RemoveAll(x => x.Rank == 50);
@@ -241,10 +239,19 @@ namespace Nekoyume.PandoraBox
             gList.Sort((a, b) => b.Level.CompareTo(a.Level));
             foreach (playerRecord member in gList)
             {
-                membersText += $"\n<color=green>{member.Level}</color> " + member.Name;
+                membersText += GetMemberName(member);
             }
 
             return membersText;
+        }
+
+        string GetMemberName(playerRecord member)
+        {
+            if (Premium.CheckPremium(member.Address))
+                return $"\n<color=green>{member.Level}</color=#FF7800> " + member.Name +
+                       "  <sprite name=UI_main_icon_star>\n"; // "\U0001F601" + "\n";
+            else
+                return $"\n<color=green>{member.Level}</color> " + member.Name + "\n";
         }
 
         public void ContactGuild()
@@ -260,13 +267,15 @@ namespace Nekoyume.PandoraBox
             public string Name { set; get; }
             public int Rank { set; get; }
             public int CP { set; get; }
+            public Address Address { set; get; }
 
-            public playerRecord(int rank, int lv, int cp, string name)
+            public playerRecord(int rank, int lv, int cp, string name, Address address)
             {
                 Level = lv;
                 Name = name;
                 Rank = rank;
                 CP = cp;
+                Address = address;
             }
         }
     }

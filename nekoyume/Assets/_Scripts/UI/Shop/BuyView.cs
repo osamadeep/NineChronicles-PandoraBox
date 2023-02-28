@@ -36,8 +36,7 @@ namespace Nekoyume
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        public UnityEngine.UI.Toggle PriceToggle;
+        [Header("PANDORA CUSTOM FIELDS")] public UnityEngine.UI.Toggle PriceToggle;
         [SerializeField] private UnityEngine.UI.Toggle SpellToggle;
         [SerializeField] private TMP_InputField AddressTxt = null;
 
@@ -45,9 +44,20 @@ namespace Nekoyume
         [SerializeField] private TMP_Dropdown IsLessDrop = null;
         [SerializeField] private TMP_Dropdown ItemElementType = null;
         [SerializeField] private TMP_Dropdown StarCountsDrop = null;
-        public GameObject PandoraLoading;
 
+        [SerializeField] private GameObject SelectedOriginalVFX;
+        [SerializeField] private GameObject SelectedPandoraVFX;
+        [SerializeField] private Button sortPandoraButton;
+        [SerializeField] private Button sortOrderPandoraButton;
+        [SerializeField] private RectTransform sortOrderPandoraIcon = null;
+        private Animator _sortPandoraAnimator;
+        private Animator _sortOrderPandoraAnimator;
+        private TextMeshProUGUI _sortPandoraText;
+
+
+        int PandoraExtraIndexStart = 4;
         public UnityEngine.UI.Toggle World6Toggle;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField]
@@ -63,14 +73,11 @@ namespace Nekoyume
 
         [SerializeField] private Button resetButton;
 
-        [SerializeField]
-        private Button historyButton;
+        [SerializeField] private Button historyButton;
 
-        [SerializeField]
-        private Button showCartButton;
+        [SerializeField] private Button showCartButton;
 
-        [SerializeField]
-        private Toggle levelLimitToggle;
+        [SerializeField] private Toggle levelLimitToggle;
 
         [SerializeField] private RectTransform sortOrderIcon = null;
 
@@ -184,6 +191,11 @@ namespace Nekoyume
             _resetAnimator = resetButton.GetComponent<Animator>();
 
             _sortText = sortButton.GetComponentInChildren<TextMeshProUGUI>();
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            _sortPandoraAnimator = sortPandoraButton.GetComponent<Animator>();
+            _sortOrderPandoraAnimator = sortOrderPandoraButton.GetComponent<Animator>();
+            _sortPandoraText = sortPandoraButton.GetComponentInChildren<TextMeshProUGUI>();
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var tableSheets = Game.Game.instance.TableSheets;
             _itemIds.AddRange(tableSheets.EquipmentItemSheet.Values.Select(x => x.Id));
             _itemIds.AddRange(tableSheets.ConsumableItemSheet.Values.Select(x => x.Id));
@@ -196,10 +208,7 @@ namespace Nekoyume
                     "UI_ALERT_NOT_IMPLEMENTED_CONTENT");
             });
 
-            showCartButton.onClick.AddListener(() =>
-            {
-                _mode.SetValueAndForceNotify(BuyMode.Multiple);
-            });
+            showCartButton.onClick.AddListener(() => { _mode.SetValueAndForceNotify(BuyMode.Multiple); });
 
             cartView.Set(() =>
                 {
@@ -234,20 +243,23 @@ namespace Nekoyume
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            PriceToggle.onValueChanged.AddListener(_ => {UpdateView();});
-            SpellToggle.onValueChanged.AddListener(_ => {UpdateView();});
+            PriceToggle.onValueChanged.AddListener(_ => { UpdateView(); });
+            SpellToggle.onValueChanged.AddListener(_ => { UpdateView(); });
             World6Toggle.onValueChanged.AddListener(_ =>
             {
                 if (World6Toggle.isOn)
                     World6Toggle.isOn = Premium.PANDORA_CheckPremium();
-                UpdateView();});
-            priceValueTxt.onValueChanged.AddListener(_ => {
+                UpdateView();
+            });
+            priceValueTxt.onValueChanged.AddListener(_ =>
+            {
                 if (priceValueTxt.text.Length > 0)
-                    UpdateView();});
+                    UpdateView();
+            });
             IsLessDrop.onValueChanged.AddListener(_ => { UpdateView(); });
-            ItemElementType.onValueChanged.AddListener(_ => { UpdateView();});
-            StarCountsDrop.onValueChanged.AddListener(_ => { UpdateView();});
-            AddressTxt.onValueChanged.AddListener(_ => { UpdateView();});
+            ItemElementType.onValueChanged.AddListener(_ => { UpdateView(); });
+            StarCountsDrop.onValueChanged.AddListener(_ => { UpdateView(); });
+            AddressTxt.onValueChanged.AddListener(_ => { UpdateView(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -301,12 +313,38 @@ namespace Nekoyume
                 }
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            sortPandoraButton.onClick.AddListener(() =>
+            {
+                var count = Enum.GetNames(typeof(Nekoyume.EnumType.ShopSortFilter)).Length;
+                int selected = (int)_selectedSortFilter.Value;
+                //_selectedSortFilter.Value = (int)_selectedSortFilter.Value < (count + PandoraExtraIndexStart) - 1
+                //    ? _selectedSortFilter.Value + 1
+                //    : ShopSortFilter.Time;
+                _selectedSortFilter.Value = (Nekoyume.EnumType.ShopSortFilter)UnityEngine.Mathf.Clamp(
+                    selected < count - 1 ? selected + 1 : PandoraExtraIndexStart, PandoraExtraIndexStart,
+                    Enum.GetNames(typeof(Nekoyume.EnumType.ShopSortFilter)).Length);
+                SelectedOriginalVFX.SetActive((int)_selectedSortFilter.Value < PandoraExtraIndexStart);
+                SelectedPandoraVFX.SetActive((int)_selectedSortFilter.Value >= PandoraExtraIndexStart);
+            });
+            sortOrderPandoraButton.onClick.AddListener(() => { _isAscending.Value = !_isAscending.Value; });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+
             sortButton.onClick.AddListener(() =>
             {
                 var count = Enum.GetNames(typeof(Nekoyume.EnumType.ShopSortFilter)).Length;
-                _selectedSortFilter.Value = (int)_selectedSortFilter.Value < count - 1
-                    ? _selectedSortFilter.Value + 1
-                    : 0;
+                //_selectedSortFilter.Value = (int)_selectedSortFilter.Value < count - 1
+                //    ? _selectedSortFilter.Value + 1
+                //    : 0;
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                int selected = (int)_selectedSortFilter.Value;
+                _selectedSortFilter.Value = (Nekoyume.EnumType.ShopSortFilter)UnityEngine.Mathf.Clamp(
+                    selected < (count - PandoraExtraIndexStart) ? selected + 1 : 0, 0, count - PandoraExtraIndexStart);
+
+                SelectedOriginalVFX.SetActive((int)_selectedSortFilter.Value < PandoraExtraIndexStart);
+                SelectedPandoraVFX.SetActive((int)_selectedSortFilter.Value >= PandoraExtraIndexStart);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             });
             sortOrderButton.onClick.AddListener(() => { _isAscending.Value = !_isAscending.Value; });
             searchButton.onClick.AddListener(OnSearch);
@@ -326,13 +364,21 @@ namespace Nekoyume
             _selectedSubTypeFilter.Subscribe(_ => UpdateView()).AddTo(gameObject);
             _selectedSortFilter.Subscribe(filter =>
             {
-                _sortText.text = L10nManager.Localize($"UI_{filter.ToString().ToUpper()}");
+                //_sortText.text = L10nManager.Localize($"UI_{filter.ToString().ToUpper()}");
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                if ((int)filter < PandoraExtraIndexStart)
+                    _sortText.text = L10nManager.Localize($"UI_{filter.ToString().ToUpper()}");
+                else
+                    _sortPandoraText.text = L10nManager.Localize($"UI_{filter.ToString().ToUpper()}");
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
                 UpdateView();
             }).AddTo(gameObject);
             _selectedItemIds.Subscribe(_ => UpdateView()).AddTo(gameObject);
             _isAscending.Subscribe(v =>
             {
                 sortOrderIcon.localScale = new Vector3(1, v ? 1 : -1, 1);
+                sortOrderPandoraIcon.localScale = new Vector3(1, v ? 1 : -1, 1); //|||||||||||||| PANDORA
                 UpdateView();
             }).AddTo(gameObject);
             _levelLimit.Subscribe(_ => UpdateView()).AddTo(gameObject);
@@ -474,7 +520,7 @@ namespace Nekoyume
             {
                 return item.ItemBase.ItemType == ItemType.Equipment
                     ? CrystalCalculator.CalculateCrystal(
-                            new[] {(Equipment) item.ItemBase},
+                            new[] { (Equipment)item.ItemBase },
                             false,
                             TableSheets.Instance.CrystalEquipmentGrindingSheet,
                             TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
@@ -485,7 +531,6 @@ namespace Nekoyume
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-
 
 
             if (PriceToggle.isOn)
@@ -516,18 +561,22 @@ namespace Nekoyume
             if (SpellToggle.isOn)
             {
                 models = models.Where(x =>
-                    x.ItemBase.ItemType == Model.Item.ItemType.Equipment && (x.ItemBase as Model.Item.Equipment).Skills.Count > 0).ToList();
+                    x.ItemBase.ItemType == Model.Item.ItemType.Equipment &&
+                    (x.ItemBase as Model.Item.Equipment).Skills.Count > 0).ToList();
             }
 
             if (StarCountsDrop.value != 0)
             {
                 models = models.Where(x => x.ItemBase.ItemType == Model.Item.ItemType.Equipment &&
-                    ((x.ItemBase as Model.Item.Equipment).Skills.Count + (new ItemOptionInfo(x.ItemBase as Model.Item.Equipment).StatOptions.Sum(y => y.count)) == StarCountsDrop.value)).ToList();
+                                           ((x.ItemBase as Model.Item.Equipment).Skills.Count +
+                                               (new ItemOptionInfo(x.ItemBase as Model.Item.Equipment).StatOptions.Sum(
+                                                   y => y.count)) == StarCountsDrop.value)).ToList();
             }
 
-            if (World6Toggle.isOn && Premium.CurrentPandoraPlayer.IsPremium())
+            if (World6Toggle.isOn && Premium.PandoraProfile.IsPremium())
             {
-                List<int> world6IDs = new List<int> {
+                List<int> world6IDs = new List<int>
+                {
                     //War Sword
                     10140000, 10141000, 10142000, 10143000, 10144000,
                     //Legendary Belt
@@ -553,6 +602,7 @@ namespace Nekoyume
                     models = models.Where(x =>
                         _selectedItemIds.Value.Exists(y => x.ItemBase.Id.Equals(y))).ToList();
                 }
+
                 if (_levelLimit.Value)
                 {
                     models = models.Where(x => Util.IsUsableItem(x.ItemBase)).ToList();
@@ -561,8 +611,9 @@ namespace Nekoyume
 
             if (!string.IsNullOrEmpty(AddressTxt.text))
             {
-                if (Premium.CurrentPandoraPlayer.IsPremium())
-                    models = models.Where(x => x.OrderDigest.SellerAgentAddress.ToString().ToLower() == AddressTxt.text.ToLower()).ToList();
+                if (Premium.PandoraProfile.IsPremium())
+                    models = models.Where(x =>
+                        x.OrderDigest.SellerAgentAddress.ToString().ToLower() == AddressTxt.text.ToLower()).ToList();
             }
 
 
@@ -574,8 +625,10 @@ namespace Nekoyume
                     ? models.OrderBy(x => x.OrderDigest.CombatPoint).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.CombatPoint).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Price => _isAscending.Value
-                    ? models.OrderBy(x => ((int)x.OrderDigest.Price.RawValue/100f) / ((int)x.OrderDigest.ItemCount/100f)).ToList()
-                    : models.OrderByDescending(x => ((int)x.OrderDigest.Price.RawValue / 100f) / ((int)x.OrderDigest.ItemCount / 100f)).ToList(),
+                    ? models.OrderBy(x =>
+                        ((int)x.OrderDigest.Price.RawValue / 100f) / ((int)x.OrderDigest.ItemCount / 100f)).ToList()
+                    : models.OrderByDescending(x =>
+                        ((int)x.OrderDigest.Price.RawValue / 100f) / ((int)x.OrderDigest.ItemCount / 100f)).ToList(),
                 Nekoyume.EnumType.ShopSortFilter.Class => _isAscending.Value
                     ? models.OrderBy(x => x.Grade)
                         .ThenByDescending(x => x.ItemBase.ItemType)
@@ -586,11 +639,12 @@ namespace Nekoyume
                 Nekoyume.EnumType.ShopSortFilter.Crystal => _isAscending.Value
                     ? models.OrderBy(GetCrystalPerPrice).ToList()
                     : models.OrderByDescending(GetCrystalPerPrice).ToList(),
-                Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SHOP_TimeFilter(_isAscending, models),            
+                Nekoyume.EnumType.ShopSortFilter.Time => PandoraBox.Premium.SHOP_TimeFilter(_isAscending, models),
                 Nekoyume.EnumType.ShopSortFilter.Level => _isAscending.Value
                     ? models.OrderBy(x => x.OrderDigest.Level).ToList()
                     : models.OrderByDescending(x => x.OrderDigest.Level).ToList(),
-                Nekoyume.EnumType.ShopSortFilter.PandoraScore => PandoraBox.Premium.SHOP_PandoraScoreFilter(_isAscending, models),
+                Nekoyume.EnumType.ShopSortFilter.PandoraScore => PandoraBox.Premium.SHOP_PandoraScoreFilter(
+                    _isAscending, models),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -605,6 +659,10 @@ namespace Nekoyume
                 _sortAnimator.Play(_hashNormal);
                 _sortOrderAnimator.Play(_hashNormal);
                 _levelLimitAnimator.Play(_hashNormal);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                _sortPandoraAnimator.Play(_hashNormal);
+                _sortOrderPandoraAnimator.Play(_hashNormal);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             else
             {
@@ -615,6 +673,10 @@ namespace Nekoyume
                 _sortAnimator.Play(hash);
                 _sortOrderAnimator.Play(hash);
                 _levelLimitAnimator.Play(hash);
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                _sortPandoraAnimator.Play(hash);
+                _sortOrderPandoraAnimator.Play(hash);
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 
             return loading.activeSelf;

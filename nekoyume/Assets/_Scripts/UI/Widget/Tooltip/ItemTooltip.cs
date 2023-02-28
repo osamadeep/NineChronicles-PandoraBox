@@ -26,8 +26,9 @@ namespace Nekoyume.UI
     public abstract class ItemTooltip : NewVerticalTooltipWidget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI PandoraScoreTxt;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI PandoraScoreTxt;
+
         [SerializeField] private TextMeshProUGUI OwnerName;
         [SerializeField] private TextMeshProUGUI CrystalValueTxt;
         public TextMeshProUGUI MarketPriceText;
@@ -44,11 +45,9 @@ namespace Nekoyume.UI
 
         [SerializeField] protected ConditionalButton submitButton;
 
-        [SerializeField]
-        private Button enhancementButton;
+        [SerializeField] private Button enhancementButton;
 
-        [SerializeField]
-        protected ItemTooltipBuy buy;
+        [SerializeField] protected ItemTooltipBuy buy;
 
         [SerializeField] protected ItemTooltipSell sell;
 
@@ -58,11 +57,9 @@ namespace Nekoyume.UI
 
         [SerializeField] protected Button descriptionButton;
 
-        [SerializeField]
-        protected GameObject submitButtonContainer;
+        [SerializeField] protected GameObject submitButtonContainer;
 
-        [SerializeField]
-        protected AcquisitionPlaceDescription acquisitionPlaceDescription;
+        [SerializeField] protected AcquisitionPlaceDescription acquisitionPlaceDescription;
 
         private readonly List<IDisposable> _disposablesForModel = new();
 
@@ -86,21 +83,21 @@ namespace Nekoyume.UI
 
             if (Input.GetKeyDown(KeyCode.M))
             {
-                if (PandoraMaster.CurrentShopSellerAvatar != null)
-                {
-                    PandoraPlayer PandoraSellerPlayer = Premium.Pandoraplayers.Find(y =>
-                                        y.Address.ToLower() == PandoraMaster.CurrentShopSellerAvatar.agentAddress.ToString().ToLower());
-                    if (!(PandoraSellerPlayer is null)  && PandoraSellerPlayer.IsPremium())
-                    {
-                        Application.OpenURL("https://discordapp.com/users/" + "00000"); // PandoraSellerPlayer.DiscordID);
-                    }
-                    else
-                        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player Not Premium!",
-                            NotificationCell.NotificationType.Alert);
-                }
-                else
-                    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This item Belong to you!",
-                        NotificationCell.NotificationType.Alert);
+                PandoraUtil.ShowSystemNotification("Message owner feature coming soon!",
+                    NotificationCell.NotificationType.Information);
+                //if (PandoraMaster.CurrentShopSellerAvatar != null)
+                //{
+                //    if (!Premium.CheckPremium(PandoraMaster.CurrentShopSellerAvatar.agentAddress))
+                //    {
+                //        Application.OpenURL("https://discordapp.com/users/" + "00000"); // PandoraSellerPlayer.DiscordID);
+                //    }
+                //    else
+                //        OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Player Not Premium!",
+                //            NotificationCell.NotificationType.Alert);
+                //}
+                //else
+                //    OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: This item Belong to you!",
+                //        NotificationCell.NotificationType.Alert);
             }
 
             if (Input.GetKeyDown(KeyCode.C))
@@ -114,24 +111,23 @@ namespace Nekoyume.UI
             if (Input.GetKeyDown(KeyCode.S))
             {
                 //check client-side if cost is enough
-                if (PandoraMaster.PlayFabInventory.VirtualCurrency["PG"] < PandoraMaster.PanDatabase.ShopFeaturePrice)
+                if (Premium.PandoraProfile.Currencies["PG"] < PandoraMaster.PanDatabase.ShopFeaturePrice)
                 {
-                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System, $"PandoraBox: You dont have {PandoraMaster.PanDatabase.ShopFeaturePrice} Pandora Gems!"
+                    NotificationSystem.Push(Nekoyume.Model.Mail.MailType.System,
+                        $"PandoraBox: You dont have {PandoraMaster.PanDatabase.ShopFeaturePrice} Pandora Gems!"
                         , NotificationCell.NotificationType.Alert);
                 }
                 else
                 {
                     if (currentItemBase is ITradableItem tradableItem)
                     {
-                        
                         if (currentItemBase is INonFungibleItem nonFungibleItem)
                         {
-                            string content = $"Are you sure to spend <color=#76F3FE><b>{PandoraMaster.PanDatabase.ShopFeaturePrice} " +
+                            string content =
+                                $"Are you sure to spend <color=#76F3FE><b>{PandoraMaster.PanDatabase.ShopFeaturePrice} " +
                                 $"Pandora Gems</b></color> to Feature this item in market for 36500 Blocks(5 days)?";
                             Find<TwoButtonSystem>().Show(content, "Yes", "No",
-                            (() => {
-                                Premium.SHOP_FeatureItem(nonFungibleItem.NonFungibleId.ToString());
-                            }));
+                                (() => { Premium.SHOP_FeatureItem(nonFungibleItem.NonFungibleId.ToString()); }));
                         }
                     }
                 }
@@ -139,7 +135,7 @@ namespace Nekoyume.UI
 
             if (Input.GetKeyDown(KeyCode.I))
             {
-                if (!Premium.CurrentPandoraPlayer.IsPremium())
+                if (!Premium.PandoraProfile.IsPremium())
                 {
                     OneLineSystem.Push(MailType.System,
                         "<color=green>Pandora Box</color>: This is Premium Feature!",
@@ -184,13 +180,14 @@ namespace Nekoyume.UI
 
         string GetItemInfo()
         {
-            AvatarState ownerAvatarState = PandoraMaster.CurrentShopSellerAvatar == null ? States.Instance.CurrentAvatarState : PandoraMaster.CurrentShopSellerAvatar;
+            AvatarState ownerAvatarState = PandoraMaster.CurrentShopSellerAvatar == null
+                ? States.Instance.CurrentAvatarState
+                : PandoraMaster.CurrentShopSellerAvatar;
 
             string itemString = "===== Pandora Item Information =====";
 
-            if (Premium.CurrentPandoraPlayer.IsPremium())
+            if (Premium.PandoraProfile.IsPremium())
             {
-                PandoraPlayer currentPandoraPlayer = PandoraMaster.GetPandoraPlayer(ownerAvatarState.agentAddress.ToString());
                 itemString += "\nOwner Avatar Name    : " + ownerAvatarState.NameWithHash;
                 itemString += "\nOwner Agent  Address : " + ownerAvatarState.agentAddress;
                 itemString += "\nOwner Avatar Address : " + ownerAvatarState.address;
@@ -227,6 +224,7 @@ namespace Nekoyume.UI
                     itemString += "\nItem Guid            : " + nonFungibleItem.NonFungibleId;
                     itemString += "\nItem Unique address  : " + Addresses.GetItemAddress(nonFungibleItem.NonFungibleId);
                 }
+
                 try
                 {
                     itemString += "\nItem Shop ID         : " + currentShopItem.OrderDigest.OrderId;
@@ -234,7 +232,9 @@ namespace Nekoyume.UI
                     if (currentShopItem.OrderDigest.ItemCount > 1)
                         itemString += "\nItem Count           : " + currentShopItem.OrderDigest.ItemCount;
                 }
-                catch { }
+                catch
+                {
+                }
             }
 
             itemString += "\nCurrent Time (Utc)   : " + DateTime.UtcNow;
@@ -274,7 +274,7 @@ namespace Nekoyume.UI
 
         void SetStatsPercentage()
         {
-            if (!Premium.CurrentPandoraPlayer.IsPremium())
+            if (!Premium.PandoraProfile.IsPremium())
                 return;
             //ToDO: Not Optimize way to get the stats
             Transform content = panel
@@ -300,9 +300,11 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level,out float percent1);
+
+                statView.valueText.text +=
+                    Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent1);
                 if (stars == 1)
-                    PandoraScore += (Mathf.Clamp(percent1,0,130) * 0.25f);
+                    PandoraScore += (Mathf.Clamp(percent1, 0, 130) * 0.25f);
                 else if (stars == 2)
                     PandoraScore += (Mathf.Clamp(percent1, 0, 130) * 0.5f);
             }
@@ -316,7 +318,9 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent2);
+
+                statView.valueText.text +=
+                    Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent2);
                 if (stars == 1)
                     PandoraScore += (Mathf.Clamp(percent2, 0, 130) * 0.25f);
                 else if (stars == 2)
@@ -332,7 +336,9 @@ namespace Nekoyume.UI
                     if (star.gameObject.activeInHierarchy)
                         stars++;
                 }
-                statView.valueText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent3);
+
+                statView.valueText.text +=
+                    Premium.SHOP_GetStatePercentage(currentItemBase.Id, statView, stars, level, out float percent3);
                 if (stars == 1)
                     PandoraScore += (Mathf.Clamp(percent3, 0, 130) * 0.25f);
                 else if (stars == 2)
@@ -342,7 +348,8 @@ namespace Nekoyume.UI
             if (content.Find("SkillView").gameObject.activeInHierarchy)
             {
                 var skillView = content.Find("SkillView").GetComponent<UI.Module.SkillView>();
-                skillView.powerText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, null, 1, level, out float percent4,skillView);
+                skillView.powerText.text += Premium.SHOP_GetStatePercentage(currentItemBase.Id, null, 1, level,
+                    out float percent4, skillView);
                 if (percent4 == 0 || percent4 == 100)
                     PandoraScore += 25;
                 else
@@ -351,13 +358,17 @@ namespace Nekoyume.UI
 
             PandoraScore = Mathf.Clamp(PandoraScore, 0, 130);
             if (PandoraScore >= 80)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Excellent</color></size>";
+                PandoraScoreTxt.text =
+                    $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Excellent</color></size>";
             else if (PandoraScore >= 60 && PandoraScore < 80)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Good</color></size>";
+                PandoraScoreTxt.text =
+                    $"<size=80%>Pandora Score: </size><color=green>{(int)PandoraScore}<size=80%>% Good</color></size>";
             else if (PandoraScore >= 40 && PandoraScore < 60)
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=#FF4900>{(int)PandoraScore}<size=80%>% Fair</color></size>";
+                PandoraScoreTxt.text =
+                    $"<size=80%>Pandora Score: </size><color=#FF4900>{(int)PandoraScore}<size=80%>% Fair</color></size>";
             else
-                PandoraScoreTxt.text = $"<size=80%>Pandora Score: </size><color=red>{(int)PandoraScore}<size=80%>% Low</color></size>";
+                PandoraScoreTxt.text =
+                    $"<size=80%>Pandora Score: </size><color=red>{(int)PandoraScore}<size=80%>% Low</color></size>";
         }
 
         string GetItemMainStats()
@@ -477,7 +488,7 @@ namespace Nekoyume.UI
                 else
                 {
                     int maxCount = 2;
-                    if (Premium.CurrentPandoraPlayer.IsPremium())
+                    if (Premium.PandoraProfile.IsPremium())
                         maxCount = 15;
 
                     if (PandoraMaster.FavItems.Count > maxCount)
@@ -505,18 +516,23 @@ namespace Nekoyume.UI
             }
         }
 
-        void CheckCrystal(ItemBase item)
+        void CheckCrystal(ItemBase item, int price = 0)
         {
             CrystalValueTxt.gameObject.SetActive(item.ItemType == ItemType.Equipment);
             if (item.ItemType == ItemType.Equipment)
             {
                 List<Equipment> grindList = new List<Equipment>();
                 grindList.Add(item as Equipment);
-                CrystalValueTxt.text = "<color=green>+" + CrystalCalculator.CalculateCrystal(grindList,
+                var totalValue = CrystalCalculator.CalculateCrystal(grindList,
                     false,
                     TableSheets.Instance.CrystalEquipmentGrindingSheet,
                     TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
-                    States.Instance.StakingLevel).MajorUnit + "</color>";
+                    States.Instance.StakingLevel).MajorUnit;
+                if (price == 0)
+                    CrystalValueTxt.text = "<color=green>+" + totalValue + "</color>";
+                else
+                    CrystalValueTxt.text =
+                        "<color=green>+" + totalValue + "</color>" + $"({(int)(totalValue / price)})";
             }
         }
 
@@ -696,7 +712,7 @@ namespace Nekoyume.UI
             currentItemBase = item.ItemBase;
             var order = Util.GetOrder(item.OrderDigest.OrderId);
             OwnerName.gameObject.SetActive(false);
-            
+
 #if UNITY_EDITOR
             Debug.LogError(item.OrderDigest.OrderId);
 #endif
@@ -740,12 +756,12 @@ namespace Nekoyume.UI
             _onClose = onClose;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            CheckCrystal(item.ItemBase);
+            CheckCrystal(item.ItemBase, (int)item.OrderDigest.Price.MajorUnit);
             currentShopItem = item;
             OwnerName.gameObject.SetActive(false);
             currentItemBase = item.ItemBase;
             SetItemOwner(item.OrderDigest.OrderId);
-            
+
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             scrollbar.value = 1f;

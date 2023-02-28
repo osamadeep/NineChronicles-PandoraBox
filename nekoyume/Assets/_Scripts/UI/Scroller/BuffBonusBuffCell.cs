@@ -8,17 +8,13 @@ namespace Nekoyume.UI.Scroller
 {
     public class BuffBonusBuffCell : MonoBehaviour
     {
-        [SerializeField]
-        private BonusBuffViewDataScriptableObject bonusBuffViewData;
+        [SerializeField] private BonusBuffViewDataScriptableObject bonusBuffViewData;
 
-        [SerializeField]
-        private Image gradeIconImage;
+        [SerializeField] private Image gradeIconImage;
 
-        [SerializeField]
-        private Image buffIconImage;
+        [SerializeField] private Image buffIconImage;
 
-        [SerializeField]
-        private TextMeshProUGUI buffNameText;
+        [SerializeField] private TextMeshProUGUI buffNameText;
 
         public void Set(CrystalRandomBuffSheet.Row itemData)
         {
@@ -42,11 +38,13 @@ namespace Nekoyume.UI.Scroller
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         CrystalRandomBuffSheet.Row itemDataSimulation;
+
         public void SetSimulateBuff()
         {
             if (!Premium.PANDORA_CheckPremium())
                 return;
-            PandoraUtil.ShowSystemNotification(1002, NotificationCell.NotificationType.Information);
+            PandoraUtil.ShowSystemNotification("Custom Crystal Buff <color=green>Selected</color>!",
+                NotificationCell.NotificationType.Information);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuff", itemDataSimulation.Id);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuffSkillId", itemDataSimulation.SkillId);
             PlayerPrefs.SetInt("_PandoraBox_PVE_SelectedCrystalBuffRank", (int)itemDataSimulation.Rank);

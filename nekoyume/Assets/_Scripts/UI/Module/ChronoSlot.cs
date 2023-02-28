@@ -32,8 +32,9 @@ namespace Nekoyume.UI.Module
 
     public class ChronoSlot : MonoBehaviour
     {
-        [Header("GENERAL FIELDS")]
-        [SerializeField] private GameObject SelectedAvatarVFX;
+        [Header("GENERAL FIELDS")] [SerializeField]
+        private GameObject SelectedAvatarVFX;
+
         [SerializeField] private TextMeshProUGUI AvatarNameText;
         [SerializeField] private GameObject slotNotificationImage;
         [SerializeField] private Button SwitchButton;
@@ -45,16 +46,17 @@ namespace Nekoyume.UI.Module
         AvatarState currentAvatarState;
         int _slotIndex;
         long currentBlockIndex;
+        ChronoAvatarSetting currentChronoAvatarSetting;
+
         int updateAvatarInterval = 90; //blocks to periodly update avatar
         int updateCraftInterval = 200; //blocks to periodly update craft slots
         int updateEventInterval = 200; //blocks to periodly update event EventDungeonInfo
         int updateBossInterval = 200; //blocks to periodly update boss
         int urgentUpdateInterval = 15; //blocks to update if there is an action (auto collect,craft ...)
-        [Space(5)]
 
+        [Space(5)] [Header("STAGE")] [SerializeField]
+        private GameObject stageModule;
 
-        [Header("STAGE")]
-        [SerializeField] private GameObject stageModule;
         [SerializeField] private GameObject stageNotificationImage;
         [SerializeField] private TextMeshProUGUI ProsperityText;
         [SerializeField] private GameObject ProsperityImage;
@@ -65,16 +67,10 @@ namespace Nekoyume.UI.Module
         [SerializeField] private Image stageCooldownImage;
 
         public long stageCooldown;
-        bool IsStage;
-        bool IsStageNotify;
-        bool IsAutoCollect;
-        bool IsAutoSpend;
-        bool IsSweep;
-        int sweepStage;
-        [Space(5)]
 
-        [Header("CRAFT")]
-        [SerializeField] private GameObject craftModule;
+        [Space(5)] [Header("CRAFT")] [SerializeField]
+        private GameObject craftModule;
+
         [SerializeField] private GameObject craftNotificationImage;
         [SerializeField] private Image isCraftedImage;
         [SerializeField] private TextMeshProUGUI[] CraftingSlotsText;
@@ -83,17 +79,10 @@ namespace Nekoyume.UI.Module
 
         List<CombinationSlotState> Combinationslotstates = new List<CombinationSlotState>();
         long craftCooldown;
-        bool IsCraft;
-        bool IsCraftNotify;
-        bool IsAutoCraft;
-        bool IsCraftFillCrystal;
-        bool IsBasicCraft;
-        int craftID;
-        [Space(5)]
 
+        [Space(5)] [Header("EVENT")] [SerializeField]
+        private GameObject eventModule;
 
-        [Header("EVENT")]
-        [SerializeField] private GameObject eventModule;
         [SerializeField] private GameObject eventNotificationImage;
         [SerializeField] private TextMeshProUGUI eventTicketsText;
         [SerializeField] private TextMeshProUGUI eventLevelText;
@@ -104,14 +93,10 @@ namespace Nekoyume.UI.Module
         long eventCooldown;
         Address eventAddress;
         EventDungeonInfo eventDungeonInfo;
-        bool IsEvent;
-        bool IsEventNotify;
-        bool IsAutoEvent;
-        int eventLevel;
-        [Space(5)]
 
-        [Header("BOSS")]
-        [SerializeField] private GameObject bossModule;
+        [Space(5)] [Header("BOSS")] [SerializeField]
+        private GameObject bossModule;
+
         [SerializeField] private GameObject bossNotificationImage;
         [SerializeField] private TextMeshProUGUI bossTicketsText;
         [SerializeField] private TextMeshProUGUI bossRemainsText;
@@ -121,21 +106,18 @@ namespace Nekoyume.UI.Module
         long bossCooldown;
         RaiderState raider;
         WorldBossListSheet.Row raidRow;
-        //EventDungeonInfo eventDungeonInfo;
-        bool IsBoss;
-        bool IsBossNotify;
-        bool IsAutoBoss;
-
 
         private void Awake()
         {
             SwitchButton.onClick.AddListener(() => { SwitchChar(); });
             SettingsButton.onClick.AddListener(() => { OpenSlotSettings(); });
-            CheckNowButton.onClick.AddListener(() => { CheckNowSlot(); });
+            CheckNowButton.onClick.AddListener(() => { CheckNowSlot().Forget(); });
         }
 
-        public void CheckNowSlot()
+        public async UniTask CheckNowSlot()
         {
+            await UpdateAvatar();
+            await UpdateCombinationSlotStates();
             IsPrefsLoded = false;
             LoadSettings();
             UpdateInformation();
@@ -154,81 +136,28 @@ namespace Nekoyume.UI.Module
             IsPrefsLoded = true; //to read it once
             string addressKey = "_PandoraBox_Chrono_" + currentAvatarState.address;
 
-            if (PlayerPrefs.HasKey(addressKey))
-            {
-                //STAGE
-                IsStage = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStage", 1));
-                IsStageNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsStageNotify", 1));
-                IsAutoCollect = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCollect", 1));
-                IsAutoSpend = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoSpend", 0));
-                IsSweep = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsSweep", 1));
-                sweepStage = PlayerPrefs.GetInt(addressKey + "_SweepStage", 0);
-
-                //CRAFT
-                IsCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraft", 0));
-                IsCraftNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftNotify", 1));
-                IsAutoCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoCraft", 0));
-                IsCraftFillCrystal = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsCraftFillCrystal", 0));
-                IsBasicCraft = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBasicCraft", 1));
-                craftID = PlayerPrefs.GetInt(addressKey + "_CraftID", 0);
-
-                //EVENT
-                IsEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEvent", 0));
-                IsEventNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsEventNotify", 1));
-                IsAutoEvent = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoEvent", 0));
-                eventLevel = PlayerPrefs.GetInt(addressKey + "_EventLevel", 0);
-
-                //BOSS
-                IsBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBoss", 0));
-                IsBossNotify = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsBossNotify", 1));
-                IsAutoBoss = System.Convert.ToBoolean(PlayerPrefs.GetInt(addressKey + "_IsAutoBoss", 0));
-            }
-            else
-            {
-                //register STAGE variables
-                IsStage = true;
-                IsStageNotify = true;
-                IsAutoCollect = true;
-                IsAutoSpend = false;
-                IsSweep = true;
-                sweepStage = 0;
-
-                //register CRAFT variables
-                IsCraft = false;
-                IsCraftNotify = true;
-                IsAutoCraft = false;
-                IsCraftFillCrystal = false;
-                IsBasicCraft = true;
-                craftID = 0;
-
-                //register EVENT variables
-                IsEvent = false;
-                IsEventNotify = true;
-                IsAutoEvent = false;
-                eventLevel = 20;
-
-                //register BOSS variables
-                IsBoss = false;
-                IsBossNotify = true;
-                IsAutoBoss = false;
-            }
+            var settings = new ChronoAvatarSettings();
+            settings.LoadSettings();
+            currentChronoAvatarSetting = settings.GetSettings(currentAvatarState.address.ToString());
 
             //those settings will set only on game start or setting changes once
             //general
-            AvatarNameText.text = $"#{(_slotIndex + 1)} Lv.{currentAvatarState.level} {currentAvatarState.NameWithHash} : {currentAvatarState.address}";
-            if(currentAvatarState.agentAddress != States.Instance.AgentState.address)
+            AvatarNameText.text =
+                $"#{(_slotIndex + 1)} Lv.{currentAvatarState.level} {currentAvatarState.NameWithHash} : {currentAvatarState.address}";
+            if (currentAvatarState.agentAddress != States.Instance.AgentState.address)
             {
                 var result = await GetAgentBalance();
                 AvatarNameText.text += result;
             }
+
             //stage
-            stageModule.SetActive(IsStage);
-            if (IsStage)
+            stageModule.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.Stage));
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Stage))
             {
-                ProsperityImage.SetActive(IsAutoCollect);
-                APImage.SetActive(IsAutoSpend);
-                if (IsSweep)
-                    SweepStageText.text = "Sweep > " + sweepStage;
+                ProsperityImage.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoCollectProsperity));
+                APImage.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoSpendProsperity));
+                if (Convert.ToBoolean(currentChronoAvatarSetting.StageIsSweepAP))
+                    SweepStageText.text = "Sweep > " + currentChronoAvatarSetting.StageSweepLevelIndex;
                 else
                 {
                     int _stageId = 1;
@@ -240,43 +169,52 @@ namespace Nekoyume.UI.Module
             }
 
             //craft
-            craftModule.SetActive(IsCraft);
-            if (IsCraft)
+            craftModule.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.Craft));
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Craft))
             {
                 var tableSheets = Game.TableSheets.Instance;
-                isCraftedImage.gameObject.SetActive(IsAutoCraft);
-                if (IsAutoCraft)
+                isCraftedImage.gameObject.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine));
+                if (Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine))
                 {
-                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(currentChronoAvatarSetting.CraftItemID,
+                            out var equipRow))
                         isCraftedImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
-                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(currentChronoAvatarSetting.CraftItemID,
+                                 out var consumableRow))
                         isCraftedImage.sprite = SpriteHelper.GetItemIcon(consumableRow.ResultConsumableItemId);
-                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(
+                                 currentChronoAvatarSetting.CraftItemID, out var eventConsumableRow))
                         isCraftedImage.sprite = SpriteHelper.GetItemIcon(eventConsumableRow.ResultConsumableItemId);
                 }
             }
 
             //event
-            eventModule.SetActive(IsEvent);
-            if (IsEvent)
+            eventModule.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.Event));
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Event))
             {
                 var tableSheets = Game.TableSheets.Instance;
-                if (!tableSheets.EventScheduleSheet.TryGetRowForDungeon(currentBlockIndex, out var scheduleRow) || scheduleRow.DungeonEndBlockIndex == currentBlockIndex)
+                if (!tableSheets.EventScheduleSheet.TryGetRowForDungeon(currentBlockIndex, out var scheduleRow) ||
+                    scheduleRow.DungeonEndBlockIndex == currentBlockIndex)
                 {
                     try
                     {
-                        eventAddress = Nekoyume.Model.Event.EventDungeonInfo.DeriveAddress(currentAvatarState.address, RxProps.EventDungeonRow.Id);
+                        eventAddress = Nekoyume.Model.Event.EventDungeonInfo.DeriveAddress(currentAvatarState.address,
+                            RxProps.EventDungeonRow.Id);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                    }
                 }
                 else
                 {
-                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read Event Data!", NotificationCell.NotificationType.Alert);
+                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read Event Data!",
+                        NotificationCell.NotificationType.Alert);
                 }
             }
 
             //Boss
-            bossModule.SetActive(IsBoss);
+            bossModule.SetActive(Convert.ToBoolean(currentChronoAvatarSetting.Boss));
 
 
             //update States
@@ -297,20 +235,29 @@ namespace Nekoyume.UI.Module
 
         async void UpdateInformation()
         {
+            if (States.Instance.CurrentAvatarState is null)
+                return;
+
             try
             {
                 SelectedAvatarVFX.SetActive(currentAvatarState.address == States.Instance.CurrentAvatarState.address);
-            } catch { SelectedAvatarVFX.SetActive(false); }
-
+            }
+            catch (Exception ex)
+            {
+                PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                SelectedAvatarVFX.SetActive(false);
+            }
 
             //STAGE SECTION
             bool stageNotification = false;
-            if (IsStage)
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Stage))
             {
-                var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1, 0, 1700);
+                var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1,
+                    0, 1700);
                 bool isFull = prosperityBlocks == 1700;
                 //urgent upgrade because prosperity is full
-                if (IsAutoCollect && isFull && stageCooldown > currentBlockIndex + urgentUpdateInterval)
+                if (Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoCollectProsperity) && isFull &&
+                    stageCooldown > currentBlockIndex + urgentUpdateInterval)
                     stageCooldown = currentBlockIndex + urgentUpdateInterval;
                 long diff = (long)(1700 - prosperityBlocks);
 
@@ -318,38 +265,48 @@ namespace Nekoyume.UI.Module
                 switch (PandoraMaster.Instance.Settings.BlockShowType)
                 {
                     case 1:
-                        {
-                            value = diff.ToString();
-                            break;
-                        }
+                    {
+                        value = diff.ToString();
+                        break;
+                    }
                     default:
-                        {
-                            value = Util.GetBlockToTime(diff);
-                            break;
-                        }
+                    {
+                        value = Util.GetBlockToTime(diff);
+                        break;
+                    }
                 }
 
                 ProsperityText.text = isFull ? $"<color=red>FULL</color>" : value;
-                APText.text = currentAvatarState.actionPoint > 5 ? $"<color=red>{currentAvatarState.actionPoint}</color>" : currentAvatarState.actionPoint.ToString();
+                APText.text = currentAvatarState.actionPoint > 5
+                    ? $"<color=red>{currentAvatarState.actionPoint}</color>"
+                    : currentAvatarState.actionPoint.ToString();
                 //urgent upgrade because there is some action points
-                if (IsAutoSpend && currentAvatarState.actionPoint > 5 && stageCooldown > currentBlockIndex + urgentUpdateInterval)
+                if (Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoSpendProsperity) &&
+                    currentAvatarState.actionPoint > 5 && stageCooldown > currentBlockIndex + urgentUpdateInterval)
+                {
+                    await UpdateAvatar();
                     stageCooldown = currentBlockIndex + urgentUpdateInterval;
+                }
 
-                var cooldownBar = Mathf.Clamp(updateAvatarInterval - (stageCooldown - currentBlockIndex), 1, updateAvatarInterval);
+                var cooldownBar = Mathf.Clamp(updateAvatarInterval - (stageCooldown - currentBlockIndex), 1,
+                    updateAvatarInterval);
                 stageCooldownText.text = cooldownBar.ToString();
                 stageCooldownImage.fillAmount = (updateAvatarInterval - cooldownBar) * 1f / updateAvatarInterval;
-                stageNotification = IsStageNotify && (isFull || currentAvatarState.actionPoint > 5);
+                stageNotification = Convert.ToBoolean(currentChronoAvatarSetting.StageNotification) &&
+                                    (isFull || currentAvatarState.actionPoint > 5);
 
                 if (stageCooldown < currentBlockIndex)
-                    await UpdateAvatar();
+                    await UpdateStage();
             }
 
             //CRAFT SECTION
             bool craftNotification = false;
-            if (IsCraft)
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Craft))
             {
-                craftNotification = UpdateCraftingSlots() && IsCraftNotify;
-                var cooldownBar = Mathf.Clamp(updateCraftInterval - (craftCooldown - currentBlockIndex), 1, updateCraftInterval);
+                craftNotification = IsAvailableCraftingSlots() &&
+                                    Convert.ToBoolean(currentChronoAvatarSetting.CraftNotification);
+                var cooldownBar = Mathf.Clamp(updateCraftInterval - (craftCooldown - currentBlockIndex), 1,
+                    updateCraftInterval);
                 craftCooldownText.text = cooldownBar.ToString();
                 craftCooldownImage.fillAmount = (updateCraftInterval - cooldownBar) * 1f / updateCraftInterval;
 
@@ -359,56 +316,65 @@ namespace Nekoyume.UI.Module
 
             //Event
             bool eventNotification = false;
-            if (IsEvent)
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Event))
             {
                 if (!(eventDungeonInfo is null))
                 {
-                    var current = eventDungeonInfo.GetRemainingTicketsConsiderReset(RxProps.EventScheduleRowForDungeon.Value, currentBlockIndex);
-                    var resetIntervalBlockRange = RxProps.EventScheduleRowForDungeon.Value.DungeonTicketsResetIntervalBlockRange;
-                    var progressedBlockRange = (currentBlockIndex - RxProps.EventScheduleRowForDungeon.Value.StartBlockIndex) % resetIntervalBlockRange;
+                    var current =
+                        eventDungeonInfo.GetRemainingTicketsConsiderReset(RxProps.EventScheduleRowForDungeon.Value,
+                            currentBlockIndex);
+                    var resetIntervalBlockRange =
+                        RxProps.EventScheduleRowForDungeon.Value.DungeonTicketsResetIntervalBlockRange;
+                    var progressedBlockRange =
+                        (currentBlockIndex - RxProps.EventScheduleRowForDungeon.Value.StartBlockIndex) %
+                        resetIntervalBlockRange;
                     var blocksRemains = resetIntervalBlockRange - progressedBlockRange;
 
                     //urgent upgrade if there is any tickets
-                    if (IsAutoEvent && current > 0 && eventCooldown > currentBlockIndex + urgentUpdateInterval)
+                    if (Convert.ToBoolean(currentChronoAvatarSetting.EventIsAutoSpendTickets) && current > 0 &&
+                        eventCooldown > currentBlockIndex + urgentUpdateInterval)
                         eventCooldown = currentBlockIndex + urgentUpdateInterval;
 
                     string value = "";
                     switch (PandoraMaster.Instance.Settings.BlockShowType)
                     {
                         case 1:
-                            {
-                                value = blocksRemains.ToString();
-                                break;
-                            }
+                        {
+                            value = blocksRemains.ToString();
+                            break;
+                        }
                         default:
-                            {
-                                value = Util.GetBlockToTime(blocksRemains);
-                                break;
-                            }
+                        {
+                            value = Util.GetBlockToTime(blocksRemains);
+                            break;
+                        }
                     }
-                    eventRemainsText.text = value;
-                    eventNotification = IsEventNotify && current > 0;
-                    eventTicketsText.text = current.ToString();
-                    eventLevelText.text = eventLevel.ToString();
 
-                    var cooldownBar = Mathf.Clamp(updateEventInterval - (eventCooldown - currentBlockIndex), 1, updateEventInterval);
+                    eventRemainsText.text = value;
+                    eventNotification = Convert.ToBoolean(currentChronoAvatarSetting.EventNotification) && current > 0;
+                    eventTicketsText.text = current.ToString();
+                    eventLevelText.text = currentChronoAvatarSetting.EventLevelIndex.ToString();
+
+                    var cooldownBar = Mathf.Clamp(updateEventInterval - (eventCooldown - currentBlockIndex), 1,
+                        updateEventInterval);
                     eventCooldownText.text = cooldownBar.ToString();
                     eventCooldownImage.fillAmount = (updateEventInterval - cooldownBar) * 1f / updateEventInterval;
                 }
 
                 if (eventCooldown < currentBlockIndex)
-                    SetEventDungeon().Forget();
+                    await SetEventDungeon();
             }
 
             //BOSS SECTION
             bool bossNotification = false;
-            if (IsBoss)
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Boss))
             {
                 if (!(raider is null) && !(raidRow is null))
                 {
                     var RemainTicket = WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex);
                     bossTicketsText.text = RemainTicket.ToString();
-                    bossNotification = RemainTicket > 0 && IsBossNotify;
+                    bossNotification =
+                        RemainTicket > 0 && Convert.ToBoolean(currentChronoAvatarSetting.BossNotification);
                     var start = raidRow.StartedBlockIndex;
                     var reminder = (currentBlockIndex - start) % WorldBossHelper.RefillInterval;
                     var remain = WorldBossHelper.RefillInterval - reminder;
@@ -416,28 +382,35 @@ namespace Nekoyume.UI.Module
                     switch (PandoraMaster.Instance.Settings.BlockShowType)
                     {
                         case 1:
-                            {
-                                value = remain.ToString();
-                                break;
-                            }
+                        {
+                            value = remain.ToString();
+                            break;
+                        }
                         default:
-                            {
-                                value = Util.GetBlockToTime(remain);
-                                break;
-                            }
+                        {
+                            value = Util.GetBlockToTime(remain);
+                            break;
+                        }
                     }
+
                     bossRemainsText.text = value;
 
                     //urgent upgrade if there is any tickets
-                    if (IsAutoBoss && RemainTicket > 0 && bossCooldown > currentBlockIndex + urgentUpdateInterval)
+                    if (Convert.ToBoolean(currentChronoAvatarSetting.BosstIsAutoSpendTickets) && RemainTicket > 0 &&
+                        bossCooldown > currentBlockIndex + urgentUpdateInterval)
                         bossCooldown = currentBlockIndex + urgentUpdateInterval;
                 }
-                var cooldownBar = Mathf.Clamp(updateBossInterval - (bossCooldown - currentBlockIndex), 1, updateBossInterval);
+
+                var cooldownBar = Mathf.Clamp(updateBossInterval - (bossCooldown - currentBlockIndex), 1,
+                    updateBossInterval);
                 bossCooldownText.text = cooldownBar.ToString();
                 bossCooldownImage.fillAmount = (updateBossInterval - cooldownBar) * 1f / updateBossInterval;
 
                 if (bossCooldown < currentBlockIndex)
-                    SetBossRaidData().Forget();
+                {
+                    await UpdateAvatar();
+                    await SetBossRaidData();
+                }
             }
 
 
@@ -450,9 +423,9 @@ namespace Nekoyume.UI.Module
             bossNotificationImage.SetActive(bossNotification);
         }
 
-        async UniTaskVoid SetBossRaidData()
+        async UniTask SetBossRaidData()
         {
-            if (IsBoss)
+            if (Convert.ToBoolean(currentChronoAvatarSetting.Boss))
             {
                 var bossSheet = Game.Game.instance.TableSheets.WorldBossListSheet;
                 try
@@ -465,18 +438,19 @@ namespace Nekoyume.UI.Module
                     var raiderState = await Game.Game.instance.Agent.GetStateAsync(raiderAddress);
                     raider = raiderState is Bencodex.Types.List raiderList ? new RaiderState(raiderList) : null;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Cannot read World Boss Data!", NotificationCell.NotificationType.Alert);
+                    PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
                     return;
                 }
 
                 bossCooldown = currentBlockIndex + updateBossInterval;
 
                 //send fights
-                if (IsAutoBoss && WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) > 0)
+                if (Convert.ToBoolean(currentChronoAvatarSetting.BosstIsAutoSpendTickets) &&
+                    WorldBossFrontHelper.GetRemainTicket(raider, currentBlockIndex) > 0)
                 {
-                    Premium.PVE_AutoWorldBoss(currentAvatarState, raider).Forget();
+                    await Premium.PVE_AutoWorldBoss(currentAvatarState, raider);
                     bossCooldown = currentBlockIndex + urgentUpdateInterval;
                 }
             }
@@ -484,31 +458,44 @@ namespace Nekoyume.UI.Module
 
         async UniTask<string> GetAgentBalance()
         {
-                var ncgCurrency = Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
-                var crystalCurrency = Libplanet.Assets.Currency.Legacy("CRYSTAL", 18, minters: null);
-                var goldbalance = await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, ncgCurrency);
-                var crystalbalance = await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, crystalCurrency);
-                return $", N:{PandoraUtil.ToLongNumberNotation(goldbalance.MajorUnit)} C:{PandoraUtil.ToLongNumberNotation(crystalbalance.MajorUnit)}";
+            var ncgCurrency =
+                Libplanet.Assets.Currency.Legacy("NCG", 2, new Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+            var crystalCurrency = Libplanet.Assets.Currency.Legacy("CRYSTAL", 18, minters: null);
+            var goldbalance =
+                await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, ncgCurrency);
+            var crystalbalance =
+                await Game.Game.instance.Agent.GetBalanceAsync(currentAvatarState.agentAddress, crystalCurrency);
+            return
+                $", N:{PandoraUtil.ToLongNumberNotation(goldbalance.MajorUnit)} C:{PandoraUtil.ToLongNumberNotation(crystalbalance.MajorUnit)}";
         }
 
         async UniTask UpdateAvatar()
         {
-            stageCooldown = currentBlockIndex + updateAvatarInterval;
             await States.Instance.AddOrReplaceAvatarStateAsync(currentAvatarState.address, _slotIndex);
+        }
+
+        async UniTask UpdateStage()
+        {
+            stageCooldown = currentBlockIndex + updateAvatarInterval;
+            await UpdateAvatar();
 
             //check for prosperity
-            var prosperityBlocks = Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1, 0, 1700);
-            if (currentAvatarState.actionPoint >= 5 && IsAutoSpend)
+            var prosperityBlocks =
+                Mathf.Clamp(currentBlockIndex - currentAvatarState.dailyRewardReceivedIndex + 1, 0, 1700);
+            if (currentAvatarState.actionPoint >= 5 &&
+                Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoSpendProsperity))
             {
                 //check for sweep, we used else if to not doing twice 
-                if ( IsSweep && sweepStage != 0)
+                if (Convert.ToBoolean(currentChronoAvatarSetting.StageIsSweepAP) &&
+                    currentChronoAvatarSetting.StageSweepLevelIndex != 0)
                 {
                     try //in case actionManager is not ready yet
                     {
-                        var result = await Premium.PVE_AutoStageSweep(currentAvatarState, sweepStage);
+                        var result = await Premium.PVE_AutoStageSweep(currentAvatarState,
+                            currentChronoAvatarSetting.StageSweepLevelIndex);
                         if (string.IsNullOrEmpty(result))
                             OneLineSystem.Push(MailType.System,
-                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!",
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Sweep <color=green>{currentAvatarState.actionPoint}</color> AP for stage {currentChronoAvatarSetting.StageSweepLevelIndex}!",
                                 NotificationCell.NotificationType.Information);
                         else
                             OneLineSystem.Push(MailType.System,
@@ -516,17 +503,21 @@ namespace Nekoyume.UI.Module
                                 NotificationCell.NotificationType.Alert);
                         stageCooldown = currentBlockIndex + urgentUpdateInterval;
                     }
-                    catch (Exception e) { Debug.LogError(e); }
+                    catch (Exception ex)
+                    {
+                        PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                        return;
+                    }
                 }
                 //check for repeat, we used else if to not doing twice 
-                else if (!IsSweep)
+                else if (!Convert.ToBoolean(currentChronoAvatarSetting.StageIsSweepAP))
                 {
                     try //in case actionManager is not ready yet
                     {
                         var result = await Premium.PVE_AutoStageRepeat(currentAvatarState);
                         if (string.IsNullOrEmpty(result))
                             OneLineSystem.Push(MailType.System,
-                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>{currentAvatarState.actionPoint}</color> AP for stage {sweepStage}!",
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>{currentAvatarState.actionPoint}</color> AP for stage {currentChronoAvatarSetting.StageSweepLevelIndex}!",
                                 NotificationCell.NotificationType.Information);
                         else
                             OneLineSystem.Push(MailType.System,
@@ -534,16 +525,28 @@ namespace Nekoyume.UI.Module
                                 NotificationCell.NotificationType.Alert);
                         stageCooldown = currentBlockIndex + urgentUpdateInterval;
                     }
-                    catch (Exception e) { Debug.LogError(e); }
+                    catch (Exception ex)
+                    {
+                        PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                        return;
+                    }
                 }
             }
             else
             {
-                if (IsAutoCollect && prosperityBlocks >= 1700 && currentAvatarState.actionPoint < 5)
+                if (Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoCollectProsperity) &&
+                    prosperityBlocks >= 1700 && currentAvatarState.actionPoint < 5)
                 {
                     try //in case actionManager is not ready yet
-                    {CollectAP(); stageCooldown = currentBlockIndex + urgentUpdateInterval; }
-                    catch (Exception e) { Debug.LogError(e); }
+                    {
+                        CollectAP();
+                        stageCooldown = currentBlockIndex + urgentUpdateInterval;
+                    }
+                    catch (Exception ex)
+                    {
+                        PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                        return;
+                    }
                 }
             }
         }
@@ -551,12 +554,13 @@ namespace Nekoyume.UI.Module
         public void CollectAP()
         {
             if (currentAvatarState.address != States.Instance.CurrentAvatarState.address)
-                if (!Premium.CurrentPandoraPlayer.IsPremium())
+                if (!Premium.PandoraProfile.IsPremium())
                     return;
 
             if (currentAvatarState.actionPoint > 5)
             {
-                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: There is still Action Points!", NotificationCell.NotificationType.Information);
+                OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: There is still Action Points!",
+                    NotificationCell.NotificationType.Information);
                 return;
             }
 
@@ -565,34 +569,54 @@ namespace Nekoyume.UI.Module
             else
                 Game.Game.instance.ActionManager.DailyRewardPandora(currentAvatarState.address);
 
-            OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!", NotificationCell.NotificationType.Information);
+            OneLineSystem.Push(MailType.System,
+                $"<color=green>Pandora Box</color>: Prosperity bar for {currentAvatarState.NameWithHash} Auto collected!",
+                NotificationCell.NotificationType.Information);
         }
 
-        public async UniTaskVoid SetEventDungeon()
+        public async UniTask SetEventDungeon()
         {
             try
             {
                 eventDungeonInfo = await Game.Game.instance.Agent.GetStateAsync(eventAddress)
-                is Bencodex.Types.List serialized? new EventDungeonInfo(serialized): null;
+                    is Bencodex.Types.List serialized
+                    ? new EventDungeonInfo(serialized)
+                    : null;
                 if (eventDungeonInfo is null)
                     return;
             }
-            catch { return; }
+            catch (Exception ex)
+            {
+                PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                return;
+            }
 
 
             eventCooldown = currentBlockIndex + updateEventInterval;
             var ticketsCount = eventDungeonInfo.GetRemainingTicketsConsiderReset(
-                    RxProps.EventScheduleRowForDungeon.Value, currentBlockIndex);
-            if (ticketsCount > 0 && IsAutoEvent)
+                RxProps.EventScheduleRowForDungeon.Value, currentBlockIndex);
+            if (ticketsCount > 0 && Convert.ToBoolean(currentChronoAvatarSetting.EventIsAutoSpendTickets))
             {
                 int realLevelID = 0; //10030001 - 10030020 winter event
-                if (eventLevel.ToString().Length == 1)
-                    realLevelID = int.Parse("1003000" + eventLevel.ToString());
+                if (currentChronoAvatarSetting.EventLevelIndex.ToString().Length == 1)
+                    realLevelID = int.Parse("1003000" + currentChronoAvatarSetting.EventLevelIndex.ToString());
                 else
-                    realLevelID = int.Parse("100300" + eventLevel.ToString());
+                    realLevelID = int.Parse("100300" + currentChronoAvatarSetting.EventLevelIndex.ToString());
 
-                Premium.PVE_AutoEventDungeon(currentAvatarState, realLevelID, ticketsCount).Forget();
+                await Premium.PVE_AutoEventDungeon(currentAvatarState, realLevelID, ticketsCount);
                 eventCooldown = currentBlockIndex + urgentUpdateInterval;
+            }
+        }
+
+        public async UniTask UpdateCombinationSlotStates()
+        {
+            Combinationslotstates.Clear();
+            for (var i = 0; i < currentAvatarState.combinationSlotAddresses.Count; i++)
+            {
+                var slotAddress = currentAvatarState.address.Derive(string.Format(CultureInfo.InvariantCulture,
+                    CombinationSlotState.DeriveFormat, i));
+                var stateValue = await Game.Game.instance.Agent.GetStateAsync(slotAddress);
+                Combinationslotstates.Add(new CombinationSlotState((Dictionary)stateValue));
             }
         }
 
@@ -600,31 +624,35 @@ namespace Nekoyume.UI.Module
         public async UniTask SetCombinationSlotStatesAsync()
         {
             craftCooldown = currentBlockIndex + updateCraftInterval;
-            Combinationslotstates.Clear();
+            await UpdateCombinationSlotStates();
             for (var i = 0; i < currentAvatarState.combinationSlotAddresses.Count; i++)
             {
-                var slotAddress = currentAvatarState.address.Derive(string.Format(CultureInfo.InvariantCulture,CombinationSlotState.DeriveFormat,i));
-                var stateValue = await Game.Game.instance.Agent.GetStateAsync(slotAddress);
-                Combinationslotstates.Add( new CombinationSlotState((Dictionary)stateValue));
-
-                if (currentBlockIndex > Combinationslotstates[i].UnlockBlockIndex && IsAutoCraft)
+                if (currentBlockIndex > Combinationslotstates[i].UnlockBlockIndex &&
+                    Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine))
                 {
+                    //update the avatar to get last material inventory
+                    await UpdateAvatar();
                     craftCooldown = currentBlockIndex + urgentUpdateInterval;
 
                     //check if its consumable or equipment
                     var tableSheets = Game.TableSheets.Instance;
-                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(craftID, out var equipRow))
+                    if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(currentChronoAvatarSetting.CraftItemID,
+                            out var equipRow))
                     {
                         if (equipRow != null)
-                            await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, i, equipRow, IsCraftFillCrystal, IsBasicCraft);
+                            await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, i, equipRow,
+                                Convert.ToBoolean(currentChronoAvatarSetting.CraftIsUseCrystal),
+                                Convert.ToBoolean(currentChronoAvatarSetting.CraftIsPremium));
                         break; //enforce break to wait new craft count the hammer points
                     }
-                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(craftID, out var consumableRow))
+                    else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(currentChronoAvatarSetting.CraftItemID,
+                                 out var consumableRow))
                     {
                         if (consumableRow != null)
                             Premium.CRAFT_AutoCraftConsumable(currentAvatarState, i, consumableRow);
                     }
-                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(craftID, out var eventConsumableRow))
+                    else if (tableSheets.EventConsumableItemRecipeSheet.TryGetValue(
+                                 currentChronoAvatarSetting.CraftItemID, out var eventConsumableRow))
                     {
                         if (eventConsumableRow != null)
                             Premium.CRAFT_AutoCraftEventConsumable(currentAvatarState, i, eventConsumableRow);
@@ -633,7 +661,7 @@ namespace Nekoyume.UI.Module
             }
         }
 
-        bool UpdateCraftingSlots()
+        bool IsAvailableCraftingSlots()
         {
             bool isEmptySlot = false;
             try
@@ -649,7 +677,8 @@ namespace Nekoyume.UI.Module
                             isEmptySlot = true;
                         CraftingSlotsText[i].text = $"<color=red>-</color>";
                         //urgent upgrade
-                        if (craftCooldown > currentBlockIndex + urgentUpdateInterval && IsAutoCraft)
+                        if (craftCooldown > currentBlockIndex + urgentUpdateInterval &&
+                            Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine))
                             craftCooldown = currentBlockIndex + urgentUpdateInterval;
                     }
                     else
@@ -658,40 +687,53 @@ namespace Nekoyume.UI.Module
                         switch (PandoraMaster.Instance.Settings.BlockShowType)
                         {
                             case 1:
-                                {
-                                    value = (maxValue - diff).ToString();
-                                    break;
-                                }
+                            {
+                                value = (maxValue - diff).ToString();
+                                break;
+                            }
                             default:
-                                {
-                                    value = Util.GetBlockToTime(maxValue - diff);
-                                    break;
-                                }
+                            {
+                                value = Util.GetBlockToTime(maxValue - diff);
+                                break;
+                            }
                         }
+
                         CraftingSlotsText[i].text = value;
                     }
                 }
-            }catch { }
+            }
+            catch (Exception ex)
+            {
+                PandoraUtil.ShowSystemNotification(ex.Message, NotificationCell.NotificationType.Alert);
+                return false;
+            }
 
             return isEmptySlot;
         }
 
         async void SwitchChar()
         {
-            var loadingScreen = Widget.Find<GrayLoadingScreen>();
-            loadingScreen.Show();
-            await RxProps.SelectAvatarAsync(_slotIndex);
-            await WorldBossStates.Set(States.Instance.CurrentAvatarState.address);
-            await States.Instance.InitRuneStoneBalance();
-            await States.Instance.InitRuneStates();
-            await States.Instance.InitRuneSlotStates();
-            await States.Instance.InitItemSlotStates();
-            loadingScreen.Close();
-            Util.SaveAvatarSlotIndex(_slotIndex);
-            Game.Event.OnRoomEnter.Invoke(false);
-            Game.Event.OnUpdateAddresses.Invoke();
-            Widget.Find<ChronoSlotsPopup>().Close();
-            AudioController.PlayClick();
+            try
+            {
+                var loadingScreen = Widget.Find<GrayLoadingScreen>();
+                loadingScreen.Show();
+                await RxProps.SelectAvatarAsync(_slotIndex);
+                await WorldBossStates.Set(States.Instance.CurrentAvatarState.address);
+                await States.Instance.InitRuneStoneBalance();
+                await States.Instance.InitRuneStates();
+                await States.Instance.InitRuneSlotStates();
+                await States.Instance.InitItemSlotStates();
+                loadingScreen.Close();
+                Util.SaveAvatarSlotIndex(_slotIndex);
+                Game.Event.OnRoomEnter.Invoke(false);
+                Game.Event.OnUpdateAddresses.Invoke();
+                Widget.Find<ChronoSlotsPopup>().Close();
+                AudioController.PlayClick();
+            }
+            catch
+            {
+                PandoraMaster.Instance.ShowError(405);
+            }
         }
 
         //private async void UpdateArena(AvatarState state, long currentBlockIndex)

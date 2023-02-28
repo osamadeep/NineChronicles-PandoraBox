@@ -41,7 +41,9 @@ namespace Nekoyume.Game
     using Nekoyume.PandoraBox;
     using PlayFab;
     using PlayFab.ClientModels;
+    using PlayFab.CloudScriptModels;
     using PlayFab.Json;
+    using Sentry.Infrastructure;
     using System.Net.Http;
     using UniRx;
 
@@ -50,6 +52,7 @@ namespace Nekoyume.Game
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [SerializeField] private PandoraRunner runner = null;
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         [SerializeField] private Stage stage = null;
 
@@ -77,6 +80,7 @@ namespace Nekoyume.Game
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         public PandoraRunner Runner => runner;
+
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         public Stage Stage => stage;
         public Arena Arena => arena;
@@ -250,6 +254,41 @@ namespace Nekoyume.Game
 
             ShowNext(agentInitializeSucceed);
             StartCoroutine(CoUpdate());
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+
+            // Set up the request to get all player data
+            var request = new GetPlayerCombinedInfoRequest
+            {
+                InfoRequestParameters = new GetPlayerCombinedInfoRequestParams
+                {
+                    GetUserInventory = true,
+                    GetPlayerStatistics = true,
+                    GetPlayerProfile = true,
+                    GetUserVirtualCurrency = true
+                }
+            };
+            PlayFabClientAPI.GetPlayerCombinedInfo(request,
+                OnPlayerDataReceived =>
+                {
+                    // Handle the player data result
+                    Premium.PandoraProfile = new PandoraAccount
+                    {
+                        Currencies = OnPlayerDataReceived.InfoResultPayload.UserVirtualCurrency,
+                        Inventory = OnPlayerDataReceived.InfoResultPayload.UserInventory,
+                        Profile = OnPlayerDataReceived.InfoResultPayload.PlayerProfile,
+                        Statistics = OnPlayerDataReceived.InfoResultPayload.PlayerStatistics
+                    };
+
+                    //initilize data
+                    Premium.GetPremiumPlayers();
+                },
+                OnError =>
+                {
+                    PandoraUtil.ShowSystemNotification(OnError.ErrorMessage, NotificationCell.NotificationType.Alert);
+                });
+
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         protected override void OnDestroy()
@@ -685,58 +724,51 @@ namespace Nekoyume.Game
                 _options.RpcServerHost = $"9c-main-rpc-{UnityEngine.Random.Range(1, 5)}.nine-chronicles.com";
 
             var loginPopup = Widget.Find<LoginSystem>();
+            var intro = Widget.Find<IntroScreen>();
+            intro.Show(_options.KeyStorePath, _options.PrivateKey);
+            yield return new WaitUntil(() => loginPopup.Login);
 
-            if (!PandoraMaster.Instance.Settings.IsMultipleLogin
-                && Application.isBatchMode) //|||||||||||||| PANDORA CODE |||||||||||||||||||
-            {
-                loginPopup.Show(_options.KeyStorePath, _options.PrivateKey);
-            }
-            else
-            {
-                var intro = Widget.Find<IntroScreen>();
-                intro.Show(_options.KeyStorePath, _options.PrivateKey);
-                yield return new WaitUntil(() => loginPopup.Login);
-            }
+            StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //auth is complete
             //if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
             //PlayFabSettings.staticSettings.TitleId = "42";
 
-            Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address;
+            //Address currentLoginAddress = Widget.Find<LoginSystem>().KeyStore.List().ElementAt(PandoraMaster.LoginIndex).Item2.Address;
 
-            //Login into playfab
-            PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
-            {
-                CustomId = currentLoginAddress.ToString(),              
-                CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
-            },
-            success =>
-            {
-                if (success.InfoResultPayload.PlayerProfile != null)
-                {
-                    PandoraMaster.PlayFabPlayerProfile = success.InfoResultPayload.PlayerProfile;
+            ////Login into playfab
+            //PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest
+            //{
+            //    CustomId = currentLoginAddress.ToString(),              
+            //    CreateAccount = true, InfoRequestParameters = new GetPlayerCombinedInfoRequestParams { GetPlayerProfile = true }
+            //},
+            //success =>
+            //{
+            //    if (success.InfoResultPayload.PlayerProfile != null)
+            //    {
+            //        PandoraMaster.PlayFabPlayerProfile = success.InfoResultPayload.PlayerProfile;
 
-                    //get players
-                    Premium.PANDORA_GetDatabase(currentLoginAddress);
-                    Premium.PANDORA_UpdateDatabasePeriodly().Forget();
-                    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
-                    //GetPlayerConfiguration(callback);                   
-                }
-            },
-            failed =>
-            {
-                if (failed.Error == PlayFabErrorCode.AccountBanned)
-                    PandoraMaster.Instance.ShowError(101);
-                else
-                {
-                    Debug.LogError("Pandora Server Failed: " + failed.GenerateErrorReport());
-                    PandoraMaster.Instance.ShowError(404);
-                }
-            });
+            //        //get players
+            //        Premium.PANDORA_GetDatabase(currentLoginAddress);
+            //        Premium.PANDORA_UpdateDatabasePeriodly().Forget();
+            //        StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+            //        //GetPlayerConfiguration(callback);                   
+            //    }
+            //},
+            //failed =>
+            //{
+            //    if (failed.Error == PlayFabErrorCode.AccountBanned)
+            //        PandoraMaster.Instance.ShowError(101);
+            //    else
+            //    {
+            //        Debug.LogError("Pandora Server Failed: " + failed.GenerateErrorReport());
+            //        PandoraMaster.Instance.ShowError(404);
+            //    }
+            //});
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
-
 
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -745,33 +777,33 @@ namespace Nekoyume.Game
             var loginPopup = Widget.Find<LoginSystem>();
 
             PlayFabClientAPI.GetUserData(new GetUserDataRequest(),
-            success =>
-            {
-                PandoraMaster.PlayFabUserData = success.Data;
-
-                PlayFabClientAPI.ExecuteCloudScript(
-                new ExecuteCloudScriptRequest { FunctionName = "getGameConfiguration" },
                 success =>
                 {
-                    //JsonObject jsonResult = (JsonObject)success.FunctionResult;
-                    //object data;
-                    //jsonResult.TryGetValue("data", out data);
-                    //if (success.FunctionResult != null)
-                    {
-                        Debug.LogError("reply from clould: " + success.FunctionResult.ToString());
-                    }
-                    StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+                    PandoraMaster.PlayFabUserData = success.Data;
+
+                    PlayFabClientAPI.ExecuteCloudScript(
+                        new ExecuteCloudScriptRequest { FunctionName = "getGameConfiguration" },
+                        success =>
+                        {
+                            //JsonObject jsonResult = (JsonObject)success.FunctionResult;
+                            //object data;
+                            //jsonResult.TryGetValue("data", out data);
+                            //if (success.FunctionResult != null)
+                            {
+                                Debug.LogError("reply from clould: " + success.FunctionResult.ToString());
+                            }
+                            StartCoroutine(Agent.Initialize(_options, loginPopup.GetPrivateKey(), callback));
+                        },
+                        failed =>
+                        {
+                            Debug.LogError("Failed to getGameConfiguration!, " + failed.GenerateErrorReport());
+                        });
                 },
                 failed =>
                 {
-                    Debug.LogError("Failed to getGameConfiguration!, " + failed.GenerateErrorReport());
+                    Debug.LogError(failed.GenerateErrorReport());
+                    PandoraMaster.Instance.ShowError(401);
                 });
-            },
-            failed =>
-            {
-                Debug.LogError(failed.GenerateErrorReport());
-                PandoraMaster.Instance.ShowError(401);
-            });
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
@@ -933,7 +965,7 @@ namespace Nekoyume.Game
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //Disable logs Dev confirm it not affect the statistics : https://discord.com/channels/928926944937013338/970554251308830750/1060111524015898684
-            Analyzer = new Analyzer(uniqueId,rpcServerHost,false);
+            Analyzer = new Analyzer(uniqueId, rpcServerHost, false);
             return;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 

@@ -55,11 +55,12 @@ namespace Nekoyume.UI
         private const string FirstOpenMimisbrunnrKeyFormat = "Nekoyume.UI.Menu.FirstOpenMimisbrunnrKeyKey_{0}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Transform shopCrystalChanges;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Transform shopCrystalChanges;
 
         //Extra UI Buttons
         public Button ChronoButton;
+
         [SerializeField] private Button runnerButton;
         //[SerializeField] private Button fastSwitchButton;
         //[SerializeField] private Button updateAvatarButton;
@@ -70,67 +71,48 @@ namespace Nekoyume.UI
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        [SerializeField] private MainMenu btnQuest;
-
         [SerializeField]
-        private MainMenu btnCombination;
+        private MainMenu btnQuest;
 
-        [SerializeField]
-        private MainMenu btnShop;
+        [SerializeField] private MainMenu btnCombination;
 
-        [SerializeField]
-        private MainMenu btnRanking;
+        [SerializeField] private MainMenu btnShop;
 
-        [SerializeField]
-        private MainMenu btnMimisbrunnr;
+        [SerializeField] private MainMenu btnRanking;
 
-        [SerializeField]
-        private MainMenu btnStaking;
+        [SerializeField] private MainMenu btnMimisbrunnr;
 
-        [SerializeField]
-        private MainMenu btnWorldBoss = null;
+        [SerializeField] private MainMenu btnStaking;
 
-        [SerializeField]
-        private SpeechBubble[] speechBubbles = null;
+        [SerializeField] private MainMenu btnWorldBoss = null;
 
-        [SerializeField]
-        private GameObject shopExclamationMark;
+        [SerializeField] private SpeechBubble[] speechBubbles = null;
 
-        [SerializeField]
-        private GameObject combinationExclamationMark;
+        [SerializeField] private GameObject shopExclamationMark;
 
-        [SerializeField]
-        private GameObject questExclamationMark;
+        [SerializeField] private GameObject combinationExclamationMark;
 
-        [SerializeField]
-        private GameObject mimisbrunnrExclamationMark;
+        [SerializeField] private GameObject questExclamationMark;
 
-        [SerializeField]
-        private GameObject eventDungeonExclamationMark;
+        [SerializeField] private GameObject mimisbrunnrExclamationMark;
 
-        [SerializeField]
-        private TextMeshProUGUI eventDungeonTicketsText;
+        [SerializeField] private GameObject eventDungeonExclamationMark;
 
-        [SerializeField]
-        private Image stakingLevelIcon;
+        [SerializeField] private TextMeshProUGUI eventDungeonTicketsText;
 
-        [SerializeField]
-        private GuidedQuest guidedQuest;
+        [SerializeField] private Image stakingLevelIcon;
 
-        [SerializeField]
-        private Button playerButton;
+        [SerializeField] private GuidedQuest guidedQuest;
 
-        [SerializeField]
-        private StakeIconDataScriptableObject stakeIconData;
+        [SerializeField] private Button playerButton;
 
-        [SerializeField]
-        private RectTransform player;
+        [SerializeField] private StakeIconDataScriptableObject stakeIconData;
 
-        [SerializeField]
-        private RectTransform playerPosition;
+        [SerializeField] private RectTransform player;
 
-        [SerializeField]
-        private Transform titleSocket;
+        [SerializeField] private RectTransform playerPosition;
+
+        [SerializeField] private Transform titleSocket;
 
         private Coroutine _coLazyClose;
 
@@ -146,10 +128,7 @@ namespace Nekoyume.UI
 
             CloseWidget = null;
 
-            playerButton.onClick.AddListener(() =>
-            {
-                Game.Game.instance.Lobby.Character.Touch();
-            });
+            playerButton.onClick.AddListener(() => { Game.Game.instance.Lobby.Character.Touch(); });
             guidedQuest.OnClickWorldQuestCell
                 .Subscribe(tuple => HackAndSlash(tuple.quest.Goal))
                 .AddTo(gameObject);
@@ -199,7 +178,7 @@ namespace Nekoyume.UI
                 CloseWithOtherWidgets();
                 ShortcutHelper.ShortcutActionForStage(worldRow.Id, stageId, true);
             }
-            else if(ShortcutHelper.CheckUIStateForUsingShortcut(ShortcutHelper.PlaceType.Stage))
+            else if (ShortcutHelper.CheckUIStateForUsingShortcut(ShortcutHelper.PlaceType.Stage))
             {
                 Find<Menu>().QuestClick();
             }
@@ -318,9 +297,8 @@ namespace Nekoyume.UI
                 && (PlayerPrefs.GetInt(firstOpenCombinationKey, 0) == 0 ||
                     Craft.SharedModel.HasNotification));
             shopExclamationMark.gameObject.SetActive(
-
-            btnShop.IsUnlocked
-            && PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
+                btnShop.IsUnlocked
+                && PlayerPrefs.GetInt(firstOpenShopKey, 0) == 0);
 
             var worldMap = Find<WorldMap>();
             worldMap.UpdateNotificationInfo();
@@ -567,18 +545,24 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //PandoraMaster.SetCurrentPandoraPlayer(PandoraMaster.GetPandoraPlayer(States.Instance.CurrentAvatarState.agentAddress.ToString()));
-            string tmp = "_PandoraBox_Account_LoginProfile0" + PandoraMaster.LoginIndex + "_Name";
+            string displayNameKey = "_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex +
+                                    "_DisplayText";
+            var currentName = States.Instance.CurrentAvatarState.name + " #" +
+                              States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 5);
+            PlayerPrefs.SetString(displayNameKey, currentName); //save profile name
 
-            PlayerPrefs.SetString(tmp, States.Instance.CurrentAvatarState.name); //save profile name
-            //set name to playfab
-            if (string.IsNullOrEmpty(PandoraMaster.PlayFabPlayerProfile.DisplayName))
+            if (string.IsNullOrEmpty(Premium.PandoraProfile.Profile.DisplayName))
             {
-                var currentName = States.Instance.CurrentAvatarState.name + " #" + States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 4);
-                //PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnChangePlayFabNameSuccess, OnChangePlayFabNameError);
-                PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest { DisplayName = currentName},
-                    success => { PandoraMaster.PlayFabPlayerProfile.DisplayName = currentName;},failed => { Debug.LogError(failed.GenerateErrorReport()); });
+                PlayFabClientAPI.UpdateUserTitleDisplayName(
+                    new UpdateUserTitleDisplayNameRequest { DisplayName = currentName },
+                    success => { Premium.PandoraProfile.Profile.DisplayName = currentName; },
+                    failed =>
+                    {
+                        PandoraUtil.ShowSystemNotification(failed.ErrorMessage,
+                            NotificationCell.NotificationType.Alert);
+                    });
             }
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             //load favorite items
             PandoraMaster.FavItems.Clear();
@@ -596,10 +580,11 @@ namespace Nekoyume.UI
             PandoraMaster.CurrentGuildPlayer = null;
             PandoraMaster.CurrentGuild = null;
 
-            PandoraMaster.CurrentGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.
-                Find(x => x.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower());
+            PandoraMaster.CurrentGuildPlayer = PandoraMaster.PanDatabase.GuildPlayers.Find(x =>
+                x.AvatarAddress.ToLower() == States.Instance.CurrentAvatarState.address.ToString().ToLower());
             if (!(PandoraMaster.CurrentGuildPlayer is null))
-                PandoraMaster.CurrentGuild = PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
+                PandoraMaster.CurrentGuild =
+                    PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
 
             //check crystal changes
             ChangeCrystalRatio();
@@ -738,8 +723,10 @@ namespace Nekoyume.UI
         void ChangeCrystalRatio()
         {
             var difference = PandoraMaster.PanDatabase.Crystal - PandoraMaster.PanDatabase.CrystalOld;
-            var percentage = Mathf.Round(((float)difference / (float)PandoraMaster.PanDatabase.CrystalOld) * 100f) ;
-            string percentageString = difference > 0 ? "<color=green>" + percentage + "</color>" : "<color=red>" + Mathf.Abs(percentage) + "</color>";
+            var percentage = Mathf.Round(((float)difference / (float)PandoraMaster.PanDatabase.CrystalOld) * 100f);
+            string percentageString = difference > 0
+                ? "<color=green>" + percentage + "</color>"
+                : "<color=red>" + Mathf.Abs(percentage) + "</color>";
             shopCrystalChanges.GetChild(0).GetComponent<TextMeshProUGUI>().text = "%" + percentageString;
             shopCrystalChanges.GetChild(1).gameObject.SetActive(difference > 0); //green
             shopCrystalChanges.GetChild(2).gameObject.SetActive(difference < 0); //red
@@ -761,7 +748,7 @@ namespace Nekoyume.UI
         }
 
         private static UniTask UpdateAvatarState(AvatarState avatarState, int index) =>
-        States.Instance.AddOrReplaceAvatarStateAsync(avatarState, index);
+            States.Instance.AddOrReplaceAvatarStateAsync(avatarState, index);
 
 
         protected override void OnEnable()
@@ -775,9 +762,10 @@ namespace Nekoyume.UI
             if (!PandoraMaster.PanDatabase.RunnerSettings.Available)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under maintenance!",
-                NotificationCell.NotificationType.Information);
+                    NotificationCell.NotificationType.Information);
                 return;
             }
+
             Find<RunnerTown>().Show(true);
             return;
         }
@@ -794,7 +782,7 @@ namespace Nekoyume.UI
                     L10nManager.Localize("UI_BLOCK_EXIT"), NotificationCell.NotificationType.Information);
                 return;
             }
-#endif 
+#endif
             Game.Event.OnNestEnter.Invoke();
 
             var deletableWidgets = FindWidgets().Where(widget =>

@@ -25,7 +25,7 @@ namespace Nekoyume.PandoraBox
 
         //Unsaved Reg Settings 
         public static string OriginalVersionId = "v100361";
-        public static string VersionId = "010088";
+        public static string VersionId = "010089";
 
         //Pandora Database
         public static PanDatabase PanDatabase;
@@ -35,15 +35,15 @@ namespace Nekoyume.PandoraBox
         //Playfab
         public static PlayerProfileModel PlayFabPlayerProfile = new PlayerProfileModel();
         public static Dictionary<string, UserDataRecord> PlayFabUserData = new Dictionary<string, UserDataRecord>();
-        public static GetUserInventoryResult PlayFabInventory = new GetUserInventoryResult();
 
         //General
+        public static float WncgPrice = 0;
         public static string CrystalTransferTx = "";
         public static PandoraUtil.ActionType CurrentAction = PandoraUtil.ActionType.Idle;
         public static int ActionCooldown = 4;
         public static bool MarketPriceHelper = false;
         public static string MarketPriceValue;
-        public static int LoginIndex;
+        public static int SelectedLoginAccountIndex;
         public static int ArenaTicketsToUse = 1;
         public static List<string> ArenaFavTargets = new List<string>();
         public static int FavItemsMaxCount = 15;
@@ -60,9 +60,6 @@ namespace Nekoyume.PandoraBox
 
         //Objects
         public PandoraSettings Settings;
-        public AudioMixer Audiomixer;
-        public GameObject CosmicSword;
-        public Sprite CosmicIcon;
 
         //Inventory
         public static List<Model.Item.ItemBase> TestShopItems = new List<Model.Item.ItemBase>();
@@ -82,34 +79,10 @@ namespace Nekoyume.PandoraBox
             }
         }
 
-        public void SpeedTimeScale(int speed = 1)
-        {
-            if (speed != 1)
-            {
-                Time.timeScale = Settings.FightSpeed;
-                DOTween.timeScale = Settings.MenuSpeed / Settings.FightSpeed;
-            }
-            else
-            {
-                Time.timeScale = 1;
-                DOTween.timeScale = 1;
-            }
-        }
-
-        public static PandoraPlayer GetPandoraPlayer(string address)
-        {
-            foreach (PandoraPlayer player in Premium.Pandoraplayers)
-            {
-                if (player.Address.ToLower() == address.ToLower())
-                    return player;
-            }
-
-            return new PandoraPlayer();
-        }
-
         public void ShowError(int errorNumber)
         {
-            Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!", PandoraUtil.GetNotificationText(errorNumber));
+            Widget.Find<PandoraError>().Show($"Error <color=red>{errorNumber}</color>!",
+                PandoraUtil.GetNotificationText(errorNumber));
         }
     }
 
@@ -118,9 +91,8 @@ namespace Nekoyume.PandoraBox
         //General
         [HideInInspector] public bool IsStory { get; set; } = false;
         [HideInInspector] public bool IsMultipleLogin { get; set; } = false;
-
         [HideInInspector] public int BlockShowType { get; set; } = 0;
-        [HideInInspector] public int MenuSpeed { get; set; } = 3;
+        [HideInInspector] public int CurrencyType { get; set; } = 2;
         [HideInInspector] public bool RandomNode { get; set; } = true;
 
         //PVE
@@ -134,7 +106,10 @@ namespace Nekoyume.PandoraBox
         [HideInInspector] public int ArenaListLower { get; set; } = 0;
 
         [HideInInspector] public int ArenaListStep { get; set; } = 90;
-        [HideInInspector] public bool ArenaPush { get; set; } = true; //push means send every 'ArenaPushStep' whatever its confirm or not
+
+        [HideInInspector]
+        public bool ArenaPush { get; set; } = true; //push means send every 'ArenaPushStep' whatever its confirm or not
+
         [HideInInspector] public int ArenaPushStep { get; set; } = 5;
         [HideInInspector] public bool ArenaValidator { get; set; } = true; //true = 9cscan, false = local node
 
@@ -143,9 +118,8 @@ namespace Nekoyume.PandoraBox
             //General
             PlayerPrefs.SetString("_PandoraBox_Ver", PandoraMaster.VersionId);
             PlayerPrefs.SetInt("_PandoraBox_General_IsStory", System.Convert.ToInt32(IsStory));
-            PlayerPrefs.SetInt("_PandoraBox_General_IsMultipleLogin", System.Convert.ToInt32(IsMultipleLogin));
             PlayerPrefs.SetInt("_PandoraBox_General_BlockShowType", BlockShowType);
-            PlayerPrefs.SetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
+            PlayerPrefs.SetInt("_PandoraBox_General_CurrencyType", CurrencyType);
             PlayerPrefs.SetInt("_PandoraBox_General_RandomNode", System.Convert.ToInt32(RandomNode));
 
             //PVE
@@ -159,9 +133,6 @@ namespace Nekoyume.PandoraBox
             PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPush", System.Convert.ToInt32(ArenaPush));
             PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
             PlayerPrefs.SetInt("_PandoraBox_PVP_ArenaValidator", System.Convert.ToInt32(ArenaValidator));
-
-            //apply ingame changes
-            DOTween.timeScale = MenuSpeed;
         }
 
         public void Load()
@@ -185,12 +156,10 @@ namespace Nekoyume.PandoraBox
             //General
             IsStory = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsStory",
                 System.Convert.ToInt32(IsStory)));
-            IsMultipleLogin = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_IsMultipleLogin",
-                System.Convert.ToInt32(IsMultipleLogin)));
             BlockShowType = PlayerPrefs.GetInt("_PandoraBox_General_BlockShowType", BlockShowType);
-            MenuSpeed = PlayerPrefs.GetInt("_PandoraBox_General_MenuSpeed", MenuSpeed);
+            CurrencyType = PlayerPrefs.GetInt("_PandoraBox_General_CurrencyType", CurrencyType);
             RandomNode = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_General_RandomNode",
-            System.Convert.ToInt32(RandomNode)));
+                System.Convert.ToInt32(RandomNode)));
 
             //PVE
             FightSpeed = PlayerPrefs.GetInt("_PandoraBox_PVE_FightSpeed", FightSpeed);
@@ -200,12 +169,11 @@ namespace Nekoyume.PandoraBox
             ArenaListUpper = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountUpper", ArenaListUpper);
             ArenaListLower = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountLower", ArenaListLower);
             ArenaListStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ListCountStep", ArenaListStep);
-            ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPush",System.Convert.ToInt32(ArenaPush)));
+            ArenaPush = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPush",
+                System.Convert.ToInt32(ArenaPush)));
             ArenaPushStep = PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaPushStep", ArenaPushStep);
-            ArenaValidator = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaValidator", System.Convert.ToInt32(ArenaValidator)));
-
-            //Load ingame changes
-            DOTween.timeScale = MenuSpeed;
+            ArenaValidator = System.Convert.ToBoolean(PlayerPrefs.GetInt("_PandoraBox_PVP_ArenaValidator",
+                System.Convert.ToInt32(ArenaValidator)));
         }
     }
 }

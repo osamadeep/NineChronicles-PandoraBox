@@ -11,11 +11,15 @@ namespace Nekoyume.UI.Module
     public class EventBanner : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button closeButton;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button closeButton;
+
+        [SerializeField] private WNCGPrice priceWidget;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        [SerializeField] private RectTransform content = null;
+        [SerializeField]
+        private RectTransform content = null;
 
         [SerializeField] private RectTransform indexContent = null;
 
@@ -49,7 +53,7 @@ namespace Nekoyume.UI.Module
                     continue;
                 }
 
-                var ba= Instantiate(Banner, content);
+                var ba = Instantiate(Banner, content);
                 ba.GetComponent<EventBannerItem>().Set(data);
             }
 
@@ -65,6 +69,12 @@ namespace Nekoyume.UI.Module
             }
 
             pageView.Set(content, indexImages);
+        }
+
+        public override void Show(bool ignoreShowAnimation = false)
+        {
+            priceWidget.UpdateWncgPrice();
+            base.Show(ignoreShowAnimation);
         }
     }
 }

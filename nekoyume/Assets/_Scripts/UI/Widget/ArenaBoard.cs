@@ -29,8 +29,9 @@ namespace Nekoyume.UI
     public class ArenaBoard : Widget
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private TextMeshProUGUI extraInfoText = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private TextMeshProUGUI extraInfoText = null;
+
         [SerializeField] private TextMeshProUGUI lastUpdateText = null;
         [SerializeField] private TextMeshProUGUI AttackStatusText = null;
 
@@ -40,7 +41,9 @@ namespace Nekoyume.UI
         public Button ExpectedTicketsBtn = null;
         [SerializeField] private Button GoMyPlaceBtn = null;
         [SerializeField] private Button RefreshBtn = null;
+
         [SerializeField] private Button CancelMultiBtn = null;
+
         //[SerializeField] private UnityEngine.UI.Toggle OnlyLowerTgl = null;
         [SerializeField] private GameObject RefreshObj = null;
         public Slider MultipleSlider = null;
@@ -50,6 +53,7 @@ namespace Nekoyume.UI
         public long myLastBattle;
 
         public List<string> CompletedBattlesResult; //TODO , show win/lose on arena button
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 #if UNITY_EDITOR
@@ -65,14 +69,11 @@ namespace Nekoyume.UI
 
         public ArenaBoardPlayerScroll _playerScroll;
 
-        [SerializeField]
-        private GameObject _noJoinedPlayersGameObject;
+        [SerializeField] private GameObject _noJoinedPlayersGameObject;
 
-        [SerializeField]
-        private Button _backButton;
+        [SerializeField] private Button _backButton;
 
-        [SerializeField]
-        private GameObject grandFinaleLogoObject;
+        [SerializeField] private GameObject grandFinaleLogoObject;
 
         public ArenaSheet.RoundData _roundData;
         public RxProps.ArenaParticipant[] _boundedData;
@@ -95,18 +96,17 @@ namespace Nekoyume.UI
             }).AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            GoMyPlaceBtn.OnClickAsObservable().Subscribe(_=> GoMyPlace()).AddTo(gameObject);
-            RefreshBtn.OnClickAsObservable().Subscribe(_ => {
+            GoMyPlaceBtn.OnClickAsObservable().Subscribe(_ => GoMyPlace()).AddTo(gameObject);
+            RefreshBtn.OnClickAsObservable().Subscribe(_ =>
+            {
                 if (_useGrandFinale)
                 {
-
                 }
                 else
                 {
                     RefreshList().Forget();
                     StartCoroutine(RefreshCooldown());
                 }
-
             }).AddTo(gameObject);
             CancelMultiBtn.OnClickAsObservable().Subscribe(_ => CancelMultiArena()).AddTo(gameObject);
             ExpectedTicketsBtn.OnClickAsObservable().Subscribe(_ => ExpectedTicketsToReach()).AddTo(gameObject);
@@ -117,8 +117,6 @@ namespace Nekoyume.UI
 
         async UniTaskVoid GetDifferenceAttack()
         {
-
-
             while (true)
             {
                 try
@@ -130,13 +128,19 @@ namespace Nekoyume.UI
                     }
                     else
                     {
-                        var myArenaAvatarStateAddr = Nekoyume.Model.State.ArenaAvatarState.DeriveAddress(RxProps.PlayersArenaParticipant.Value.AvatarAddr);
-                        var myArenaAvatarState = await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List serialized
-                            ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
-                            : null;
+                        var myArenaAvatarStateAddr =
+                            Nekoyume.Model.State.ArenaAvatarState.DeriveAddress(RxProps.PlayersArenaParticipant.Value
+                                .AvatarAddr);
+                        var myArenaAvatarState =
+                            await Game.Game.instance.Agent.GetStateAsync(myArenaAvatarStateAddr) is Bencodex.Types.List
+                                serialized
+                                ? new Nekoyume.Model.State.ArenaAvatarState(serialized)
+                                : null;
                         myLastBattle = myArenaAvatarState.LastBattleBlockIndex;
-                        var blockValidator = PandoraMaster.Instance.Settings.ArenaValidator ? Find<VersionSystem>().NodeBlockIndex : Game.Game.instance.Agent.BlockIndex;
-                        diff = (long)Mathf.Clamp(blockValidator - myLastBattle,0,999);
+                        var blockValidator = PandoraMaster.Instance.Settings.ArenaValidator
+                            ? Find<VersionSystem>().NodeBlockIndex
+                            : Game.Game.instance.Agent.BlockIndex;
+                        diff = (long)Mathf.Clamp(blockValidator - myLastBattle, 0, 999);
                     }
 
 
@@ -161,13 +165,15 @@ namespace Nekoyume.UI
                             item.gameObject.SetActive(false);
                         AttackStatusText.transform.GetChild(0).gameObject.SetActive(true);
                     }
+
                     await Task.Delay(System.TimeSpan.FromSeconds(15));
                 }
-                catch { }
+                catch
+                {
+                }
 
                 await Task.Delay(System.TimeSpan.FromSeconds(.1f));
             }
-
         }
 
         void GoMyPlace()
@@ -184,18 +190,18 @@ namespace Nekoyume.UI
             RefreshObj.SetActive(true);
             if (_useGrandFinale)
             {
-
             }
             else
             {
                 await UniTask.WhenAll(
-                    RxProps.ArenaInfoTuple.UpdateAsync(),
-                    RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
+                        RxProps.ArenaInfoTuple.UpdateAsync(),
+                        RxProps.ArenaParticipantsOrderedWithScore.UpdateAsync())
                     .AsUniTask();
                 _boundedData = RxProps.ArenaParticipantsOrderedWithScore.Value;
                 UpdateBillboard();
                 UpdateScrolls();
             }
+
             RefreshObj.SetActive(false);
         }
 
@@ -203,7 +209,7 @@ namespace Nekoyume.UI
         {
             RefreshBtn.interactable = false;
             int cooldown = 25;
-            if (Premium.CurrentPandoraPlayer.IsPremium())
+            if (Premium.PandoraProfile.IsPremium())
                 cooldown = 10;
             TextMeshProUGUI buttonText = RefreshBtn.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -219,7 +225,7 @@ namespace Nekoyume.UI
 
         System.Collections.IEnumerator LastUpdateCounter()
         {
-            bool redFliker=false;
+            bool redFliker = false;
             while (true)
             {
                 yield return new WaitForSeconds(1);
@@ -238,7 +244,6 @@ namespace Nekoyume.UI
                         lastUpdateText.text = $"Last Update: {time} ({differenceBlock})";
                 }
             }
-
         }
 
         public void SetLastUpdate()
@@ -252,7 +257,7 @@ namespace Nekoyume.UI
         {
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             SetLastUpdate();
-            Show(RxProps.ArenaParticipantsOrderedWithScore.Value,ignoreShowAnimation);
+            Show(RxProps.ArenaParticipantsOrderedWithScore.Value, ignoreShowAnimation);
 
             RefreshList().Forget();
             StartCoroutine(RefreshCooldown());
@@ -260,7 +265,7 @@ namespace Nekoyume.UI
 
         public void ExpectedTicketsToReach()
         {
-            Premium.PVP_ExpectedTicketsToReach(ExpectedTicketsText,ExpectedRankText);
+            Premium.PVP_ExpectedTicketsToReach(ExpectedTicketsText, ExpectedRankText);
         }
 
         public void CancelMultiArena()
@@ -312,6 +317,7 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
             }
+
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             RefreshObj.SetActive(false);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -329,7 +335,6 @@ namespace Nekoyume.UI
             //       Not use `_boundedData` here because there is the case to
             //       use the mock data from `_so`.
             _noJoinedPlayersGameObject.SetActive(_playerScroll.Data.Count < 2);
-
 
 
             base.Show(ignoreShowAnimation);
@@ -405,7 +410,8 @@ namespace Nekoyume.UI
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             OldScore = player.Score;
-            extraInfoText.text = $"<color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
+            extraInfoText.text =
+                $"<color=green>{player.CurrentArenaInfo.Win}</color>/<color=red>{player.CurrentArenaInfo.Lose}</color>" +
                 $"\n{player.CurrentArenaInfo.Ticket}\n{player.CurrentArenaInfo.PurchasedTicketCount}";
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
@@ -432,7 +438,7 @@ namespace Nekoyume.UI
                         ? _grandFinaleParticipants[index].AvatarState
                         : _boundedData[index].AvatarState;
 
-                    Find<FriendInfoPopupPandora>().ShowAsync(avatarState, BattleType.Arena,true).Forget();
+                    Find<FriendInfoPopupPandora>().ShowAsync(avatarState, BattleType.Arena, true).Forget();
                     //Find<FriendInfoPopup>().ShowAsync(avatarState, BattleType.Arena).Forget();
                 })
                 .AddTo(gameObject);
@@ -569,7 +575,7 @@ namespace Nekoyume.UI
                         canFight = true,
                     };
                 }).ToList();
-            
+
             for (var i = 0; i < _boundedData.Length; i++)
             {
                 var data = _boundedData[i];
@@ -597,6 +603,7 @@ namespace Nekoyume.UI
                 if (PlayerPrefs.HasKey(key))
                     PandoraMaster.ArenaFavTargets.Add(PlayerPrefs.GetString(key));
             }
+
             MultipleSlider.gameObject.SetActive(Premium.ArenaRemainsBattle > 0);
             RefreshObj.SetActive(false);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -647,6 +654,7 @@ namespace Nekoyume.UI
             participants.AddRange(foughtPlayers);
             return participants.ToArray();
         }
+
         private void UpdateBillboardForGrandFinale()
         {
 #if UNITY_EDITOR

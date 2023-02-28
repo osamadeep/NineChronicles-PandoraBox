@@ -33,8 +33,9 @@ namespace Nekoyume.UI
         private const string NicknameTextFormat = "<color=#B38271>Lv.{0}</color=> {1}";
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private AvatarStats currentAvatarStats = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private AvatarStats currentAvatarStats = null;
+
         [SerializeField] private TextMeshProUGUI rateText = null;
         [SerializeField] private UnityEngine.UI.Button multipleSimulateButton = null;
         [SerializeField] private UnityEngine.UI.Button soloSimulateButton = null;
@@ -55,31 +56,23 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI nicknameText;
 
-        [SerializeField]
-        private Transform titleSocket;
+        [SerializeField] private Transform titleSocket;
 
-        [SerializeField]
-        private TextMeshProUGUI cpText;
+        [SerializeField] private TextMeshProUGUI cpText;
 
-        [SerializeField]
-        private EquipmentSlots costumeSlots;
+        [SerializeField] private EquipmentSlots costumeSlots;
 
-        [SerializeField]
-        private EquipmentSlots equipmentSlots;
+        [SerializeField] private EquipmentSlots equipmentSlots;
 
-        [SerializeField]
-        private RuneSlots runeSlots;
+        [SerializeField] private RuneSlots runeSlots;
 
         [SerializeField] private AvatarStats avatarStats = null;
 
-        [SerializeField]
-        private CategoryTabButton adventureButton;
+        [SerializeField] private CategoryTabButton adventureButton;
 
-        [SerializeField]
-        private CategoryTabButton arenaButton;
+        [SerializeField] private CategoryTabButton arenaButton;
 
-        [SerializeField]
-        private CategoryTabButton raidButton;
+        [SerializeField] private CategoryTabButton raidButton;
 
         private GameObject _cachedCharacterTitle;
         public AvatarState _avatarState;
@@ -97,22 +90,13 @@ namespace Nekoyume.UI
             _toggleGroup.RegisterToggleable(raidButton);
 
             adventureButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Adventure);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Adventure); })
                 .AddTo(gameObject);
             arenaButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Arena);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Arena); })
                 .AddTo(gameObject);
             raidButton.OnClick
-                .Subscribe(b =>
-                {
-                    OnClickPresetTab(b, BattleType.Raid);
-                })
+                .Subscribe(b => { OnClickPresetTab(b, BattleType.Raid); })
                 .AddTo(gameObject);
 
             base.Awake();
@@ -137,7 +121,8 @@ namespace Nekoyume.UI
         {
             rateText.text = "Win Rate :" + "..."; //prevent old value
             if (Premium.PANDORA_CheckPremium())
-                rateText.text = "Win Rate :" + await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, _avatarState, 1000);
+                rateText.text = "Win Rate :" +
+                                await Premium.PVP_WinRate(States.Instance.CurrentAvatarState, _avatarState, 1000);
             multipleSimulateButton.interactable = true;
             multipleSimulateButton.GetComponentInChildren<TextMeshProUGUI>().text = "1000 X Simulate";
         }
@@ -200,7 +185,7 @@ namespace Nekoyume.UI
             else
             {
                 int maxCount = 2;
-                if (Premium.CurrentPandoraPlayer.PremiumEndBlock > Game.Game.instance.Agent.BlockIndex)
+                if (Premium.PandoraProfile.IsPremium())
                     maxCount = 9;
 
                 if (PandoraMaster.ArenaFavTargets.Count > maxCount)
@@ -271,6 +256,7 @@ namespace Nekoyume.UI
                     OnClickPresetTab(raidButton, battleType);
                     break;
             }
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             rateText.text = "Win Rate :" + "..."; //prevent old value
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -382,7 +368,7 @@ namespace Nekoyume.UI
             var runeSlot = _runes[battleType].GetRuneSlot();
             costumeSlots.SetPlayerCostumes(level, costumes, ShowTooltip, null);
             equipmentSlots.SetPlayerEquipments(level, equipments, ShowTooltip, null);
-            runeSlots.Set(runeSlot, _runeStates,ShowRuneTooltip);
+            runeSlots.Set(runeSlot, _runeStates, ShowRuneTooltip);
         }
 
         private void UpdateStatViews(AvatarState avatarState, BattleType battleType)
@@ -398,6 +384,7 @@ namespace Nekoyume.UI
             {
                 return;
             }
+
             var characterStats = new CharacterStats(row, avatarState.level);
             characterStats.SetAll(
                 avatarState.level,
@@ -435,23 +422,29 @@ namespace Nekoyume.UI
                 .FirstOrDefault(x => x.Value.address == myAvatarState.address).Key;
             var itemSlotState = States.Instance.ItemSlotStates[avatarSlotIndex][battleType];
             var myEquipments = itemSlotState.Equipments.Select(guid =>
-                myAvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null).ToList(); ;
+                    myAvatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null)
+                .ToList();
+            ;
             var myCostumes = itemSlotState.Costumes.Select(guid =>
-                myAvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null).ToList(); ;
+                    myAvatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid)).Where(item => item != null)
+                .ToList();
+            ;
             var myRuneStates = States.Instance.GetEquippedRuneStates(battleType);
 
             if (!characterSheet.TryGetValue(myAvatarState.characterId, out var myRow))
             {
                 return;
             }
+
             var myCharacterStats = new CharacterStats(myRow, myAvatarState.level);
             myCharacterStats.SetAll(
-            myAvatarState.level,
-            myEquipments,
-            myCostumes,
-            null,
-            equipmentSetEffectSheet,
-            costumeSheet);
+                myAvatarState.level,
+                myEquipments,
+                myCostumes,
+                null,
+                equipmentSetEffectSheet,
+                costumeSheet);
 
             foreach (var myRuneState in myRuneStates)
             {
@@ -472,6 +465,7 @@ namespace Nekoyume.UI
                 myCharacterStats.AddOption(myStatModifiers);
                 myCharacterStats.EqualizeCurrentHPWithHP();
             }
+
             currentAvatarStats.SetData(myCharacterStats);
 
             //color fields

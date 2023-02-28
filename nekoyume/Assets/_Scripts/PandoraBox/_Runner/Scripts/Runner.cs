@@ -87,8 +87,8 @@ namespace Nekoyume.PandoraBox
         public IEnumerator ShowStartBooster()
         {
             playerName.text = PandoraMaster.PlayFabPlayerProfile.DisplayName;
-            pcBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
-            pgBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
+            pcBalance.text = Premium.PandoraProfile.Currencies["PC"].ToString();
+            pgBalance.text = Premium.PandoraProfile.Currencies["PG"].ToString();
             startCounterText.text = "";
             StartFeaturesHolder.SetActive(true);
             UIBalance.SetActive(true);
@@ -103,9 +103,10 @@ namespace Nekoyume.PandoraBox
             FeaturesUICooldown = 50;
             while (FeaturesUICooldown > 0)
             {
-                startCounterText.text = (Mathf.Round((float)(FeaturesUICooldown--)/10f)).ToString();
+                startCounterText.text = (Mathf.Round((float)(FeaturesUICooldown--) / 10f)).ToString();
                 yield return new WaitForSeconds(0.1f);
             }
+
             StartFeaturesHolder.SetActive(false);
             UIBalance.SetActive(false);
         }
@@ -115,10 +116,10 @@ namespace Nekoyume.PandoraBox
             FeaturesUICooldown = 0;
         }
 
-        public IEnumerator ShowEndBooster(int livesBought,int gameSeed)
+        public IEnumerator ShowEndBooster(int livesBought, int gameSeed)
         {
-            pcBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PC"].ToString();
-            pgBalance.text = PandoraMaster.PlayFabInventory.VirtualCurrency["PG"].ToString();
+            pcBalance.text = Premium.PandoraProfile.Currencies["PC"].ToString();
+            pgBalance.text = Premium.PandoraProfile.Currencies["PG"].ToString();
             EndFeaturesHolder.SetActive(true);
             UIBalance.SetActive(true);
             Transform boosters = EndFeaturesHolder.transform.Find("Boosters");
@@ -126,9 +127,11 @@ namespace Nekoyume.PandoraBox
             {
                 boosters.GetChild(i).GetComponent<UtilitieSlot>().SetItemData();
             }
+
             int newPrice = boosters.GetChild(0).GetComponent<UtilitieSlot>().ItemPrice
-                + (boosters.GetChild(0).GetComponent<UtilitieSlot>().ItemPrice * (livesBought - gameSeed));
-            boosters.GetChild(0).GetComponent<UtilitieSlot>().itemPrice.text = "x " + (newPrice); ;
+                           + (boosters.GetChild(0).GetComponent<UtilitieSlot>().ItemPrice * (livesBought - gameSeed));
+            boosters.GetChild(0).GetComponent<UtilitieSlot>().itemPrice.text = "x " + (newPrice);
+            ;
 
             FeaturesUICooldown = 50;
             while (FeaturesUICooldown > 0)
