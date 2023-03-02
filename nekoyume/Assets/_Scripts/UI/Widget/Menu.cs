@@ -549,7 +549,7 @@ namespace Nekoyume.UI
                                     "_DisplayText";
             var currentName = States.Instance.CurrentAvatarState.name + " #" +
                               States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 5);
-            PlayerPrefs.SetString(displayNameKey, currentName); //save profile name
+
 
             if (string.IsNullOrEmpty(Premium.PandoraProfile.Profile.DisplayName))
             {
@@ -562,6 +562,10 @@ namespace Nekoyume.UI
                             NotificationCell.NotificationType.Alert);
                     });
             }
+
+            if (!string.IsNullOrEmpty(Premium.PandoraProfile.Profile.DisplayName))
+                currentName = Premium.PandoraProfile.Profile.DisplayName;
+            PlayerPrefs.SetString(displayNameKey, currentName); //save profile name
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             //load favorite items

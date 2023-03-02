@@ -469,7 +469,7 @@ namespace Nekoyume.PandoraBox
         }
 
         public static async UniTask CRAFT_AutoCraftEquipment(AvatarState currentAvatarState, int slotIndex,
-            EquipmentItemRecipeSheet.Row recipeRow, bool payByCrystal, bool isPremium)
+            EquipmentItemRecipeSheet.Row recipeRow, bool payByCrystal, bool isPremium, int avatarSlotIndex)
         {
             if (!PandoraProfile.IsPremium())
                 return;
@@ -537,11 +537,11 @@ namespace Nekoyume.PandoraBox
             try //in case actionManager is not ready yet
             {
                 var itemName = L10nManager.Localize($"ITEM_NAME_{recipeRow.ResultEquipmentId}");
-                string basicCraft = indexSub == 0 ? "Basic" : "Premium";
+                string premiumCraft = indexSub == 0 ? "Basic" : "Premium";
                 string hammerCraft = isHammerCraft ? "Super Craft" : "";
                 string crystal = payByCrystal ? ", With Crystal!" : "";
                 string analyzeText =
-                    $"CombinationEquipment > **{hammerCraft} {basicCraft}** {itemName} > {slotIndex}{crystal} " +
+                    $"CombinationEquipment > **{hammerCraft} {premiumCraft}** {itemName} > {slotIndex}{crystal} " +
                     $"> hammer:{hammerData.HammerPoint + 1}/{max}";
 
                 if (currentAvatarState.address == States.Instance.CurrentAvatarState.address)
@@ -583,7 +583,7 @@ namespace Nekoyume.PandoraBox
                     ActionManager.Instance.PreProcessAction(action, currentAvatarState, analyzeText);
                 }
 
-                Widget.Find<ChronoSlotsPopup>().slots[slotIndex].stageCooldown = 0; //force reset avatar?
+                Widget.Find<ChronoSlotsPopup>().slots[avatarSlotIndex].stageCooldown = 0; //force reset avatar?
                 OneLineSystem.Push(MailType.System,
                     $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} " +
                     $"start Auto Craft <color=green>{itemName}</color> on Slot <color=green>{slotIndex + 1}</color> hammer points: <color=green>{hammerData.HammerPoint + 1}</color>/{max}!",
@@ -825,6 +825,7 @@ namespace Nekoyume.PandoraBox
         {
             if (!PandoraProfile.IsPremium())
                 return "This is not <b>Premium</b> account!";
+
 
             int _stageId = 1;
             currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);

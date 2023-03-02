@@ -516,13 +516,19 @@ namespace Nekoyume.UI.Module
                     {
                         var result = await Premium.PVE_AutoStageRepeat(currentAvatarState);
                         if (string.IsNullOrEmpty(result))
+                        {
+                            int _stageId = 1;
+                            currentAvatarState.worldInformation.TryGetLastClearedStageId(out _stageId);
+                            _stageId = Math.Clamp(_stageId + 1, 1, 300);
                             OneLineSystem.Push(MailType.System,
-                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>{currentAvatarState.actionPoint}</color> AP for stage {currentChronoAvatarSetting.StageSweepLevelIndex}!",
+                                $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} Repeat <color=green>{currentAvatarState.actionPoint}</color> AP for stage {_stageId}!",
                                 NotificationCell.NotificationType.Information);
+                        }
                         else
                             OneLineSystem.Push(MailType.System,
                                 $"<color=green>Pandora Box</color>: {currentAvatarState.NameWithHash} <b>Failed</b> to send Repeat because {result}",
                                 NotificationCell.NotificationType.Alert);
+
                         stageCooldown = currentBlockIndex + urgentUpdateInterval;
                     }
                     catch (Exception ex)
@@ -640,9 +646,12 @@ namespace Nekoyume.UI.Module
                             out var equipRow))
                     {
                         if (equipRow != null)
+                        {
                             await Premium.CRAFT_AutoCraftEquipment(currentAvatarState, i, equipRow,
                                 Convert.ToBoolean(currentChronoAvatarSetting.CraftIsUseCrystal),
-                                Convert.ToBoolean(currentChronoAvatarSetting.CraftIsPremium));
+                                Convert.ToBoolean(currentChronoAvatarSetting.CraftIsPremium), _slotIndex);
+                        }
+
                         break; //enforce break to wait new craft count the hammer points
                     }
                     else if (tableSheets.ConsumableItemRecipeSheet.TryGetValue(currentChronoAvatarSetting.CraftItemID,

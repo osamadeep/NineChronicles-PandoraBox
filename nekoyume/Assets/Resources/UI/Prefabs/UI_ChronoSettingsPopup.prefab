@@ -208,8 +208,8 @@ MonoBehaviour:
   CraftFillCrystalOffImage: {fileID: 3945192262050490926}
   craftIDInput: {fileID: 2499088356550524056}
   CraftIconIDImage: {fileID: 2683253423150997691}
-  PremiumCraftOnImage: {fileID: 1520204203447040727}
-  PremiumCraftOffImage: {fileID: 5077406376068622806}
+  PremiumCraftOnImage: {fileID: 5077406376068622806}
+  PremiumCraftOffImage: {fileID: 1520204203447040727}
   eventModule: {fileID: 7942195345694710592}
   eventOnImage: {fileID: 2661835468360354059}
   eventOffImage: {fileID: 4271979595519262278}
@@ -6276,7 +6276,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4036712308749684564
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7977,8 +7977,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5232719873926403040}
-  - {fileID: 7316849210538695835}
   - {fileID: 3638842469721888199}
+  - {fileID: 7316849210538695835}
   m_Father: {fileID: 4186700801071807072}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -9310,7 +9310,7 @@ GameObject:
   - component: {fileID: 1520204203447040727}
   - component: {fileID: 5452853124039657211}
   m_Layer: 5
-  m_Name: OnButton
+  m_Name: OffButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9330,11 +9330,11 @@ RectTransform:
   m_Children:
   - {fileID: 7563313629119266519}
   m_Father: {fileID: 5300096477861215189}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -95.182556, y: -20.000006}
+  m_AnchoredPosition: {x: -93.3, y: -20.000006}
   m_SizeDelta: {x: 65, y: 40}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &7791647216950446208
@@ -9429,7 +9429,7 @@ MonoBehaviour:
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 1
+          m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &4685316978088708534
 GameObject:
@@ -14551,7 +14551,7 @@ GameObject:
   - component: {fileID: 5077406376068622806}
   - component: {fileID: 6336439769612691507}
   m_Layer: 5
-  m_Name: OffButton
+  m_Name: OnButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14571,11 +14571,11 @@ RectTransform:
   m_Children:
   - {fileID: 973742342656225715}
   m_Father: {fileID: 5300096477861215189}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -25, y: -20.000006}
+  m_AnchoredPosition: {x: -24.100006, y: -20.000006}
   m_SizeDelta: {x: 65, y: 40}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &2228443431663481048
@@ -14670,7 +14670,7 @@ MonoBehaviour:
           m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
+          m_BoolArgument: 1
         m_CallState: 2
 --- !u!1 &7264538906419280994
 GameObject:

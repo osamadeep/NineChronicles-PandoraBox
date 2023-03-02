@@ -17,9 +17,11 @@ using Nekoyume.UI.Scroller;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using NCTx = Libplanet.Tx.Transaction<Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>>;
 
 namespace Nekoyume.UI
 {
+    using Nekoyume.PandoraBox;
     using System.Threading.Tasks;
     using UniRx;
 
@@ -284,16 +286,16 @@ namespace Nekoyume.UI
         {
             var runeId = _selectedRuneItem.Row.Id;
             Animator.Play(HashToMaterialUse);
+            LoadingHelper.RuneEnhancement.Value = true;
             for (int i = 0; i < multiSlider.value; i++)
             {
                 await ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
-                await Task.Delay(1000);
+                PandoraUtil.ShowSystemNotification($"{i + 1}/{multiSlider.value} Upgrade sent, please wait...",
+                    NotificationCell.NotificationType.Notification);
             }
 
-            OneLineSystem.Push(MailType.System,
-                $"<color=green>Pandora Box</color>: {multiSlider.value} times Upgrade sent!",
-                NotificationCell.NotificationType.Information);
-            LoadingHelper.RuneEnhancement.Value = true;
+            PandoraUtil.ShowSystemNotification($"{multiSlider.value} times Upgrades finished Successfully!",
+                NotificationCell.NotificationType.Notification);
         }
 
         public void ChangeMultiSlider()
