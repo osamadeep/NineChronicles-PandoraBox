@@ -33,40 +33,34 @@ namespace Nekoyume.UI
     {
         private static readonly int FirstClicked =
             Animator.StringToHash("FirstClicked");
+
         private static readonly int EquipmentClick =
             Animator.StringToHash("EquipmentClick");
+
         private static readonly int ConsumableClick =
             Animator.StringToHash("ConsumableClick");
 
-        [SerializeField]
-        private Toggle equipmentToggle;
+        [SerializeField] private Toggle equipmentToggle;
 
-        [SerializeField]
-        private Toggle consumableToggle;
+        [SerializeField] private Toggle consumableToggle;
 
-        [SerializeField]
-        private Toggle eventConsumableToggle;
+        [SerializeField] private Toggle eventConsumableToggle;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private RecipeScroll recipeScroll;
+        [SerializeField] private RecipeScroll recipeScroll;
 
-        [SerializeField]
-        private SubRecipeView equipmentSubRecipeView;
+        [SerializeField] private SubRecipeView equipmentSubRecipeView;
 
-        [SerializeField]
-        private SubRecipeView consumableSubRecipeView;
+        [SerializeField] private SubRecipeView consumableSubRecipeView;
 
-        [SerializeField]
-        private SubRecipeView eventConsumableSubRecipeView;
+        [SerializeField] private SubRecipeView eventConsumableSubRecipeView;
 
-        [SerializeField]
-        private SubRecipeView eventMaterialSubRecipeView;
+        [SerializeField] private SubRecipeView eventMaterialSubRecipeView;
 
-        [SerializeField]
-        private CanvasGroup canvasGroup;
+        [SerializeField] private SubRecipeView eventEquipmentSubRecipeView;
+
+        [SerializeField] private CanvasGroup canvasGroup;
 
         public static RecipeModel SharedModel { get; set; }
 
@@ -120,6 +114,10 @@ namespace Nekoyume.UI
 
             eventMaterialSubRecipeView.CombinationActionSubject
                 .Subscribe(EventMaterialItemCraftsAction)
+                .AddTo(gameObject);
+
+            eventEquipmentSubRecipeView.CombinationActionSubject
+                .Subscribe(OnClickEquipmentAction)
                 .AddTo(gameObject);
         }
 
@@ -181,6 +179,10 @@ namespace Nekoyume.UI
                     else if (eventMaterialSubRecipeView.gameObject.activeSelf)
                     {
                         eventMaterialSubRecipeView.UpdateView();
+                    }
+                    else if (eventEquipmentSubRecipeView.gameObject.activeSelf)
+                    {
+                        eventEquipmentSubRecipeView.UpdateView();
                     }
                 })
                 .AddTo(gameObject);
@@ -294,6 +296,7 @@ namespace Nekoyume.UI
         {
             Assert.True(equipmentToggle.isOn);
             equipmentSubRecipeView.ResetSelectedIndex();
+            eventEquipmentSubRecipeView.ResetSelectedIndex();
             recipeScroll.ShowAsEquipment(ItemSubType.Weapon, true);
             SharedModel.SelectedRow.Value = null;
         }
@@ -304,7 +307,6 @@ namespace Nekoyume.UI
             {
                 consumableSubRecipeView.ResetSelectedIndex();
                 recipeScroll.ShowAsFood(StatType.HP, true);
-
             }
             else if (eventConsumableToggle.isOn)
             {
@@ -322,11 +324,17 @@ namespace Nekoyume.UI
             switch (row)
             {
                 case EquipmentItemRecipeSheet.Row equipmentRow:
-                    equipmentSubRecipeView.gameObject.SetActive(true);
+                    equipmentSubRecipeView.gameObject.SetActive(false);
                     consumableSubRecipeView.gameObject.SetActive(false);
                     eventConsumableSubRecipeView.gameObject.SetActive(false);
                     eventMaterialSubRecipeView.gameObject.SetActive(false);
-                    equipmentSubRecipeView.SetData(equipmentRow, equipmentRow.SubRecipeIds);
+                    eventEquipmentSubRecipeView.gameObject.SetActive(false);
+
+                    var subRecipeView = Util.IsEventEquipmentRecipe(equipmentRow.Id)
+                        ? eventEquipmentSubRecipeView
+                        : equipmentSubRecipeView;
+                    subRecipeView.gameObject.SetActive(true);
+                    subRecipeView.SetData(equipmentRow, equipmentRow.SubRecipeIds);
                     break;
                 // NOTE: We must check the `row` is type of `EventConsumableItemRecipeSheet.Row`
                 //       because the `EventConsumableItemRecipeSheet.Row` is the inherited class of
@@ -336,6 +344,7 @@ namespace Nekoyume.UI
                     consumableSubRecipeView.gameObject.SetActive(false);
                     eventConsumableSubRecipeView.gameObject.SetActive(true);
                     eventMaterialSubRecipeView.gameObject.SetActive(false);
+                    eventEquipmentSubRecipeView.gameObject.SetActive(false);
                     eventConsumableSubRecipeView.SetData(eventConsumableRow, null);
                     break;
                 case ConsumableItemRecipeSheet.Row consumableRow:
@@ -343,6 +352,7 @@ namespace Nekoyume.UI
                     consumableSubRecipeView.gameObject.SetActive(true);
                     eventConsumableSubRecipeView.gameObject.SetActive(false);
                     eventMaterialSubRecipeView.gameObject.SetActive(false);
+                    eventEquipmentSubRecipeView.gameObject.SetActive(false);
                     consumableSubRecipeView.SetData(consumableRow, null);
                     break;
 
@@ -351,6 +361,7 @@ namespace Nekoyume.UI
                     consumableSubRecipeView.gameObject.SetActive(false);
                     eventConsumableSubRecipeView.gameObject.SetActive(false);
                     eventMaterialSubRecipeView.gameObject.SetActive(true);
+                    eventEquipmentSubRecipeView.gameObject.SetActive(false);
                     eventMaterialSubRecipeView.SetData(eventMaterialRow, null);
                     break;
                 default:
@@ -358,6 +369,7 @@ namespace Nekoyume.UI
                     consumableSubRecipeView.gameObject.SetActive(false);
                     eventConsumableSubRecipeView.gameObject.SetActive(false);
                     eventMaterialSubRecipeView.gameObject.SetActive(false);
+                    eventEquipmentSubRecipeView.gameObject.SetActive(false);
                     break;
             }
         }
@@ -483,9 +495,10 @@ namespace Nekoyume.UI
 
         private void CombinationEquipmentAction(SubRecipeView.RecipeInfo recipeInfo)
         {
-            if (!equipmentSubRecipeView.CheckSubmittable(
-                    out var errorMessage,
-                    out var slotIndex))
+            var subRecipeView = Util.IsEventEquipmentRecipe(recipeInfo.RecipeId)
+                ? eventEquipmentSubRecipeView
+                : equipmentSubRecipeView;
+            if (!subRecipeView.CheckSubmittable(out var errorMessage, out var slotIndex))
             {
                 OneLineSystem.Push(
                     MailType.System,
@@ -508,7 +521,7 @@ namespace Nekoyume.UI
                 requiredBlockIndex += subRecipeRow.RequiredBlockIndex;
             }
 
-            equipmentSubRecipeView.UpdateView();
+            subRecipeView.UpdateView();
             var insufficientMaterials = recipeInfo.ReplacedMaterials;
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             if (insufficientMaterials.Any())
@@ -548,37 +561,37 @@ namespace Nekoyume.UI
                 else
                 {
                     Find<ReplaceMaterialPopup>().Show(insufficientMaterials,
-                    () =>
-                    {
-                        var slots = Find<CombinationSlotsPopup>();
-                        slots.SetCaching(
-                            avatarAddress,
-                            slotIndex,
-                            true,
-                            requiredBlockIndex,
-                            itemUsable: equipment);
-                        Find<HeaderMenuStatic>().Crystal.SetProgressCircle(true);
-
-                        Analyzer.Instance.Track(
-                            "Unity/Replace Combination Material",
-                            new Dictionary<string, Value>()
-                            {
-                                ["MaterialCount"] = insufficientMaterials
-                                    .Sum(x => x.Value),
-                                ["BurntCrystal"] = (long)recipeInfo.CostCrystal,
-                                ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
-                                ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
-                            });
-
-                        ActionManager.Instance
-                            .CombinationEquipment(
-                                recipeInfo,
+                        () =>
+                        {
+                            var slots = Find<CombinationSlotsPopup>();
+                            slots.SetCaching(
+                                avatarAddress,
                                 slotIndex,
                                 true,
-                                false)
-                            .Subscribe();
-                        StartCoroutine(CoCombineNPCAnimation(equipment, requiredBlockIndex));
-                    });
+                                requiredBlockIndex,
+                                itemUsable: equipment);
+                            Find<HeaderMenuStatic>().Crystal.SetProgressCircle(true);
+
+                            Analyzer.Instance.Track(
+                                "Unity/Replace Combination Material",
+                                new Dictionary<string, Value>()
+                                {
+                                    ["MaterialCount"] = insufficientMaterials
+                                        .Sum(x => x.Value),
+                                    ["BurntCrystal"] = (long)recipeInfo.CostCrystal,
+                                    ["AvatarAddress"] = States.Instance.CurrentAvatarState.address.ToString(),
+                                    ["AgentAddress"] = States.Instance.CurrentAvatarState.agentAddress.ToString(),
+                                });
+
+                            ActionManager.Instance
+                                .CombinationEquipment(
+                                    recipeInfo,
+                                    slotIndex,
+                                    true,
+                                    false)
+                                .Subscribe();
+                            StartCoroutine(CoCombineNPCAnimation(equipment, requiredBlockIndex));
+                        });
                 }
             }
             else
@@ -717,7 +730,8 @@ namespace Nekoyume.UI
             var format = L10nManager.Localize("UI_COST_BLOCK");
             var quote = string.Format(format, blockIndex);
             var itemType = itemBase.ItemType != ItemType.Material
-                ? itemBase.ItemType : ItemType.Consumable;
+                ? itemBase.ItemType
+                : ItemType.Consumable;
             loadingScreen.AnimateNPC(itemType, quote);
         }
 

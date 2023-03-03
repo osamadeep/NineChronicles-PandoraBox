@@ -13,8 +13,7 @@ namespace Nekoyume.Game.Character
 {
     public class CharacterAppearance : MonoBehaviour
     {
-        [SerializeField]
-        private BoxCollider boxCollider;
+        [SerializeField] private BoxCollider boxCollider;
 
         private CharacterAnimator _animator;
         private HudContainer _hudContainer;
@@ -22,6 +21,11 @@ namespace Nekoyume.Game.Character
 
         public PlayerSpineController SpineController { get; private set; }
         public BoxCollider BoxCollider => boxCollider;
+
+        private void OnDisable()
+        {
+            Destroy(_cachedCharacterTitle);
+        }
 
         public void Set(
             ArenaPlayerDigest digest,
@@ -198,7 +202,7 @@ namespace Nekoyume.Game.Character
                 case ItemSubType.FullCostume:
                     // FullCostume is handled elsewhere
                     break;
-           }
+            }
         }
 
         private void ChangeSpineObject(string spineResourcePath, bool isFullCostume, bool updateHitPoint = true)

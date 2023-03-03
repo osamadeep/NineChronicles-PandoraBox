@@ -38,9 +38,9 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public TextMeshProUGUI PriceText;
+        [SerializeField] private Button CancelLastBtn = null;
         [SerializeField] private Button RelistAllBtn = null;
         [SerializeField] private Button ReturnAllBtn = null;
-        [SerializeField] private Button CancelLastBtn = null;
         public TextMeshProUGUI LastSoldTxt = null;
 
         public ItemBase LastItemSold = null;
@@ -126,9 +126,9 @@ namespace Nekoyume.UI
             };
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            CancelLastBtn.onClick.AddListener(() => { ReturnLast(); });
             RelistAllBtn.onClick.AddListener(() => { RelistAll(); });
             ReturnAllBtn.onClick.AddListener(() => { ReturnAll(); });
-            CancelLastBtn.onClick.AddListener(() => { ReturnLast(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 

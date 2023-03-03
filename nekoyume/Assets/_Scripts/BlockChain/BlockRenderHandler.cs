@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Bencodex.Types;
 using Cysharp.Threading.Tasks;
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet.Action;
 using Libplanet.Assets;
 using Libplanet.Blocks;
@@ -55,7 +55,8 @@ namespace Nekoyume.BlockChain
                 .Subscribe(_ =>
                 {
                     var msg = L10nManager.Localize("ERROR_REORG_OCCURRED");
-                    UI.NotificationSystem.Push(Model.Mail.MailType.System, msg, NotificationCell.NotificationType.Alert);
+                    UI.NotificationSystem.Push(Model.Mail.MailType.System, msg,
+                        NotificationCell.NotificationType.Alert);
                 })
                 .AddTo(_disposables);
             _blockRenderer.ReorgEndSubject.ObserveOnMainThread().Subscribe(_ =>

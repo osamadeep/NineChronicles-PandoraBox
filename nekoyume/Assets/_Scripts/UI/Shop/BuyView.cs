@@ -56,7 +56,6 @@ namespace Nekoyume
 
 
         int PandoraExtraIndexStart = 4;
-        public UnityEngine.UI.Toggle World6Toggle;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -245,12 +244,6 @@ namespace Nekoyume
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PriceToggle.onValueChanged.AddListener(_ => { UpdateView(); });
             SpellToggle.onValueChanged.AddListener(_ => { UpdateView(); });
-            World6Toggle.onValueChanged.AddListener(_ =>
-            {
-                if (World6Toggle.isOn)
-                    World6Toggle.isOn = Premium.PANDORA_CheckPremium();
-                UpdateView();
-            });
             priceValueTxt.onValueChanged.AddListener(_ =>
             {
                 if (priceValueTxt.text.Length > 0)
@@ -489,7 +482,6 @@ namespace Nekoyume
             StarCountsDrop.value = 0;
             SpellToggle.isOn = false;
             AddressTxt.text = "";
-            World6Toggle.isOn = false;
             PandoraBox.Premium.SHOP_FirstFilter(_selectedSortFilter);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
@@ -571,42 +563,6 @@ namespace Nekoyume
                                            ((x.ItemBase as Model.Item.Equipment).Skills.Count +
                                                (new ItemOptionInfo(x.ItemBase as Model.Item.Equipment).StatOptions.Sum(
                                                    y => y.count)) == StarCountsDrop.value)).ToList();
-            }
-
-            if (World6Toggle.isOn && Premium.PandoraProfile.IsPremium())
-            {
-                List<int> world6IDs = new List<int>
-                {
-                    //War Sword
-                    10140000, 10141000, 10142000, 10143000, 10144000,
-                    //Legendary Belt
-                    10350000, 10351000, 10352000, 10353000, 10354000,
-                    //Warrior's Ring
-                    10540000, 10541000, 10542000, 10543000, 10544000,
-                    //Legendary Necklace
-                    10450000, 10451000, 10452000, 10453000, 10454000,
-                    //War Armor
-                    10240000, 10241000, 10242000, 10243000, 10244000,
-                };
-                models = items[ItemSubTypeFilter.Weapon];
-                models.AddRange(items[ItemSubTypeFilter.Armor]);
-                models.AddRange(items[ItemSubTypeFilter.Belt]);
-                models.AddRange(items[ItemSubTypeFilter.Necklace]);
-                models.AddRange(items[ItemSubTypeFilter.Ring]);
-                models = models.Where(x => !x.Expired.Value).ToList();
-
-                models = models.Where(x => world6IDs.Exists(y => y == x.ItemBase.Id)).ToList();
-
-                if (_selectedItemIds.Value.Any()) // _selectedItemIds
-                {
-                    models = models.Where(x =>
-                        _selectedItemIds.Value.Exists(y => x.ItemBase.Id.Equals(y))).ToList();
-                }
-
-                if (_levelLimit.Value)
-                {
-                    models = models.Where(x => Util.IsUsableItem(x.ItemBase)).ToList();
-                }
             }
 
             if (!string.IsNullOrEmpty(AddressTxt.text))

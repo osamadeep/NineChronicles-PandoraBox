@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using Lib9c.Model.Order;
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet;
 using Libplanet.Action;
 using Nekoyume.Action;
@@ -234,6 +234,7 @@ namespace Nekoyume.BlockChain
                 .Subscribe(ResponseSell)
                 .AddTo(_disposables);
         }
+
         private void SellCancellation()
         {
             _actionRenderer.EveryRender<SellCancellation>()
@@ -375,6 +376,7 @@ namespace Nekoyume.BlockChain
                 .Subscribe(ResponseTransferAsset)
                 .AddTo(_disposables);
         }
+
         private void HackAndSlashSweep()
         {
             _actionRenderer.EveryRender<HackAndSlashSweep>()
@@ -481,7 +483,7 @@ namespace Nekoyume.BlockChain
                 .AddTo(_disposables);
         }
 
-        private async UniTaskVoid ResponseCreateAvatar(ActionBase.ActionEvaluation<CreateAvatar> eval)
+        private async UniTaskVoid ResponseCreateAvatar(ActionEvaluation<CreateAvatar> eval)
         {
             if (eval.Exception != null)
             {
@@ -491,8 +493,6 @@ namespace Nekoyume.BlockChain
             await UpdateAgentStateAsync(eval);
             await UpdateAvatarState(eval, eval.Action.index);
             var avatarState = await States.Instance.SelectAvatarAsync(eval.Action.index);
-            await States.Instance.InitRuneStoneBalance();
-            await States.Instance.InitRuneStates();
             await States.Instance.InitItemSlotStates();
             await States.Instance.InitRuneSlotStates();
 
@@ -517,7 +517,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseRapidCombination(ActionBase.ActionEvaluation<RapidCombination> eval)
+        private void ResponseRapidCombination(ActionEvaluation<RapidCombination> eval)
         {
             if (eval.Exception is null)
             {
@@ -533,7 +533,7 @@ namespace Nekoyume.BlockChain
                 var formatKey = string.Empty;
                 var currentBlockIndex = Game.Game.instance.Agent.BlockIndex;
 
-                var avatarState = States.Instance.AvatarStates.Values.FirstOrDefault(x=> x.address == avatarAddress);
+                var avatarState = States.Instance.AvatarStates.Values.FirstOrDefault(x => x.address == avatarAddress);
                 if (avatarState is null)
                 {
                     return;
@@ -628,7 +628,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseCombinationEquipment(ActionBase.ActionEvaluation<CombinationEquipment> eval)
+        private void ResponseCombinationEquipment(ActionEvaluation<CombinationEquipment> eval)
         {
             if (eval.Action.payByCrystal)
             {
@@ -734,7 +734,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseCombinationConsumable(ActionBase.ActionEvaluation<CombinationConsumable> eval)
+        private void ResponseCombinationConsumable(ActionEvaluation<CombinationConsumable> eval)
         {
             if (eval.Exception is null)
             {
@@ -778,7 +778,7 @@ namespace Nekoyume.BlockChain
         }
 
         private void ResponseEventConsumableItemCrafts(
-            ActionBase.ActionEvaluation<EventConsumableItemCrafts> eval)
+            ActionEvaluation<EventConsumableItemCrafts> eval)
         {
             if (eval.Exception is not null)
             {
@@ -823,7 +823,7 @@ namespace Nekoyume.BlockChain
         }
 
         private void ResponseEventMaterialItemCrafts(
-            ActionBase.ActionEvaluation<EventMaterialItemCrafts> eval)
+            ActionEvaluation<EventMaterialItemCrafts> eval)
         {
             if (eval.Exception is not null)
             {
@@ -833,7 +833,8 @@ namespace Nekoyume.BlockChain
             var avatarAddress = eval.Action.AvatarAddress;
             var materialsToUse = eval.Action.MaterialsToUse;
             var recipe = TableSheets.Instance.EventMaterialItemRecipeSheet[eval.Action.EventMaterialItemRecipeId];
-            var resultItem = ItemFactory.CreateMaterial(TableSheets.Instance.MaterialItemSheet, recipe.ResultMaterialItemId);
+            var resultItem =
+                ItemFactory.CreateMaterial(TableSheets.Instance.MaterialItemSheet, recipe.ResultMaterialItemId);
 
             foreach (var material in materialsToUse)
             {
@@ -850,7 +851,7 @@ namespace Nekoyume.BlockChain
             // ~Notify
         }
 
-        private void ResponseItemEnhancement(ActionBase.ActionEvaluation<ItemEnhancement> eval)
+        private void ResponseItemEnhancement(ActionEvaluation<ItemEnhancement> eval)
         {
             Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
             if (eval.Exception is null)
@@ -940,7 +941,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseSell(ActionBase.ActionEvaluation<Sell> eval)
+        private void ResponseSell(ActionEvaluation<Sell> eval)
         {
             if (eval.Exception is null)
             {
@@ -991,7 +992,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async void ResponseSellCancellation(ActionBase.ActionEvaluation<SellCancellation> eval)
+        private async void ResponseSellCancellation(ActionEvaluation<SellCancellation> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -1022,12 +1023,13 @@ namespace Nekoyume.BlockChain
             ReactiveShopState.UpdateSellDigestsAsync().Forget();
         }
 
-        private async void ResponseUpdateSell(ActionBase.ActionEvaluation<UpdateSell> eval)
+        private async void ResponseUpdateSell(ActionEvaluation<UpdateSell> eval)
         {
             if (!(eval.Exception is null))
             {
                 return;
             }
+
             var updateSellInfos = eval.Action.updateSellInfos;
 
             string message;
@@ -1052,13 +1054,14 @@ namespace Nekoyume.BlockChain
                     message = string.Format(L10nManager.Localize("NOTIFICATION_REREGISTER_COMPLETE"), itemName);
                 }
             }
+
             OneLineSystem.Push(MailType.Auction, message, NotificationCell.NotificationType.Information);
 
             UpdateCurrentAvatarStateAsync(eval).Forget();
             ReactiveShopState.UpdateSellDigestsAsync().Forget();
         }
 
-        private async void ResponseBuy(ActionBase.ActionEvaluation<Buy> eval)
+        private async void ResponseBuy(ActionEvaluation<Buy> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -1180,7 +1183,7 @@ namespace Nekoyume.BlockChain
             RenderQuest(avatarAddress, avatarState.questList.completedQuestIds);
         }
 
-        private async void ResponseDailyRewardAsync(ActionBase.ActionEvaluation<DailyReward> eval)
+        private async void ResponseDailyRewardAsync(ActionEvaluation<DailyReward> eval)
         {
             if (GameConfigStateSubject.ActionPointState.ContainsKey(eval.Action.avatarAddress))
             {
@@ -1207,7 +1210,8 @@ namespace Nekoyume.BlockChain
                     }
                 }
 
-                if (isMyOtherAvatars && eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
+                if (isMyOtherAvatars &&
+                    eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
                 {
                     //var newAvatar = await States.Instance.AddOrReplaceAvatarStateAsync(avatarState, avatarKey); //update and forget
                     //await States.Instance.AddOrReplaceAvatarStateAsync(avatarState, avatarKey);
@@ -1218,6 +1222,7 @@ namespace Nekoyume.BlockChain
                         {
                             return;
                         }
+
                         await States.Instance.AddOrReplaceAvatarStateAsync(curAvatarState, avatarKey);
                         //Debug.LogError($"[{avatarState.name}]{avatarState.address} with key {avatarKey} AddOrReplaceAvatarStateAsync!");
                     });
@@ -1226,9 +1231,8 @@ namespace Nekoyume.BlockChain
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (eval.Exception is null &&
-            eval.Action.avatarAddress == States.Instance.CurrentAvatarState.address)
+                eval.Action.avatarAddress == States.Instance.CurrentAvatarState.address)
             {
-                await States.Instance.InitRuneStoneBalance();
                 LocalLayer.Instance.ClearAvatarModifiers<AvatarDailyRewardReceivedIndexModifier>(
                     eval.Action.avatarAddress);
                 UpdateCurrentAvatarStateAsync(eval).Forget();
@@ -1251,7 +1255,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async void ResponseHackAndSlashAsync(ActionBase.ActionEvaluation<HackAndSlash> eval)
+        private async void ResponseHackAndSlashAsync(ActionEvaluation<HackAndSlash> eval)
         {
             if (eval.Exception is null)
             {
@@ -1270,9 +1274,9 @@ namespace Nekoyume.BlockChain
                         .First()
                         .Subscribe(_ =>
                         {
-                            var task = UniTask.Run(() =>
+                            var task = UniTask.Run(async () =>
                             {
-                                UpdateCurrentAvatarStateAsync(eval).Forget();
+                                await UpdateCurrentAvatarStateAsync(eval);
                                 UpdateCrystalRandomSkillState(eval);
                                 var avatarState = States.Instance.CurrentAvatarState;
                                 RenderQuest(eval.Action.AvatarAddress,
@@ -1383,7 +1387,7 @@ namespace Nekoyume.BlockChain
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
-        private async void ResponseHackAndSlashSweepAsync(ActionBase.ActionEvaluation<HackAndSlashSweep> eval)
+        private async void ResponseHackAndSlashSweepAsync(ActionEvaluation<HackAndSlashSweep> eval)
         {
             if (eval.Exception is null)
             {
@@ -1394,9 +1398,9 @@ namespace Nekoyume.BlockChain
                     ActionRenderHandler.Instance.Pending = false;
 
                     OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Sweep Hack And Slash Fights " +
-                    "<color=green><b>Successfully</b></color> committed on the blockchain!"
-                    , NotificationCell.NotificationType.Information);
+                        "<color=green>Pandora Box</color>: Sweep Hack And Slash Fights " +
+                        "<color=green><b>Successfully</b></color> committed on the blockchain!"
+                        , NotificationCell.NotificationType.Information);
                 }
 
                 bool isMyOtherAvatars = false;
@@ -1416,7 +1420,8 @@ namespace Nekoyume.BlockChain
                     }
                 }
 
-                if (isMyOtherAvatars && eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
+                if (isMyOtherAvatars &&
+                    eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address) //not current one
                 {
                     await UniTask.Run(async () =>
                     {
@@ -1425,6 +1430,7 @@ namespace Nekoyume.BlockChain
                         {
                             return;
                         }
+
                         await States.Instance.AddOrReplaceAvatarStateAsync(curAvatarState, avatarKey);
                     });
                 }
@@ -1447,21 +1453,21 @@ namespace Nekoyume.BlockChain
                     States.Instance.UpdateRuneSlotStates(BattleType.Adventure));
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 if (Widget.Find<BattlePreparation>().IsActive())
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-                Widget.Find<BattlePreparation>().UpdateInventoryView();
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    Widget.Find<BattlePreparation>().UpdateInventoryView();
             }
             else
             {
                 Widget.Find<SweepResultPopup>().Close();
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, false).Forget();
             }
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         }
 
-        private async void ResponseMimisbrunnrAsync(ActionBase.ActionEvaluation<MimisbrunnrBattle> eval)
+        private async void ResponseMimisbrunnrAsync(ActionEvaluation<MimisbrunnrBattle> eval)
         {
             if (eval.Exception is null)
             {
@@ -1556,6 +1562,7 @@ namespace Nekoyume.BlockChain
                     showLoadingScreen = true;
                     Widget.Find<BattleResultPopup>().Close();
                 }
+
                 Game.Game.BackToMainAsync(eval.Exception.InnerException, showLoadingScreen).Forget();
             }
 
@@ -1564,7 +1571,7 @@ namespace Nekoyume.BlockChain
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
-        private async void ResponseEventDungeonBattleAsync(ActionBase.ActionEvaluation<EventDungeonBattle> eval)
+        private async void ResponseEventDungeonBattleAsync(ActionEvaluation<EventDungeonBattle> eval)
         {
             if (!ActionManager.IsLastBattleActionId(eval.Action.Id))
             {
@@ -1578,8 +1585,8 @@ namespace Nekoyume.BlockChain
                 {
                     ActionRenderHandler.Instance.Pending = false;
                     OneLineSystem.Push(MailType.System,
-                    "<color=green>Pandora Box</color>: Event Fights " + "<color=red><b>Failed</b></color>!",
-                    NotificationCell.NotificationType.Information);
+                        "<color=green>Pandora Box</color>: Event Fights " + "<color=red><b>Failed</b></color>!",
+                        NotificationCell.NotificationType.Information);
                     PandoraMaster.CurrentAction = PandoraUtil.ActionType.Idle;
                 }
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -1691,7 +1698,7 @@ namespace Nekoyume.BlockChain
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         }
 
-        private void ResponseRedeemCode(ActionBase.ActionEvaluation<Action.RedeemCode> eval)
+        private void ResponseRedeemCode(ActionEvaluation<Action.RedeemCode> eval)
         {
             var key = "UI_REDEEM_CODE_INVALID_CODE";
             if (eval.Exception is null)
@@ -1714,7 +1721,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseChargeActionPoint(ActionBase.ActionEvaluation<ChargeActionPoint> eval)
+        private void ResponseChargeActionPoint(ActionEvaluation<ChargeActionPoint> eval)
         {
             if (eval.Exception is null)
             {
@@ -1735,7 +1742,7 @@ namespace Nekoyume.BlockChain
         }
 
         private void ResponseClaimMonsterCollectionReward(
-            ActionBase.ActionEvaluation<ClaimMonsterCollectionReward> eval)
+            ActionEvaluation<ClaimMonsterCollectionReward> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -1799,7 +1806,7 @@ namespace Nekoyume.BlockChain
             RenderQuest(avatarAddress, avatarState.questList.completedQuestIds);
         }
 
-        private void ResponseTransferAsset(ActionBase.ActionEvaluation<TransferAsset> eval)
+        private void ResponseTransferAsset(ActionEvaluation<TransferAsset> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -1810,7 +1817,6 @@ namespace Nekoyume.BlockChain
             var recipientAddress = eval.Action.Recipient;
             var currentAgentAddress = States.Instance.CurrentAvatarState.agentAddress;
             var playToEarnRewardAddress = new Address("d595f7e85e1757d6558e9e448fa9af77ab28be4c");
-
 
 
             if (senderAddress == currentAgentAddress)
@@ -1831,7 +1837,8 @@ namespace Nekoyume.BlockChain
 
 
                         //Debug.LogError("RESPONSE: " + eval.Action.Memo + "  ," + PandoraMaster.CrystalTransferTx);
-                        Premium.ACCOUNT_ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo, (int)eval.Action.Amount.MajorUnit);
+                        Premium.ACCOUNT_ConfirmCrystalRequest(eval.BlockIndex, eval.Action.Memo,
+                            (int)eval.Action.Amount.MajorUnit);
                     }
                     else if (eval.Action.Memo.Length > 12 && eval.Action.Memo.Substring(0, 12) == "Pandora Gems")
                     {
@@ -1874,11 +1881,13 @@ namespace Nekoyume.BlockChain
                     if (eval.Action.Memo.Substring(0, 6) == "PNDCRY")
                     {
                         Widget.Find<Alert>().Show("Crystals Incoming",
-                        $"You received {eval.Action.Amount.MajorUnit} <color=#EF3DFF>CRYSTALS</color>, Thank you for Using Pandora Service!", "OK", false);
+                            $"You received {eval.Action.Amount.MajorUnit} <color=#EF3DFF>CRYSTALS</color>, Thank you for Using Pandora Service!",
+                            "OK", false);
                     }
                 }
-                catch { }
-
+                catch
+                {
+                }
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
@@ -1887,8 +1896,7 @@ namespace Nekoyume.BlockChain
             UpdateAgentStateAsync(eval).Forget();
         }
 
-
-        private void ResponseGrinding(ActionBase.ActionEvaluation<Grinding> eval)
+        private void ResponseGrinding(ActionEvaluation<Grinding> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -1923,7 +1931,7 @@ namespace Nekoyume.BlockChain
         }
 
         private async UniTaskVoid ResponseUnlockEquipmentRecipeAsync(
-            ActionBase.ActionEvaluation<UnlockEquipmentRecipe> eval)
+            ActionEvaluation<UnlockEquipmentRecipe> eval)
         {
             Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
             var sharedModel = Craft.SharedModel;
@@ -1963,7 +1971,7 @@ namespace Nekoyume.BlockChain
             sharedModel.UpdateUnlockableRecipes();
         }
 
-        private void ResponseUnlockWorld(ActionBase.ActionEvaluation<UnlockWorld> eval)
+        private void ResponseUnlockWorld(ActionEvaluation<UnlockWorld> eval)
         {
             Widget.Find<UnlockWorldLoadingScreen>().Close();
 
@@ -1982,7 +1990,7 @@ namespace Nekoyume.BlockChain
             UpdateAgentStateAsync(eval).Forget();
         }
 
-        private void ResponseHackAndSlashRandomBuff(ActionBase.ActionEvaluation<HackAndSlashRandomBuff> eval)
+        private void ResponseHackAndSlashRandomBuff(ActionEvaluation<HackAndSlashRandomBuff> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -2000,7 +2008,7 @@ namespace Nekoyume.BlockChain
             Widget.Find<BuffBonusResultPopup>().Show(skillState.StageId, skillState);
         }
 
-        private void ResponseStake(ActionBase.ActionEvaluation<Stake> eval)
+        private void ResponseStake(ActionEvaluation<Stake> eval)
         {
             if (!(eval.Exception is null))
             {
@@ -2021,7 +2029,7 @@ namespace Nekoyume.BlockChain
             UpdateAgentStateAsync(eval).Forget();
         }
 
-        private void ResponseClaimStakeReward(ActionBase.ActionEvaluation<ActionBase> eval)
+        private void ResponseClaimStakeReward(ActionEvaluation<ActionBase> eval)
         {
             if (eval.Exception is not null)
             {
@@ -2104,16 +2112,16 @@ namespace Nekoyume.BlockChain
                 .AddTo(_disposables);
         }
 
-        private void ResponseTestbed(ActionBase.ActionEvaluation<CreateTestbed> eval)
+        private void ResponseTestbed(ActionEvaluation<CreateTestbed> eval)
         {
         }
 
-        private void ResponseCreateArenaDummy(ActionBase.ActionEvaluation<CreateArenaDummy> eval)
+        private void ResponseCreateArenaDummy(ActionEvaluation<CreateArenaDummy> eval)
         {
         }
 #endif
 
-        private static async UniTaskVoid ResponseJoinArenaAsync(ActionBase.ActionEvaluation<JoinArena> eval)
+        private static async UniTaskVoid ResponseJoinArenaAsync(ActionEvaluation<JoinArena> eval)
         {
             if (eval.Action.avatarAddress != States.Instance.CurrentAvatarState.address)
             {
@@ -2154,7 +2162,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async void ResponseBattleArenaAsync(ActionBase.ActionEvaluation<BattleArena> eval)
+        private async void ResponseBattleArenaAsync(ActionEvaluation<BattleArena> eval)
         {
             if (!ActionManager.IsLastBattleActionId(eval.Action.Id) ||
                 eval.Action.myAvatarAddress != States.Instance.CurrentAvatarState.address)
@@ -2169,6 +2177,7 @@ namespace Nekoyume.BlockChain
                 {
                     arenaBattlePreparation.OnRenderBattleArena(eval);
                 }
+
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 Premium.PVP_CancelPendingFights();
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -2331,6 +2340,7 @@ namespace Nekoyume.BlockChain
                 Widget.Find<ArenaBoard>().RefreshList().Forget();
                 Widget.Find<ArenaBoard>().StartCoroutine(Widget.Find<ArenaBoard>().RefreshCooldown());
             }
+
             if (Premium.ArenaBattleInProgress)
             {
                 UpdateAgentStateAsync(eval).Forget();
@@ -2343,7 +2353,8 @@ namespace Nekoyume.BlockChain
                 else
                 {
                     _disposableForBattleEnd = null;
-                    Premium.PVP_OnConfirmBattleEnd(enemyDigest.Value.NameWithHash, logs[0].Result.ToString(), (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
+                    Premium.PVP_OnConfirmBattleEnd(enemyDigest.Value.NameWithHash, logs[0].Result.ToString(),
+                        (outputMyScore - previousMyScore).ToString(), eval.BlockIndex);
                 }
             }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -2359,7 +2370,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private void ResponseBattleGrandFinale(ActionBase.ActionEvaluation<BattleGrandFinale> eval)
+        private void ResponseBattleGrandFinale(ActionEvaluation<BattleGrandFinale> eval)
         {
             if (!ActionManager.IsLastBattleActionId(eval.Action.Id) ||
                 eval.Action.myAvatarAddress != States.Instance.CurrentAvatarState.address)
@@ -2484,7 +2495,7 @@ namespace Nekoyume.BlockChain
             }
         }
 
-        private async void ResponseRaidAsync(ActionBase.ActionEvaluation<Raid> eval)
+        private async void ResponseRaidAsync(ActionEvaluation<Raid> eval)
         {
             if (eval.Exception is not null)
             {
@@ -2497,7 +2508,6 @@ namespace Nekoyume.BlockChain
                 States.Instance.UpdateRuneSlotStates(BattleType.Raid));
 
 
-
             var worldBoss = Widget.Find<WorldBoss>();
             var avatarAddress = Game.Game.instance.States.CurrentAvatarState.address;
 
@@ -2507,9 +2517,9 @@ namespace Nekoyume.BlockChain
             if (!(preRaiderStateEarly is null))
                 HighScore = preRaiderStateEarly.HighScore;
             OneLineSystem.Push(MailType.System,
-            "<color=green>Pandora Box</color>: Raid " +
-            $"<color=green><b>Successfully</b></color> committed on the blockchain, Your High is <color=green><b>{HighScore}</b></color>"
-            , NotificationCell.NotificationType.Information);
+                "<color=green>Pandora Box</color>: Raid " +
+                $"<color=green><b>Successfully</b></color> committed on the blockchain, Your High is <color=green><b>{HighScore}</b></color>"
+                , NotificationCell.NotificationType.Information);
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (Widget.Find<RaidPreparation>().IsSkipRender)
@@ -2517,7 +2527,7 @@ namespace Nekoyume.BlockChain
                 Widget.Find<LoadingScreen>().Close();
                 worldBoss.Close();
                 await WorldBossStates.Set(avatarAddress);
-                await States.Instance.InitRuneStoneBalance();
+                UpdateCurrentAvatarStateAsync(eval).Forget();
                 Game.Event.OnRoomEnter.Invoke(true);
                 return;
             }
@@ -2526,7 +2536,10 @@ namespace Nekoyume.BlockChain
             {
                 UpdateAgentStateAsync(eval).Forget();
             }
-            UpdateCrystalBalance(eval);
+            else
+            {
+                UpdateCrystalBalance(eval);
+            }
 
             _disposableForBattleEnd?.Dispose();
             _disposableForBattleEnd =
@@ -2584,8 +2597,6 @@ namespace Nekoyume.BlockChain
                 runeStates);
 
             await WorldBossStates.Set(avatarAddress);
-            await States.Instance.InitRuneStoneBalance();
-            await States.Instance.InitRuneStates();
             var raiderState = WorldBossStates.GetRaiderState(avatarAddress);
             var killRewards = new List<FungibleAssetValue>();
             if (latestBossLevel < raiderState.LatestBossLevel)
@@ -2633,21 +2644,21 @@ namespace Nekoyume.BlockChain
                 killRewards);
         }
 
-        private async void ResponseClaimRaidRewardAsync(ActionBase.ActionEvaluation<ClaimRaidReward> eval)
+        private async void ResponseClaimRaidRewardAsync(ActionEvaluation<ClaimRaidReward> eval)
         {
             if (eval.Exception is not null)
             {
                 return;
             }
 
-            await States.Instance.InitRuneStoneBalance();
+            UpdateCurrentAvatarStateAsync(eval).Forget();
             UpdateCrystalBalance(eval);
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             WorldBossStates.SetReceivingGradeRewards(avatarAddress, false);
             Widget.Find<WorldBossRewardScreen>().Show(new LocalRandom(eval.RandomSeed));
         }
 
-        private void ResponseRuneEnhancement(ActionBase.ActionEvaluation<RuneEnhancement> eval)
+        private void ResponseRuneEnhancement(ActionEvaluation<RuneEnhancement> eval)
         {
             Widget.Find<Rune>().OnActionRender(new LocalRandom(eval.RandomSeed)).Forget();
 
@@ -2656,11 +2667,10 @@ namespace Nekoyume.BlockChain
                 return;
             }
 
-            UpdateCrystalBalance(eval);
             UpdateAgentStateAsync(eval).Forget();
         }
 
-        private void ResponseUnlockRuneSlot(ActionBase.ActionEvaluation<UnlockRuneSlot> eval)
+        private void ResponseUnlockRuneSlot(ActionEvaluation<UnlockRuneSlot> eval)
         {
             if (eval.Exception is not null)
             {

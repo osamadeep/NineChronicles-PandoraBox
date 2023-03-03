@@ -60,7 +60,9 @@ namespace Nekoyume
             KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
 
             // Load the index of the last logged-in Pandora account from PlayerPrefs, default to 0 if not set
-            PandoraMaster.SelectedLoginAccountIndex = PlayerPrefs.GetInt("_PandoraBox_Account_lastLoginIndex", 0);
+            PandoraMaster.SelectedLoginAccountIndex =
+                Mathf.Clamp(PlayerPrefs.GetInt("_PandoraBox_Account_lastLoginIndex", 0), 0, PandoraAccounts.Count);
+
 
             // Select the appropriate account slot and load its data
             foreach (var accountSlot in PandoraAccounts)
@@ -136,12 +138,35 @@ namespace Nekoyume
             PlayFabClientAPI.LoginWithEmailAddress(request,
                 OnLoginSuccess =>
                 {
+                    string tempAddress = "";
+                    for (int i = 0; i < KeyStore.List().Count(); i++)
+                    {
+                        if (KeyStore.List().ElementAt(i).Item2.Address.ToString().Substring(2, 20).ToLower() ==
+                            OnLoginSuccess.InfoResultPayload.AccountInfo.Username.ToLower())
+                        {
+                            tempAddress = KeyStore.List().ElementAt(i).Item2.Address.ToString();
+                            break;
+                        }
+                    }
+
+                    if (tempAddress == "")
+                    {
+                        PandoraUtil.ShowSystemNotification("There is no KeyStore for your Registered Address!",
+                            NotificationCell.NotificationType.Information);
+                        pandoraLoginGroup.SetActive(true);
+                        return;
+                    }
+
                     // if the user is using an premium account slot
                     if (PandoraMaster.SelectedLoginAccountIndex > 0)
                     {
                         // check if the user is a premium user
                         PlayFabClientAPI.ExecuteCloudScript(
-                            new ExecuteCloudScriptRequest { FunctionName = "checkPremium" },
+                            new ExecuteCloudScriptRequest
+                            {
+                                FunctionName = "GetSettings",
+                                FunctionParameter = new { address = tempAddress }
+                            },
                             success =>
                             {
                                 //PlayFabCloudScriptAPI.ExecuteFunction(new ExecuteFunctionRequest()

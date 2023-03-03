@@ -28,32 +28,23 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI stageText;
 
-        [SerializeField]
-        private GuidedQuest guidedQuest;
+        [SerializeField] private GuidedQuest guidedQuest;
 
-        [SerializeField]
-        private BossStatus bossStatus;
+        [SerializeField] private BossStatus bossStatus;
 
-        [SerializeField]
-        private Toggle repeatToggle;
+        [SerializeField] private Toggle repeatToggle;
 
-        [SerializeField]
-        private Toggle exitToggle;
+        [SerializeField] private Toggle exitToggle;
 
-        [SerializeField]
-        private HelpButton helpButton;
+        [SerializeField] private HelpButton helpButton;
 
-        [SerializeField]
-        private BossStatus enemyPlayerStatus;
+        [SerializeField] private BossStatus enemyPlayerStatus;
 
-        [SerializeField]
-        private StageProgressBar stageProgressBar;
+        [SerializeField] private StageProgressBar stageProgressBar;
 
-        [SerializeField]
-        private ComboText comboText;
+        [SerializeField] private ComboText comboText;
 
-        [SerializeField]
-        private GameObject boostEffectObject;
+        [SerializeField] private GameObject boostEffectObject;
 
         [SerializeField] private TMP_Text boostCountText;
 
@@ -125,6 +116,7 @@ namespace Nekoyume.UI
             bool isTutorial,
             int boostCost)
         {
+            Find<EventBanner>().Close(true);
             _stageType = stageType;
             if (isTutorial)
             {

@@ -16,26 +16,19 @@ namespace Nekoyume.UI.Module.Lobby
 
     public class ArenaMenu : MainMenu
     {
-        [SerializeField]
-        private GameObject _ticketCountGO;
+        [SerializeField] private GameObject _ticketCountGO;
 
-        [SerializeField]
-        private TextMeshProUGUI _ticketCount;
+        [SerializeField] private TextMeshProUGUI _ticketCount;
 
-        [SerializeField]
-        private TextMeshProUGUI _ticketResetTime;
+        [SerializeField] private TextMeshProUGUI _ticketResetTime;
 
-        [SerializeField]
-        private TextMeshProUGUI _seasonText;
+        [SerializeField] private TextMeshProUGUI _seasonText;
 
-        [SerializeField]
-        private GameObject _seasonGameObject;
+        [SerializeField] private GameObject _seasonGameObject;
 
-        [SerializeField]
-        private GameObject _championshipGameObject;
+        [SerializeField] private GameObject _championshipGameObject;
 
-        [SerializeField]
-        private GameObject grandFinaleGameObject;
+        [SerializeField] private GameObject grandFinaleGameObject;
 
         private readonly List<IDisposable> _disposables = new();
 
@@ -82,7 +75,7 @@ namespace Nekoyume.UI.Module.Lobby
                 currentRoundData =
                     TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
             }
-            catch(RoundNotFoundException)
+            catch (Exception)
             {
                 _seasonGameObject.SetActive(false);
                 _championshipGameObject.SetActive(false);

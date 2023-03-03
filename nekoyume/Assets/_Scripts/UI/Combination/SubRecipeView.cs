@@ -78,68 +78,50 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI UnlockText = null;
         [SerializeField] private ConditionalCostButton maxButton;
         [SerializeField] private Button copyItemIDBtn;
+
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         [SerializeField]
         private GameObject toggleParent;
 
-        [SerializeField]
-        private List<Toggle> categoryToggles;
+        [SerializeField] private List<Toggle> categoryToggles;
 
-        [SerializeField]
-        private RecipeCell recipeCell;
+        [SerializeField] private RecipeCell recipeCell;
 
-        [SerializeField]
-        private TextMeshProUGUI titleText;
+        [SerializeField] private TextMeshProUGUI titleText;
 
         // [SerializeField]
         // private TextMeshProUGUI statText;
 
-        [SerializeField]
-        private TextMeshProUGUI[] mainStatTexts;
+        [SerializeField] private TextMeshProUGUI[] mainStatTexts;
 
-        [SerializeField]
-        private TextMeshProUGUI blockIndexText;
+        [SerializeField] private TextMeshProUGUI blockIndexText;
 
-        [SerializeField]
-        private TextMeshProUGUI greatSuccessRateText;
+        [SerializeField] private TextMeshProUGUI greatSuccessRateText;
 
-        [SerializeField]
-        private List<OptionView> optionViews;
+        [SerializeField] private List<OptionView> optionViews;
 
-        [SerializeField]
-        private List<OptionView> skillViews;
+        [SerializeField] private List<OptionView> skillViews;
 
-        [SerializeField]
-        private List<GameObject> optionIcons;
+        [SerializeField] private List<GameObject> optionIcons;
 
-        [SerializeField]
-        private TextMeshProUGUI levelText;
+        [SerializeField] private TextMeshProUGUI levelText;
 
-        [SerializeField]
-        private RequiredItemRecipeView requiredItemRecipeView;
+        [SerializeField] private RequiredItemRecipeView requiredItemRecipeView;
 
-        [SerializeField]
-        private ConditionalCostButton button;
+        [SerializeField] private ConditionalCostButton button;
 
-        [SerializeField]
-        private GameObject lockedObject;
+        [SerializeField] private GameObject lockedObject;
 
-        [SerializeField]
-        private TextMeshProUGUI lockedText;
+        [SerializeField] private TextMeshProUGUI lockedText;
 
-        [SerializeField]
-        private HammerPointView hammerPointView;
+        [SerializeField] private HammerPointView hammerPointView;
 
-        [SerializeField]
-        private ConditionalCostButton materialSelectButton;
+        [SerializeField] private ConditionalCostButton materialSelectButton;
 
-        [SerializeField]
-        private List<RequiredNormalItemIcon> requiredNormalItemIcons;
+        [SerializeField] private List<RequiredNormalItemIcon> requiredNormalItemIcons;
 
-        [SerializeField]
-        private Image requiredNormalItemImage;
+        [SerializeField] private Image requiredNormalItemImage;
 
         public readonly Subject<RecipeInfo> CombinationActionSubject = new Subject<RecipeInfo>();
 
@@ -253,18 +235,21 @@ namespace Nekoyume.UI
                         if (i == 0)
                         {
                             var stat = resultItem.GetUniqueStat();
-                            var statValueText =
-                                    stat.Type == StatType.SPD ||
-                                    stat.Type == StatType.DRR ||
-                                    stat.Type == StatType.CDMG
+                            var statValueText = stat.Type is StatType.SPD or StatType.DRR or StatType.CDMG
                                 ? (stat.ValueAsInt * 0.01m).ToString(CultureInfo.InvariantCulture)
                                 : stat.ValueAsInt.ToString();
                             mainStatText.text = string.Format(StatTextFormat, stat.Type, statValueText);
                             mainStatText.gameObject.SetActive(true);
-                            continue;
                         }
-
-                        mainStatText.gameObject.SetActive(false);
+                        else if (i == 1 && Util.IsEventEquipmentRecipe(equipmentRow.Id))
+                        {
+                            mainStatText.text = resultItem.GetLocalizedDescription();
+                            mainStatText.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            mainStatText.gameObject.SetActive(false);
+                        }
                     }
 
                     recipeCell.Show(equipmentRow, false);
@@ -283,11 +268,11 @@ namespace Nekoyume.UI
                         {
                             var stat = resultItem.Stats[i];
                             var statValueText =
-                                    stat.StatType == StatType.SPD ||
-                                    stat.StatType == StatType.DRR ||
-                                    stat.StatType == StatType.CDMG
-                                ? (stat.ValueAsInt * 0.01m).ToString(CultureInfo.InvariantCulture)
-                                : stat.ValueAsInt.ToString();
+                                stat.StatType == StatType.SPD ||
+                                stat.StatType == StatType.DRR ||
+                                stat.StatType == StatType.CDMG
+                                    ? (stat.ValueAsInt * 0.01m).ToString(CultureInfo.InvariantCulture)
+                                    : stat.ValueAsInt.ToString();
                             mainStatText.text = string.Format(StatTextFormat, stat.StatType, statValueText);
                             mainStatText.gameObject.SetActive(true);
                             continue;
@@ -299,7 +284,7 @@ namespace Nekoyume.UI
                     recipeCell.Show(consumableRow, false);
                     break;
                 }
-                case EventMaterialItemRecipeSheet.Row materialRow :
+                case EventMaterialItemRecipeSheet.Row materialRow:
                 {
                     var resultItem = materialRow.GetResultMaterialItemRow();
                     title = resultItem.GetLocalizedName(false, false);
@@ -389,7 +374,8 @@ namespace Nekoyume.UI
             optionIcons.ForEach(obj => obj.SetActive(false));
             if (equipmentRow != null)
             {
-                var isLocked = !Craft.SharedModel.UnlockedRecipes.Value.Contains(_recipeRow.Key);
+                var isUnlocked = Craft.SharedModel.UnlockedRecipes.Value.Contains(_recipeRow.Key)
+                                 || equipmentRow.CRYSTAL == 0;
                 var baseMaterialInfo = new EquipmentItemSubRecipeSheet.MaterialInfo(
                     equipmentRow.MaterialId,
                     equipmentRow.MaterialCount);
@@ -401,10 +387,13 @@ namespace Nekoyume.UI
                 // Add base material
                 materialMap.Add(equipmentRow.MaterialId, equipmentRow.MaterialCount);
 
-                if (_subrecipeIds != null &&
-                    _subrecipeIds.Any())
+                if (_subrecipeIds != null && _subrecipeIds.Any())
                 {
-                    toggleParent.SetActive(true);
+                    if (toggleParent != null)
+                    {
+                        toggleParent.SetActive(true);
+                    }
+
                     subRecipeId = _subrecipeIds[index];
                     var subRecipe = TableSheets.Instance
                         .EquipmentItemSubRecipeSheetV2[subRecipeId.Value];
@@ -415,52 +404,66 @@ namespace Nekoyume.UI
                         .Select(x => x.Ratio.NormalizeFromTenThousandths())
                         .Aggregate((a, b) => a * b);
 
-                    SetOptions(options);
-
-                    var hammerPointStates = States.Instance.HammerPointStates;
-                    var showHammerPoint = hammerPointStates is not null &&
-                                          hammerPointStates.TryGetValue(recipeId,
-                                              out _hammerPointState) &&
-                                          index != MimisbrunnrRecipeIndex;
-                    hammerPointView.parentObject.SetActive(showHammerPoint);
-                    if (showHammerPoint)
+                    var isEventEquipment = Util.IsEventEquipmentRecipe(recipeId);
+                    if (!isEventEquipment)
                     {
-                        var max = TableSheets.Instance.CrystalHammerPointSheet[recipeId].MaxPoint;
-                        var increasePoint = index == 0
-                            ? CombinationEquipment.BasicSubRecipeHammerPoint
-                            : CombinationEquipment.SpecialSubRecipeHammerPoint;
-                        var increasedPoint = Math.Min(_hammerPointState.HammerPoint + increasePoint, max);
-                        _canSuperCraft = _hammerPointState.HammerPoint == max;
-                        var optionSheet = TableSheets.Instance.EquipmentItemOptionSheet;
-                        hammerPointView.nowPoint.maxValue = max;
-                        hammerPointView.hammerPointText.text =
-                            $"{_hammerPointState.HammerPoint}/{max}";
-                        hammerPointView.nowPoint.value = _hammerPointState.HammerPoint;
-                        hammerPointView.nowPointImage.fillAmount =
-                            _hammerPointState.HammerPoint / (float)max;
-                        hammerPointView.increasePointImage.fillAmount =
-                            increasedPoint / (float) max;
-                        hammerPointView.notEnoughHammerPointObject.SetActive(!_canSuperCraft);
-                        hammerPointView.enoughHammerPointObject.SetActive(_canSuperCraft);
-                        _skillOptionRow = options
-                            .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
-                            .FirstOrDefault(tuple => tuple.option.SkillId != 0)
-                            .option;
-                    }
+                        SetOptions(options);
 
-                    var sheet = TableSheets.Instance.ItemRequirementSheet;
-                    var resultItemRow = equipmentRow.GetResultEquipmentItemRow();
+                        var hammerPointStates = States.Instance.HammerPointStates;
+                        var showHammerPoint = hammerPointStates is not null &&
+                                              hammerPointStates.TryGetValue(recipeId, out _hammerPointState) &&
+                                              index != MimisbrunnrRecipeIndex;
+                        hammerPointView.parentObject.SetActive(showHammerPoint);
 
-                    if (!sheet.TryGetValue(resultItemRow.Id, out var row))
-                    {
-                        levelText.enabled = false;
+                        if (showHammerPoint)
+                        {
+                            var max = TableSheets.Instance.CrystalHammerPointSheet[recipeId].MaxPoint;
+                            var increasePoint = index == 0
+                                ? CombinationEquipment.BasicSubRecipeHammerPoint
+                                : CombinationEquipment.SpecialSubRecipeHammerPoint;
+                            var increasedPoint = Math.Min(_hammerPointState.HammerPoint + increasePoint, max);
+                            var optionSheet = TableSheets.Instance.EquipmentItemOptionSheet;
+                            _canSuperCraft = _hammerPointState.HammerPoint == max;
+                            hammerPointView.nowPoint.maxValue = max;
+                            hammerPointView.hammerPointText.text = $"{_hammerPointState.HammerPoint}/{max}";
+                            hammerPointView.nowPoint.value = _hammerPointState.HammerPoint;
+                            hammerPointView.nowPointImage.fillAmount = _hammerPointState.HammerPoint / (float)max;
+                            hammerPointView.increasePointImage.fillAmount = increasedPoint / (float)max;
+                            hammerPointView.notEnoughHammerPointObject.SetActive(!_canSuperCraft);
+                            hammerPointView.enoughHammerPointObject.SetActive(_canSuperCraft);
+                            _skillOptionRow = options
+                                .Select(x => (ratio: x.Ratio, option: optionSheet[x.Id]))
+                                .FirstOrDefault(tuple => tuple.option.SkillId != 0).option;
+                        }
+
+                        var sheet = TableSheets.Instance.ItemRequirementSheet;
+                        var resultItemRow = equipmentRow.GetResultEquipmentItemRow();
+
+                        if (!sheet.TryGetValue(resultItemRow.Id, out var row))
+                        {
+                            levelText.enabled = false;
+                        }
+                        else
+                        {
+                            var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
+                            levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
+                            var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= level;
+                            levelText.color = hasEnoughLevel
+                                ? Palette.GetColor(EnumType.ColorType.ButtonEnabled)
+                                : Palette.GetColor(EnumType.ColorType.TextDenial);
+
+                            levelText.enabled = true;
+                        }
+
+                        requiredItemRecipeView.SetData(
+                            baseMaterialInfo,
+                            subRecipe.Materials,
+                            true,
+                            !isUnlocked);
                     }
                     else
                     {
-                        var level = index == MimisbrunnrRecipeIndex ? row.MimisLevel : row.Level;
-
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-
                         var unlockStage = equipmentRow.UnlockStage;
                         var clearedStage =
                             States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
@@ -472,21 +475,10 @@ namespace Nekoyume.UI
                         CanCraft = clearedStage >= unlockStage;
                         UnlockText.text = "Unlock Level: " + unlockStage;
                         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
-                        levelText.text = L10nManager.Localize("UI_REQUIRED_LEVEL", level);
-                        var hasEnoughLevel = States.Instance.CurrentAvatarState.level >= level;
-                        levelText.color = hasEnoughLevel
-                            ? Palette.GetColor(EnumType.ColorType.ButtonEnabled)
-                            : Palette.GetColor(EnumType.ColorType.TextDenial);
-
-                        levelText.enabled = true;
+                        var list = new List<EquipmentItemSubRecipeSheet.MaterialInfo> { baseMaterialInfo };
+                        list.AddRange(subRecipe.Materials);
+                        requiredItemRecipeView.SetData(list, true);
                     }
-
-                    requiredItemRecipeView.SetData(
-                        baseMaterialInfo,
-                        subRecipe.Materials,
-                        true,
-                        isLocked);
 
                     costNCG += subRecipe.RequiredGold;
 
@@ -497,8 +489,12 @@ namespace Nekoyume.UI
                 }
                 else
                 {
-                    toggleParent.SetActive(false);
-                    requiredItemRecipeView.SetData(baseMaterialInfo, null, true, isLocked);
+                    if (toggleParent != null)
+                    {
+                        toggleParent.SetActive(false);
+                    }
+
+                    requiredItemRecipeView.SetData(baseMaterialInfo, null, true, !isUnlocked);
                 }
             }
             else if (consumableRow != null)
@@ -608,6 +604,7 @@ namespace Nekoyume.UI
                     replacedMaterialMap.Add(row.Id, count - itemCount);
                 }
             }
+
             return replacedMaterialMap;
         }
 
@@ -622,7 +619,9 @@ namespace Nekoyume.UI
                 return;
             }
 
-            if (Craft.SharedModel.UnlockedRecipes.Value.Contains(_selectedRecipeInfo.RecipeId))
+            var isUnlocked = Craft.SharedModel.UnlockedRecipes.Value.Contains(_selectedRecipeInfo.RecipeId) ||
+                             TableSheets.Instance.EquipmentItemRecipeSheet[_selectedRecipeInfo.RecipeId].CRYSTAL == 0;
+            if (isUnlocked)
             {
                 var submittable = CheckNCGAndSlotIsEnough();
                 var costNCG = new ConditionalCostButton.CostParam(
@@ -750,7 +749,7 @@ namespace Nekoyume.UI
                     var normalizedRatio = ratio.NormalizeFromTenThousandths();
                     optionView.OptionText.text = option.OptionRowToString();
                     optionView.PercentageText.text = normalizedRatio.ToString("0%");
-                    optionView.PercentageSlider.value = (float) normalizedRatio;
+                    optionView.PercentageSlider.value = (float)normalizedRatio;
                     optionView.ParentObject.transform.SetSiblingIndex(siblingIndex);
                     optionView.ParentObject.SetActive(true);
                     optionIcons[siblingIndex].SetActive(true);
@@ -761,12 +760,12 @@ namespace Nekoyume.UI
                     //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                     var description = skillSheet.TryGetValue(option.SkillId, out var skillRow)
                         ? skillRow.GetLocalizedName() + $" ({option.SkillDamageMin}-{option.SkillDamageMax})"
-                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                         : string.Empty;
                     var normalizedRatio = ratio.NormalizeFromTenThousandths();
                     skillView.OptionText.text = description;
                     skillView.PercentageText.text = normalizedRatio.ToString("0%");
-                    skillView.PercentageSlider.value = (float) normalizedRatio;
+                    skillView.PercentageSlider.value = (float)normalizedRatio;
                     skillView.ParentObject.transform.SetSiblingIndex(siblingIndex);
                     skillView.ParentObject.SetActive(true);
                     optionIcons.Last().SetActive(true);
@@ -780,7 +779,7 @@ namespace Nekoyume.UI
         public void CopyItemID(int craftType)
         {
             OneLineSystem.Push(MailType.System, $"<color=green>Pandora Box</color>: Item ID copied to clipboard!",
-            NotificationCell.NotificationType.Information);      
+                NotificationCell.NotificationType.Information);
 
             switch (craftType)
             {
@@ -814,6 +813,7 @@ namespace Nekoyume.UI
                 CombinationActionSubject.OnNext(_selectedRecipeInfo);
                 yield return new WaitForSeconds(2);
             }
+
             PandoraBox.PandoraMaster.IsMultiCombine = false;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||

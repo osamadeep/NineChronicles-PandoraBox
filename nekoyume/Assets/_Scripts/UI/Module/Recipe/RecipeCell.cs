@@ -21,12 +21,14 @@ namespace Nekoyume.UI.Module
     public class RecipeCell : MonoBehaviour
     {
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private GameObject ExtraLocked;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private GameObject ExtraLocked;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-        [SerializeField] private Animator animator = null;
+        [SerializeField]
+        private Animator animator = null;
+
         [SerializeField] private RecipeViewData recipeViewData = null;
         [SerializeField] private RecipeView equipmentView = null;
         [SerializeField] private RecipeView consumableView = null;
@@ -190,8 +192,15 @@ namespace Nekoyume.UI.Module
             clearedStage = 30000;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             var diff = unlockStage - clearedStage;
-
             var sharedModel = Craft.SharedModel;
+
+            if (equipmentRow.CRYSTAL == 0)
+            {
+                SetEquipmentView(equipmentRow);
+                IsLocked = false;
+                return;
+            }
+
             if (diff > 0)
             {
                 unlockConditionText.text = unlockStage != 999
@@ -241,7 +250,6 @@ namespace Nekoyume.UI.Module
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 if (ExtraLocked.activeInHierarchy)
                 {
-
                 }
                 else
                 {

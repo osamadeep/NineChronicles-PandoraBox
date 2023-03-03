@@ -12,7 +12,8 @@ using UnityEditor.OSXStandalone;
 namespace Editor
 {
     [ExecuteInEditMode]
-    public class Builder {
+    public class Builder
+    {
         private static readonly string PlayerName = PlayerSettings.productName;
         private const string BuildBasePath = "Build";
 
@@ -152,14 +153,35 @@ namespace Editor
             Build(BuildTarget.StandaloneWindows64, BuildOptions.EnableHeadlessMode, "WindowsHeadless");
         }
 
-        [MenuItem("Build/QA")]
+        [MenuItem("Build/QA/Windows")]
         public static void BuildWindowsForQA()
         {
             Debug.Log("Build Windows For QA");
             CopyJsonDataFile("TestbedSell");
             CopyJsonDataFile("TestbedCreateAvatar");
-            Build(BuildTarget.StandaloneWindows64, BuildOptions.Development | BuildOptions.AllowDebugging, "Windows", true);
+            Build(BuildTarget.StandaloneWindows64, BuildOptions.Development | BuildOptions.AllowDebugging, "Windows",
+                true);
         }
+
+#if UNITY_STANDALONE_OSX
+        [MenuItem("Build/QA/MacOS (intel)")]
+        public static void BuildMacOSForQA()
+        {
+            Debug.Log("Build MacOS(Intel) For QA");
+            CopyJsonDataFile("TestbedSell");
+            CopyJsonDataFile("TestbedCreateAvatar");
+            var originalArchitecture = UserBuildSettings.architecture;
+            try
+            {
+                UserBuildSettings.architecture = MacOSArchitecture.x64;
+                Build(BuildTarget.StandaloneOSX, BuildOptions.Development | BuildOptions.AllowDebugging, "macOS", true);
+            }
+            finally
+            {
+                UserBuildSettings.architecture = originalArchitecture;
+            }
+        }
+#endif
 
         private static void Build(
             BuildTarget buildTarget,
@@ -208,7 +230,7 @@ namespace Editor
             Debug.Log($"UpdateDefines : {isDevelopment}");
             var buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
             var preDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
-            var newDefines = preDefines.Split( ';' ).ToList();
+            var newDefines = preDefines.Split(';').ToList();
             const string qaDefine = "LIB9C_DEV_EXTENSIONS";
             if (isDevelopment)
             {
@@ -224,6 +246,7 @@ namespace Editor
                     newDefines.Remove(qaDefine);
                 }
             }
+
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup,
                 string.Join(";", newDefines.ToArray()));
             EditorApplication.ExecuteMenuItem("File/Save Project");
@@ -251,6 +274,7 @@ namespace Editor
                     {
                         destLibPath += ".app";
                     }
+
                     destLibPath = Path.Combine(
                         destLibPath, "Contents/Resources/Data/Managed/", libDir);
                     break;

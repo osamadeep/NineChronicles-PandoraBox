@@ -145,11 +145,12 @@ namespace Nekoyume.UI
         {
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "GameRun")
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             {
                 var intro = Widget.Create<IntroScreen>(true);
                 intro.Initialize();
             }
+
             UpdateLayers();
         }
 
@@ -234,6 +235,10 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<Blind>());
             yield return null;
+            secondWidgets.Add(Widget.Create<Status>());
+            yield return null;
+            secondWidgets.Add(Widget.Create<EventBanner>());
+            yield return null;
             secondWidgets.Add(Widget.Create<ShopSell>());
             yield return null;
             secondWidgets.Add(Widget.Create<ShopBuy>());
@@ -252,13 +257,9 @@ namespace Nekoyume.UI
             yield return null;
             secondWidgets.Add(Widget.Create<RaidPreparation>());
             yield return null;
-            secondWidgets.Add(Widget.Create<Status>());
-            yield return null;
             secondWidgets.Add(Widget.Create<ArenaJoin>());
             yield return null;
             secondWidgets.Add(Widget.Create<ArenaBoard>());
-            yield return null;
-            secondWidgets.Add(Widget.Create<EventBanner>());
             yield return null;
             secondWidgets.Add(Widget.Create<EventReleaseNotePopup>());
             yield return null;

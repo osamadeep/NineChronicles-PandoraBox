@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Lib9c.Renderers;
 using Nekoyume.Action;
 using Nekoyume.Arena;
 using Nekoyume.BlockChain;
@@ -43,38 +44,27 @@ namespace Nekoyume.UI
         private ArenaJoinSO _so;
 #endif
 
-        [SerializeField]
-        private ArenaJoinSeasonScroll _scroll;
+        [SerializeField] private ArenaJoinSeasonScroll _scroll;
 
-        [SerializeField]
-        private ArenaJoinSeasonBarScroll _barScroll;
+        [SerializeField] private ArenaJoinSeasonBarScroll _barScroll;
 
-        [SerializeField]
-        private ArenaJoinSeasonInfo _info;
+        [SerializeField] private ArenaJoinSeasonInfo _info;
 
-        [SerializeField]
-        private TextMeshProUGUI _bottomButtonText;
+        [SerializeField] private TextMeshProUGUI _bottomButtonText;
 
-        [SerializeField]
-        private ConditionalButton _joinButton;
+        [SerializeField] private ConditionalButton _joinButton;
 
-        [SerializeField]
-        private ConditionalCostButton _paymentButton;
+        [SerializeField] private ConditionalCostButton _paymentButton;
 
-        [SerializeField]
-        private ArenaJoinEarlyRegisterButton _earlyPaymentButton;
+        [SerializeField] private ArenaJoinEarlyRegisterButton _earlyPaymentButton;
 
-        [SerializeField]
-        private ArenaJoinMissionButton _missionButton;
+        [SerializeField] private ArenaJoinMissionButton _missionButton;
 
-        [SerializeField]
-        private Button _backButton;
+        [SerializeField] private Button _backButton;
 
-        [SerializeField]
-        private GrandFinaleJoin grandFinaleJoin;
+        [SerializeField] private GrandFinaleJoin grandFinaleJoin;
 
-        [SerializeField]
-        private GameObject baseArenaJoinObject;
+        [SerializeField] private GameObject baseArenaJoinObject;
 
         private InnerState _innerState = InnerState.Idle;
         private readonly List<IDisposable> _disposablesForShow = new List<IDisposable>();
@@ -125,7 +115,8 @@ namespace Nekoyume.UI
             RxProps.ArenaInfoTuple
                 .Subscribe(tuple => UpdateBottomButtons())
                 .AddTo(_disposablesForShow);
-            if (TableSheets.Instance.GrandFinaleScheduleSheet?.GetRowByBlockIndex(Game.Game.instance.Agent.BlockIndex) is not null)
+            if (TableSheets.Instance.GrandFinaleScheduleSheet?.GetRowByBlockIndex(Game.Game.instance.Agent.BlockIndex)
+                is not null)
             {
                 baseArenaJoinObject.SetActive(false);
                 grandFinaleJoin.gameObject.SetActive(true);
@@ -145,7 +136,7 @@ namespace Nekoyume.UI
             base.Close(ignoreCloseAnimation);
         }
 
-        public void OnRenderJoinArena(ActionBase.ActionEvaluation<JoinArena> eval)
+        public void OnRenderJoinArena(ActionEvaluation<JoinArena> eval)
         {
             if (eval.Exception is { })
             {
@@ -642,8 +633,8 @@ namespace Nekoyume.UI
                     ArenaJoinSeasonInfo.RewardType.Food |
                     ArenaJoinSeasonInfo.RewardType.Medal |
                     ArenaJoinSeasonInfo.RewardType.NCG,
-                    // NOTE: Enable costume when championship rewards contains one.
-                    // ArenaJoinSeasonInfo.RewardType.Costume,
+                // NOTE: Enable costume when championship rewards contains one.
+                // ArenaJoinSeasonInfo.RewardType.Costume,
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

@@ -46,53 +46,39 @@ namespace Nekoyume.UI.Scroller
             public StatType Type;
         }
 
-        [SerializeField]
-        private GameObject viewport;
+        [SerializeField] private GameObject viewport;
 
-        [SerializeField]
-        private List<EquipmentCategoryToggle> equipmentCategoryToggles;
+        [SerializeField] private List<EquipmentCategoryToggle> equipmentCategoryToggles;
 
-        [SerializeField]
-        private List<ConsumableCategoryToggle> consumableCategoryToggles;
+        [SerializeField] private List<ConsumableCategoryToggle> consumableCategoryToggles;
 
-        [SerializeField]
-        private GameObject equipmentTab;
+        [SerializeField] private GameObject equipmentTab;
 
-        [SerializeField]
-        private GameObject consumableTab;
+        [SerializeField] private GameObject consumableTab;
 
-        [SerializeField]
-        private GameObject eventScheduleTab;
+        [SerializeField] private GameObject eventScheduleTab;
 
-        [SerializeField]
-        private BlocksAndDatesPeriod eventScheduleTabEntireBlocksAndDatesPeriod;
+        [SerializeField] private BlocksAndDatesPeriod eventScheduleTabEntireBlocksAndDatesPeriod;
 
-        [SerializeField]
-        private TextMeshProUGUI eventScheduleTabRemainingTimeText;
+        [SerializeField] private TextMeshProUGUI eventScheduleTabRemainingTimeText;
 
-        [SerializeField]
-        private GameObject emptyObject;
+        [SerializeField] private GameObject emptyObject;
 
-        [SerializeField]
-        private TextMeshProUGUI emptyObjectText;
+        [SerializeField] private TextMeshProUGUI emptyObjectText;
 
-        [SerializeField]
-        private GameObject openAllRecipeArea;
+        [SerializeField] private GameObject openAllRecipeArea;
 
-        [SerializeField]
-        private Button openAllRecipeButton;
+        [SerializeField] private Button openAllRecipeButton;
 
-        [SerializeField]
-        private TextMeshProUGUI openAllRecipeCostText;
+        [SerializeField] private TextMeshProUGUI openAllRecipeCostText;
 
-        [SerializeField]
-        private float animationInterval = 0.3f;
+        [SerializeField] private float animationInterval = 0.3f;
 
         private Coroutine _animationCoroutine;
 
         private BigInteger _openCost;
 
-        private List<int> _unlockableRecipeIds = new List<int>();
+        private List<int> _unlockableRecipeIds = new();
 
         private List<IDisposable> _disposablesAtShow = new List<IDisposable>();
 
@@ -206,9 +192,22 @@ namespace Nekoyume.UI.Scroller
             }
 
             viewport.SetActive(true);
-            var items = Craft.SharedModel.EquipmentRecipeMap.Values
-                .Where(x => x.ItemSubType == type)
-                .ToList();
+            List<RecipeRow.Model> items;
+            if (type is not ItemSubType.EquipmentMaterial)
+            {
+                items = Craft.SharedModel.EquipmentRecipeMap.Values
+                    .Where(x => x.ItemSubType == type &&
+                                !Util.IsEventEquipmentRecipe(x.Rows.First().Key))
+                    .ToList();
+            }
+            else
+            {
+                items = new List<RecipeRow.Model>
+                {
+                    Craft.SharedModel.EquipmentRecipeMap["crystal_equipment"]
+                };
+            }
+
             emptyObjectText.text = L10nManager.Localize("UI_WORKSHOP_EMPTY_CATEGORY");
             emptyObject.SetActive(!items.Any());
             Show(items);
@@ -222,8 +221,9 @@ namespace Nekoyume.UI.Scroller
                     max = Mathf.Max(max, items.IndexOf(item));
                 }
             }
+
             // `Scroller.ViewportSize`(viewport.rect.size.x,y) was not initialized.
-            const float viewportSizeVertical = 458f;  // in `UI_Craft` prefab
+            const float viewportSizeVertical = 458f; // in `UI_Craft` prefab
             AdjustCellIntervalAndScrollOffset(viewportSizeVertical);
             JumpTo(max - 1);
 
@@ -248,22 +248,31 @@ namespace Nekoyume.UI.Scroller
                 : 0;
             var sharedModel = Craft.SharedModel;
 
+            if (equipmentRow.CRYSTAL == 0)
+            {
+                return false;
+            }
+
             if (equipmentRow.UnlockStage - clearedStage > 0)
             {
                 return true;
             }
+
             if (sharedModel.DummyLockedRecipes.Contains(equipmentRow.Id))
             {
                 return true;
             }
+
             if (sharedModel.UnlockedRecipes is null)
             {
                 return true;
             }
+
             if (sharedModel.UnlockingRecipes.Contains(equipmentRow.Id))
             {
                 return false;
             }
+
             return !sharedModel.UnlockedRecipes.Value.Contains(equipmentRow.Id);
         }
 
@@ -301,11 +310,12 @@ namespace Nekoyume.UI.Scroller
             foreach (var item in items)
             {
                 if (item.Rows.Any(row => row is ConsumableItemRecipeSheet.Row consumableRow
-                    && !IsConsumableLocked(consumableRow)))
+                                         && !IsConsumableLocked(consumableRow)))
                 {
                     max = Mathf.Max(max, items.IndexOf(item));
                 }
             }
+
             max = max != -1 ? max : items.Count - 1;
             JumpTo(max - 1);
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Lib9c.Renderers;
 using Nekoyume.Action;
 using Nekoyume.Arena;
 using Nekoyume.BlockChain;
@@ -29,12 +30,12 @@ namespace Nekoyume.UI
 
     public class ArenaBattlePreparation : Widget
     {
-        [SerializeField]
-        private AvatarInformation information;
+        [SerializeField] private AvatarInformation information;
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        [Header("PANDORA CUSTOM FIELDS")]
-        [SerializeField] private Button multiFightsBtn = null;
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button multiFightsBtn = null;
+
         public TextMeshProUGUI CurrentTicketsText = null;
         public TextMeshProUGUI ExpectedCostText = null;
         public TextMeshProUGUI ExpectedBlockText = null;
@@ -48,39 +49,29 @@ namespace Nekoyume.UI
         [SerializeField]
         private ParticleSystem[] particles;
 
-        [SerializeField]
-        private ConditionalCostButton startButton;
+        [SerializeField] private ConditionalCostButton startButton;
 
-        [SerializeField]
-        private Button repeatPopupButton;
+        [SerializeField] private Button repeatPopupButton;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private Transform buttonStarImageTransform;
+        [SerializeField] private Transform buttonStarImageTransform;
 
-        [SerializeField, Range(.5f, 3.0f)]
-        private float animationTime = 1f;
+        [SerializeField, Range(.5f, 3.0f)] private float animationTime = 1f;
 
-        [SerializeField]
-        private bool moveToLeft = false;
+        [SerializeField] private bool moveToLeft = false;
 
         [SerializeField, Range(0f, 10f),
          Tooltip("Gap between start position X and middle position X")]
         private float middleXGap = 1f;
 
-        [SerializeField]
-        private GameObject coverToBlockClick;
+        [SerializeField] private GameObject coverToBlockClick;
 
-        [SerializeField]
-        private TextMeshProUGUI blockStartingText;
+        [SerializeField] private TextMeshProUGUI blockStartingText;
 
-        [SerializeField]
-        private TextMeshProUGUI enemyCp;
+        [SerializeField] private TextMeshProUGUI enemyCp;
 
-        [SerializeField]
-        private ConditionalButton grandFinaleStartButton;
+        [SerializeField] private ConditionalButton grandFinaleStartButton;
 
         private GameObject _cachedCharacterTitle;
         private int _grandFinaleId;
@@ -88,8 +79,8 @@ namespace Nekoyume.UI
         private const int TicketCountToUse = 1;
         private ArenaSheet.RoundData _roundData;
         private AvatarState _chooseAvatarState;
-        private List<Equipment> _chooseAvatarEquipments = new ();
-        private List<Costume> _chooseAvatarCostumes = new ();
+        private List<Equipment> _chooseAvatarEquipments = new();
+        private List<Costume> _chooseAvatarCostumes = new();
 
         private readonly List<IDisposable> _disposables = new();
 
@@ -125,10 +116,7 @@ namespace Nekoyume.UI
             });
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            multiFightsBtn.onClick.AddListener(() =>
-            {
-                SendMultipleBattleArenaAction();
-            });
+            multiFightsBtn.onClick.AddListener(() => { SendMultipleBattleArenaAction(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             CloseWidget = () => Close(true);
@@ -240,9 +228,8 @@ namespace Nekoyume.UI
 
         void SendMultipleBattleArenaAction()
         {
-
             if (Premium.PVP_MultiConfirmBattles(maxTriesSld.value, _chooseAvatarState.address,
-                _roundData.ChampionshipId, _roundData.Round, TicketCountToUse))
+                    _roundData.ChampionshipId, _roundData.Round, TicketCountToUse))
             {
                 Close();
                 Find<ArenaBoard>().ShowAsync().Forget();
@@ -426,18 +413,19 @@ namespace Nekoyume.UI
             SendBattleGrandFinaleAction();
         }
 
-        public void OnRenderBattleArena(ActionBase.ActionEvaluation<BattleArena> eval)
+        public void OnRenderBattleArena(ActionEvaluation<BattleArena> eval)
         {
             if (eval.Exception is { })
             {
                 Find<ArenaBattleLoadingScreen>().Close();
                 return;
             }
+
             Close(true);
             Find<ArenaBattleLoadingScreen>().Close();
         }
 
-        public void OnRenderBattleArena(ActionBase.ActionEvaluation<BattleGrandFinale> eval)
+        public void OnRenderBattleArena(ActionEvaluation<BattleGrandFinale> eval)
         {
             if (eval.Exception is { })
             {
@@ -464,10 +452,8 @@ namespace Nekoyume.UI
             if (isEquipmentValid && !isIntervalValid)
             {
                 Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
-                    .Subscribe(blockIndex =>
-                    {
-                        SetStartButton(isGrandFinale, IsIntervalValid(blockIndex), true);
-                    }).AddTo(_disposables);
+                    .Subscribe(blockIndex => { SetStartButton(isGrandFinale, IsIntervalValid(blockIndex), true); })
+                    .AddTo(_disposables);
             }
 
             grandFinaleStartButton.Interactable = isGrandFinale;

@@ -471,6 +471,8 @@ namespace Nekoyume.UI
             //color fields
             for (int i = 0; i < 6; i++)
             {
+                if (i == 3)
+                    continue;
                 DetailedStatView enemyST = avatarStats.transform.GetChild(i).GetComponent<DetailedStatView>();
                 DetailedStatView currentST = currentAvatarStats.transform.GetChild(i).GetComponent<DetailedStatView>();
                 if (float.Parse(enemyST.valueText.text, CultureInfo.InvariantCulture) >

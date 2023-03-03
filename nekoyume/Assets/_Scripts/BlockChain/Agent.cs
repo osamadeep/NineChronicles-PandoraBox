@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using AsyncIO;
 using Bencodex.Types;
 using Cysharp.Threading.Tasks;
-using Lib9c.Renderer;
+using Lib9c.Renderers;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Blockchain;
@@ -47,6 +47,7 @@ using NCTx = Libplanet.Tx.Transaction<Libplanet.Action.PolymorphicAction<Nekoyum
 
 namespace Nekoyume.BlockChain
 {
+    using Libplanet.Net.Transports;
     using UniRx;
 
     /// <summary>
@@ -154,10 +155,10 @@ namespace Nekoyume.BlockChain
                 yield break;
             }
 
-            InitAgent(callback, privateKey, options);
+            InitAgentAsync(callback, privateKey, options);
         }
 
-        private void Init(
+        private async Task InitAsync(
             PrivateKey privateKey,
             string path,
             IEnumerable<BoundPeer> peers,
@@ -228,11 +229,16 @@ namespace Nekoyume.BlockChain
             appProtocolVersionOptions.DifferentAppProtocolVersionEncountered =
                 DifferentAppProtocolVersionEncountered;
             var swarmOptions = new SwarmOptions();
+            var transport = await NetMQTransport.Create(
+                privateKey,
+                appProtocolVersionOptions,
+                hostOptions,
+                swarmOptions.MessageTimestampBuffer);
+
             var initSwarmTask = Task.Run(() => new Swarm<NCAction>(
                 blockChain: blocks,
                 privateKey: privateKey,
-                appProtocolVersionOptions: appProtocolVersionOptions,
-                hostOptions: hostOptions,
+                transport: transport,
                 options: swarmOptions));
 
             initSwarmTask.Wait();
@@ -286,12 +292,14 @@ namespace Nekoyume.BlockChain
         }
 
         //public void EnqueueAction(ActionBase actionBase)
-        public void EnqueueAction(Address avatarAddress, ActionBase actionBase) //|||||||||||||| PANDORA CODE |||||||||||||||||||
+        public void
+            EnqueueAction(Address avatarAddress,
+                ActionBase actionBase) //|||||||||||||| PANDORA CODE |||||||||||||||||||
         {
             Debug.LogFormat("Enqueue GameAction: {0}", actionBase);
             //_queuedActions.Enqueue(actionBase);
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            _queuedActions.Enqueue( new AvatarAction() {Action = actionBase,AvatarAddress = avatarAddress });
+            _queuedActions.Enqueue(new AvatarAction() { Action = actionBase, AvatarAddress = avatarAddress });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             if (actionBase is GameAction gameAction)
@@ -387,7 +395,7 @@ namespace Nekoyume.BlockChain
 
         #endregion
 
-        private void InitAgent(Action<bool> callback, PrivateKey privateKey, CommandLineOptions options)
+        private async void InitAgentAsync(Action<bool> callback, PrivateKey privateKey, CommandLineOptions options)
         {
             var peers = options.Peers.Select(LoadPeer);
             var iceServerList = options.IceServers.Select(LoadIceServer).ToImmutableList();
@@ -413,7 +421,7 @@ namespace Nekoyume.BlockChain
             var trustedAppProtocolVersionSigners = options.TrustedAppProtocolVersionSigners
                 .Select(s => new PublicKey(ByteUtil.ParseHex(s)));
             var hostOptions = new HostOptions(host, iceServers, port ?? default);
-            Init(
+            await InitAsync(
                 privateKey,
                 storagePath,
                 peers,
@@ -860,7 +868,7 @@ namespace Nekoyume.BlockChain
                 //while (_queuedActions.TryDequeue(out NCAction action))
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 while (_queuedActions.TryDequeue(out AvatarAction action))
-                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+                    //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 {
                     actions.Add(action.Action);
                     Debug.LogFormat("Remain Queued Actions Count: {0}", _queuedActions.Count);
@@ -957,7 +965,7 @@ namespace Nekoyume.BlockChain
                     var actionsList = ByteSerializer.Deserialize<List<GameAction>>(actionsListBytes);
                     foreach (var action in actionsList)
                     {
-                        EnqueueAction(States.Instance.AgentState.avatarAddresses.First().Value,action);
+                        EnqueueAction(States.Instance.AgentState.avatarAddresses.First().Value, action);
                     }
 
                     Debug.Log($"Load queued actions: {_queuedActions.Count}");
@@ -1081,11 +1089,11 @@ namespace Nekoyume.BlockChain
         {
             _queuedActions.Enqueue(new AvatarAction() { Action = action, AvatarAddress = avatarAddress });
         }
+
         public int GetQueueCount()
         {
             return _queuedActions.Count;
         }
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
     }
 }

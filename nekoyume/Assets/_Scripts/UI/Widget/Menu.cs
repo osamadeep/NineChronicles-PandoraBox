@@ -591,7 +591,7 @@ namespace Nekoyume.UI
                     PandoraMaster.PanDatabase.Guilds.Find(x => x.Tag == PandoraMaster.CurrentGuildPlayer.Guild);
 
             //check crystal changes
-            ChangeCrystalRatio();
+            //ChangeCrystalRatio();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             stakingLevelIcon.sprite =
                 stakeIconData.GetIcon(States.Instance.StakingLevel, IconType.Bubble);
@@ -739,6 +739,10 @@ namespace Nekoyume.UI
 
         public void ShowPandoraShop()
         {
+            OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: Under maintenance!",
+                NotificationCell.NotificationType.Information);
+            return;
+
             Widget.Find<PandoraShopPopup>().Show();
         }
 

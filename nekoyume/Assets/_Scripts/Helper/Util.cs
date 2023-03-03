@@ -26,6 +26,7 @@ namespace Nekoyume.Helper
     {
         public const int VisibleEnhancementEffectLevel = 10;
         private const string StoredSlotIndex = "AutoSelectedSlotIndex_";
+        private static readonly List<int> CrystalEquipmentRecipes = new() { 158, 159, 160 };
 
         public static string GetBlockToTime(long block)
         {
@@ -327,6 +328,7 @@ namespace Nekoyume.Helper
             {
                 return 0;
             }
+
             if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
             {
                 return 0;
@@ -370,6 +372,11 @@ namespace Nekoyume.Helper
             }
 
             return id;
+        }
+
+        public static bool IsEventEquipmentRecipe(int recipeId)
+        {
+            return CrystalEquipmentRecipes.Contains(recipeId);
         }
     }
 }

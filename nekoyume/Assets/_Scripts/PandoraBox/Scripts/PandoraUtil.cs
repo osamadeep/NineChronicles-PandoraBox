@@ -188,7 +188,8 @@ namespace Nekoyume.PandoraBox
                     messageText = "Cannot connect to Pandora Server, please visit us for more information!";
                     break;
                 case 405:
-                    messageText = "Game stuck while trying Avatar States, your avatar may lake of items or stones!";
+                    messageText =
+                        "Game stuck while trying Avatar States, your avatar may lake of items or stones please switch it again or to another character!";
                     break;
                 case 322:
                     messageText = "cannot read Player Inventory!";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,11 +18,9 @@ namespace Nekoyume.UI
 {
     public class CombinationSimulator : Widget
     {
-        [SerializeField]
-        private GameObject content;
+        [SerializeField] private GameObject content;
 
-        [SerializeField]
-        private TMP_InputField inputField;
+        [SerializeField] private TMP_InputField inputField;
 
         public override WidgetType WidgetType => WidgetType.Development;
 
@@ -142,7 +140,7 @@ namespace Nekoyume.UI
                 for (var i = 0; i < 4; i++)
                 {
                     decimal ratio;
-                    if (combination.ToList().Exists(x=> x == i))
+                    if (combination.ToList().Exists(x => x == i))
                     {
                         ratio = (result.expects[i].NormalizeFromTenThousandths());
                     }
@@ -153,6 +151,7 @@ namespace Nekoyume.UI
 
                     value *= ratio;
                 }
+
                 sum += value;
             }
 
@@ -196,7 +195,8 @@ namespace Nekoyume.UI
             var equipment =
                 (Equipment)ItemFactory.CreateItemUsable(row, random.GenerateRandomGuid(), 0);
             var agentState = States.Instance.AgentState;
-            Action.CombinationEquipment.AddAndUnlockOption(agentState,
+            Action.CombinationEquipment.AddAndUnlockOption(
+                agentState,
                 equipment,
                 random,
                 subRecipeRow,

@@ -94,14 +94,12 @@ namespace Nekoyume.UI
             bool localize = true,
             SystemType type = SystemType.Error)
         {
+            Set(title, content, labelYes, "", localize, type);
             if (gameObject.activeSelf)
             {
-                Close(true);
-                Show(title, content, labelYes, localize, type);
                 return;
             }
 
-            Set(title, content, labelYes, "", localize, type);
             Show();
         }
 
@@ -113,14 +111,12 @@ namespace Nekoyume.UI
             bool localize = true,
             SystemType type = SystemType.Error)
         {
+            Set(title, content, labelYes, labelNo, localize, type);
             if (gameObject.activeSelf)
             {
-                Close(true);
-                ShowWithTwoButton(title, content, labelYes, labelNo, localize, type);
                 return;
             }
 
-            Set(title, content, labelYes, labelNo, localize, type);
             Show();
         }
 
@@ -192,7 +188,7 @@ namespace Nekoyume.UI
 
         private void Confirm()
         {
-            Close();
+            Close(true);
             ConfirmCallback?.Invoke();
             AudioController.PlayClick();
         }
@@ -200,7 +196,7 @@ namespace Nekoyume.UI
         public void Cancel()
         {
             CancelCallback?.Invoke();
-            Close();
+            Close(true);
             AudioController.PlayClick();
         }
 

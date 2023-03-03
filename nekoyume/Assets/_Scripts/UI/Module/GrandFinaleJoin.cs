@@ -1,43 +1,39 @@
-﻿using Nekoyume.Game;
+﻿using System;
+using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.TableData.GrandFinale;
-using Nekoyume.UI.Module.Arena.Join;
-using Nekoyume.ValueControlComponents.Shader;
 using TMPro;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using UniRx;
+
     public class GrandFinaleJoin : MonoBehaviour
     {
-        [SerializeField]
-        private ConditionalButton arenaJoinButton;
+        [SerializeField] private ConditionalButton arenaJoinButton;
 
-        [SerializeField]
-        private ConditionalButton grandFinaleJoinButton;
+        [SerializeField] private ConditionalButton grandFinaleJoinButton;
 
-        [SerializeField]
-        private Image arenaProgressFillImage;
+        [SerializeField] private Image arenaProgressFillImage;
 
-        [SerializeField]
-        private TextMeshProUGUI arenaProgressSliderFillText;
+        [SerializeField] private TextMeshProUGUI arenaProgressSliderFillText;
 
-        [SerializeField]
-        private Image grandFinaleProgressFillImage;
+        [SerializeField] private Image grandFinaleProgressFillImage;
 
-        [SerializeField]
-        private TextMeshProUGUI grandFinaleProgressSliderFillText;
+        [SerializeField] private TextMeshProUGUI grandFinaleProgressSliderFillText;
 
         private GrandFinaleScheduleSheet.Row _grandFinaleScheduleRow;
 
         public void Set(System.Action onClickJoinArena)
         {
-            arenaJoinButton.OnClickSubject.Subscribe(_ => onClickJoinArena.Invoke()).AddTo(gameObject);
+            arenaJoinButton.OnClickSubject
+                .Subscribe(_ => onClickJoinArena.Invoke())
+                .AddTo(gameObject);
             grandFinaleJoinButton.OnClickSubject.Subscribe(_ =>
             {
                 AudioController.PlayClick();
@@ -52,8 +48,18 @@ namespace Nekoyume.UI.Module
         public void UpdateInformation()
         {
             var blockIndex = Game.Game.instance.Agent.BlockIndex;
-            var roundData = TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
-            if (roundData is null)
+            ArenaSheet.RoundData currentRoundData;
+            try
+            {
+                currentRoundData =
+                    TableSheets.Instance.ArenaSheet.GetRoundByBlockIndex(blockIndex);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            if (currentRoundData is null)
             {
                 return;
             }
@@ -70,7 +76,7 @@ namespace Nekoyume.UI.Module
                 grandFinaleProgressFillImage,
                 grandFinaleProgressSliderFillText);
             SetScheduleUI(
-                roundData.GetSeasonProgress(blockIndex),
+                currentRoundData.GetSeasonProgress(blockIndex),
                 arenaProgressFillImage,
                 arenaProgressSliderFillText);
         }
@@ -100,7 +106,7 @@ namespace Nekoyume.UI.Module
 
             var range = end - beginning;
             var progress = current - beginning;
-            var sliderNormalizedValue = (float) progress / range;
+            var sliderNormalizedValue = (float)progress / range;
             sliderImage.fillAmount = sliderNormalizedValue;
             sliderImage.enabled = true;
             text.text = Util.GetBlockToTime(range - progress);

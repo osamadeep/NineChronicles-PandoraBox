@@ -34,39 +34,28 @@ namespace Nekoyume.UI.Module
             public int minimum;
         }
 
-        [SerializeField]
-        private Inventory grindInventory;
+        [SerializeField] private Inventory grindInventory;
 
-        [SerializeField]
-        private ConditionalCostButton grindButton;
+        [SerializeField] private ConditionalCostButton grindButton;
 
-        [SerializeField]
-        private StakingBonus stakingBonus;
+        [SerializeField] private StakingBonus stakingBonus;
 
-        [SerializeField]
-        private List<GrindingItemSlot> itemSlots;
+        [SerializeField] private List<GrindingItemSlot> itemSlots;
 
         // TODO: It is used when NCG can be obtained through grinding later.
-        [SerializeField]
-        private GameObject ncgRewardObject;
+        [SerializeField] private GameObject ncgRewardObject;
 
-        [SerializeField]
-        private TMP_Text ncgRewardText;
+        [SerializeField] private TMP_Text ncgRewardText;
 
-        [SerializeField]
-        private TMP_Text crystalRewardText;
+        [SerializeField] private TMP_Text crystalRewardText;
 
-        [SerializeField]
-        private CanvasGroup canvasGroup;
+        [SerializeField] private CanvasGroup canvasGroup;
 
-        [SerializeField]
-        private Animator animator;
+        [SerializeField] private Animator animator;
 
-        [SerializeField]
-        private CrystalAnimationData animationData;
+        [SerializeField] private CrystalAnimationData animationData;
 
-        [SerializeField]
-        private DigitTextTweener crystalRewardTweener;
+        [SerializeField] private DigitTextTweener crystalRewardTweener;
 
         private bool _isInitialized;
 
@@ -221,7 +210,7 @@ namespace Nekoyume.UI.Module
             _selectedItemsForGrind.ObserveCountChanged().Subscribe(count =>
             {
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                if (count <11)
+                if (count < 11)
                     grindButton.SetCost(CostType.ActionPoint, 5);
                 else if (count >= 11 && count < 21)
                     grindButton.SetCost(CostType.ActionPoint, 10);
@@ -256,10 +245,10 @@ namespace Nekoyume.UI.Module
 
             if (isValid)
             {
-                if (isEquipped)
+                if (isEquipped && isRegister)
                 {
                     var confirm = Widget.Find<IconAndButtonSystem>();
-                    confirm.ConfirmCallback = () => RegisterToGrindingList(model, isRegister);
+                    confirm.ConfirmCallback = () => RegisterToGrindingList(model, true);
                     confirm.ShowWithTwoButton(
                         "UI_CONFIRM",
                         "UI_CONFIRM_EQUIPPED_GRINDING",
@@ -371,8 +360,8 @@ namespace Nekoyume.UI.Module
                 else
                 {
                     crystalRewardTweener.Play(
-                        (long) prevCrystalReward,
-                        (long) _cachedGrindingRewardCrystal.MajorUnit);
+                        (long)prevCrystalReward,
+                        (long)_cachedGrindingRewardCrystal.MajorUnit);
                 }
             }
             else
@@ -430,7 +419,6 @@ namespace Nekoyume.UI.Module
                             false, IconAndButtonSystem.SystemType.Information);
                         confirm.ConfirmCallback = () =>
                             PushAction(equipments, true);
-                        confirm.CancelCallback = () => confirm.Close();
                     }
                     else
                     {
@@ -465,19 +453,19 @@ namespace Nekoyume.UI.Module
                 bool isChargeAp = i == 0 ? chargeAp : false;
                 List<Equipment> batch = equipments.GetRange(i, Math.Min(batchSize, equipments.Count - i));
                 ActionManager.Instance
-                .Grinding(batch, isChargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
-                .Subscribe(eval =>
-                {
-                    Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
-                    if (eval.Exception != null)
+                    .Grinding(batch, isChargeAp, (int)_cachedGrindingRewardCrystal.MajorUnit)
+                    .Subscribe(eval =>
                     {
-                        Debug.LogException(eval.Exception.InnerException);
-                        OneLineSystem.Push(
-                            MailType.Grinding,
-                            L10nManager.Localize("ERROR_UNKNOWN"),
-                            NotificationCell.NotificationType.Alert);
-                    }
-                });
+                        Widget.Find<HeaderMenuStatic>().Crystal.SetProgressCircle(false);
+                        if (eval.Exception != null)
+                        {
+                            Debug.LogException(eval.Exception.InnerException);
+                            OneLineSystem.Push(
+                                MailType.Grinding,
+                                L10nManager.Localize("ERROR_UNKNOWN"),
+                                NotificationCell.NotificationType.Alert);
+                        }
+                    });
             }
 
             _selectedItemsForGrind.Clear();

@@ -20,6 +20,7 @@ using Nekoyume.L10n;
 using Nekoyume.Model.Item;
 using Nekoyume.TableData;
 using Nekoyume.UI.Module.WorldBoss;
+using Lib9c.Renderers;
 
 namespace Nekoyume.UI
 {
@@ -50,10 +51,10 @@ namespace Nekoyume.UI
         private readonly Dictionary<ItemSubType, List<int>> _costumes =
             new Dictionary<ItemSubType, List<int>>()
             {
-                {ItemSubType.HairCostume, new List<int>()},
-                {ItemSubType.EyeCostume, new List<int>()},
-                {ItemSubType.EarCostume, new List<int>()},
-                {ItemSubType.TailCostume, new List<int>()},
+                { ItemSubType.HairCostume, new List<int>() },
+                { ItemSubType.EyeCostume, new List<int>() },
+                { ItemSubType.EarCostume, new List<int>() },
+                { ItemSubType.TailCostume, new List<int>() },
             };
 
         private readonly Dictionary<ItemSubType, int> _index = new Dictionary<ItemSubType, int>()
@@ -120,6 +121,7 @@ namespace Nekoyume.UI
                     partnership.Add(id);
                 }
             }
+
             result.AddRange(partnership);
             result.AddRange(origin);
             return result;
@@ -165,7 +167,7 @@ namespace Nekoyume.UI
                 .Subscribe();
         }
 
-        public void OnRenderCreateAvatar(ActionBase.ActionEvaluation<CreateAvatar> eval)
+        public void OnRenderCreateAvatar(ActionEvaluation<CreateAvatar> eval)
         {
             if (eval.Exception is { })
             {
@@ -200,8 +202,6 @@ namespace Nekoyume.UI
             var results =
                 await RxProps.SelectAvatarAsync(_selectedIndex);
             await WorldBossStates.Set(States.Instance.CurrentAvatarState.address);
-            await States.Instance.InitRuneStoneBalance();
-            await States.Instance.InitRuneStates();
             await States.Instance.InitRuneSlotStates();
             await States.Instance.InitItemSlotStates();
             loadingScreen.Close();
@@ -362,6 +362,7 @@ namespace Nekoyume.UI
         {
             UpdateCostume(ItemSubType.EyeCostume, offset);
         }
+
         public void ChangeHair(int offset)
         {
             UpdateCostume(ItemSubType.HairCostume, offset);

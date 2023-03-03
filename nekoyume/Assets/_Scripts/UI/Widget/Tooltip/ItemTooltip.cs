@@ -13,6 +13,7 @@ using ShopItem = Nekoyume.UI.Model.ShopItem;
 namespace Nekoyume.UI
 {
     using Nekoyume.Game;
+    using Nekoyume.L10n;
     using Nekoyume.Model.Mail;
     using Nekoyume.Model.State;
     using Nekoyume.PandoraBox;
@@ -528,11 +529,14 @@ namespace Nekoyume.UI
                     TableSheets.Instance.CrystalEquipmentGrindingSheet,
                     TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
                     States.Instance.StakingLevel).MajorUnit;
-                if (price == 0)
-                    CrystalValueTxt.text = "<color=green>+" + totalValue + "</color>";
-                else
+                if (price <= 1)
                     CrystalValueTxt.text =
-                        "<color=green>+" + totalValue + "</color>" + $"({(int)(totalValue / price)})";
+                        L10nManager.Localize("UI_CRYSTAL_VALUE",
+                            totalValue); //"<color=green>+" + totalValue + "</color>";
+                else
+                    CrystalValueTxt.text = L10nManager.Localize("UI_CRYSTAL_VALUE", totalValue) +
+                                           $"(<color=green>{(int)(totalValue / price)}</color>)";
+                //"<color=green>+" + totalValue + "</color>" + $"({(int)(totalValue / price)})";
             }
         }
 

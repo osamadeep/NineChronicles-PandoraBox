@@ -25,59 +25,41 @@ namespace Nekoyume.UI
 
     public class Enhancement : Widget
     {
-        [SerializeField]
-        public EnhancementInventory enhancementInventory;
+        [SerializeField] public EnhancementInventory enhancementInventory;
 
-        [SerializeField]
-        private ConditionalCostButton upgradeButton;
+        [SerializeField] private ConditionalCostButton upgradeButton;
 
-        [SerializeField]
-        private Button closeButton;
+        [SerializeField] private Button closeButton;
 
-        [SerializeField]
-        private UpgradeEquipmentSlot baseSlot;
+        [SerializeField] private UpgradeEquipmentSlot baseSlot;
 
-        [SerializeField]
-        private UpgradeEquipmentSlot materialSlot;
+        [SerializeField] private UpgradeEquipmentSlot materialSlot;
 
-        [SerializeField]
-        private TextMeshProUGUI successRatioText;
+        [SerializeField] private TextMeshProUGUI successRatioText;
 
-        [SerializeField]
-        private TextMeshProUGUI requiredBlockIndexText;
+        [SerializeField] private TextMeshProUGUI requiredBlockIndexText;
 
-        [SerializeField]
-        private TextMeshProUGUI itemNameText;
+        [SerializeField] private TextMeshProUGUI itemNameText;
 
-        [SerializeField]
-        private TextMeshProUGUI currentLevelText;
+        [SerializeField] private TextMeshProUGUI currentLevelText;
 
-        [SerializeField]
-        private TextMeshProUGUI nextLevelText;
+        [SerializeField] private TextMeshProUGUI nextLevelText;
 
-        [SerializeField]
-        private TextMeshProUGUI materialGuideText;
+        [SerializeField] private TextMeshProUGUI materialGuideText;
 
-        [SerializeField]
-        private EnhancementOptionView mainStatView;
+        [SerializeField] private EnhancementOptionView mainStatView;
 
-        [SerializeField]
-        private List<EnhancementOptionView> statViews;
+        [SerializeField] private List<EnhancementOptionView> statViews;
 
-        [SerializeField]
-        private List<EnhancementOptionView> skillViews;
+        [SerializeField] private List<EnhancementOptionView> skillViews;
 
-        [SerializeField]
-        private TextMeshProUGUI levelText;
+        [SerializeField] private TextMeshProUGUI levelText;
 
-        [SerializeField]
-        private GameObject noneContainer;
+        [SerializeField] private GameObject noneContainer;
 
-        [SerializeField]
-        private GameObject itemInformationContainer;
+        [SerializeField] private GameObject itemInformationContainer;
 
-        [SerializeField]
-        private Animator animator;
+        [SerializeField] private Animator animator;
 
         private static readonly int HashToRegisterBase =
             Animator.StringToHash("RegisterBase");
@@ -325,7 +307,7 @@ namespace Nekoyume.UI
                 var slots = Find<CombinationSlotsPopup>();
                 upgradeButton.Interactable = slots.TryGetEmptyCombinationSlot(out var _);
 
-                itemNameText.text = equipment.GetLocalizedName();
+                itemNameText.text = equipment.GetLocalizedNonColoredName();
                 currentLevelText.text = $"+{equipment.level}";
                 nextLevelText.text = $"+{equipment.level + 1}";
                 successRatioText.text =
