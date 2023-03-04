@@ -825,7 +825,11 @@ namespace Nekoyume.UI
                 && _selectedRecipeInfo.RecipeId != 10020001
                 && _selectedRecipeInfo.RecipeId != 10020002
                 && _selectedRecipeInfo.RecipeId != 10020003
-                && _selectedRecipeInfo.RecipeId != 10020004)
+                && _selectedRecipeInfo.RecipeId != 10020004
+                && _selectedRecipeInfo.RecipeId != 158
+                && _selectedRecipeInfo.RecipeId != 159
+                && _selectedRecipeInfo.RecipeId != 160
+               )
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);

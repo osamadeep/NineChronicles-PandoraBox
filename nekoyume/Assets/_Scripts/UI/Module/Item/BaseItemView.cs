@@ -5,8 +5,10 @@ using Nekoyume.Game;
 using Nekoyume.Game.Character;
 using Nekoyume.Game.ScriptableObject;
 using Nekoyume.Helper;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.PandoraBox;
+using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.UI.Module;
 using TMPro;
@@ -23,6 +25,7 @@ namespace Nekoyume
         public GameObject FavoriteObj = null;
         public GameObject GuildObj = null;
         public GameObject myItem = null;
+        public TextMeshProUGUI ChangeText = null;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -69,8 +72,7 @@ namespace Nekoyume
 
         [SerializeField] private GameObject tradableObject;
 
-        [SerializeField]
-        private GameObject dimObject;
+        [SerializeField] private GameObject dimObject;
 
         [SerializeField] private GameObject levelLimitObject;
 
@@ -84,17 +86,13 @@ namespace Nekoyume
 
         [SerializeField] private GameObject shadowObject;
 
-        [SerializeField]
-        private GameObject loadingObject;
+        [SerializeField] private GameObject loadingObject;
 
-        [SerializeField]
-        private ParticleSystem itemGradeParticle;
+        [SerializeField] private ParticleSystem itemGradeParticle;
 
-        [SerializeField]
-        private GameObject grindingCountObject;
+        [SerializeField] private GameObject grindingCountObject;
 
-        [SerializeField]
-        private TMP_Text grindingCountText;
+        [SerializeField] private TMP_Text grindingCountText;
 
         public GameObject Container => container;
         public GameObject EmptyObject => emptyObject;
@@ -147,6 +145,8 @@ namespace Nekoyume
             FavoriteObj.SetActive(false);
             GuildObj.SetActive(false);
             myItem.SetActive(false);
+            //ChangeText.gameObject.SetActive(false);
+
             if (itemBase is INonFungibleItem nonFungibleItem)
             {
                 var nonFungibleId = nonFungibleItem.NonFungibleId;
@@ -156,10 +156,23 @@ namespace Nekoyume
                 FeatureItem currentFeatureItem =
                     PandoraMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
 
+                //change text
+                var slotIndex = States.Instance.AvatarStates
+                    .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+                var itemSlotStates = States.Instance.ItemSlotStates[slotIndex];
+                var equippedItems = States.Instance.CurrentAvatarState.inventory.Equipments.Where(x => x.equipped);
+                var matchedItem = equippedItems.First(x => x.ItemSubType == itemBase.ItemSubType);
+                var ratio = ((Battle.CPHelper.GetCP(itemBase as ItemUsable) * 1f) /
+                    (Battle.CPHelper.GetCP(matchedItem) * 1f) * 100f) - 100;
+                ChangeText.text = (int)Mathf.Abs(ratio) + "%";
+                ChangeText.transform.GetChild(0).gameObject.SetActive(ratio >= 0);
+                ChangeText.transform.GetChild(1).gameObject.SetActive(ratio < 0);
+
                 if (!(currentFeatureItem is null) && currentFeatureItem.IsValid())
                 {
                     FeatureObj.SetActive(true);
-                    FeatureObj.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = $"PROMO>{currentFeatureItem.EndBlock}";
+                    FeatureObj.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text =
+                        $"PROMO>{currentFeatureItem.EndBlock}";
                 }
 
                 //if (nonFungibleId.ToString() == "8208c642-6848-4fba-81b3-494f36178e19" || nonFungibleId.ToString() == "4e8f40e9-00a2-4e0e-89fe-1d686da22702")

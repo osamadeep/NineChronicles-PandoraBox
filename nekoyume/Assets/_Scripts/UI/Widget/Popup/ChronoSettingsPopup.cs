@@ -298,7 +298,8 @@ namespace Nekoyume.UI
                     var tableSheets = Game.TableSheets.Instance;
                     if (tableSheets.EquipmentItemRecipeSheet.TryGetValue(tempCraftID, out var equipRow))
                     {
-                        if (currentAvatarState.worldInformation.IsStageCleared(equipRow.UnlockStage))
+                        if (currentAvatarState.worldInformation.IsStageCleared(equipRow.UnlockStage) ||
+                            (tempCraftID == 158 || tempCraftID == 159 || tempCraftID == 160))
                         {
                             currentChronoAvatarSetting.CraftItemID = tempCraftID; //equip
                             CraftIconIDImage.sprite = SpriteHelper.GetItemIcon(equipRow.ResultEquipmentId);
