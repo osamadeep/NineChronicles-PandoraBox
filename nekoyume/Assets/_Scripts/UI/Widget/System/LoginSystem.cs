@@ -41,6 +41,8 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public PandoraLogin pandoraLogin;
+        [SerializeField] private UnityEngine.UI.Toggle pandoraAutoSaveToggle;
+        [SerializeField] private UnityEngine.UI.Toggle show9cPasswordToggle;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -105,21 +107,31 @@ namespace Nekoyume.UI
                 .Subscribe(_ => Submit())
                 .AddTo(gameObject);
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            show9cPasswordToggle.onValueChanged.AddListener(_ => Show9cPass());
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             base.Awake();
             SubmitWidget = Submit;
         }
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
+        void Show9cPass()
+        {
+            if (show9cPasswordToggle.isOn)
+                loginField.contentType = InputField.ContentType.Standard;
+            else
+                loginField.contentType = InputField.ContentType.Password;
+            loginField.ForceLabelUpdate();
+        }
+
         public void Update9cLoginInfo(string address, string password, bool isAutoLogin)
         {
             accountAddressText.text = address;
             loginField.text = password;
-            if (isAutoLogin)
+            pandoraAutoSaveToggle.isOn = isAutoLogin;
+            if (pandoraAutoSaveToggle.isOn)
             {
-                PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
-                                                                       + "_IsAutoLogin",
-                    System.Convert.ToInt32(isAutoLogin));
                 Login9cAccount();
             }
         }
@@ -133,6 +145,9 @@ namespace Nekoyume.UI
                 PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
                                                                           + "_AddressPassword",
                     PandoraUtil.SimpleEncrypt(loginField.text));
+                PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
+                                                                       + "_IsAutoLogin",
+                    System.Convert.ToInt32(pandoraAutoSaveToggle.isOn));
 
                 //if everything is ok
                 Login = true;
@@ -283,20 +298,17 @@ namespace Nekoyume.UI
             {
                 _privateKey = CheckPrivateKey(KeyStore, loginField.text);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //loginWarning.SetActive(true);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System,
-                    "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
-                    , NotificationCell.NotificationType.Alert);
+                PandoraUtil.ShowSystemNotification("CheckLogin, " + e.Message, NotificationCell.NotificationType.Alert);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 return;
             }
 
             //Login = !(_privateKey is null);
-            var finalCheck = !(_privateKey is null);
-            if (finalCheck)
+            if (!(_privateKey is null))
             {
                 Login9cAccount();
                 //Close();
@@ -305,9 +317,8 @@ namespace Nekoyume.UI
             {
                 //loginWarning.SetActive(true);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                OneLineSystem.Push(Nekoyume.Model.Mail.MailType.System,
-                    "<color=green>Pandora Box</color>: Password is <color=red>not Correct</color>!"
-                    , NotificationCell.NotificationType.Alert);
+                PandoraUtil.ShowSystemNotification("CheckLogin, _privateKey is null",
+                    NotificationCell.NotificationType.Alert);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 loginField.text = string.Empty;
             }

@@ -145,7 +145,7 @@ namespace Nekoyume
             FavoriteObj.SetActive(false);
             GuildObj.SetActive(false);
             myItem.SetActive(false);
-            //ChangeText.gameObject.SetActive(false);
+            ChangeText.gameObject.SetActive(itemBase.ItemType == ItemType.Equipment);
 
             if (itemBase is INonFungibleItem nonFungibleItem)
             {
@@ -157,16 +157,30 @@ namespace Nekoyume
                     PandoraMaster.PanDatabase.FeatureItems.Find(x => x.IsEqual(nonFungibleId.ToString()));
 
                 //change text
-                var slotIndex = States.Instance.AvatarStates
-                    .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
-                var itemSlotStates = States.Instance.ItemSlotStates[slotIndex];
-                var equippedItems = States.Instance.CurrentAvatarState.inventory.Equipments.Where(x => x.equipped);
-                var matchedItem = equippedItems.First(x => x.ItemSubType == itemBase.ItemSubType);
-                var ratio = ((Battle.CPHelper.GetCP(itemBase as ItemUsable) * 1f) /
-                    (Battle.CPHelper.GetCP(matchedItem) * 1f) * 100f) - 100;
-                ChangeText.text = (int)Mathf.Abs(ratio) + "%";
-                ChangeText.transform.GetChild(0).gameObject.SetActive(ratio >= 0);
-                ChangeText.transform.GetChild(1).gameObject.SetActive(ratio < 0);
+                try
+                {
+                    if (itemBase is Equipment equipment)
+                    {
+                        var slotIndex = States.Instance.AvatarStates
+                            .FirstOrDefault(x => x.Value.address == States.Instance.CurrentAvatarState.address).Key;
+                        var itemSlotStates = States.Instance.ItemSlotStates[slotIndex];
+                        var equippedItems =
+                            States.Instance.CurrentAvatarState.inventory.Equipments.Where(x => x.equipped);
+                        var matchedItem = equippedItems.First(x => x.ItemSubType == itemBase.ItemSubType);
+                        var ratio = ((Battle.CPHelper.GetCP(equipment) * 1f) /
+                            (Battle.CPHelper.GetCP(matchedItem) * 1f) * 100f) - 100;
+                        ChangeText.text = (int)Mathf.Abs(ratio) + "%";
+                        ChangeText.color = ratio > 0 ? Color.green : Color.red;
+                        ChangeText.transform.GetChild(0).gameObject.SetActive((int)ratio > 0);
+                        ChangeText.transform.GetChild(1).gameObject.SetActive((int)ratio < 0);
+                        ChangeText.gameObject.SetActive(matchedItem != equipment);
+                    }
+                }
+                catch
+                {
+                    ChangeText.gameObject.SetActive(false);
+                }
+
 
                 if (!(currentFeatureItem is null) && currentFeatureItem.IsValid())
                 {

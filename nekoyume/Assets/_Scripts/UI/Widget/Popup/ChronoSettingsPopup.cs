@@ -97,9 +97,11 @@ namespace Nekoyume.UI
         [SerializeField] Image bossNotifyOnImage;
         [SerializeField] Image bossNotifyOffImage;
 
+        [SerializeField] Image bossRewardsOnImage;
+        [SerializeField] Image bossRewardsOffImage;
+
         [SerializeField] Image bossFightOnImage;
         [SerializeField] Image bossFightOffImage;
-
 
         AvatarState currentAvatarState;
         int index;
@@ -139,6 +141,13 @@ namespace Nekoyume.UI
 
             var settings = new ChronoAvatarSettings();
             settings.LoadSettings();
+            if (currentAvatarState is null)
+            {
+                PandoraUtil.ShowSystemNotification("Please Wait while slot settnigs is ready...",
+                    NotificationCell.NotificationType.Information);
+                return;
+            }
+
             currentChronoAvatarSetting = settings.GetSettings(currentAvatarState.address.ToString());
 
             //reflect on UI
@@ -146,31 +155,32 @@ namespace Nekoyume.UI
             SelectTab(0);
 
             //STAGE
-            LoadStage(Convert.ToBoolean(currentChronoAvatarSetting.Stage));
-            LoadStageNotify(Convert.ToBoolean(currentChronoAvatarSetting.StageNotification));
-            LoadAutoCollect(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoCollectProsperity));
-            LoadAutoSpend(Convert.ToBoolean(currentChronoAvatarSetting.StageIsAutoSpendProsperity));
-            LoadSweep(Convert.ToBoolean(currentChronoAvatarSetting.StageIsSweepAP));
+            LoadStage(currentChronoAvatarSetting.Stage);
+            LoadStageNotify(currentChronoAvatarSetting.StageNotification);
+            LoadAutoCollect(currentChronoAvatarSetting.StageIsAutoCollectProsperity);
+            LoadAutoSpend(currentChronoAvatarSetting.StageIsAutoSpendProsperity);
+            LoadSweep(currentChronoAvatarSetting.StageIsSweepAP);
             LoadSweepStage(currentChronoAvatarSetting.StageSweepLevelIndex);
 
             //CRAFT
-            LoadCraft(Convert.ToBoolean(currentChronoAvatarSetting.Craft));
-            LoadCraftNotify(Convert.ToBoolean(currentChronoAvatarSetting.CraftNotification));
-            LoadAutoCraft(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsAutoCombine));
-            LoadCraftFillCrystal(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsUseCrystal));
+            LoadCraft(currentChronoAvatarSetting.Craft);
+            LoadCraftNotify(currentChronoAvatarSetting.CraftNotification);
+            LoadAutoCraft(currentChronoAvatarSetting.CraftIsAutoCombine);
+            LoadCraftFillCrystal(currentChronoAvatarSetting.CraftIsUseCrystal);
             LoadCraftID(currentChronoAvatarSetting.CraftItemID);
-            LoadPremiumCraft(Convert.ToBoolean(currentChronoAvatarSetting.CraftIsPremium));
+            LoadPremiumCraft(currentChronoAvatarSetting.CraftIsPremium);
 
             //EVENT
-            LoadEvent(Convert.ToBoolean(currentChronoAvatarSetting.Event));
-            LoadEventAutoFight(Convert.ToBoolean(currentChronoAvatarSetting.EventIsAutoSpendTickets));
-            LoadEventNotify(Convert.ToBoolean(currentChronoAvatarSetting.EventNotification));
+            LoadEvent(currentChronoAvatarSetting.Event);
+            LoadEventAutoFight(currentChronoAvatarSetting.EventIsAutoSpendTickets);
+            LoadEventNotify(currentChronoAvatarSetting.EventNotification);
             LoadEventLevel(currentChronoAvatarSetting.EventLevelIndex.ToString());
 
-            //EVENT
-            LoadBoss(Convert.ToBoolean(currentChronoAvatarSetting.Boss));
-            LoadBossAutoFight(Convert.ToBoolean(currentChronoAvatarSetting.BosstIsAutoSpendTickets));
-            LoadBossNotify(Convert.ToBoolean(currentChronoAvatarSetting.BossNotification));
+            //BOSS
+            LoadBoss(currentChronoAvatarSetting.Boss);
+            LoadBossAutoCollect(currentChronoAvatarSetting.BosstIsAutoCollectRewards);
+            LoadBossAutoFight(currentChronoAvatarSetting.BosstIsAutoSpendTickets);
+            LoadBossNotify(currentChronoAvatarSetting.BossNotification);
 
             base.Show();
         }
@@ -184,8 +194,20 @@ namespace Nekoyume.UI
 
         public void ChangeBoss(bool value)
         {
-            currentChronoAvatarSetting.Boss = Convert.ToInt32(value);
+            currentChronoAvatarSetting.Boss = value;
             LoadBoss(value);
+        }
+
+        void LoadBossAutoCollect(bool IsAuto)
+        {
+            bossRewardsOnImage.color = IsAuto ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            bossRewardsOffImage.color = !IsAuto ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+        }
+
+        public void ChangeBossAutoCollect(bool value)
+        {
+            currentChronoAvatarSetting.BosstIsAutoCollectRewards = value;
+            LoadBossAutoCollect(value);
         }
 
         void LoadBossAutoFight(bool IsAuto)
@@ -198,7 +220,7 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            currentChronoAvatarSetting.BosstIsAutoSpendTickets = Convert.ToInt32(value);
+            currentChronoAvatarSetting.BosstIsAutoSpendTickets = value;
             LoadBossAutoFight(value);
         }
 
@@ -210,7 +232,7 @@ namespace Nekoyume.UI
 
         public void ChangeBossNotify(bool value)
         {
-            currentChronoAvatarSetting.BossNotification = Convert.ToInt32(value);
+            currentChronoAvatarSetting.BossNotification = value;
             LoadBossNotify(value);
         }
 
@@ -223,7 +245,7 @@ namespace Nekoyume.UI
 
         public void ChangeEvent(bool value)
         {
-            currentChronoAvatarSetting.Event = Convert.ToInt32(value);
+            currentChronoAvatarSetting.Event = value;
             LoadEvent(value);
         }
 
@@ -237,7 +259,7 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            currentChronoAvatarSetting.EventIsAutoSpendTickets = Convert.ToInt32(value);
+            currentChronoAvatarSetting.EventIsAutoSpendTickets = value;
             LoadEventAutoFight(value);
         }
 
@@ -249,7 +271,7 @@ namespace Nekoyume.UI
 
         public void ChangeEventNotify(bool value)
         {
-            currentChronoAvatarSetting.EventNotification = Convert.ToInt32(value);
+            currentChronoAvatarSetting.EventNotification = value;
             LoadEventNotify(value);
         }
 
@@ -331,7 +353,7 @@ namespace Nekoyume.UI
 
         public void ChangePremiumCraft(bool value)
         {
-            currentChronoAvatarSetting.CraftIsPremium = Convert.ToInt32(value);
+            currentChronoAvatarSetting.CraftIsPremium = value;
             LoadPremiumCraft(value);
         }
 
@@ -343,7 +365,7 @@ namespace Nekoyume.UI
 
         public void ChangeCraftFillCrystal(bool value)
         {
-            currentChronoAvatarSetting.CraftIsUseCrystal = Convert.ToInt32(value);
+            currentChronoAvatarSetting.CraftIsUseCrystal = value;
             LoadCraftFillCrystal(value);
         }
 
@@ -357,7 +379,7 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            currentChronoAvatarSetting.CraftIsAutoCombine = Convert.ToInt32(value);
+            currentChronoAvatarSetting.CraftIsAutoCombine = value;
             LoadAutoCraft(value);
         }
 
@@ -370,7 +392,7 @@ namespace Nekoyume.UI
 
         public void ChangeStage(bool value)
         {
-            currentChronoAvatarSetting.Stage = Convert.ToInt32(value);
+            currentChronoAvatarSetting.Stage = value;
             LoadStage(value);
         }
 
@@ -382,7 +404,7 @@ namespace Nekoyume.UI
 
         public void ChangeStageNotify(bool value)
         {
-            currentChronoAvatarSetting.StageNotification = Convert.ToInt32(value);
+            currentChronoAvatarSetting.StageNotification = value;
             LoadStageNotify(value);
         }
 
@@ -395,7 +417,7 @@ namespace Nekoyume.UI
 
         public void ChangeCraft(bool value)
         {
-            currentChronoAvatarSetting.Craft = Convert.ToInt32(value);
+            currentChronoAvatarSetting.Craft = value;
             LoadCraft(value);
         }
 
@@ -407,7 +429,7 @@ namespace Nekoyume.UI
 
         public void ChangeCraftNotify(bool value)
         {
-            currentChronoAvatarSetting.CraftNotification = Convert.ToInt32(value);
+            currentChronoAvatarSetting.CraftNotification = value;
             LoadCraftNotify(value);
         }
 
@@ -419,7 +441,7 @@ namespace Nekoyume.UI
 
         public void ChangeAutoCollect(bool value)
         {
-            currentChronoAvatarSetting.StageIsAutoCollectProsperity = Convert.ToInt32(value);
+            currentChronoAvatarSetting.StageIsAutoCollectProsperity = value;
             LoadAutoCollect(value);
         }
 
@@ -434,7 +456,7 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            currentChronoAvatarSetting.StageIsSweepAP = Convert.ToInt32(value);
+            currentChronoAvatarSetting.StageIsSweepAP = value;
             sweepStageInput.transform.parent.gameObject.SetActive(value);
             LoadSweep(value);
         }
@@ -449,7 +471,7 @@ namespace Nekoyume.UI
         {
             if (value && !Premium.PANDORA_CheckPremium())
                 return;
-            currentChronoAvatarSetting.StageIsAutoSpendProsperity = Convert.ToInt32(value);
+            currentChronoAvatarSetting.StageIsAutoSpendProsperity = value;
             LoadAutoSpend(value);
         }
 

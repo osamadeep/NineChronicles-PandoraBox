@@ -7,10 +7,9 @@ namespace Nekoyume.UI
 {
     public class PandoraError : TitleOneButtonSystem
     {
-        [SerializeField]
-        private TextMeshProUGUI titleTxt;
-        [SerializeField]
-        private TextMeshProUGUI messageTxt;
+        [SerializeField] private TextMeshProUGUI titleTxt;
+        [SerializeField] private TextMeshProUGUI messageTxt;
+
         protected override void Awake()
         {
             base.Awake();
@@ -25,7 +24,8 @@ namespace Nekoyume.UI
 
         public void OpenDiscord()
         {
-            Application.OpenURL("https://discord.gg/rnCrYnGvdb");
+            //Application.OpenURL("https://discord.gg/rnCrYnGvdb");
+            Close();
         }
     }
 }

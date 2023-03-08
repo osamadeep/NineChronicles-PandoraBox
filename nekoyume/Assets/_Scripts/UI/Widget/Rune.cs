@@ -289,7 +289,8 @@ namespace Nekoyume.UI
             LoadingHelper.RuneEnhancement.Value = true;
             for (int i = 0; i < multiSlider.value; i++)
             {
-                await ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
+                var x = ActionManager.Instance.RuneEnhancement(runeId, TryCount.Value);
+                await Task.Delay(System.TimeSpan.FromSeconds(2));
                 PandoraUtil.ShowSystemNotification($"{i + 1}/{multiSlider.value} Upgrade sent, please wait...",
                     NotificationCell.NotificationType.Notification);
             }

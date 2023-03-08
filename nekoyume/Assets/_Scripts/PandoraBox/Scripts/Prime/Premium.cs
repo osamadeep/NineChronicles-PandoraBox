@@ -1896,7 +1896,7 @@ namespace Nekoyume.PandoraBox
                 return "";
         }
 
-        public static void SHOP_RelistAll(SellView view)
+        public static async UniTaskVoid SHOP_RelistAll(SellView view)
         {
             if (!PANDORA_CheckPremium())
                 return;
@@ -1916,36 +1916,61 @@ namespace Nekoyume.PandoraBox
 
             view.SetLoading(orderDigests);
 
-            var updateSellInfos = new List<UpdateSellInfo>();
             var oneLineSystemInfos = new List<(string name, int count)>();
-            foreach (var orderDigest in orderDigests)
+            int chunkSize = 10;
+            for (int i = 0; i < orderDigests.Count; i += chunkSize)
             {
-                if (!ReactiveShopState.TryGetShopItem(orderDigest, out var itemBase))
+                var chunk = orderDigests.Skip(i).Take(chunkSize);
+                var updateSellInfos = new List<UpdateSellInfo>();
+                foreach (var orderDigest in chunk)
                 {
-                    return;
+                    if (!ReactiveShopState.TryGetShopItem(orderDigest, out var itemBase))
+                        continue;
+
+                    var currentprice = orderDigest.Price;
+                    var updateSellInfo = new UpdateSellInfo(
+                        orderDigest.OrderId,
+                        Guid.NewGuid(),
+                        orderDigest.TradableId,
+                        itemBase.ItemSubType,
+                        currentprice,
+                        orderDigest.ItemCount
+                    );
+                    updateSellInfos.Add(updateSellInfo);
+                    oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
                 }
 
-                var currentprice = orderDigest.Price;
-                //if (itemBase.Id == 201020)
-                //{
-                //    var currency = new Libplanet.Assets.Currency("NCG", 2, new Libplanet.Address("0x47d082a115c63e7b58b1532d20e631538eafadde"));
-                //    currentprice = new Libplanet.Assets.FungibleAssetValue(currency, 1, 79);
-                //}
-
-                var updateSellInfo = new UpdateSellInfo(
-                    orderDigest.OrderId,
-                    Guid.NewGuid(),
-                    orderDigest.TradableId,
-                    itemBase.ItemSubType,
-                    //orderDigest.Price,
-                    currentprice,
-                    orderDigest.ItemCount
-                );
-                updateSellInfos.Add(updateSellInfo);
-                oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
+                Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
+                PandoraUtil.ShowSystemNotification(
+                    $"<color=red>{i + updateSellInfos.Count}</color>/{orderDigests.Count} Orders relisted!",
+                    NotificationCell.NotificationType.Information);
+                await Task.Delay(2000);
             }
 
-            Game.Game.instance.ActionManager.UpdateSell(updateSellInfos).Subscribe();
+            PandoraUtil.ShowSystemNotification(
+                $"All <color=red>{orderDigests.Count}</color> Orders relisted successfully!",
+                NotificationCell.NotificationType.Information);
+
+            //foreach (var orderDigest in orderDigests)
+            //{
+            //    if (!ReactiveShopState.TryGetShopItem(orderDigest, out var itemBase))
+            //        return;
+
+            //    var currentprice = orderDigest.Price;
+            //    var updateSellInfo = new UpdateSellInfo(
+            //        orderDigest.OrderId,
+            //        Guid.NewGuid(),
+            //        orderDigest.TradableId,
+            //        itemBase.ItemSubType,
+            //        //orderDigest.Price,
+            //        currentprice,
+            //        orderDigest.ItemCount
+            //    );
+            //    updateSellInfos.Add(updateSellInfo);
+            //    oneLineSystemInfos.Add((itemBase.GetLocalizedName(), orderDigest.ItemCount));
+
+            //    await Task.Delay(1000);
+            //}
         }
 
         public static int SHOP_GetPandoraScore(ItemBase itemBase)

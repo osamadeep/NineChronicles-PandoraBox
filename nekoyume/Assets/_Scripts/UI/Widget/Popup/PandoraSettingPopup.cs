@@ -34,6 +34,7 @@ namespace Nekoyume.UI
         [SerializeField] private Toggle rememberToggle;
         [SerializeField] private Toggle autoLoginToggle;
         [SerializeField] TextMeshProUGUI nodeText;
+        [SerializeField] Button pandoraFolderButton;
         PandoraAccountSlot currentPandoraAccountSlot;
 
         [Space(20)]
@@ -102,6 +103,7 @@ namespace Nekoyume.UI
         {
             base.Awake();
             itemIDButton.onClick.AddListener(() => { ShowBaseItemTooltip(); });
+            pandoraFolderButton.onClick.AddListener(() => { OpenPandoraFolder(); });
             SubmitWidget = () => Close(true);
             CloseWidget = () => Close(true);
         }
@@ -116,9 +118,8 @@ namespace Nekoyume.UI
             //save slot data
             PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex +
                                "_IsRemember", System.Convert.ToInt32(rememberToggle.isOn));
-            PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
-                                                                   + "_IsAutoLogin",
-                System.Convert.ToInt32(autoLoginToggle.isOn));
+            PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex +
+                               "_IsAutoLogin", System.Convert.ToInt32(autoLoginToggle.isOn));
 
             base.Close(ignoreCloseAnimation);
             AudioController.PlayClick();
@@ -208,6 +209,11 @@ namespace Nekoyume.UI
             currentPandoraAccountSlot.SaveData(currentPandoraAccountSlot.Email, "", "", false);
             PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
                                                                    + "_IsAutoLogin", System.Convert.ToInt32(false));
+        }
+
+        void OpenPandoraFolder()
+        {
+            System.Diagnostics.Process.Start(Application.persistentDataPath);
         }
 
         public void ChangeDisplayName()

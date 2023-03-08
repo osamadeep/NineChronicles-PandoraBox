@@ -1514,11 +1514,13 @@ namespace Nekoyume.BlockChain
         //CUSTOM ACTIONS
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
 
-        public void PreProcessAction<T>(T actionBase, AvatarState currentAvatarState, string analyzeText)
+        public void PreProcessAction<T>(T actionBase, AvatarState currentAvatarState, string analyzeText = "")
             where T : ActionBase
         {
             ProcessAction(actionBase, currentAvatarState.address);
 
+            if (analyzeText == "")
+                return;
             //analyze actions
             string message =
                 $"[v{PandoraMaster.VersionId.Substring(3)}][{Game.Game.instance.Agent.BlockIndex}] **{currentAvatarState.name}** Lv.**{currentAvatarState.level}** " +

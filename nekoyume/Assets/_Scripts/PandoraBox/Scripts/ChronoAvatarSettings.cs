@@ -67,30 +67,31 @@ namespace Nekoyume.PandoraBox
         public string AvatarAddress;
 
         //STAGE
-        public int Stage;
-        public int StageNotification;
-        public int StageIsAutoCollectProsperity;
-        public int StageIsAutoSpendProsperity;
-        public int StageIsSweepAP;
+        public bool Stage;
+        public bool StageNotification;
+        public bool StageIsAutoCollectProsperity;
+        public bool StageIsAutoSpendProsperity;
+        public bool StageIsSweepAP;
         public int StageSweepLevelIndex;
 
         //CRAFT
-        public int Craft;
-        public int CraftNotification;
-        public int CraftIsAutoCombine;
-        public int CraftIsUseCrystal;
-        public int CraftIsPremium;
+        public bool Craft;
+        public bool CraftNotification;
+        public bool CraftIsAutoCombine;
+        public bool CraftIsUseCrystal;
+        public bool CraftIsPremium;
         public int CraftItemID;
 
         //EVENT
-        public int Event;
-        public int EventNotification;
-        public int EventIsAutoSpendTickets;
+        public bool Event;
+        public bool EventNotification;
+        public bool EventIsAutoSpendTickets;
         public int EventLevelIndex;
 
         //BOSS
-        public int Boss;
-        public int BossNotification;
-        public int BosstIsAutoSpendTickets;
+        public bool Boss;
+        public bool BossNotification;
+        public bool BosstIsAutoSpendTickets;
+        public bool BosstIsAutoCollectRewards;
     }
 }

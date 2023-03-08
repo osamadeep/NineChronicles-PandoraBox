@@ -78,6 +78,7 @@ namespace Nekoyume.UI
         [SerializeField] private TextMeshProUGUI UnlockText = null;
         [SerializeField] private ConditionalCostButton maxButton;
         [SerializeField] private Button copyItemIDBtn;
+        int currentRecipeId;
 
         [Space(50)]
         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
@@ -383,6 +384,9 @@ namespace Nekoyume.UI
                 costNCG = equipmentRow.RequiredGold;
                 costAP = equipmentRow.RequiredActionPoint;
                 recipeId = equipmentRow.Id;
+                //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+                currentRecipeId = recipeId;
+                //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
                 // Add base material
                 materialMap.Add(equipmentRow.MaterialId, equipmentRow.MaterialCount);
@@ -455,14 +459,6 @@ namespace Nekoyume.UI
                             levelText.enabled = true;
                         }
 
-                        requiredItemRecipeView.SetData(
-                            baseMaterialInfo,
-                            subRecipe.Materials,
-                            true,
-                            !isUnlocked);
-                    }
-                    else
-                    {
                         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                         var unlockStage = equipmentRow.UnlockStage;
                         var clearedStage =
@@ -471,10 +467,19 @@ namespace Nekoyume.UI
                                 ? stageId
                                 : 0;
 
-                        //Debug.LogError(currentAvatarLevel + "  " + level + " " + clearedStage);
+                        //Debug.LogError(States.Instance.CurrentAvatarState.level + "  " + clearedStage + "  " + unlockStage);
                         CanCraft = clearedStage >= unlockStage;
                         UnlockText.text = "Unlock Level: " + unlockStage;
                         //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
+                        requiredItemRecipeView.SetData(
+                            baseMaterialInfo,
+                            subRecipe.Materials,
+                            true,
+                            !isUnlocked);
+                    }
+                    else
+                    {
                         var list = new List<EquipmentItemSubRecipeSheet.MaterialInfo> { baseMaterialInfo };
                         list.AddRange(subRecipe.Materials);
                         requiredItemRecipeView.SetData(list, true);
@@ -800,7 +805,8 @@ namespace Nekoyume.UI
 
         public System.Collections.IEnumerator MaxCombineCurrentRecipe()
         {
-            if (!CanCraft)
+            var isEventEquipment = Util.IsEventEquipmentRecipe(currentRecipeId);
+            if (!CanCraft && !isEventEquipment)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);
@@ -820,16 +826,16 @@ namespace Nekoyume.UI
 
         public void CombineCurrentRecipe()
         {
+            //States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(out var clearedStage);
+
+            //var stageId = _selectedRecipeInfo.rec row.UnlockStage;
+            //var canCraft = clearedStage >= stageId
+            //    ? row
+            //    : null;
+
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            if (!CanCraft
-                && _selectedRecipeInfo.RecipeId != 10020001
-                && _selectedRecipeInfo.RecipeId != 10020002
-                && _selectedRecipeInfo.RecipeId != 10020003
-                && _selectedRecipeInfo.RecipeId != 10020004
-                && _selectedRecipeInfo.RecipeId != 158
-                && _selectedRecipeInfo.RecipeId != 159
-                && _selectedRecipeInfo.RecipeId != 160
-               )
+            var isEventEquipment = Util.IsEventEquipmentRecipe(currentRecipeId);
+            if (!CanCraft && !isEventEquipment)
             {
                 OneLineSystem.Push(MailType.System, "<color=green>Pandora Box</color>: You didnt Unlock this item yet!",
                     NotificationCell.NotificationType.Alert);

@@ -522,20 +522,28 @@ namespace Nekoyume.UI
             CrystalValueTxt.gameObject.SetActive(item.ItemType == ItemType.Equipment);
             if (item.ItemType == ItemType.Equipment)
             {
-                List<Equipment> grindList = new List<Equipment>();
-                grindList.Add(item as Equipment);
-                var totalValue = CrystalCalculator.CalculateCrystal(grindList,
-                    false,
-                    TableSheets.Instance.CrystalEquipmentGrindingSheet,
-                    TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
-                    States.Instance.StakingLevel).MajorUnit;
-                if (price <= 1)
-                    CrystalValueTxt.text =
-                        L10nManager.Localize("UI_CRYSTAL_VALUE",
-                            totalValue); //"<color=green>+" + totalValue + "</color>";
-                else
-                    CrystalValueTxt.text = L10nManager.Localize("UI_CRYSTAL_VALUE", totalValue) +
-                                           $"(<color=green>{(int)(totalValue / price)}</color>)";
+                try
+                {
+                    List<Equipment> grindList = new List<Equipment>();
+                    grindList.Add(item as Equipment);
+                    var totalValue = CrystalCalculator.CalculateCrystal(grindList,
+                        false,
+                        TableSheets.Instance.CrystalEquipmentGrindingSheet,
+                        TableSheets.Instance.CrystalMonsterCollectionMultiplierSheet,
+                        States.Instance.StakingLevel).MajorUnit;
+                    if (price <= 1)
+                        CrystalValueTxt.text =
+                            L10nManager.Localize("UI_CRYSTAL_VALUE",
+                                totalValue); //"<color=green>+" + totalValue + "</color>";
+                    else
+                        CrystalValueTxt.text = L10nManager.Localize("UI_CRYSTAL_VALUE", totalValue) +
+                                               $"(<color=green>{(int)(totalValue / price)}</color>)";
+                }
+                catch (Exception e)
+                {
+                    PandoraUtil.ShowSystemNotification("CheckCrystal, " + e.Message,
+                        NotificationCell.NotificationType.Alert);
+                }
                 //"<color=green>+" + totalValue + "</color>" + $"({(int)(totalValue / price)})";
             }
         }
