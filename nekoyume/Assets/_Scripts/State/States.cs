@@ -18,9 +18,8 @@ using Nekoyume.Helper;
 using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.UI;
-using Nekoyume.PandoraBox;
-using UnityEngine;
 using Event = Nekoyume.Game.Event;
+using Nekoyume.PandoraBox;
 
 namespace Nekoyume.State
 {
@@ -120,7 +119,7 @@ namespace Nekoyume.State
             }
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //await Prime.GetAllCustomAvatars(state.address.ToString().ToLower());
+            //Prime.GetAllCustomAvatars(state.address.ToString().ToLower()).Forget();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -187,40 +186,33 @@ namespace Nekoyume.State
             CurrentRuneSlotStates.Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
 
             RuneSlotStates.Clear();
-            try
+            foreach (var (index, avatarState) in _avatarStates)
             {
-                foreach (var (index, avatarState) in _avatarStates)
+                RuneSlotStates.Add(index, new Dictionary<BattleType, RuneSlotState>());
+                RuneSlotStates[index].Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
+                RuneSlotStates[index].Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
+                RuneSlotStates[index].Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+
+                var addresses = new List<Address>
                 {
-                    RuneSlotStates.Add(index, new Dictionary<BattleType, RuneSlotState>());
-                    RuneSlotStates[index].Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
-                    RuneSlotStates[index].Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
-                    RuneSlotStates[index].Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+                    RuneSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
+                    RuneSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
+                    RuneSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
+                };
+                var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
+                foreach (var value in stateBulk.Values)
+                {
+                    if (value is List list)
+                    {
+                        var slotState = new RuneSlotState(list);
+                        RuneSlotStates[index][slotState.BattleType] = slotState;
 
-                    var addresses = new List<Address>
-                    {
-                        RuneSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
-                        RuneSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
-                        RuneSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
-                    };
-                    var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
-                    foreach (var value in stateBulk.Values)
-                    {
-                        if (value is List list)
+                        if (avatarState.address == CurrentAvatarState.address)
                         {
-                            var slotState = new RuneSlotState(list);
-                            RuneSlotStates[index][slotState.BattleType] = slotState;
-
-                            if (avatarState.address == CurrentAvatarState.address)
-                            {
-                                CurrentRuneSlotStates[slotState.BattleType] = slotState;
-                            }
+                            CurrentRuneSlotStates[slotState.BattleType] = slotState;
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                PandoraMaster.Instance.ShowError(405);
             }
         }
 
@@ -266,44 +258,37 @@ namespace Nekoyume.State
             CurrentItemSlotStates.Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
 
             ItemSlotStates.Clear();
-            try
+            foreach (var (index, avatarState) in _avatarStates)
             {
-                foreach (var (index, avatarState) in _avatarStates)
-                {
-                    ItemSlotStates.Add(index, new Dictionary<BattleType, ItemSlotState>());
-                    ItemSlotStates[index].Add(BattleType.Adventure, new ItemSlotState(BattleType.Adventure));
-                    ItemSlotStates[index].Add(BattleType.Arena, new ItemSlotState(BattleType.Arena));
-                    ItemSlotStates[index].Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
+                ItemSlotStates.Add(index, new Dictionary<BattleType, ItemSlotState>());
+                ItemSlotStates[index].Add(BattleType.Adventure, new ItemSlotState(BattleType.Adventure));
+                ItemSlotStates[index].Add(BattleType.Arena, new ItemSlotState(BattleType.Arena));
+                ItemSlotStates[index].Add(BattleType.Raid, new ItemSlotState(BattleType.Raid));
 
-                    var addresses = new List<Address>
+                var addresses = new List<Address>
+                {
+                    ItemSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
+                    ItemSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
+                    ItemSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
+                };
+                var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
+                foreach (var value in stateBulk.Values)
+                {
+                    if (value is List list)
                     {
-                        ItemSlotState.DeriveAddress(avatarState.address, BattleType.Adventure),
-                        ItemSlotState.DeriveAddress(avatarState.address, BattleType.Arena),
-                        ItemSlotState.DeriveAddress(avatarState.address, BattleType.Raid)
-                    };
-                    var stateBulk = await Game.Game.instance.Agent.GetStateBulk(addresses);
-                    foreach (var value in stateBulk.Values)
-                    {
-                        if (value is List list)
+                        var slotState = new ItemSlotState(list);
+                        var checkedState = GetVerifiedItemSlotState(slotState, avatarState);
+                        ItemSlotStates[index][checkedState.BattleType] = checkedState;
+                        if (avatarState.address == CurrentAvatarState.address)
                         {
-                            var slotState = new ItemSlotState(list);
-                            var checkedState = GetVerifiedItemSlotState(slotState, avatarState);
-                            ItemSlotStates[index][checkedState.BattleType] = checkedState;
-                            if (avatarState.address == CurrentAvatarState.address)
-                            {
-                                CurrentItemSlotStates[checkedState.BattleType] = checkedState;
-                            }
+                            CurrentItemSlotStates[checkedState.BattleType] = checkedState;
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                PandoraMaster.Instance.ShowError(405);
-            }
         }
 
-        private async UniTask InitItemSlotStateAsync(int slotIndex, AvatarState avatarState)
+        public async UniTask InitItemSlotStateAsync(int slotIndex, AvatarState avatarState)
         {
             if (ItemSlotStates.ContainsKey(slotIndex))
             {
@@ -515,9 +500,11 @@ namespace Nekoyume.State
                 return null;
             }
 
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //if (AgentState is null || !AgentState.avatarAddresses.ContainsValue(state.address))
             //    throw new Exception(
             //        $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             state = LocalLayer.Instance.Modify(state);
 
@@ -567,20 +554,18 @@ namespace Nekoyume.State
         /// <summary>
         /// 인자로 받은 인덱스의 아바타 상태를 선택한다.
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="initializeReactiveState"></param>
-        /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
         public async UniTask<AvatarState> SelectAvatarAsync(
             int index,
-            bool initializeReactiveState = true)
+            bool initializeReactiveState = true,
+            bool forceNewSelection = false)
         {
             if (!_avatarStates.ContainsKey(index))
             {
                 throw new KeyNotFoundException($"{nameof(index)}({index})");
             }
 
-            var isNewlySelected = CurrentAvatarKey != index;
+            var isNewlySelected = forceNewSelection || CurrentAvatarKey != index;
 
             CurrentAvatarKey = index;
             var avatarState = _avatarStates[CurrentAvatarKey];
@@ -640,7 +625,7 @@ namespace Nekoyume.State
             UpdateCurrentAvatarState(null);
         }
 
-        public async UniTask SetCombinationSlotStatesAsync(AvatarState avatarState)
+        private async UniTask SetCombinationSlotStatesAsync(AvatarState avatarState)
         {
             if (avatarState is null)
             {

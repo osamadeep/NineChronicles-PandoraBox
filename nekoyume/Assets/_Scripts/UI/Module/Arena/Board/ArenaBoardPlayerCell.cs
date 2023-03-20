@@ -317,7 +317,7 @@ namespace Nekoyume.UI.Module.Arena.Board
                 //cannotAttackImg.SetActive(false); //false on offseason
                 //if (currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Championship || currentRoundData.ArenaType == Nekoyume.Model.EnumType.ArenaType.Season)
                 var myScore = RxProps.PlayersArenaParticipant.Value.Score;
-                cannotAttackImg.SetActive(_currentData.score > myScore + 200 || myScore > _currentData.score + 200);
+                cannotAttackImg.SetActive(_currentData.score > myScore + 200 || myScore > _currentData.score + 100);
             }
         }
 

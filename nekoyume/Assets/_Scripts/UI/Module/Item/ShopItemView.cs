@@ -10,11 +10,19 @@ namespace Nekoyume.UI.Module
     using Nekoyume.PandoraBox;
     using Nekoyume.State;
     using UniRx;
+    using UnityEngine.UI;
 
     [RequireComponent(typeof(BaseItemView))]
     public class ShopItemView : MonoBehaviour
     {
-        [SerializeField] private BaseItemView baseItemView;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Image remainingTimeImage;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private BaseItemView baseItemView;
 
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
@@ -63,6 +71,8 @@ namespace Nekoyume.UI.Module
             baseItemView.myItem.SetActive(model.OrderDigest.SellerAgentAddress ==
                                           States.Instance.CurrentAvatarState.agentAddress);
 
+            remainingTimeImage.fillAmount =
+                ((float)model.OrderDigest.ExpiredBlockIndex - (float)Game.Game.instance.Agent.BlockIndex) / 36000f;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             baseItemView.GradeImage.overrideSprite = data.GradeBackground;

@@ -66,6 +66,7 @@ namespace Nekoyume.State
         public class PlayerArenaParticipant : ArenaParticipant
         {
             public ArenaInformation CurrentArenaInfo;
+
             // public ArenaInformation NextArenaInfo;
             public int PurchasedCountDuringInterval;
             public long LastBattleBlockIndex;
@@ -205,7 +206,7 @@ namespace Nekoyume.State
                 currentRoundData.StartBlockIndex,
                 ticketResetInterval);
             var purchasedCount = _playersArenaParticipant?.Value?.PurchasedCountDuringInterval ?? 0;
-            var purchasedCountDuringInterval =  currentArenaInfo.GetPurchasedCountInInterval(
+            var purchasedCountDuringInterval = currentArenaInfo.GetPurchasedCountInInterval(
                 blockIndex,
                 currentRoundData.StartBlockIndex,
                 ticketResetInterval,
@@ -329,7 +330,7 @@ namespace Nekoyume.State
                 return Array.Empty<ArenaParticipant>();
             }
 
-            var avatarAddrList = participants.AvatarAddresses;
+            var avatarAddrList = participants.AvatarAddresses; //.GetRange(0,20); //REMOVE IT
             var avatarAndScoreAddrList = avatarAddrList
                 .Select(avatarAddr => (
                     avatarAddr,
@@ -368,9 +369,9 @@ namespace Nekoyume.State
                 //    playerScore, playerTuple.rank);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 avatarAddrAndScoresWithRank = Premium.PVP_GetListRange(
-                avatarAddrAndScoresWithRank,
-                currentRoundData.ArenaType,
-                playerScore, playerTuple.rank);
+                    avatarAddrAndScoresWithRank,
+                    currentRoundData.ArenaType,
+                    playerScore, playerTuple.rank);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
             catch
@@ -394,9 +395,9 @@ namespace Nekoyume.State
                 //    playerScore, 0);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
                 avatarAddrAndScoresWithRank = Premium.PVP_GetListRange(
-                avatarAddrAndScoresWithRank,
-                currentRoundData.ArenaType,
-                playerScore, 0);
+                    avatarAddrAndScoresWithRank,
+                    currentRoundData.ArenaType,
+                    playerScore, 0);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             }
 

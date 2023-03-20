@@ -298,6 +298,8 @@ namespace Nekoyume.UI
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<ChronoSlotsPopup>());
             yield return null;
+            secondWidgets.Add(Widget.Create<PandoraTransfer>());
+            yield return null;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             secondWidgets.Add(Widget.Create<MailPopup>());
             yield return null;

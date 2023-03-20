@@ -62,7 +62,9 @@ namespace Nekoyume.UI
         public Button ChronoButton;
 
         [SerializeField] private Button runnerButton;
-        //[SerializeField] private Button fastSwitchButton;
+        [SerializeField] private Button fastSwitchButton;
+
+        [SerializeField] private Button pandoraTransferButton;
         //[SerializeField] private Button updateAvatarButton;
         //[SerializeField] private Button labButton;
 
@@ -162,10 +164,11 @@ namespace Nekoyume.UI
                 .AddTo(gameObject);
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            //fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
-            runnerButton.onClick.AddListener(() => { ShowRunner(); });
-            //labButton.onClick.AddListener(() => { FastShowEvent(); });
+            fastSwitchButton.onClick.AddListener(() => { FastCharacterSwitch(); });
             ChronoButton.onClick.AddListener(() => { Widget.Find<ChronoSlotsPopup>().Show(); });
+            runnerButton.onClick.AddListener(() => { ShowRunner(); });
+            pandoraTransferButton.onClick.AddListener(() => { ShowTransfer(); });
+            //labButton.onClick.AddListener(() => { FastShowEvent(); });
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
@@ -545,8 +548,6 @@ namespace Nekoyume.UI
             UpdateButtons();
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            string displayNameKey = "_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex +
-                                    "_DisplayText";
             var currentName = States.Instance.CurrentAvatarState.name + " #" +
                               States.Instance.CurrentAvatarState.address.ToHex().Substring(0, 5);
 
@@ -565,7 +566,10 @@ namespace Nekoyume.UI
 
             if (!string.IsNullOrEmpty(Premium.PandoraProfile.Profile.DisplayName))
                 currentName = Premium.PandoraProfile.Profile.DisplayName;
-            PlayerPrefs.SetString(displayNameKey, currentName); //save profile name
+
+            var slot = Widget.Find<LoginSystem>().pandoraLogin.PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex];
+            slot.SlotSettings.DisplayText = currentName;
+            slot.SaveData();
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             //load favorite items
@@ -775,7 +779,11 @@ namespace Nekoyume.UI
             }
 
             Find<RunnerTown>().Show(true);
-            return;
+        }
+
+        public void ShowTransfer()
+        {
+            Find<PandoraTransfer>().Show(true);
         }
 
         public void FastCharacterSwitch()

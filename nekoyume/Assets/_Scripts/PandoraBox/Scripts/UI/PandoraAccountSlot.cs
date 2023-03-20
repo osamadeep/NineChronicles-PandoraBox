@@ -1,5 +1,6 @@
 using Nekoyume.PandoraBox;
 using Nekoyume.UI;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -8,75 +9,80 @@ using UnityEngine.UI;
 
 namespace Nekoyume.PandoraBox
 {
+    [Serializable]
     public class PandoraAccountSlot : MonoBehaviour
     {
-        public int _slotIndex;
+        //public int _slotIndex;
         [SerializeField] GameObject selectionVFX;
         [SerializeField] GameObject particleVFX;
         [SerializeField] GameObject premiumButton;
         [SerializeField] Image slotPicture;
         [SerializeField] Button slotButton;
         [SerializeField] TextMeshProUGUI titleText;
+        [SerializeField] TextMeshProUGUI numberText;
 
-        public string Email { private set; get; }
-        public string Password { private set; get; }
-        public string Username { private set; get; }
-        public string DisplayText { private set; get; }
-        public bool IsRemember { private set; get; }
-        public bool IsAutoLogin { private set; get; }
-        public string AddressPassword { private set; get; }
+        public LoginSlotSettings SlotSettings;
+
+        //public string PandoraPassword { private set; get; }
+        //public string AddressPassword { private set; get; }
+
+
+        //public string Email { private set; get; }
+        //public string Username { private set; get; }
+        //public string DisplayText { private set; get; }
+        //public bool IsRemember { private set; get; }
+        //public bool IsAutoLogin { private set; get; }
 
         public void LoadData(int index)
         {
-            _slotIndex = index;
-            Email = PlayerPrefs.GetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Email", "").ToLower();
-            Password = PandoraUtil.SimpleDecrypt(
-                PlayerPrefs.GetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Password", ""));
-            Username = PlayerPrefs.GetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Username", "");
-            DisplayText = PlayerPrefs.GetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_DisplayText",
-                "Account");
-            IsRemember =
-                System.Convert.ToBoolean(
-                    PlayerPrefs.GetInt("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_IsRemember", 0));
-            IsAutoLogin =
-                System.Convert.ToBoolean(
-                    PlayerPrefs.GetInt("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_IsAutoLogin", 0));
-            AddressPassword = PandoraUtil.SimpleDecrypt(
-                PlayerPrefs.GetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_AddressPassword", ""));
-            premiumButton.SetActive(_slotIndex > 0);
-            titleText.text = DisplayText;
+            var settings = new LoginSlotsSettings();
+            settings.LoadSettings();
+            SlotSettings = settings.GetSettings(index);
+            SlotSettings.Password = !string.IsNullOrEmpty(SlotSettings.Password)
+                ? PandoraUtil.SimpleDecrypt(SlotSettings.Password)
+                : "";
+            SlotSettings.AddressPassword = !string.IsNullOrEmpty(SlotSettings.Password)
+                ? PandoraUtil.SimpleDecrypt(SlotSettings.AddressPassword)
+                : "";
+
+            premiumButton.SetActive(SlotSettings.Index > 0);
+            titleText.text = SlotSettings.DisplayText;
+            numberText.text = "#" + (SlotSettings.Index + 1);
 
             slotButton.onClick.RemoveAllListeners();
-            slotButton.onClick.AddListener(() => Widget.Find<LoginSystem>().pandoraLogin.SetAccountIndex(_slotIndex));
+            slotButton.onClick.AddListener(() =>
+                Widget.Find<LoginSystem>().pandoraLogin.SetAccountIndex(SlotSettings.Index));
         }
 
-        public void SaveData(string email, string password, string username, bool isRemember)
+        public void SaveData()
         {
-            PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Email", email);
-            PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Username", username.ToLower());
-            //PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_DisplayText", username.ToLower().Substring(0,6));
-            PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_IsRemember",
-                System.Convert.ToInt32(isRemember));
-            string newPassword = isRemember ? password : "";
-            PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + _slotIndex + "_Password",
-                PandoraUtil.SimpleEncrypt(newPassword));
-            PlayerPrefs.SetInt("_PandoraBox_Account_lastLoginIndex", _slotIndex);
-
-            //update local data
-            Email = email;
-            Password = password;
-            Username = username;
-            IsRemember = isRemember;
+            var settings = new LoginSlotsSettings();
+            settings.LoadSettings();
+            var temp = new LoginSlotSettings
+            {
+                Index = SlotSettings.Index,
+                Email = SlotSettings.Email,
+                Username = SlotSettings.Username,
+                DisplayText = SlotSettings.DisplayText,
+                IsRemember = SlotSettings.IsRemember,
+                IsAutoLogin = SlotSettings.IsAutoLogin,
+                Password = SlotSettings.IsRemember ? PandoraUtil.SimpleEncrypt(SlotSettings.Password) : "",
+                AddressPassword = SlotSettings.IsAutoLogin
+                    ? PandoraUtil.SimpleEncrypt(SlotSettings.AddressPassword)
+                    : "",
+            };
+            settings.SaveSettings(temp);
+            PlayerPrefs.SetInt("_PandoraBox_Account_lastLoginIndex", SlotSettings.Index);
         }
 
         public void CheckSelect()
         {
-            Color pictureColor = _slotIndex == PandoraMaster.SelectedLoginAccountIndex
+            Color pictureColor = SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex
                 ? Color.white
                 : new Color(100f / 255f, 100f / 255f, 100f / 255f);
             slotPicture.color = pictureColor;
-            selectionVFX.SetActive(_slotIndex == PandoraMaster.SelectedLoginAccountIndex);
-            particleVFX.SetActive(_slotIndex == PandoraMaster.SelectedLoginAccountIndex);
+            selectionVFX.SetActive(SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex);
+            particleVFX.SetActive(SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex);
         }
     }
 }

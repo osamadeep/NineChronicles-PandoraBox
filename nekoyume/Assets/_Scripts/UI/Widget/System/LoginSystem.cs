@@ -41,7 +41,7 @@ namespace Nekoyume.UI
 
         //|||||||||||||| PANDORA START CODE |||||||||||||||||||
         [Header("PANDORA CUSTOM FIELDS")] public PandoraLogin pandoraLogin;
-        [SerializeField] private UnityEngine.UI.Toggle pandoraAutoSaveToggle;
+        [SerializeField] private UnityEngine.UI.Toggle nineLoginRememberToggle;
         [SerializeField] private UnityEngine.UI.Toggle show9cPasswordToggle;
 
         [Space(50)]
@@ -125,13 +125,15 @@ namespace Nekoyume.UI
             loginField.ForceLabelUpdate();
         }
 
-        public void Update9cLoginInfo(string address, string password, bool isAutoLogin)
+        public void Update9cLoginInfo(string address)
         {
+            var slot = pandoraLogin.PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings;
+
             accountAddressText.text = address;
-            loginField.text = password;
-            pandoraAutoSaveToggle.isOn = isAutoLogin;
-            if (pandoraAutoSaveToggle.isOn)
+            nineLoginRememberToggle.isOn = slot.IsAutoLogin;
+            if (nineLoginRememberToggle.isOn)
             {
+                loginField.text = slot.AddressPassword;
                 Login9cAccount();
             }
         }
@@ -142,12 +144,13 @@ namespace Nekoyume.UI
             if (!(_privateKey is null))
             {
                 //save address password
-                PlayerPrefs.SetString("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
-                                                                          + "_AddressPassword",
-                    PandoraUtil.SimpleEncrypt(loginField.text));
-                PlayerPrefs.SetInt("_PandoraBox_Account_LoginAccount_" + PandoraMaster.SelectedLoginAccountIndex
-                                                                       + "_IsAutoLogin",
-                    System.Convert.ToInt32(pandoraAutoSaveToggle.isOn));
+                var slot = pandoraLogin.PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings;
+                slot.IsAutoLogin = nineLoginRememberToggle.isOn;
+                if (slot.IsAutoLogin)
+                {
+                    slot.AddressPassword = loginField.text;
+                    pandoraLogin.PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SaveData();
+                }
 
                 //if everything is ok
                 Login = true;
@@ -302,7 +305,8 @@ namespace Nekoyume.UI
             {
                 //loginWarning.SetActive(true);
                 //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-                PandoraUtil.ShowSystemNotification("CheckLogin, " + e.Message, NotificationCell.NotificationType.Alert);
+                PandoraUtil.ShowSystemNotification("LoginSystem/CheckLogin > " + e.Message,
+                    NotificationCell.NotificationType.Alert);
                 //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
                 return;
             }
@@ -348,7 +352,7 @@ namespace Nekoyume.UI
                     Close();
                     break;
                 case States.Login:
-                    CheckLogin();
+                    Login9cAccount(); // CheckLogin();
                     break;
                 case States.FindPassphrase:
                 {

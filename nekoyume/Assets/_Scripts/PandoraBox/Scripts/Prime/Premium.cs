@@ -167,6 +167,28 @@ namespace Nekoyume.PandoraBox
             }
         }
 
+        public static void PANDORA_TransferAsset(string currency, long majorUnit, long minorUnit, string recipent,
+            string memo)
+        {
+            var currencyUsed = new Libplanet.Assets.Currency();
+            if (currency == "NCG")
+                currencyUsed = Libplanet.Assets.Currency.Legacy("NCG", 2,
+                    new Libplanet.Address("47d082a115c63e7b58b1532d20e631538eafadde"));
+            else if (currency == "CRYSTAL")
+                currencyUsed = Libplanet.Assets.Currency.Legacy("CRYSTAL", 18, minters: null);
+            else if (currency == "RUNE_FENRIR1")
+                currencyUsed = Libplanet.Assets.Currency.Legacy("RUNE_FENRIR1", 0, minters: null);
+
+            var blockIndex = Game.Game.instance.Agent?.BlockIndex ?? -1;
+            ActionManager.Instance
+                .TransferAsset(
+                    States.Instance.CurrentAvatarState.agentAddress,
+                    new Libplanet.Address(recipent),
+                    new Libplanet.Assets.FungibleAssetValue(currencyUsed, majorUnit, minorUnit),
+                    memo)
+                .Subscribe();
+        }
+
         public static IEnumerator PANDORA_ProcessQueueWebHook()
         {
             while (true)
@@ -612,6 +634,82 @@ namespace Nekoyume.PandoraBox
                 materialMap.Add(material.Id, material.Count);
 
             return CRAFT_GetReplacedMaterials(currentAvatarState, materialMap).Count;
+        }
+
+        public static int CRAFT_GetCraftingFees(Equipment equipment)
+        {
+            int grade = equipment
+                .Grade; // The grade of the item, 1 for normal, 2 for epic, 3 for legendary, 4 for mythic
+            int level = equipment.level; // The level of the item, can be any integer from 0 to 7
+
+            int craftingFees = 0; // The crafting fees for the item, initially set to 0
+            int totalFees = 0; // The total crafting fees for all levels up to the given level, initially set to 0
+
+            switch (grade) // Calculate the crafting fees based on the grade
+            {
+                case 1:
+                    craftingFees = 10;
+                    break;
+                case 2:
+                    craftingFees = 20;
+                    break;
+                case 3:
+                    craftingFees = 30;
+                    break;
+                case 4:
+                    craftingFees = 40;
+                    break;
+                default:
+                    // Handle invalid grade values here
+                    break;
+            }
+
+            if (level >= 4) // Levels 4, 5, 6, 7, 8, and 9 have crafting fees
+            {
+                if (level == 4)
+                {
+                    totalFees = craftingFees;
+                }
+                else if (level == 5)
+                {
+                    totalFees = craftingFees * 2;
+                }
+                else if (level == 6)
+                {
+                    totalFees = craftingFees * 4;
+                }
+                else if (level == 7)
+                {
+                    totalFees = craftingFees * 8 + (craftingFees * 2);
+                }
+                else if (level == 8)
+                {
+                    totalFees = craftingFees * 16 + (craftingFees * 4);
+                }
+                else if (level == 9)
+                {
+                    totalFees = craftingFees * 32 + (craftingFees * 8);
+                }
+                else if (level == 10)
+                {
+                    totalFees = craftingFees * 64 + (craftingFees * 16);
+                }
+                else if (level == 11)
+                {
+                    totalFees = craftingFees * 128 + (craftingFees * 32);
+                }
+                else if (level == 12)
+                {
+                    totalFees = craftingFees * 256 + (craftingFees * 64);
+                }
+            }
+
+            return totalFees;
+        }
+
+        public static int CRAFT_GetCraftingFodderCount(Equipment equipment)
+        {
+            return (equipment.level >= 1) ? (int)Math.Pow(2, equipment.level - 2) : 0;
         }
 
         static Dictionary<int, int> CRAFT_GetReplacedMaterials(AvatarState currentAvatarState,

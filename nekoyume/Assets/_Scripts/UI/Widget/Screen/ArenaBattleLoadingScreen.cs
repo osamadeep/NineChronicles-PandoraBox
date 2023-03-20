@@ -154,7 +154,7 @@ namespace Nekoyume.UI
             pandoraTips[4] =
                 "Tip: Pandora Auto-Claim your prosperity Bar if you have nothing left in Action Points bar!";
 
-            tipText.text = pandoraTips[Random.Range(0, pandoraTips.Length - 1)];
+            //tipText.text = pandoraTips[Random.Range(0, pandoraTips.Length - 1)];
             AudioController.instance.PlaySfx("sfx_useitem");
             //player.gameObject.SetActive(true);
         }

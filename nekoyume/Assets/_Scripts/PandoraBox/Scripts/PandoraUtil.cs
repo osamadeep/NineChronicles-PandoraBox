@@ -1,5 +1,8 @@
+using Cysharp.Threading.Tasks;
+using Libplanet;
 using Nekoyume.Extensions;
 using Nekoyume.Game;
+using Nekoyume.Model.Item;
 using Nekoyume.Model.Mail;
 using Nekoyume.State;
 using Nekoyume.TableData;
@@ -88,6 +91,32 @@ namespace Nekoyume.PandoraBox
             }
 
             return new string(inputChars);
+        }
+
+        public static async UniTask ShowBaseItemTooltip(Address address, ItemBase itemBase = null)
+        {
+            if (itemBase != null)
+            {
+                var tooltip = ItemTooltip.Find(itemBase.ItemType);
+                tooltip.Show(itemBase, string.Empty, false, null);
+                return;
+            }
+
+            try
+            {
+                var state = await Game.Game.instance.Agent.GetStateAsync(address);
+                if (state is Bencodex.Types.Dictionary dictionary)
+                {
+                    var itemBaseN = ItemFactory.Deserialize(dictionary);
+                    var tooltip = ItemTooltip.Find(itemBaseN.ItemType);
+                    tooltip.Show(itemBaseN, string.Empty, false, null);
+                }
+            }
+            catch
+            {
+                NotificationSystem.Push(MailType.System, $"<color=green>PandoraBox</color>: Invalid item Address!",
+                    NotificationCell.NotificationType.Alert);
+            }
         }
 
 

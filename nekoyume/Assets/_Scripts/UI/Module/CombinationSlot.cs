@@ -18,6 +18,8 @@ using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
+    using Cysharp.Threading.Tasks;
+    using Nekoyume.PandoraBox;
     using Nekoyume.UI.Scroller;
     using UniRx;
 
@@ -41,7 +43,14 @@ namespace Nekoyume.UI.Module
             WaitingReceive,
         }
 
-        [SerializeField] private SimpleItemView itemView;
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] [SerializeField]
+        private Button showItemButton;
+
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+        [SerializeField]
+        private SimpleItemView itemView;
 
         [SerializeField] private SimpleItemView waitingReceiveItemView;
 
@@ -138,6 +147,10 @@ namespace Nekoyume.UI.Module
                 AudioController.PlayClick();
                 OnClickSlot(Type, _state, _slotIndex, Game.Game.instance.Agent.BlockIndex);
             }).AddTo(gameObject);
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            showItemButton.onClick.AddListener(() => { ShowItem(); });
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
 
         private void OnEnable()
@@ -168,6 +181,21 @@ namespace Nekoyume.UI.Module
             Type = GetSlotType(state, currentBlockIndex, IsCached(avatarAddress));
             UpdateInformation(Type, currentBlockIndex, state, IsCached(avatarAddress));
         }
+
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        void ShowItem()
+        {
+            if (_state is null)
+            {
+                PandoraUtil.ShowSystemNotification("Item Not Ready Yet, please try again in few seconds!",
+                    NotificationCell.NotificationType.Alert);
+                return;
+            }
+
+            PandoraUtil.ShowBaseItemTooltip(new Address(), _state.Result.itemUsable).Forget();
+        }
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
 
         private void SubscribeOnBlockIndex(long currentBlockIndex)
         {

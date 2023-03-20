@@ -151,18 +151,8 @@ namespace Nekoyume.BlockChain
                 string.Join(",", evaluation.OutputStates.UpdatedAddresses));
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            try
-            {
-                if (!evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[0].address) &&
-                    !evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[1].address) &&
-                    !evaluation.OutputStates.UpdatedAddresses.Contains(States.Instance.AvatarStates[2].address)
-                   )
-                    return;
-            }
-            catch
-            {
+            if (States.Instance.CurrentAvatarKey > 2)
                 return;
-            }
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             await UpdateAgentStateAsync(GetAgentState(evaluation));

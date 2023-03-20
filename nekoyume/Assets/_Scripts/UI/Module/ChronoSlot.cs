@@ -35,6 +35,9 @@ namespace Nekoyume.UI.Module
         [Header("GENERAL FIELDS")] [SerializeField]
         private GameObject SelectedAvatarVFX;
 
+        [SerializeField] private GameObject DataLoading;
+
+        [SerializeField] private TextMeshProUGUI AccountAddressText;
         [SerializeField] private TextMeshProUGUI AvatarNameText;
         [SerializeField] private GameObject slotNotificationImage;
         [SerializeField] private Button SwitchButton;
@@ -74,6 +77,7 @@ namespace Nekoyume.UI.Module
 
         [SerializeField] private GameObject craftNotificationImage;
         [SerializeField] private Image isCraftedImage;
+        [SerializeField] private GameObject premiumSign;
         [SerializeField] private TextMeshProUGUI[] CraftingSlotsText;
         [SerializeField] private TextMeshProUGUI craftCooldownText;
         [SerializeField] private Image craftCooldownImage;
@@ -122,11 +126,17 @@ namespace Nekoyume.UI.Module
 
         public async UniTask CheckNowSlot()
         {
+            DataLoading.SetActive(true);
             currentAvatarState = await UpdateAvatar();
-            //await UpdateCombinationSlotStates();
+            while (currentAvatarState is null)
+                await Task.Delay(1000);
+            DataLoading.SetActive(false);
+
+            await GetCombinationSlotStates();
             IsPrefsLoded = false;
+            IsBusy = false;
             LoadSettings();
-            //UpdateInformation();
+            UpdateInformation();
         }
 
         public void SetSlot(long _currentBlockIndex, int slotIndex, AvatarState state)
@@ -159,8 +169,10 @@ namespace Nekoyume.UI.Module
             //general
             AvatarNameText.text =
                 $"#{(_slotIndex + 1)} Lv.{currentAvatarState.level} {currentAvatarState.NameWithHash} : {currentAvatarState.address}";
+            AccountAddressText.text = "";
             if (currentAvatarState.agentAddress != States.Instance.AgentState.address)
             {
+                AccountAddressText.text = currentAvatarState.agentAddress.ToString();
                 var result = await GetAgentBalance();
                 AvatarNameText.text += result;
             }
@@ -188,6 +200,7 @@ namespace Nekoyume.UI.Module
             if (currentChronoAvatarSetting.Craft)
             {
                 var tableSheets = Game.TableSheets.Instance;
+                premiumSign.SetActive(currentChronoAvatarSetting.CraftIsPremium);
                 isCraftedImage.gameObject.SetActive(currentChronoAvatarSetting.CraftIsAutoCombine);
                 if (currentChronoAvatarSetting.CraftIsAutoCombine)
                 {
@@ -351,7 +364,11 @@ namespace Nekoyume.UI.Module
 
                 if (bossCooldown < currentBlockIndex)
                 {
+                    DataLoading.SetActive(true);
                     currentAvatarState = await UpdateAvatar();
+                    while (currentAvatarState is null)
+                        await Task.Delay(1000);
+                    DataLoading.SetActive(false);
                     await SetBossRaidData();
                 }
             }
@@ -545,12 +562,11 @@ namespace Nekoyume.UI.Module
         async UniTask DoStageActions()
         {
             stageCooldown = currentBlockIndex + updateAvatarInterval;
+            DataLoading.SetActive(true);
             currentAvatarState = await UpdateAvatar();
-
             while (currentAvatarState is null)
-            {
                 await Task.Delay(1000);
-            }
+            DataLoading.SetActive(false);
 
             //check for prosperity
             var prosperityBlocks =
@@ -693,6 +709,8 @@ namespace Nekoyume.UI.Module
         async UniTask GetCombinationSlotStates()
         {
             Combinationslotstates.Clear();
+            while (currentAvatarState is null)
+                await Task.Delay(1000);
             for (var i = 0; i < currentAvatarState.combinationSlotAddresses.Count; i++)
             {
                 var slotAddress = currentAvatarState.address.Derive(string.Format(CultureInfo.InvariantCulture,
@@ -718,9 +736,11 @@ namespace Nekoyume.UI.Module
                 craftCooldown = currentBlockIndex + urgentUpdateInterval;
 
                 //update the avatar to get last material inventory
+                DataLoading.SetActive(true);
                 currentAvatarState = await UpdateAvatar();
                 while (currentAvatarState is null)
                     await Task.Delay(1000);
+                DataLoading.SetActive(false);
 
 
                 //check if its consumable or equipment
@@ -806,10 +826,9 @@ namespace Nekoyume.UI.Module
             {
                 var loadingScreen = Widget.Find<GrayLoadingScreen>();
                 loadingScreen.Show();
-                await RxProps.SelectAvatarAsync(_slotIndex);
+
+                var results = await RxProps.SelectAvatarAsync(_slotIndex);
                 await WorldBossStates.Set(currentAvatarState.address);
-                await States.Instance.InitRuneStoneBalanceAsync();
-                await States.Instance.InitRuneStatesAsync();
                 await States.Instance.InitRuneSlotStates();
                 await States.Instance.InitItemSlotStates();
                 loadingScreen.Close();
@@ -818,7 +837,6 @@ namespace Nekoyume.UI.Module
                 Game.Event.OnUpdateAddresses.Invoke();
                 Widget.Find<ChronoSlotsPopup>().Close();
                 AudioController.PlayClick();
-                //await CheckNowSlot();
             }
             catch
             {

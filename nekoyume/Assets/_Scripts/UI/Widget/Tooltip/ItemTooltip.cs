@@ -671,7 +671,7 @@ namespace Nekoyume.UI
             _onEnhancement = onEnhancement;
             enhancementButton.gameObject.SetActive(onEnhancement != null);
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||          
             CheckCrystal(item.ItemBase);
             PandoraMaster.CurrentShopSellerAvatar = null;
             OwnerName.gameObject.SetActive(false);
@@ -768,6 +768,12 @@ namespace Nekoyume.UI
             _onClose = onClose;
 
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            if (item.ItemBase.ItemType == ItemType.Equipment)
+            {
+                var eq = item.ItemBase as Equipment;
+                //Debug.LogError(eq.Grade + "  " + Premium.CRAFT_GetCraftingFees(eq));
+            }
+
             CheckCrystal(item.ItemBase, (int)item.OrderDigest.Price.MajorUnit);
             currentShopItem = item;
             OwnerName.gameObject.SetActive(false);
