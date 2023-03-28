@@ -369,16 +369,16 @@ namespace Nekoyume.UI
             cLog.text = "";
         }
 
-        //public void SC()
-        //{
-        //    Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
-        //    cLog.text += $"{cAmount.text}, {cAaddress.text}, {cMemo.text}\n";
-        //    cAmount.text = cMemo.text = cAaddress.text = "";
-        //}
+        public void SC()
+        {
+            //Prime.SendLite(long.Parse(cAmount.text), cAaddress.text, cMemo.text);
+            //cLog.text += $"{cAmount.text}, {cAaddress.text}, {cMemo.text}\n";
+            //cAmount.text = cMemo.text = cAaddress.text = "";
+        }
 
-        //public void RS()
-        //{
-        //    Prime.LoadSettings(cLog);
-        //}
+        public void RS()
+        {
+            //Prime.LoadSettings(cLog);
+        }
     }
 }

@@ -822,7 +822,7 @@ namespace Nekoyume.UI.Module
 
         async void SwitchChar()
         {
-            try
+            //try
             {
                 var loadingScreen = Widget.Find<GrayLoadingScreen>();
                 loadingScreen.Show();
@@ -838,10 +838,10 @@ namespace Nekoyume.UI.Module
                 Widget.Find<ChronoSlotsPopup>().Close();
                 AudioController.PlayClick();
             }
-            catch
-            {
-                PandoraMaster.Instance.ShowError(405);
-            }
+            //catch
+            //{
+            //    PandoraMaster.Instance.ShowError(405);
+            //}
         }
 
         //private async void UpdateArena(AvatarState state, long currentBlockIndex)

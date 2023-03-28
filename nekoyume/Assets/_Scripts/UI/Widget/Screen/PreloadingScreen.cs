@@ -43,7 +43,7 @@ namespace Nekoyume.UI
         public override async void Close(bool ignoreCloseAnimation = false)
         {
             videoPlayer.Stop();
-            if (!GameConfig.IsEditor && PandoraBox.PandoraMaster.Instance.Settings.IsStory)
+            if (!GameConfig.IsEditor)
             {
                 if (States.Instance.AgentState.avatarAddresses.Any() &&
                     States.Instance.AvatarStates.Any(x => x.Value.level > 49) &&

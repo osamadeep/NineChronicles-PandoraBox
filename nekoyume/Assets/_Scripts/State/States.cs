@@ -288,7 +288,7 @@ namespace Nekoyume.State
             }
         }
 
-        public async UniTask InitItemSlotStateAsync(int slotIndex, AvatarState avatarState)
+        private async UniTask InitItemSlotStateAsync(int slotIndex, AvatarState avatarState)
         {
             if (ItemSlotStates.ContainsKey(slotIndex))
             {
@@ -500,11 +500,9 @@ namespace Nekoyume.State
                 return null;
             }
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             //if (AgentState is null || !AgentState.avatarAddresses.ContainsValue(state.address))
             //    throw new Exception(
             //        $"`AgentState` is null or not found avatar's address({state.address}) in `AgentState`");
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
 
             state = LocalLayer.Instance.Modify(state);
 
@@ -554,18 +552,20 @@ namespace Nekoyume.State
         /// <summary>
         /// 인자로 받은 인덱스의 아바타 상태를 선택한다.
         /// </summary>
+        /// <param name="index"></param>
+        /// <param name="initializeReactiveState"></param>
+        /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
         public async UniTask<AvatarState> SelectAvatarAsync(
             int index,
-            bool initializeReactiveState = true,
-            bool forceNewSelection = false)
+            bool initializeReactiveState = true)
         {
             if (!_avatarStates.ContainsKey(index))
             {
                 throw new KeyNotFoundException($"{nameof(index)}({index})");
             }
 
-            var isNewlySelected = forceNewSelection || CurrentAvatarKey != index;
+            var isNewlySelected = CurrentAvatarKey != index;
 
             CurrentAvatarKey = index;
             var avatarState = _avatarStates[CurrentAvatarKey];

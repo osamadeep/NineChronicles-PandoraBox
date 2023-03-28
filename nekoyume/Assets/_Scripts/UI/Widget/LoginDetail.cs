@@ -208,20 +208,6 @@ namespace Nekoyume.UI
             OnDidAvatarStateLoaded(results.selectedAvatarState);
         }
 
-        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-        public async void AutoSwitchChars(int index)
-        {
-            AudioController.PlayClick();
-            btnLogin.SetActive(false);
-            var loadingScreen = Find<GrayLoadingScreen>();
-            loadingScreen.Show();
-            var results =
-                await RxProps.SelectAvatarAsync(index);
-            loadingScreen.Close();
-            OnDidAvatarStateLoaded(results.selectedAvatarState);
-        }
-        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
         public void BackToLogin()
         {
             Close();

@@ -1890,9 +1890,6 @@ namespace Nekoyume.BlockChain
                 }
             }
 
-            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
-            UpdateCrystalBalance(eval); //in case its crystal
-            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
             UpdateAgentStateAsync(eval).Forget();
         }
 

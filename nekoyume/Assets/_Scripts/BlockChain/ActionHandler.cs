@@ -50,7 +50,7 @@ namespace Nekoyume.BlockChain
 
         protected static AgentState GetAgentState<T>(ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            var agentAddress = States.Instance.CurrentAvatarState.agentAddress;
+            var agentAddress = States.Instance.AgentState.address;
             return evaluation.OutputStates.GetAgentState(agentAddress);
         }
 
@@ -149,12 +149,10 @@ namespace Nekoyume.BlockChain
                 "Called UpdateAgentState<{0}>. Updated Addresses : `{1}`",
                 evaluation.Action,
                 string.Join(",", evaluation.OutputStates.UpdatedAddresses));
-
             //|||||||||||||| PANDORA START CODE |||||||||||||||||||
             if (States.Instance.CurrentAvatarKey > 2)
                 return;
             //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
-
             await UpdateAgentStateAsync(GetAgentState(evaluation));
             try
             {
