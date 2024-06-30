@@ -53,6 +53,12 @@ namespace Nekoyume.UI
             }
         }
 
+        //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+        [Header("PANDORA CUSTOM FIELDS")] 
+        public PandoraBox.PandoraLogin pandoraLogin;
+        [Space(50)]
+        //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
+
         public GameObject header;
         public TextMeshProUGUI titleText;
         public TextMeshProUGUI contentText;
@@ -97,12 +103,14 @@ namespace Nekoyume.UI
         public IKeyStore KeyStore;
         public readonly ReactiveProperty<States> State = new ReactiveProperty<States>();
 
-        public bool Login { get; private set; }
+        public bool Login { get; set; }
         private string _privateKeyString;
-        private PrivateKey _privateKey;
+        public PrivateKey _privateKey;
         private States _prevState;
 
         public override bool CanHandleInputEvent => false;
+
+
 
         protected override void Awake()
         {
@@ -784,6 +792,10 @@ namespace Nekoyume.UI
                     ? Web3KeyStore.DefaultKeyStore
                     : new Web3KeyStore(path);
             }
+
+            //|||||||||||||| PANDORA START CODE |||||||||||||||||||
+            pandoraLogin.Initilize(path);
+            //|||||||||||||| PANDORA  END  CODE |||||||||||||||||||
         }
     }
 }

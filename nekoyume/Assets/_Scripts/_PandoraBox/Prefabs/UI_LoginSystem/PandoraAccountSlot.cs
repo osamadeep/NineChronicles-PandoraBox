@@ -15,7 +15,6 @@ namespace Nekoyume.PandoraBox
         //public int _slotIndex;
         [SerializeField] GameObject selectionVFX;
         [SerializeField] GameObject particleVFX;
-        [SerializeField] GameObject premiumButton;
         [SerializeField] Image slotPicture;
         [SerializeField] Button slotButton;
         [SerializeField] TextMeshProUGUI titleText;
@@ -45,7 +44,6 @@ namespace Nekoyume.PandoraBox
                 ? PandoraUtil.SimpleDecrypt(SlotSettings.AddressPassword)
                 : "";
 
-            premiumButton.SetActive(SlotSettings.Index > 0);
             titleText.text = SlotSettings.DisplayText;
             numberText.text = "#" + (SlotSettings.Index + 1);
 
@@ -77,12 +75,12 @@ namespace Nekoyume.PandoraBox
 
         public void CheckSelect()
         {
-            Color pictureColor = SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex
+            Color pictureColor = SlotSettings.Index == Pandora.SelectedLoginAccountIndex
                 ? Color.white
                 : new Color(100f / 255f, 100f / 255f, 100f / 255f);
             slotPicture.color = pictureColor;
-            selectionVFX.SetActive(SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex);
-            particleVFX.SetActive(SlotSettings.Index == PandoraMaster.SelectedLoginAccountIndex);
+            selectionVFX.SetActive(SlotSettings.Index == Pandora.SelectedLoginAccountIndex);
+            particleVFX.SetActive(SlotSettings.Index == Pandora.SelectedLoginAccountIndex);
         }
     }
 }

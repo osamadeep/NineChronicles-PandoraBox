@@ -17,7 +17,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Nekoyume
+namespace Nekoyume.PandoraBox
 {
     public class PandoraLogin : MonoBehaviour
     {
@@ -59,7 +59,7 @@ namespace Nekoyume
             KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
 
             // Load the index of the last logged-in Pandora account from PlayerPrefs, default to 0 if not set
-            PandoraMaster.SelectedLoginAccountIndex =
+            Pandora.SelectedLoginAccountIndex =
                 Mathf.Clamp(PlayerPrefs.GetInt("_PandoraBox_Account_lastLoginIndex", 0), 0, PandoraAccounts.Count);
 
 
@@ -68,7 +68,7 @@ namespace Nekoyume
                 accountSlot.CheckSelect();
 
             // Show the appropriate UI group based on whether the selected account has an email address or not
-            if (string.IsNullOrEmpty(PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings.Email))
+            if (string.IsNullOrEmpty(PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings.Email))
             {
                 pandoraSignupGroup.SetActive(true);
                 pandoraLoginGroup.SetActive(false);
@@ -77,13 +77,13 @@ namespace Nekoyume
             {
                 // Populate the email and remember toggle fields with the values from the selected account
                 pandoraLoginEmailField.text =
-                    PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings.Email;
+                    PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings.Email;
                 pandoraLoginRememberToggle.isOn =
-                    PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings.IsRemember;
+                    PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings.IsRemember;
 
                 // Set the password field to the saved password if the remember toggle is on, or an empty string otherwise
                 pandoraLoginPasswordField.text =
-                    PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings.Password;
+                    PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings.Password;
 
                 // Show the login group and hide the sign-up group
                 pandoraSignupGroup.SetActive(false);
@@ -158,7 +158,7 @@ namespace Nekoyume
                     }
 
                     // if the user is using an premium account slot
-                    if (PandoraMaster.SelectedLoginAccountIndex > 0)
+                    if (Pandora.SelectedLoginAccountIndex > 0)
                     {
                         // check if the user is a premium user
                         PlayFabClientAPI.ExecuteCloudScript(
@@ -194,17 +194,17 @@ namespace Nekoyume
                                 //});
 
 
-                                // if the user is not a premium user
-                                if (!Convert.ToBoolean(success.FunctionResult))
-                                {
-                                    PandoraUtil.ShowSystemNotification("This Slot for only Premium Accounts!",
-                                        NotificationCell.NotificationType.Information);
-                                    pandoraLoginGroup.SetActive(true);
-                                    nineLoginGroup.SetActive(false);
-                                    return;
-                                }
-                                // if the user is a premium user
-                                else
+                                // // if the user is not a premium user
+                                // if (!Convert.ToBoolean(success.FunctionResult))
+                                // {
+                                //     PandoraUtil.ShowSystemNotification("This Slot for only Premium Accounts!",
+                                //         NotificationCell.NotificationType.Information);
+                                //     pandoraLoginGroup.SetActive(true);
+                                //     nineLoginGroup.SetActive(false);
+                                //     return;
+                                // }
+                                // // if the user is a premium user
+                                // else
                                 {
                                     PandoraUtil.ShowSystemNotification("Account Logged In Successfully!",
                                         NotificationCell.NotificationType.Information);
@@ -297,7 +297,7 @@ namespace Nekoyume
                     pandoraLoginPasswordField.text = pandoraSignupPasswordField.text;
 
                     // if the user is using an premium account slot
-                    if (PandoraMaster.SelectedLoginAccountIndex > 0)
+                    if (Pandora.SelectedLoginAccountIndex > 0)
                     {
                         PandoraUtil.ShowSystemNotification("Account Created Successfully!",
                             NotificationCell.NotificationType.Information);
@@ -337,12 +337,12 @@ namespace Nekoyume
         void GetPandoraUserData(string username, string email, string password, bool isSignUp)
         {
             // Save the data to the selected Pandora account
-            var slot = PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SlotSettings;
+            var slot = PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings;
             slot.Username = username;
             slot.Email = email;
             slot.Password = password;
             slot.IsRemember = pandoraLoginRememberToggle.isOn;
-            PandoraAccounts[PandoraMaster.SelectedLoginAccountIndex].SaveData();
+            PandoraAccounts[Pandora.SelectedLoginAccountIndex].SaveData();
             isAuth = true;
 
             if (isSignUp)
@@ -382,8 +382,48 @@ namespace Nekoyume
 
             nineLoginGroup.SetActive(true);
             // Update the 9c login info widget with the address and password
-            Widget.Find<LoginSystem>().Update9cLoginInfo(currentPPK.Item2.Address.ToString());
+            Update9cLoginInfo(currentPPK.Item2.Address.ToString());
         }
+
+        public void Update9cLoginInfo(string address)
+        {
+            var slot = PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings;
+            var loginSystem = Widget.Find<LoginSystem>();
+            loginSystem.accountAddressText.text = address;
+            nineLoginRememberToggle.isOn = slot.IsAutoLogin;
+            if (nineLoginRememberToggle.isOn)
+            {
+                loginSystem.loginField.text = slot.AddressPassword;
+                Login9cAccount();
+            }
+        }
+
+        void Login9cAccount()
+        {
+            var loginSystem = Widget.Find<LoginSystem>();
+            loginSystem._privateKey = GetKey(loginSystem.loginField.text);
+            if (!(loginSystem._privateKey is null))
+            {
+                //save address password
+                var slot = PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings;
+                slot.IsAutoLogin = nineLoginRememberToggle.isOn;
+                if (slot.IsAutoLogin)
+                {
+                    slot.AddressPassword = loginSystem.loginField.text;
+                    PandoraAccounts[Pandora.SelectedLoginAccountIndex].SaveData();
+                }
+
+                //if everything is ok
+                loginSystem.Login = true;
+                loginSystem.Close();
+            }
+            else
+            {
+                PandoraUtil.ShowSystemNotification("9c Account Password is not Correct!",
+                    NotificationCell.NotificationType.Information);
+            }
+        }
+
 
         public PrivateKey GetKey(string accountPassword)
         {
@@ -417,7 +457,7 @@ namespace Nekoyume
             AudioController.instance.PlaySfx(AudioController.SfxCode.Click);
 
             // Set the selected login account index
-            PandoraMaster.SelectedLoginAccountIndex = value;
+            Pandora.SelectedLoginAccountIndex = value;
 
             // Check and update the account selection for each account slot
             foreach (var accountSlot in PandoraAccounts)
