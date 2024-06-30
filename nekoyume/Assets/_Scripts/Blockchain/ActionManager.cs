@@ -17,6 +17,7 @@ using Nekoyume.Extensions;
 using Nekoyume.Game;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
+using Nekoyume.Model.Collection;
 using Nekoyume.Model.Mail;
 using Nekoyume.Model.State;
 using Nekoyume.State.Subjects;
@@ -68,7 +69,7 @@ namespace Nekoyume.Blockchain
                 e = new ActionTimeoutException(e.Message, txId, actionId);
             }
 
-            Debug.LogException(e);
+            NcDebug.LogException(e);
             return e;
         }
 
@@ -113,7 +114,7 @@ namespace Nekoyume.Blockchain
         private void ProcessAction<T>(T actionBase) where T : ActionBase
         {
             var actionType = actionBase.GetActionTypeAttribute();
-            Debug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
+            NcDebug.Log($"[{nameof(ActionManager)}] {nameof(ProcessAction)}() called. \"{actionType.TypeIdentifier}\"");
 
             _agent.EnqueueAction(actionBase);
 
@@ -159,53 +160,6 @@ namespace Nekoyume.Blockchain
                 {
                     Game.Game.instance.BackToNest();
                     throw HandleException(action.Id, e);
-                });
-        }
-
-        public IObservable<ActionEvaluation<MimisbrunnrBattle>> MimisbrunnrBattle(
-            List<Guid> costumes,
-            List<Guid> equipments,
-            List<Consumable> foods,
-            List<RuneSlotInfo> runeInfos,
-            int worldId,
-            int stageId,
-            int playCount)
-        {
-            var avatarAddress = States.Instance.CurrentAvatarState.address;
-            costumes ??= new List<Guid>();
-            equipments ??= new List<Guid>();
-            foods ??= new List<Consumable>();
-            runeInfos ??= new List<RuneSlotInfo>();
-
-            var action = new MimisbrunnrBattle
-            {
-                Costumes = costumes,
-                Equipments = equipments,
-                Foods = foods.Select(f => f.ItemId).ToList(),
-                RuneInfos = runeInfos,
-                WorldId = worldId,
-                StageId = stageId,
-                AvatarAddress = avatarAddress,
-                PlayCount = playCount,
-            };
-            action.PayCost(Game.Game.instance.Agent, States.Instance, TableSheets.Instance);
-            LocalLayerActions.Instance.Register(action.Id, action.PayCost, _agent.BlockIndex);
-            ProcessAction(action);
-            _lastBattleActionId = action.Id;
-
-            return _agent.ActionRenderer.EveryRender<MimisbrunnrBattle>()
-                .Timeout(ActionTimeout)
-                .SkipWhile(eval => !eval.Action.Id.Equals(action.Id))
-                .First()
-                .ObserveOnMainThread()
-                .DoOnError(e =>
-                {
-                    if (_lastBattleActionId == action.Id)
-                    {
-                        _lastBattleActionId = null;
-                    }
-
-                    Game.Game.BackToMainAsync(HandleException(action.Id, e)).Forget();
                 });
         }
 
@@ -401,7 +355,6 @@ namespace Nekoyume.Blockchain
             var avatarAddress = avatarState.address;
 
             LocalLayerModifier.ModifyAgentGold(agentAddress, -recipeInfo.CostNCG);
-            LocalLayerModifier.ModifyAvatarActionPoint(agentAddress, -recipeInfo.CostAP);
 
             foreach (var pair in recipeInfo.Materials)
             {
@@ -493,7 +446,6 @@ namespace Nekoyume.Blockchain
             var avatarAddress = avatarState.address;
 
             LocalLayerModifier.ModifyAgentGold(agentAddress, -recipeInfo.CostNCG);
-            LocalLayerModifier.ModifyAvatarActionPoint(agentAddress, -recipeInfo.CostAP);
 
             foreach (var pair in recipeInfo.Materials)
             {
@@ -612,7 +564,6 @@ namespace Nekoyume.Blockchain
                 worldId = worldId,
                 stageId = stageId,
             };
-            LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress, -actionPoint);
             var apStoneRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values.First(r =>
                 r.ItemSubType == ItemSubType.ApStone);
             LocalLayerModifier.RemoveItem(avatarAddress, apStoneRow.ItemId, apStoneCount);
@@ -633,19 +584,22 @@ namespace Nekoyume.Blockchain
 
         public IObservable<ActionEvaluation<RegisterProduct>> RegisterProduct(
             Address avatarAddress,
-            IRegisterInfo registerInfo,
+            List<IRegisterInfo> registerInfos,
             bool chargeAp)
         {
+            var registerInfo = registerInfos.First();
             var sentryTrace = Analyzer.Instance.Track("Unity/RegisterProduct", new Dictionary<string, Value>()
             {
                 ["ProductType"] = registerInfo.Type.ToString(),
                 ["Price"] = registerInfo.Price.ToString(),
+                ["Count"] = registerInfos.Count,
                 ["AvatarAddress"] = registerInfo.AvatarAddress.ToString(),
                 ["AgentAddress"] = States.Instance.AgentState.address.ToString(),
             }, true);
 
             var evt = new AirbridgeEvent("RegisterProduct");
             evt.SetValue((double)registerInfo.Price.RawValue);
+            evt.AddCustomAttribute("count", registerInfos.Count);
             evt.AddCustomAttribute("product-type", registerInfo.Type.ToString());
             evt.AddCustomAttribute("agent-address", States.Instance.CurrentAvatarState.address.ToString());
             evt.AddCustomAttribute("avatar-address", States.Instance.AgentState.address.ToString());
@@ -656,8 +610,6 @@ namespace Nekoyume.Blockchain
                 var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values
                     .First(r => r.ItemSubType == ItemSubType.ApStone);
                 LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId);
-                LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress,
-                    States.Instance.GameConfigState.ActionPointMax);
             }
 
             if (GameConfigStateSubject.ActionPointState.ContainsKey(avatarAddress))
@@ -670,7 +622,7 @@ namespace Nekoyume.Blockchain
             var action = new RegisterProduct
             {
                 AvatarAddress = avatarAddress,
-                RegisterInfos = new List<IRegisterInfo> { registerInfo },
+                RegisterInfos = registerInfos,
                 ChargeAp = chargeAp,
             };
 
@@ -707,8 +659,6 @@ namespace Nekoyume.Blockchain
                 var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values
                     .First(r => r.ItemSubType == ItemSubType.ApStone);
                 LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId);
-                LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress,
-                    States.Instance.GameConfigState.ActionPointMax);
             }
 
             if (GameConfigStateSubject.ActionPointState.ContainsKey(avatarAddress))
@@ -746,8 +696,6 @@ namespace Nekoyume.Blockchain
                 var row = Game.Game.instance.TableSheets.MaterialItemSheet.Values
                     .First(r => r.ItemSubType == ItemSubType.ApStone);
                 LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId);
-                LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress,
-                    States.Instance.GameConfigState.ActionPointMax);
             }
 
             if (GameConfigStateSubject.ActionPointState.ContainsKey(avatarAddress))
@@ -830,12 +778,6 @@ namespace Nekoyume.Blockchain
 
         public IObservable<ActionEvaluation<DailyReward>> DailyReward()
         {
-            var blockCount = Game.Game.instance.Agent.BlockIndex -
-                States.Instance.CurrentAvatarState.dailyRewardReceivedIndex + 1;
-            LocalLayerModifier.IncreaseAvatarDailyRewardReceivedIndex(
-                States.Instance.CurrentAvatarState.address,
-                blockCount);
-
             var action = new DailyReward
             {
                 avatarAddress = States.Instance.CurrentAvatarState.address,
@@ -862,8 +804,6 @@ namespace Nekoyume.Blockchain
             var avatarAddress = States.Instance.CurrentAvatarState.address;
 
             LocalLayerModifier.ModifyAgentGold(agentAddress, -costNCG);
-            LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress, -GameConfig.EnhanceEquipmentCostAP);
-            LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress, -GameConfig.EnhanceEquipmentCostAP);
 
             if (baseEquipment.ItemSubType == ItemSubType.Aura)
             {
@@ -1118,7 +1058,6 @@ namespace Nekoyume.Blockchain
             var avatarAddress = avatarState.address;
 
             LocalLayerModifier.ModifyAgentGold(agentAddress, -recipeInfo.CostNCG);
-            LocalLayerModifier.ModifyAvatarActionPoint(agentAddress, -recipeInfo.CostAP);
             if (useHammerPoint)
             {
                 var recipeId = recipeInfo.RecipeId;
@@ -1177,7 +1116,7 @@ namespace Nekoyume.Blockchain
             int slotIndex)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var materialRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values
+            var hourglassDataRow = Game.Game.instance.TableSheets.MaterialItemSheet.Values
                 .First(r => r.ItemSubType == ItemSubType.Hourglass);
             var diff = state.UnlockBlockIndex - Game.Game.instance.Agent.BlockIndex;
             int cost;
@@ -1194,7 +1133,7 @@ namespace Nekoyume.Blockchain
             {
                 cost = RapidCombination0.CalculateHourglassCount(States.Instance.GameConfigState, diff);
             }
-            LocalLayerModifier.RemoveItem(avatarAddress, materialRow.ItemId, cost);
+            LocalLayerModifier.RemoveItem(avatarAddress, hourglassDataRow.ItemId, cost);
             var sentryTrace = Analyzer.Instance.Track(
                 "Unity/Rapid Combination",
                 new Dictionary<string, Value>()
@@ -1311,8 +1250,6 @@ namespace Nekoyume.Blockchain
                     .OrderedList
                     .First(r => r.ItemSubType == ItemSubType.ApStone);
                 LocalLayerModifier.RemoveItem(avatarAddress, row.ItemId);
-                LocalLayerModifier.ModifyAvatarActionPoint(avatarAddress,
-                    States.Instance.GameConfigState.ActionPointMax);
 
                 var address = States.Instance.CurrentAvatarState.address;
                 if (GameConfigStateSubject.ActionPointState.ContainsKey(address))
@@ -1596,6 +1533,49 @@ namespace Nekoyume.Blockchain
                 }).Finally(() => Analyzer.Instance.FinishTrace(sentryTrace));
         }
 
+        public IObservable<ActionEvaluation<ActivateCollection>> ActivateCollection(
+            int collectionId,
+            List<ICollectionMaterial> materials)
+        {
+            var avatarAddress = States.Instance.CurrentAvatarState.address;
+            var agentAddress = States.Instance.AgentState.address;
+            var materialsType = materials.First().Type;
+
+            var sentryTrace = Analyzer.Instance.Track($"Unity/{nameof(ActivateCollection)}",
+                new Dictionary<string, Value>()
+                {
+                    ["AvatarAddress"] = avatarAddress.ToString(),
+                    ["AgentAddress"] = agentAddress.ToString(),
+                    ["CollectionId"] = collectionId,
+                    ["MaterialsType"] = materialsType.ToString(),
+                }, true);
+
+            var evt = new AirbridgeEvent(nameof(ActivateCollection));
+            evt.SetValue(collectionId);
+            evt.AddCustomAttribute("materials-type", materialsType.ToString());
+            evt.AddCustomAttribute("agent-address", avatarAddress.ToString());
+            evt.AddCustomAttribute("avatar-address", agentAddress.ToString());
+            AirbridgeUnity.TrackEvent(evt);
+
+            var action = new ActivateCollection
+            {
+                AvatarAddress = avatarAddress,
+                CollectionData = new List<(int collectionId, List<ICollectionMaterial> materials)>
+                {
+                    (collectionId, materials)
+                },
+            };
+            ProcessAction(action);
+            return _agent.ActionRenderer.EveryRender<ActivateCollection>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.Id.Equals(action.Id))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e =>
+                {
+                    Game.Game.BackToMainAsync(HandleException(action.Id, e)).Forget();
+                }).Finally(() => Analyzer.Instance.FinishTrace(sentryTrace));
+        }
 
         public IObservable<ActionEvaluation<ApprovePledge>> ApprovePledge(Address patronAddress)
         {
@@ -1630,14 +1610,6 @@ namespace Nekoyume.Blockchain
                     ["GroupId"] = groupId,
                     ["SummonCount"] = summonCount,
                 }, true);
-
-
-            // check material enough
-            var tableSheets = Game.Game.instance.TableSheets;
-            var summonRow = tableSheets.SummonSheet[groupId];
-            var materialRow = tableSheets.MaterialItemSheet[summonRow.CostMaterial];
-            var count = summonRow.CostMaterialCount * summonCount;
-            LocalLayerModifier.RemoveItem(avatarAddress, materialRow.ItemId, count);
 
             var action = new AuraSummon
             {
@@ -1674,13 +1646,6 @@ namespace Nekoyume.Blockchain
                     ["GroupId"] = groupId,
                     ["SummonCount"] = summonCount,
                 }, true);
-
-            // check material enough
-            var tableSheets = Game.Game.instance.TableSheets;
-            var summonRow = tableSheets.SummonSheet[groupId];
-            var materialRow = tableSheets.MaterialItemSheet[summonRow.CostMaterial];
-            var count = summonRow.CostMaterialCount * summonCount;
-            LocalLayerModifier.RemoveItem(avatarAddress, materialRow.ItemId, count);
 
             var action = new RuneSummon
             {
@@ -1738,6 +1703,33 @@ namespace Nekoyume.Blockchain
             var action = new TransferAssets(sender, recipients.ToList());
             ProcessAction(action);
             return _agent.ActionRenderer.EveryRender<TransferAssets>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.PlainValue.Equals(action.PlainValue))
+                .First()
+                .ObserveOnMainThread()
+                // .DoOnError(e => HandleException(action.Id, e));
+                .DoOnError(e => { });
+        }
+
+        public IObservable<ActionEvaluation<Stake>> Stake(
+            BigInteger amount)
+        {
+            var action = new Stake(amount);
+            ProcessAction(action);
+            return _agent.ActionRenderer.EveryRender<Stake>()
+                .Timeout(ActionTimeout)
+                .Where(eval => eval.Action.PlainValue.Equals(action.PlainValue))
+                .First()
+                .ObserveOnMainThread()
+                .DoOnError(e => HandleException(action.Id, e));
+        }
+
+        public IObservable<ActionEvaluation<ClaimStakeReward>> ClaimStakeReward(
+            Address avatarAddress)
+        {
+            var action = new ClaimStakeReward(avatarAddress);
+            ProcessAction(action);
+            return _agent.ActionRenderer.EveryRender<ClaimStakeReward>()
                 .Timeout(ActionTimeout)
                 .Where(eval => eval.Action.PlainValue.Equals(action.PlainValue))
                 .First()
@@ -1804,12 +1796,12 @@ namespace Nekoyume.Blockchain
         }
 
         public IObservable<ActionEvaluation<ManipulateState>> ManipulateState(
-            List<(Address, IValue)> stateList,
+            List<(Address, Address, IValue)> stateList,
             List<(Address, FungibleAssetValue)> balanceList)
         {
             var action = new ManipulateState
             {
-                StateList = stateList ?? new List<(Address addr, IValue value)>(),
+                StateList = stateList ?? new List<(Address accountAddr, Address addr, IValue value)>(),
                 BalanceList = balanceList ?? new List<(Address addr, FungibleAssetValue fav)>(),
             };
 

@@ -2,11 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Lib9c;
 using Libplanet.Types.Assets;
 using Nekoyume.Battle;
 using Nekoyume.Blockchain;
 using Nekoyume.EnumType;
+using Nekoyume.Game.Battle;
 using Nekoyume.Game.Controller;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
@@ -19,7 +19,7 @@ using Nekoyume.State;
 using Nekoyume.UI.Model;
 using TMPro;
 using UnityEngine;
-using Material = Nekoyume.Model.Item.Material;
+using UnityEngine.UI;
 
 namespace Nekoyume.UI.Module
 {
@@ -52,6 +52,9 @@ namespace Nekoyume.UI.Module
         [SerializeField]
         private AvatarStats stats;
 
+        [SerializeField]
+        private Button collectionEffectButton;
+
         private GameObject _cachedCharacterTitle;
         private BattleType _battleType = BattleType.Adventure;
         private System.Action _onUpdate;
@@ -61,7 +64,7 @@ namespace Nekoyume.UI.Module
         private bool _isAvatarInfo;
 
         private readonly Dictionary<Inventory.InventoryTabType, GameObject> _slots = new();
-        private readonly List<Guid> _consumables = new();
+        private readonly List<int> _consumableIds = new();
         private readonly List<IDisposable> _disposables = new();
 
         private void Start()
@@ -101,6 +104,12 @@ namespace Nekoyume.UI.Module
                 slot.ShowUnlockTooltip = true;
             }
 
+            collectionEffectButton.onClick.AddListener(() =>
+            {
+                Widget.Find<StatsBonusPopup>().Show();
+                AudioController.PlayClick();
+            });
+
             _disposables.DisposeAllAndClear();
             LoadingHelper.UnlockRuneSlot.ObserveCountChanged().Subscribe(x => {
                 UpdateRuneView();
@@ -122,11 +131,11 @@ namespace Nekoyume.UI.Module
         public void UpdateInventory(BattleType battleType, int? compareCp = null)
         {
             _compareCp = compareCp;
-            _consumables.Clear();
+            _consumableIds.Clear();
             var elementalTypes = GetElementalTypes();
             inventory.SetAvatarInformation(
                 OnClickInventoryItem,
-                EquipOrUnequip,
+                model => EquipOrUnequip(model),
                 OnClickTab,
                 elementalTypes,
                 _battleType);
@@ -182,9 +191,9 @@ namespace Nekoyume.UI.Module
         private void UpdateRuneView()
         {
             var states = States.Instance.CurrentRuneSlotStates[_battleType].GetRuneSlot();
-            var equippedRuneState = States.Instance.GetEquippedRuneStates(_battleType);
+            var equippedRuneStates = States.Instance.GetEquippedRuneStates(_battleType);
             var sheet = Game.Game.instance.TableSheets.RuneListSheet;
-            inventory.UpdateRunes(equippedRuneState, _battleType, sheet);
+            inventory.UpdateRunes(equippedRuneStates, _battleType, sheet);
             runeSlots.Set(states, OnClickRuneSlot, OnDoubleClickRuneSlot);
         }
 
@@ -206,7 +215,7 @@ namespace Nekoyume.UI.Module
             var itemSlotState = States.Instance.CurrentItemSlotStates[_battleType];
             inventory.UpdateCostumes(itemSlotState.Costumes);
             inventory.UpdateEquipments(itemSlotState.Equipments);
-            inventory.UpdateConsumables(_consumables);
+            inventory.UpdateConsumables(_consumableIds);
             UpdateTitle();
         }
 
@@ -228,19 +237,28 @@ namespace Nekoyume.UI.Module
 
         public List<Consumable> GetEquippedConsumables()
         {
-            var avatarState = States.Instance.CurrentAvatarState;
-            var consumablesInventory = avatarState.inventory.Consumables;
-            var consumables = _consumables
-                .Select(guid => consumablesInventory.FirstOrDefault(x => x.ItemId == guid))
-                .Where(item => item != null).ToList();
-            return consumables;
+            var consumablesInventory =
+                States.Instance.CurrentAvatarState.inventory.Consumables.ToArray();
+
+            var equippedConsumables = new List<Consumable>();
+            foreach (var id in _consumableIds)
+            {
+                var item = consumablesInventory.FirstOrDefault(consumable =>
+                    consumable.Id == id && !equippedConsumables.Contains(consumable));
+                if (item != null)
+                {
+                    equippedConsumables.Add(item);
+                }
+            }
+
+            return equippedConsumables;
         }
 
         private void OnClickRuneSlot(RuneSlotView slot)
         {
             if (slot.RuneSlot.IsLock)
             {
-                if (Game.Game.instance.IsInWorld)
+                if (BattleRenderer.Instance.IsOnBattle)
                 {
                     return;
                 }
@@ -337,7 +355,7 @@ namespace Nekoyume.UI.Module
 
         private void OnDoubleClickRuneSlot(RuneSlotView slot)
         {
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -371,13 +389,13 @@ namespace Nekoyume.UI.Module
                 }
 
                 inventory.ClearFocus();
-                ShowItemTooltip(model);
+                ShowTooltip(model, true);
             }
         }
 
         private void OnDoubleClickSlot(EquipmentSlot slot)
         {
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -395,7 +413,7 @@ namespace Nekoyume.UI.Module
 
         private void EquipItem(InventoryItem inventoryItem)
         {
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -518,6 +536,11 @@ namespace Nekoyume.UI.Module
                         return;
                     }
 
+                    if (inventoryItem.Count.Value <= 0)
+                    {
+                        return;
+                    }
+
                     var slotCount = 0;
                     if (gameConfig.RequireCharacterLevel_ConsumableSlot1 <= avatarState.level)
                     {
@@ -540,17 +563,23 @@ namespace Nekoyume.UI.Module
                         slotCount++;
                     }
 
-                    if (_consumables.Any() && _consumables.Count == slotCount)
+                    if (_consumableIds.Any() && _consumableIds.Count == slotCount)
                     {
-                        _consumables.Remove(_consumables.Last());
+                        var lastConsumableId = _consumableIds.Last();
+                        if (inventory.TryGetConsumable(lastConsumableId, out var lastItem))
+                        {
+                            _consumableIds.Remove(lastConsumableId);
+                            lastItem.Count.Value++;
+                        }
                     }
 
                     if (inventoryItem.ItemBase is Consumable consumable)
                     {
-                        _consumables.Add(consumable.ItemId);
+                        _consumableIds.Add(consumable.Id);
+                        inventoryItem.Count.Value--;
                     }
 
-                    inventory.UpdateConsumables(_consumables);
+                    inventory.UpdateConsumables(_consumableIds);
                     break;
             }
 
@@ -559,7 +588,7 @@ namespace Nekoyume.UI.Module
 
         private void UnequipItem(InventoryItem inventoryItem)
         {
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -586,9 +615,10 @@ namespace Nekoyume.UI.Module
                 case ItemType.Consumable:
                     if (inventoryItem.ItemBase is Consumable consumable)
                     {
-                        _consumables.Remove(consumable.ItemId);
+                        _consumableIds.Remove(consumable.Id);
+                        inventoryItem.Count.Value++;
                     }
-                    inventory.UpdateConsumables(_consumables);
+                    inventory.UpdateConsumables(_consumableIds);
                     break;
             }
 
@@ -630,7 +660,7 @@ namespace Nekoyume.UI.Module
                     }
 
                     var firstRuneId = firstSlot.Value.RuneId.Value;
-                    if(!States.Instance.TryGetRuneState(firstRuneId, out var firstState))
+                    if(!States.Instance.AllRuneState.TryGetRuneState(firstRuneId, out var firstState))
                     {
                         return;
                     }
@@ -645,7 +675,7 @@ namespace Nekoyume.UI.Module
                         }
 
                         var runeId = runeSlot.RuneId.Value;
-                        if(!States.Instance.TryGetRuneState(runeId, out var state))
+                        if(!States.Instance.AllRuneState.TryGetRuneState(runeId, out var state))
                         {
                             return;
                         }
@@ -667,7 +697,7 @@ namespace Nekoyume.UI.Module
 
         private void UnequipRune(InventoryItem item)
         {
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -689,27 +719,14 @@ namespace Nekoyume.UI.Module
 
         private void OnClickInventoryItem(InventoryItem model)
         {
-            ShowItemTooltip(model);
+            ShowTooltip(model);
         }
 
-        private void ShowItemTooltip(InventoryItem model)
+        private void ShowTooltip(InventoryItem model, bool inSlot = false)
         {
             if (model.ItemBase is not null)
             {
-                var tooltip = ItemTooltip.Find(model.ItemBase.ItemType);
-                var (submitText,
-                    interactable,
-                    submit,
-                    blocked,
-                    enhancement) = GetToolTipParams(model);
-                tooltip.Show(
-                    model,
-                    submitText,
-                    interactable,
-                    submit,
-                    () => inventory.ClearSelectedItem(),
-                    blocked,
-                    enhancement);
+                ShowItemTooltip(model, inSlot);
             }
             else if (model.RuneState is not null)
             {
@@ -721,17 +738,102 @@ namespace Nekoyume.UI.Module
             }
         }
 
+        private void ShowItemTooltip(InventoryItem model, bool inSlot)
+        {
+            var item = model.ItemBase;
+            var submitText = string.Empty;
+            var interactable = false;
+            System.Action submit = null;
+            var blockedMessage = string.Empty;
+
+            switch (item.ItemType)
+            {
+                case ItemType.Consumable:
+                    submitText = inSlot
+                        ? L10nManager.Localize("UI_UNEQUIP")
+                        : L10nManager.Localize("UI_EQUIP");
+                    interactable = consumeSlots is not null && (inSlot || model.Count.Value > 0);
+                    submit = () => EquipOrUnequip(model, inSlot);
+                    blockedMessage = L10nManager.Localize("UI_EQUIP_FAILED");
+                    break;
+                case ItemType.Costume or ItemType.Equipment:
+                    submitText = model.Equipped.Value
+                        ? L10nManager.Localize("UI_UNEQUIP")
+                        : L10nManager.Localize("UI_EQUIP");
+
+                    if (!BattleRenderer.Instance.IsOnBattle)
+                    {
+                        if (model.DimObjectEnabled.Value)
+                        {
+                            interactable = model.Equipped.Value;
+                        }
+                        else
+                        {
+                            interactable = !model.LevelLimited.Value ||
+                                           model.LevelLimited.Value && model.Equipped.Value;
+                        }
+                    }
+
+                    submit = () => EquipOrUnequip(model);
+                    blockedMessage = BattleRenderer.Instance.IsOnBattle
+                        ? L10nManager.Localize("UI_BLOCK_EQUIP")
+                        : L10nManager.Localize("UI_EQUIP_FAILED");
+                    break;
+                case ItemType.Material when item.ItemSubType == ItemSubType.ApStone:
+                    submitText = L10nManager.Localize("UI_CHARGE_AP");
+                    interactable = ActionPoint.IsInteractableMaterial();
+                    submit = ReactiveAvatarState.ActionPoint > 0
+                        ? () => ActionPoint.ShowRefillConfirmPopup(ActionPoint.ChargeAP)
+                        : ActionPoint.ChargeAP;
+                    blockedMessage = BattleRenderer.Instance.IsOnBattle
+                        ? L10nManager.Localize("UI_BLOCK_CHARGE_AP")
+                        : L10nManager.Localize("UI_AP_IS_FULL");
+                    break;
+            }
+
+            System.Action blocked = () => NotificationSystem.Push(
+                MailType.System,
+                blockedMessage,
+                NotificationCell.NotificationType.Alert);
+            System.Action enhancement = item.ItemType == ItemType.Equipment ? () =>
+            {
+                if (BattleRenderer.Instance.IsOnBattle)
+                {
+                    return;
+                }
+
+                if (item is not Equipment equipment)
+                {
+                    return;
+                }
+
+                var e = Widget.Find<Enhancement>();
+                e.CloseWithOtherWidgets();
+                e.Show(item.ItemSubType, equipment.ItemId, true);
+                AudioController.PlayClick();
+            } : null;
+
+            ItemTooltip.Find(model.ItemBase.ItemType).Show(
+                model,
+                submitText,
+                interactable,
+                submit,
+                () => inventory.ClearSelectedItem(),
+                blocked,
+                enhancement);
+        }
+
         private void ShowRuneTooltip(InventoryItem model)
         {
             Widget.Find<RuneTooltip>().
                 Show(
                 model,
                 L10nManager.Localize(model.Equipped.Value ? "UI_UNEQUIP" : "UI_EQUIP"),
-                !Game.Game.instance.IsInWorld && !model.DimObjectEnabled.Value,
+                !BattleRenderer.Instance.IsOnBattle && !model.DimObjectEnabled.Value,
                 () => EquipOrUnequip(model),
                 () =>
                 {
-                    if (Game.Game.instance.IsInWorld)
+                    if (BattleRenderer.Instance.IsOnBattle)
                     {
                         return;
                     }
@@ -767,118 +869,7 @@ namespace Nekoyume.UI.Module
                     });
         }
 
-        private (string, bool, System.Action, System.Action, System.Action)
-            GetToolTipParams(InventoryItem model)
-        {
-            var item = model.ItemBase;
-            var submitText = string.Empty;
-            var interactable = false;
-            System.Action submit = null;
-            System.Action blocked = null;
-            System.Action enhancement = null;
-
-            switch (item.ItemType)
-            {
-                case ItemType.Consumable:
-                case ItemType.Costume:
-                case ItemType.Equipment:
-                    submitText = model.Equipped.Value
-                        ? L10nManager.Localize("UI_UNEQUIP")
-                        : L10nManager.Localize("UI_EQUIP");
-                    if (!Game.Game.instance.IsInWorld)
-                    {
-                        if (model.DimObjectEnabled.Value)
-                        {
-                            interactable = model.Equipped.Value;
-                        }
-                        else
-                        {
-                            interactable = !model.LevelLimited.Value || model.LevelLimited.Value && model.Equipped.Value;
-                        }
-                    }
-
-                    if (item.ItemType == ItemType.Consumable && consumeSlots is null)
-                    {
-                        interactable = false;
-                    }
-
-                    submit = () => EquipOrUnequip(model);
-
-                    if (item.ItemType == ItemType.Equipment)
-                    {
-                        enhancement = () =>
-                        {
-                            if (Game.Game.instance.IsInWorld)
-                            {
-                                return;
-                            }
-
-                            if (item is not Equipment equipment)
-                            {
-                                return;
-                            }
-
-                            var e = Widget.Find<Enhancement>();
-                            e.CloseWithOtherWidgets();
-                            e.Show(item.ItemSubType, equipment.ItemId, true);
-                            AudioController.PlayClick();
-                        };
-                    }
-
-                    if (Game.Game.instance.IsInWorld)
-                    {
-                        blocked = () => NotificationSystem.Push(MailType.System,
-                            L10nManager.Localize("UI_BLOCK_EQUIP"),
-                            NotificationCell.NotificationType.Alert);
-                    }
-                    else
-                    {
-                        blocked = () => NotificationSystem.Push(MailType.System,
-                            L10nManager.Localize("UI_EQUIP_FAILED"),
-                            NotificationCell.NotificationType.Alert);
-                    }
-
-                    break;
-                case ItemType.Material:
-                    if (item.ItemSubType == ItemSubType.ApStone)
-                    {
-                        submitText = L10nManager.Localize("UI_CHARGE_AP");
-                        interactable = ActionPoint.IsInteractableMaterial();
-
-                        if (States.Instance.CurrentAvatarState.actionPoint > 0)
-                        {
-                            submit = () => ActionPoint.ShowRefillConfirmPopup(
-                                () => Game.Game.instance.ActionManager.ChargeActionPoint().Subscribe()
-                            );
-                        }
-                        else
-                        {
-                            submit = () => Game.Game.instance.ActionManager.ChargeActionPoint().Subscribe();
-                        }
-
-                        if (Game.Game.instance.IsInWorld)
-                        {
-                            blocked = () => NotificationSystem.Push(MailType.System,
-                                L10nManager.Localize("UI_BLOCK_CHARGE_AP"),
-                                NotificationCell.NotificationType.Alert);
-                        }
-                        else
-                        {
-                            blocked = () => NotificationSystem.Push(MailType.System,
-                                L10nManager.Localize("UI_AP_IS_FULL"),
-                                NotificationCell.NotificationType.Alert);
-                        }
-                    }
-
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            return (submitText, interactable, submit, blocked, enhancement);
-        }
-
-        private void EquipOrUnequip(InventoryItem inventoryItem)
+        private void EquipOrUnequip(InventoryItem inventoryItem, bool inSlot = false)
         {
             if (inventoryItem.RuneState != null)
             {
@@ -888,7 +879,7 @@ namespace Nekoyume.UI.Module
                 }
                 else
                 {
-                    if (Game.Game.instance.IsInWorld)
+                    if (BattleRenderer.Instance.IsOnBattle)
                     {
                         return;
                     }
@@ -902,6 +893,17 @@ namespace Nekoyume.UI.Module
                     }
 
                     EquipRune(inventoryItem);
+                }
+            }
+            else if (inventoryItem.ItemBase.ItemType == ItemType.Consumable)
+            {
+                if (inSlot)
+                {
+                    UnequipItem(inventoryItem);
+                }
+                else
+                {
+                    EquipItem(inventoryItem);
                 }
             }
             else
@@ -937,9 +939,16 @@ namespace Nekoyume.UI.Module
             var consumables = GetEquippedConsumables();
             var (equipments, costumes) = States.Instance.GetEquippedItems(_battleType);
 
+            var equippedRuneStates = States.Instance.GetEquippedRuneStates(_battleType);
+
+            var allRuneState = States.Instance.AllRuneState;
+            var runeListSheet = Game.Game.instance.TableSheets.RuneListSheet;
+            var runeLevelBonusSheet = Game.Game.instance.TableSheets.RuneLevelBonusSheet;
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(allRuneState,
+                runeListSheet, runeLevelBonusSheet);
+
             var runeStatModifiers = new List<StatModifier>();
-            var equippedRuneState = States.Instance.GetEquippedRuneStates(_battleType);
-            foreach (var runeState in equippedRuneState)
+            foreach (var runeState in equippedRuneStates)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var statRow) ||
                     !statRow.LevelOptionMap.TryGetValue(runeState.Level, out var statInfo))
@@ -952,8 +961,12 @@ namespace Nekoyume.UI.Module
                         new StatModifier(
                             x.stat.StatType,
                             x.operationType,
-                            x.stat.TotalValueAsInt)));
+                            (long)(x.stat.BaseValue * (100000 + runeLevelBonus) / 100000m))));
             }
+
+            var collectionState = Game.Game.instance.States.CollectionState;
+            var collectionSheet = Game.Game.instance.TableSheets.CollectionSheet;
+            var collectionStatModifiers = collectionState.GetEffects(collectionSheet);
 
             characterStats.SetAll(
                 avatarState.level,
@@ -962,7 +975,8 @@ namespace Nekoyume.UI.Module
                 consumables,
                 runeStatModifiers,
                 equipmentSetEffectSheet,
-                costumeSheet);
+                costumeSheet,
+                collectionStatModifiers);
 
             UpdateCp();
             stats.SetData(characterStats);

@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Bencodex.Types;
 using Cysharp.Threading.Tasks;
-using Libplanet;
 using Nekoyume.Battle;
 using Nekoyume.Helper;
 using Nekoyume.Model.EnumType;
@@ -15,7 +11,6 @@ using Nekoyume.TableData;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using TMPro;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace Nekoyume.UI
@@ -62,8 +57,8 @@ namespace Nekoyume.UI
         private readonly Dictionary<BattleType, List<Equipment>> _equipments = new();
         private readonly Dictionary<BattleType, List<Costume>> _costumes = new();
         private readonly Dictionary<BattleType, RuneSlotState> _runes = new();
-        private readonly List<RuneState> _runeStates = new();
-
+        private AllRuneState _allRuneState;
+        private CollectionState _collectionState;
 
         protected override void Awake()
         {
@@ -105,11 +100,11 @@ namespace Nekoyume.UI
                 _costumes[battleType],
                 _equipments[battleType]);
 
-            UpdateCp(_avatarState, battleType);
+            UpdateCp(_avatarState, _collectionState, battleType);
             UpdateName(_avatarState);
             UpdateTitle(battleType);
             UpdateSlotView(_avatarState, battleType);
-            UpdateStatViews(_avatarState, battleType);
+            UpdateStatViews(_avatarState, _collectionState, battleType);
         }
 
         public async UniTaskVoid ShowAsync(
@@ -118,9 +113,13 @@ namespace Nekoyume.UI
             bool ignoreShowAnimation = false)
         {
             _avatarState = avatarState;
-            var (itemSlotStates, runeSlotStates) = await avatarState.GetSlotStatesAsync();
-            var runeStates = await avatarState.GetRuneStatesAsync();
-            SetItems(avatarState, itemSlotStates, runeSlotStates, runeStates);
+            var (itemSlotStates, runeSlotStates) =
+                await Game.Game.instance.Agent.GetSlotStatesAsync(avatarState.address);
+            var allRuneState =
+                await Game.Game.instance.Agent.GetAllRuneStateAsync(avatarState.address);
+            var collectionState =
+                await Game.Game.instance.Agent.GetCollectionStateAsync(avatarState.address);
+            SetItems(avatarState, itemSlotStates, runeSlotStates, allRuneState, collectionState);
 
             base.Show(ignoreShowAnimation);
             switch (battleType)
@@ -141,7 +140,8 @@ namespace Nekoyume.UI
             AvatarState avatarState,
             List<ItemSlotState> itemSlotStates,
             List<RuneSlotState> runeSlotStates,
-            List<RuneState> runeStates)
+            AllRuneState allRuneState,
+            CollectionState collectionState)
         {
             _equipments.Clear();
             _costumes.Clear();
@@ -175,11 +175,14 @@ namespace Nekoyume.UI
                 _runes[state.BattleType] = state;
             }
 
-            _runeStates.Clear();
-            _runeStates.AddRange(runeStates);
+            _allRuneState = allRuneState;
+            _collectionState = collectionState;
         }
 
-        private void UpdateCp(AvatarState avatarState, BattleType battleType)
+        private void UpdateCp(
+            AvatarState avatarState,
+            CollectionState collectionState,
+            BattleType battleType)
         {
             var level = avatarState.level;
             var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
@@ -196,8 +199,7 @@ namespace Nekoyume.UI
                     continue;
                 }
 
-                var runeState = _runeStates.FirstOrDefault(x => x.RuneId == slot.RuneId);
-                if (runeState != null)
+                if (_allRuneState.TryGetRuneState(slot.RuneId.Value, out var runeState))
                 {
                     equippedRuneStates.Add(runeState);
                 }
@@ -208,7 +210,17 @@ namespace Nekoyume.UI
             var costumes = _costumes[battleType];
             var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
             var runeOptions = Util.GetRuneOptions(equippedRuneStates, runeOptionSheet);
-            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, level, row, costumeSheet);
+
+            var runeListSheet = Game.Game.instance.TableSheets.RuneListSheet;
+            var runeLevelBonusSheet = Game.Game.instance.TableSheets.RuneLevelBonusSheet;
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(_allRuneState,
+                runeListSheet, runeLevelBonusSheet);
+
+            var collectionSheet = Game.Game.instance.TableSheets.CollectionSheet;
+            var collectionStatModifiers = collectionState.GetEffects(collectionSheet);
+
+            var cp = CPHelper.TotalCP(equipments, costumes, runeOptions, level, row, costumeSheet,
+                collectionStatModifiers, runeLevelBonus);
             cpText.text = $"{cp}";
         }
 
@@ -243,15 +255,18 @@ namespace Nekoyume.UI
             var runeSlot = _runes[battleType].GetRuneSlot();
             costumeSlots.SetPlayerCostumes(level, costumes, ShowTooltip, null);
             equipmentSlots.SetPlayerEquipments(level, equipments, ShowTooltip, null);
-            runeSlots.Set(runeSlot, _runeStates,ShowRuneTooltip);
+            runeSlots.Set(runeSlot, _allRuneState, ShowRuneTooltip);
         }
 
-        private void UpdateStatViews(AvatarState avatarState, BattleType battleType)
+        private void UpdateStatViews(
+            AvatarState avatarState,
+            CollectionState collectionState,
+            BattleType battleType)
         {
             var equipments = _equipments[battleType];
             var costumes = _costumes[battleType];
+            var runes = _runes[battleType];
             var runeOptionSheet = Game.Game.instance.TableSheets.RuneOptionSheet;
-            var runeStates = _runeStates;
             var equipmentSetEffectSheet = Game.Game.instance.TableSheets.EquipmentItemSetEffectSheet;
             var characterSheet = Game.Game.instance.TableSheets.CharacterSheet;
             var costumeSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
@@ -261,8 +276,14 @@ namespace Nekoyume.UI
             }
 
             var runeStatModifiers = new List<StatModifier>();
-            foreach (var runeState in runeStates)
+            foreach (var runeSlot in runes.GetRuneSlot())
             {
+                if (!runeSlot.RuneId.HasValue ||
+                    !_allRuneState.TryGetRuneState(runeSlot.RuneId.Value, out var runeState))
+                {
+                    continue;
+                }
+
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var statRow) ||
                     !statRow.LevelOptionMap.TryGetValue(runeState.Level, out var statInfo))
                 {
@@ -274,8 +295,11 @@ namespace Nekoyume.UI
                         new StatModifier(
                             x.stat.StatType,
                             x.operationType,
-                            x.stat.TotalValueAsInt)));
+                            x.stat.TotalValueAsLong)));
             }
+
+            var collectionSheet = Game.Game.instance.TableSheets.CollectionSheet;
+            var collectionStatModifiers = collectionState.GetEffects(collectionSheet);
 
             var characterStats = new CharacterStats(row, avatarState.level);
             characterStats.SetAll(
@@ -285,7 +309,8 @@ namespace Nekoyume.UI
                 null,
                 runeStatModifiers,
                 equipmentSetEffectSheet,
-                costumeSheet);
+                costumeSheet,
+                collectionStatModifiers);
 
             avatarStats.SetData(characterStats);
         }
@@ -309,8 +334,7 @@ namespace Nekoyume.UI
                 return;
             }
 
-            var runeState = _runeStates.FirstOrDefault(x => x.RuneId == slot.RuneSlot.RuneId.Value);
-            if (runeState == null)
+            if (!_allRuneState.TryGetRuneState(slot.RuneSlot.RuneId.Value, out var runeState))
             {
                 return;
             }

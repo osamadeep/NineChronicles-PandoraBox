@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -64,12 +64,14 @@ namespace Nekoyume.UI
             loading.Show(LoadingScreen.LoadingType.Arena);
             var sw = new Stopwatch();
             sw.Start();
-            await RxProps.ArenaInformationOrderedWithScore.UpdateAsync();
+            await UniTask.WhenAll(
+                RxProps.ArenaInformationOrderedWithScore.UpdateAsync(Game.Game.instance.Agent.BlockTipStateRootHash),
+                RxProps.ArenaInfoTuple.UpdateAsync(Game.Game.instance.Agent.BlockTipStateRootHash));
             loading.Close();
             Show(RxProps.ArenaInformationOrderedWithScore.Value,
                 ignoreShowAnimation);
             sw.Stop();
-            Debug.Log($"[Arena] Loading Complete. {sw.Elapsed}");
+            NcDebug.Log($"[Arena] Loading Complete. {sw.Elapsed}");
         }
 
         public void Show(
@@ -117,14 +119,14 @@ namespace Nekoyume.UI
             var player = RxProps.PlayerArenaInfo.Value;
             if (player is null)
             {
-                Debug.Log($"{nameof(RxProps.PlayerArenaInfo)} is null");
+                NcDebug.Log($"{nameof(RxProps.PlayerArenaInfo)} is null");
                 _billboard.SetData();
                 return;
             }
 
             if (!RxProps.ArenaInfoTuple.HasValue)
             {
-                Debug.Log($"{nameof(RxProps.ArenaInfoTuple)} is null");
+                NcDebug.Log($"{nameof(RxProps.ArenaInfoTuple)} is null");
                 _billboard.SetData();
                 return;
             }
@@ -162,8 +164,8 @@ namespace Nekoyume.UI
                         return;
                     }
 #endif
-                    var avatarStates = await Game.Game.instance.Agent.GetAvatarStatesAsync(new[]
-                        {_boundedData[index].AvatarAddr});
+                    var avatarStates = await Game.Game.instance.Agent.GetAvatarStatesAsync(
+                        new[] { _boundedData[index].AvatarAddr });
                     var avatarState = avatarStates.Values.First();
                     Find<FriendInfoPopup>().ShowAsync(avatarState, BattleType.Arena).Forget();
                 })
@@ -223,6 +225,7 @@ namespace Nekoyume.UI
                     interactableChoiceButton = !e.AvatarAddr.Equals(currentAvatarAddr),
                     canFight = true,
                     address = e.AvatarAddr.ToHex(),
+                    guildName = e.GuildName,
                 }).ToList();
             for (var i = 0; i < _boundedData.Count; i++)
             {

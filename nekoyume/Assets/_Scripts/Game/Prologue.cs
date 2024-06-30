@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,12 @@ using Nekoyume.Model.Stat;
 using Nekoyume.UI;
 using UnityEngine;
 using mixpanel;
+using Nekoyume.Game.Battle;
 using Nekoyume.UI.Module;
 
 namespace Nekoyume.Game
 {
+    [Obsolete]
     public class Prologue : MonoBehaviour
     {
         private Player _player;
@@ -28,8 +31,6 @@ namespace Nekoyume.Game
         private int _armorId = 10251001;
         private int _weaponId = 10151000;
         private int _characterId = 205007;
-
-        public const float DefaultTimeScale = 1.25f;
 
         public void StartPrologue()
         {
@@ -63,7 +64,7 @@ namespace Nekoyume.Game
             _battle.ShowForTutorial(true);
             Widget.Find<HeaderMenuStatic>().Close(true);
             yield return new WaitForSeconds(2f);
-            var go2 = EnemyFactory.Create(_characterId, _player.transform.position, 7f, _player);
+            var go2 = StageMonsterFactory.Create(_characterId, _player.transform.position, 7f, _player);
             _fenrir = go2.GetComponent<PrologueCharacter>();
             yield return new WaitUntil(() => 6f > Mathf.Abs(go.transform.position.x - go2.transform.position.x));
             _player.ShowSpeech("PLAYER_PROLOGUE_SPEECH");
@@ -186,7 +187,7 @@ namespace Nekoyume.Game
             var castingEffect = Game.instance.Stage.SkillController.Get(pos, ElementalType.Fire);
             castingEffect.Play();
             AreaAttackCutscene.Show(_armorId);
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
             var effect = Game.instance.Stage.SkillController.Get<SkillAreaVFX>(_knight.gameObject, ElementalType.Fire, SkillCategory.AreaAttack, SkillTargetType.Enemies);
             effect.Play();
             yield return new WaitForSeconds(0.5f);
@@ -225,7 +226,7 @@ namespace Nekoyume.Game
             var buff = new StatBuff(buffRow);
             var castingEffect = Game.instance.Stage.BuffController.Get(_player.transform.position, buff);
             castingEffect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
             var effect = Game.instance.Stage.BuffController.Get<BuffVFX>(_player.gameObject, buff);
             effect.Play();
             var position = _player.transform.TransformPoint(0f, 1.7f, 0f);
@@ -268,7 +269,7 @@ namespace Nekoyume.Game
             yield return new WaitWhile(() => Widget.Find<PrologueDialogPopup>().isActiveAndEnabled);
             yield return StartCoroutine(_fenrir.CoFinisher(new[] {580214, 999999}, new[] {true, true}));
             yield return new WaitForSeconds(1f);
-            Time.timeScale = DefaultTimeScale;
+            Time.timeScale = Game.DefaultTimeScale;
             _fenrir.Animator.Idle();
         }
     }

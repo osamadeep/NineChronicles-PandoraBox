@@ -54,7 +54,7 @@ namespace Nekoyume.UI
                 {
                     if (_targets.ContainsKey(target.type))
                     {
-                        Debug.LogError($"Duplication Tutorial Targets AlreadyRegisterd : {_targets[target.type].gameObject.name}  TryRegisterd : {target.rectTransform.gameObject.name}");
+                        NcDebug.LogError($"Duplication Tutorial Targets AlreadyRegisterd : {_targets[target.type].gameObject.name}  TryRegisterd : {target.rectTransform.gameObject.name}");
                         continue;
                     }
                     _targets.Add(target.type, target.rectTransform);
@@ -68,7 +68,7 @@ namespace Nekoyume.UI
                     {
                         if (_actions.ContainsKey(action))
                         {
-                            Debug.LogError($"Duplication Tutorial {action} Action AlreadyRegisterd : {_actions[action].ActionWidget.name}  TryRegisterd : {widget.name}");
+                            NcDebug.LogError($"Duplication Tutorial {action} Action AlreadyRegisterd : {_actions[action].ActionWidget.name}  TryRegisterd : {widget.name}");
                             continue;
                         }
                         _actions.Add(action, new TutorialAction(widget, methodInfo));
@@ -91,7 +91,7 @@ namespace Nekoyume.UI
 
         public void Play(int id)
         {
-            Debug.Log($"[TutorialController] Play({id})");
+            NcDebug.Log($"[TutorialController] Play({id})");
             if (!_tutorial.isActiveAndEnabled)
             {
                 _tutorial.Show(true);
@@ -249,7 +249,14 @@ namespace Nekoyume.UI
             }
             else if (TutorialStageArray.Any(stageId => stageId == clearedStageId))
             {
-                Check(clearedStageId);
+                if (Game.LiveAsset.GameConfig.IsKoreanBuild && clearedStageId == 7)
+                {
+                    // Skip tutorial 7 (portal reward) in K version
+                }
+                else
+                {
+                    Check(clearedStageId);
+                }
             }
             // If PlayerPrefs doesn't exist
             else if (clearedStageId == 0 && checkPoint != -1)
@@ -318,7 +325,7 @@ namespace Nekoyume.UI
                 TableSheets.Instance.CreateAvatarFavSheet.Values
                     .Select(row =>
                         new MailReward(row.Currency * row.Quantity, row.Quantity)));
-            Widget.Find<RewardScreen>().Show(mailRewards);
+            Widget.Find<RewardScreen>().Show(mailRewards, "First Tutorial Rewards!");
         }
 
         public void RegisterWidget(Widget widget)
@@ -327,7 +334,7 @@ namespace Nekoyume.UI
             {
                 if (_targets.ContainsKey(target.type))
                 {
-                    Debug.LogError($"Duplication Tutorial Targets AlreadyRegisterd : {_targets[target.type].gameObject.name}  TryRegisterd : {target.rectTransform.gameObject.name}");
+                    NcDebug.LogError($"Duplication Tutorial Targets AlreadyRegisterd : {_targets[target.type].gameObject.name}  TryRegisterd : {target.rectTransform.gameObject.name}");
                     continue;
                 }
                 _targets.Add(target.type, target.rectTransform);
@@ -341,7 +348,7 @@ namespace Nekoyume.UI
                 {
                     if (_actions.ContainsKey(action))
                     {
-                        Debug.LogError($"Duplication Tutorial {action} Action AlreadyRegisterd : {_actions[action].ActionWidget.name}  TryRegisterd : {widget.name}");
+                        NcDebug.LogError($"Duplication Tutorial {action} Action AlreadyRegisterd : {_actions[action].ActionWidget.name}  TryRegisterd : {widget.name}");
                         continue;
                     }
                     _actions.Add(action, new TutorialAction(widget, methodInfo));

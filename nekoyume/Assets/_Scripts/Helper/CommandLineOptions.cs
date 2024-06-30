@@ -106,6 +106,12 @@ namespace Nekoyume.Helper
 
         private bool _requiredUpdate;
 
+        private string _guildServiceUrl;
+
+        private string _guildIconBucket;
+
+        private bool _enableGuestLogin;
+
         public bool Empty { get; private set; } = true;
 
         public string genesisBlockPath;
@@ -564,6 +570,39 @@ namespace Nekoyume.Helper
             }
         }
 
+        [Option("guild-service-url", Required = false, HelpText = "guild service url")]
+        public string GuildServiceUrl
+        {
+            get => _guildServiceUrl;
+            set
+            {
+                _guildServiceUrl = value;
+                Empty = false;
+            }
+        }
+
+        [Option("guild-icon-bucket", Required = false, HelpText = "guild icon s3 bucket url")]
+        public string GuildIconBucket
+        {
+            get => _guildIconBucket;
+            set
+            {
+                _guildIconBucket = value;
+                Empty = false;
+            }
+        }
+
+        [Option("enable-guest-login", Required = false, HelpText = "enable guest login")]
+        public bool EnableGuestLogin
+        {
+            get => _enableGuestLogin;
+            set
+            {
+                _enableGuestLogin = value;
+                Empty = false;
+            }
+        }
+
         public override string ToString()
         {
             string result = "";
@@ -602,7 +641,7 @@ namespace Nekoyume.Helper
             var options = CommandLineParser.GetCommandLineOptions<CommandLineOptions>();
             if (options != null && !options.Empty)
             {
-                Debug.Log($"Get options from commandline.");
+                NcDebug.Log($"Get options from commandline.");
                 return options;
             }
 
@@ -617,12 +656,12 @@ namespace Nekoyume.Helper
 #else
             if (File.Exists(localPath))
             {
-                Debug.Log($"Get options from local: {localPath}");
+                NcDebug.Log($"Get options from local: {localPath}");
                 return JsonSerializer.Deserialize<CommandLineOptions>(File.ReadAllText(localPath), JsonOptions);
             }
 #endif
 
-            Debug.LogErrorFormat("Failed to find {0}. Using default options.", localPath);
+            NcDebug.LogErrorFormat("Failed to find {0}. Using default options.", localPath);
             return new CommandLineOptions();
         }
 

@@ -178,7 +178,6 @@ namespace Nekoyume.UI
                 Widget.Create<SettingPopup>(),
 
                 // 팝업 영역: 알림.
-                Widget.Create<BlockFailTitleOneButtonSystem>(),
                 Widget.Create<LoginSystem>(),
                 Widget.Create<TitleOneButtonSystem>(),
                 Widget.Create<Alert>(),
@@ -204,7 +203,8 @@ namespace Nekoyume.UI
 
         public IEnumerator CreateSecondWidgets()
         {
-#if UNITY_ANDROID || UNITY_IOS
+            // 실제 모바일 환경이 아닌경우 사용되는 UI가 포함될 수는 있지만, 감안하고 플래그 사용
+#if APPLY_MEMORY_IOS_OPTIMIZATION || UNITY_ANDROID || UNITY_IOS
             _secondWidgets.Add(Widget.Create<Login>());
             yield return null;
             _secondWidgets.Add(Widget.Create<LoginDetail>());
@@ -330,6 +330,10 @@ namespace Nekoyume.UI
             yield return null;
             _secondWidgets.Add(Widget.Create<SeasonPass>());
             yield return null;
+            _secondWidgets.Add(Widget.Create<Collection>());
+            yield return null;
+            _secondWidgets.Add(Widget.Create<CollectionItemFilterPopup>());
+            yield return null;
 
             // loading
             _secondWidgets.Add(Widget.Create<StageLoadingEffect>());
@@ -373,8 +377,6 @@ namespace Nekoyume.UI
             yield return null;
 
             // popup
-            _secondWidgets.Add(Widget.Create<IconPopup>());
-            yield return null;
             _secondWidgets.Add(Widget.Create<CombinationSlotPopup>());
             yield return null;
             _secondWidgets.Add(Widget.Create<BuyItemInformationPopup>());
@@ -394,6 +396,8 @@ namespace Nekoyume.UI
             _secondWidgets.Add(Widget.Create<ConfirmPopup>());
             yield return null;
             _secondWidgets.Add(Widget.Create<CelebratesPopup>());
+            yield return null;
+            _secondWidgets.Add(Widget.Create<WorldClearPopup>());
             yield return null;
             _secondWidgets.Add(Widget.Create<FriendInfoPopup>());
             yield return null;
@@ -449,7 +453,14 @@ namespace Nekoyume.UI
             yield return null;
             _secondWidgets.Add(Widget.Create<InviteFriendsPopup>());
             yield return null;
-            _secondWidgets.Add(Widget.Create<EventPopup>());
+            _secondWidgets.Add(Widget.Create<StatsBonusPopup>());
+            yield return null;
+            _secondWidgets.Add(Widget.Create<CollectionRegistrationPopup>());
+            yield return null;
+            _secondWidgets.Add(Widget.Create<CollectionResultPopup>());
+            yield return null;
+            _secondWidgets.Add(Widget.Create<RuneLevelBonusEffectPopup>());
+            yield return null;
 
             // tooltip
             _secondWidgets.Add(Widget.Create<EquipmentTooltip>());
@@ -458,7 +469,6 @@ namespace Nekoyume.UI
             _secondWidgets.Add(Widget.Create<CostumeTooltip>());
             _secondWidgets.Add(Widget.Create<RuneTooltip>());
             _secondWidgets.Add(Widget.Create<FungibleAssetTooltip>());
-            _secondWidgets.Add(Widget.Create<AvatarTooltip>());
             _secondWidgets.Add(Widget.Create<HelpTooltip>());
             _secondWidgets.Add(Widget.Create<VanilaTooltip>());
             _secondWidgets.Add(Widget.Create<MessageCatTooltip>(true));
@@ -477,7 +487,7 @@ namespace Nekoyume.UI
             {
                 if (value is null)
                 {
-                    Debug.LogWarning($"value is null. last is {last.name}");
+                    NcDebug.LogWarning($"value is null. last is {last.name}");
                     continue;
                 }
 

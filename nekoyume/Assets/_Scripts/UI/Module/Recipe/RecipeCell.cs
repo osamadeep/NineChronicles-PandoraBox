@@ -149,7 +149,7 @@ namespace Nekoyume.UI.Module
             }
             else
             {
-                Debug.LogError($"Not supported type of recipe.");
+                NcDebug.LogError($"Not supported type of recipe.");
                 IsLocked = true;
             }
 
@@ -273,7 +273,8 @@ namespace Nekoyume.UI.Module
         private void SetEquipmentView(ItemSheet.Row resultItem)
         {
             var viewData = recipeViewData.GetData(resultItem.Grade);
-            gradeEffectObject.SetActive(resultItem.Grade >= 5);
+            gradeEffectObject.SetActive(viewData.GradeEffectBgMaterial != null);
+            gradeEffectObject.GetComponent<Image>().material = viewData.GradeEffectBgMaterial;
             equipmentView.Show(viewData, resultItem);
             consumableView.Hide();
             loadingView.Hide();

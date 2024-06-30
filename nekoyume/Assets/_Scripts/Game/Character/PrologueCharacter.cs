@@ -14,6 +14,7 @@ namespace Nekoyume.Game.Character
 {
     using UniRx;
 
+    [Obsolete]
     public class PrologueCharacter : MonoBehaviour
     {
         public bool AttackEndCalled { get; set; }
@@ -34,19 +35,22 @@ namespace Nekoyume.Game.Character
 
         public void Set(int characterId, Player target)
         {
-            var spineResourcePath = $"Character/Monster/{characterId}";
-
-            if (!(Animator.Target is null))
+            var key = characterId.ToString();
+            if (Animator.Target != null)
             {
-                var animatorTargetName = spineResourcePath.Split('/').Last();
-                if (Animator.Target.name.Contains(animatorTargetName))
+                if (Animator.Target.name.Contains(key))
                     return;
 
                 Animator.DestroyTarget();
             }
 
-            var origin = Resources.Load<GameObject>(spineResourcePath);
-            var go = Instantiate(origin, gameObject.transform);
+            var go = ResourceManager.Instance.Instantiate(key, gameObject.transform);
+            if (go == null)
+            {
+                NcDebug.LogError($"Missing Spine Resource: {key}");
+                return;
+            }
+
             SpineController = go.GetComponent<CharacterSpineController>();
             Animator.ResetTarget(go);
             if (characterId == 205007)
@@ -143,7 +147,7 @@ namespace Nekoyume.Game.Character
             var pos = transform.position;
             var effect = Game.instance.Stage.SkillController.Get(pos, elementalType);
             effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
         }
 
         private IEnumerator CoAnimationCastBlow(ElementalType elementalType)
@@ -216,9 +220,9 @@ namespace Nekoyume.Game.Character
             yield return StartCoroutine(CoAnimationBuffCast(buff));
             Animator.CastAttack();
             AudioController.instance.PlaySfx(AudioController.SfxCode.FenrirGrowlCastingAttack);
-            var effect = Game.instance.Stage.BuffController.Get<Player, BuffVFX>(_target, buff);
+            var effect = Game.instance.Stage.BuffController.Get<BuffVFX>(_target.gameObject, buff);
             effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
         }
 
         private IEnumerator CoAnimationBuffCast(StatBuff buff)
@@ -230,7 +234,7 @@ namespace Nekoyume.Game.Character
             var pos = transform.position;
             var effect = Game.instance.Stage.BuffController.Get(pos, buff);
             effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
         }
 
         public IEnumerator CoFinisher(int[] damageMap, bool[] criticalMap)

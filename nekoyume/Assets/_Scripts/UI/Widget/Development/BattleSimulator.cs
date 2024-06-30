@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Lib9c.Renderers;
 using Libplanet.Action;
 using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.EnumType;
 using Nekoyume.Game;
+using Nekoyume.Game.Battle;
 using Nekoyume.Model.BattleStatus;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
@@ -116,7 +119,7 @@ public class BattleSimulator : Widget
     public void OnClickGoStage()
     {
         var log = Simulate();
-        Nekoyume.Game.Event.OnStageStart.Invoke(log);
+        BattleRenderer.Instance.PrepareStage(log);
         SaveField();
         content.SetActive(false);
     }
@@ -157,6 +160,17 @@ public class BattleSimulator : Widget
         foreach (var equipment in inventoryEquipments)
         {
             equipment.Unequip();
+        }
+
+        var collectionState = Game.instance.States.CollectionState;
+        var collectionSheet = Game.instance.TableSheets.CollectionSheet;
+        var collectionModifiers = new List<StatModifier>();
+        foreach (var id in collectionState.Ids)
+        {
+            if (collectionSheet.TryGetValue(id, out var row))
+            {
+                collectionModifiers.AddRange(row.StatModifiers);
+            }
         }
 
         var random = new DebugRandom();
@@ -205,7 +219,8 @@ public class BattleSimulator : Widget
             random,
             avatarState,
             consumables,
-            null,
+            States.Instance.AllRuneState,
+            States.Instance.CurrentRuneSlotStates[BattleType.Adventure],
             new List<Skill>(),
             worldId,
             stageId,
@@ -216,8 +231,12 @@ public class BattleSimulator : Widget
             tableSheets.GetStageSimulatorSheets(),
             tableSheets.EnemySkillSheet,
             tableSheets.CostumeStatSheet,
-            StageSimulatorV2.GetWaveRewards(random, tableSheets.StageSheet[stageId], tableSheets.MaterialItemSheet)
-        );
+            StageSimulator.GetWaveRewards(random, tableSheets.StageSheet[stageId], tableSheets.MaterialItemSheet),
+            collectionModifiers,
+            tableSheets.DeBuffLimitSheet,
+            tableSheets.BuffLinkSheet,
+            logEvent: true,
+            States.Instance.GameConfigState.ShatterStrikeMaxDamage);
 
         simulator.Simulate();
 
@@ -227,7 +246,7 @@ public class BattleSimulator : Widget
 
     private static int TextToInt(string text)
     {
-        return text.Equals(string.Empty) ? 1 : Convert.ToInt32(text);
+        return text.Equals(string.Empty) ? 1 : Nekoyume.MathematicsExtensions.ConvertToInt32(text);
     }
 
     private int[] GetOptions(string first, string second)

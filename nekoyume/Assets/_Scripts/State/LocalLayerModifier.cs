@@ -2,9 +2,13 @@ using System;
 using System.Numerics;
 using System.Security.Cryptography;
 using Cysharp.Threading.Tasks;
+using Lib9c;
+using Lib9c.Renderers;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
+using Nekoyume.Action;
+using Nekoyume.Blockchain;
 using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
@@ -60,6 +64,38 @@ namespace Nekoyume.State
             ModifyAgentGoldAsync(agentAddress, fav).Forget();
         }
 
+        public static void ModifyAgentGold<T>(ActionEvaluation<T> eval, Address agentAddress, BigInteger gold) where T : ActionBase
+        {
+            if (gold == 0)
+            {
+                return;
+            }
+
+            var fav = new FungibleAssetValue(
+                States.Instance.GoldBalanceState.Gold.Currency,
+                gold,
+                0);
+
+            ModifyAgentGold(eval, agentAddress, fav);
+        }
+
+        public static void ModifyAgentGold<T>(ActionEvaluation<T> eval, Address agentAddress, FungibleAssetValue fav) where T : ActionBase
+        {
+            var modifier = new AgentGoldModifier(fav);
+            LocalLayer.Instance.Add(agentAddress, modifier);
+
+            //FIXME Avoid LocalLayer duplicate modify gold.
+            var state = new GoldBalanceState(
+                agentAddress,
+                StateGetter.GetBalance(eval.OutputState, agentAddress, fav.Currency));
+            if (!state.address.Equals(agentAddress))
+            {
+                return;
+            }
+
+            States.Instance.SetGoldBalanceState(state);
+        }
+
         public static async UniTask ModifyAgentCrystalAsync(Address agentAddress, BigInteger crystal)
         {
             if (crystal == 0)
@@ -73,47 +109,29 @@ namespace Nekoyume.State
                 0);
             var modifier = new AgentCrystalModifier(fav);
             LocalLayer.Instance.Add(agentAddress, modifier);
-            var crystalBalance
-                = await Game.Game.instance.Agent.GetBalanceAsync(
-                    agentAddress,
-                    CrystalCalculator.CRYSTAL);
+            var crystalBalance = await Game.Game.instance.Agent.GetBalanceAsync(
+                agentAddress,
+                CrystalCalculator.CRYSTAL);
             States.Instance.SetCrystalBalance(crystalBalance);
         }
 
-        /// <summary>
-        /// Modify the avatar's action point.
-        /// </summary>
-        /// <param name="avatarAddress"></param>
-        /// <param name="actionPoint"></param>
-        public static void ModifyAvatarActionPoint(Address avatarAddress, int actionPoint)
+        public static void ModifyAgentCrystal<T>(ActionEvaluation<T> eval, Address agentAddress, BigInteger crystal) where T : ActionBase
         {
-            if (actionPoint is 0)
+            if (crystal == 0)
             {
                 return;
             }
 
-            var modifier = new AvatarActionPointModifier(actionPoint);
-            LocalLayer.Instance.Add(avatarAddress, modifier);
-
-            if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
-            {
-                return;
-            }
-
-            if (!isCurrentAvatarState)
-            {
-                return;
-            }
-
-            outAvatarState = modifier.Modify(outAvatarState);
-            ReactiveAvatarState.UpdateActionPoint(outAvatarState.actionPoint);
+            var fav = new FungibleAssetValue(
+                CrystalCalculator.CRYSTAL,
+                crystal,
+                0);
+            var modifier = new AgentCrystalModifier(fav);
+            LocalLayer.Instance.Add(agentAddress, modifier);
+            var crystalBalance =
+                StateGetter.GetBalance(eval.OutputState, agentAddress, Currencies.Crystal);
+            States.Instance.SetCrystalBalance(crystalBalance);
         }
-
         #endregion
 
         #region Avatar / AddItem
@@ -154,6 +172,8 @@ namespace Nekoyume.State
             await TryResetLoadedAvatarState(avatarAddress);
         }
 
+        // TODO: 메서드의 기능 자체가 관련된 컨텍스트를 모두 파악하고 있는게 아니라면 내부 구현을 파악할 수가 없다.
+        // 전체적인 로컬레이어 기능 수정하면서 좀 더 명확하게 변경해야할듯
         public static async void AddItem(
             Address avatarAddress,
             HashDigest<SHA256> fungibleId,
@@ -263,9 +283,18 @@ namespace Nekoyume.State
             ReactiveAvatarState.UpdateMailBox(outAvatarState.mailBox);
         }
 
+        public static void AddNewMail(AvatarState avatarState, Guid mailId)
+        {
+            UnityEngine.Debug.Log($"[AddNewMail] AddNewMail mailid : {mailId}");
+            var modifier = new AvatarMailNewSetter(mailId);
+            LocalLayer.Instance.Add(avatarState.address, modifier);
+            avatarState = modifier.Modify(avatarState);
+            ReactiveAvatarState.UpdateMailBox(avatarState.mailBox);
+        }
+
         public static void AddNewMail(Address avatarAddress, Guid mailId)
         {
-            UnityEngine.Debug.Log($"[MailRead] AddNewMail mailid : {mailId}");
+            UnityEngine.Debug.Log($"[AddNewMail] AddNewMail mailid : {mailId}");
             var modifier = new AvatarMailNewSetter(mailId);
             LocalLayer.Instance.Add(avatarAddress, modifier);
 
@@ -276,7 +305,7 @@ namespace Nekoyume.State
                 out var isCurrentAvatarState)
             )
             {
-                UnityEngine.Debug.LogError($"[MailRead] AddNewMail TryGetLoadedAvatarState fail mailid : {mailId}");
+                UnityEngine.Debug.LogError($"[AddNewMail] AddNewMail TryGetLoadedAvatarState fail mailid : {mailId}");
                 return;
             }
 
@@ -284,7 +313,7 @@ namespace Nekoyume.State
 
             if (!isCurrentAvatarState)
             {
-                UnityEngine.Debug.LogError($"[MailRead] AddNewMail isCurrentAvatarState fail mailid : {mailId}");
+                UnityEngine.Debug.LogError($"[AddNewMail] AddNewMail isCurrentAvatarState fail mailid : {mailId}");
                 return;
             }
 
@@ -325,56 +354,24 @@ namespace Nekoyume.State
         /// </summary>
         /// <param name="avatarAddress"></param>
         /// <param name="mailId"></param>
-        /// <param name="resetState"></param>
-        public static async void RemoveNewAttachmentMail(
+        public static void RemoveNewAttachmentMail(
             Address avatarAddress,
-            Guid mailId,
-            bool resetState = true)
+            Guid mailId)
         {
             UnityEngine.Debug.Log($"[MailRead] RemoveNewAttachmentMail mailid : {mailId}");
             var modifier = new AvatarAttachmentMailNewSetter(mailId);
             LocalLayer.Instance.Remove(avatarAddress, modifier);
-
-            if (!resetState)
-            {
-                return;
-            }
-
-            await TryResetLoadedAvatarState(avatarAddress);
         }
 
-        public static async void RemoveNewMail(
+        public static void RemoveNewMail(
             Address avatarAddress,
-            Guid mailId,
-            bool resetState = true)
+            Guid mailId)
         {
             UnityEngine.Debug.Log($"[MailRead] RemoveNewMail mailid : {mailId}");
             var modifier = new AvatarMailNewSetter(mailId);
             LocalLayer.Instance.Remove(avatarAddress, modifier);
-
-            if (!resetState)
-            {
-                return;
-            }
-
-            await TryResetLoadedAvatarState(avatarAddress);
         }
 
-        public static async void RemoveAttachmentResult(
-            Address avatarAddress,
-            Guid mailId,
-            bool resetState = true)
-        {
-            var resultModifier = new AvatarAttachmentMailResultSetter(mailId);
-            LocalLayer.Instance.Remove(avatarAddress, resultModifier);
-
-            if (!resetState)
-            {
-                return;
-            }
-
-            await TryResetLoadedAvatarState(avatarAddress);
-        }
         #endregion
 
         #region Avatar / Quest
@@ -505,66 +502,6 @@ namespace Nekoyume.State
             }
 
             ReactiveAvatarState.UpdateInventory(outAvatarState.inventory);
-        }
-
-        /// <summary>
-        /// Change the daily reward acquisition block index of the avatar.
-        /// </summary>
-        /// <param name="avatarAddress"></param>
-        /// <param name="blockCount"></param>
-        public static void IncreaseAvatarDailyRewardReceivedIndex(Address avatarAddress, long blockCount)
-        {
-            var modifier = new AvatarDailyRewardReceivedIndexModifier(blockCount);
-            LocalLayer.Instance.Add(avatarAddress, modifier);
-
-            if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
-            {
-                return;
-            }
-
-            if (!isCurrentAvatarState)
-            {
-                return;
-            }
-
-            outAvatarState = modifier.Modify(outAvatarState);
-            ReactiveAvatarState.UpdateDailyRewardReceivedIndex(
-                outAvatarState.dailyRewardReceivedIndex);
-        }
-
-        public static void ModifyAvatarItemRequiredIndex(
-            Address avatarAddress,
-            Guid tradableId,
-            long blockIndex
-        )
-        {
-            var modifier = new AvatarItemRequiredIndexModifier(blockIndex, tradableId);
-            LocalLayer.Instance.Add(avatarAddress, modifier);
-
-            if (!TryGetLoadedAvatarState(
-                avatarAddress,
-                out var outAvatarState,
-                out _,
-                out var isCurrentAvatarState)
-            )
-            {
-                return;
-            }
-
-            outAvatarState = modifier.Modify(outAvatarState);
-
-            if (!isCurrentAvatarState)
-            {
-                return;
-            }
-
-            ReactiveAvatarState.UpdateDailyRewardReceivedIndex(
-                outAvatarState.dailyRewardReceivedIndex);
         }
 
         public static void AddWorld(Address avatarAddress, int worldId)

@@ -10,7 +10,6 @@ using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Toggle = Nekoyume.UI.Module.Toggle;
 using ToggleGroup = Nekoyume.UI.Module.ToggleGroup;
@@ -181,11 +180,24 @@ namespace Nekoyume.UI
                     information.UpdateInventory(BattleType.Adventure);
                 }
             });
+
+            grindModeToggle.onClickObsoletedToggle.AddListener(() =>
+            {
+                OneLineSystem.Push(
+                    MailType.System,
+                    L10nManager.Localize("UI_STAGE_LOCK_FORMAT",
+                        Game.LiveAsset.GameConfig.RequiredStage.Grind),
+                    NotificationCell.NotificationType.UnlockCondition);
+            });
         }
 
         public override void Show(bool ignoreShowAnimation = false)
         {
             base.Show(ignoreShowAnimation);
+
+            var clearedStageId = States.Instance.CurrentAvatarState
+                .worldInformation.TryGetLastClearedStageId(out var stageId) ? stageId : 1;
+            grindModeToggle.obsolete = clearedStageId < Game.LiveAsset.GameConfig.RequiredStage.Grind;
             grindModeToggle.isOn = false;
             information.UpdateInventory(BattleType.Adventure);
             OnClickPresetTab(adventureButton, BattleType.Adventure, _onToggleCallback[BattleType.Adventure]);
@@ -325,7 +337,7 @@ namespace Nekoyume.UI
             }
             else
             {
-                Debug.LogError($"TutorialActionClickAvatarInfoFirstInventoryCellView() throw error.");
+                NcDebug.LogError($"TutorialActionClickAvatarInfoFirstInventoryCellView() throw error.");
             }
         }
 

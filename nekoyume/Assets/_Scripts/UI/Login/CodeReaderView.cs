@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using Nekoyume.L10n;
+using Nekoyume.Model.Mail;
 using Nekoyume.Native;
 using Nekoyume.Permissions;
+using Nekoyume.UI.Scroller;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.UI;
@@ -64,9 +67,72 @@ namespace Nekoyume.UI
             gameObject.SetActive(false);
         }
 
+        public void ScanQrCodeFromGallery(Action<Result> callback = null)
+        {
+            // Note : GetImageFromGallery method에서 권한을 요청하므로, 권한 체크는 하지 않는다.
+            var permission = NativeGallery.GetImageFromGallery(path =>
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    NcDebug.LogError("[CodeReaderView] Path is null or empty.");
+                    callback?.Invoke(null);
+
+                    return;
+                }
+
+                // file size limit 5MB
+                var selected = new FileInfo(path);
+                if (selected.Length > 5_000_000)
+                {
+                    NcDebug.LogError("[CodeReaderView] File size is too large.");
+                    callback?.Invoke(null);
+
+                    return;
+                }
+
+                var bytes = File.ReadAllBytes(path);
+                var texture = new Texture2D(400, 400);
+                texture.LoadImage(bytes);
+
+                var barcodeReader = new BarcodeReader { Options = { PureBarcode = false, }, };
+                try
+                {
+                    var result = barcodeReader.Decode(
+                        texture.GetPixels32(),
+                        texture.width,
+                        texture.height);
+                    if (result != null)
+                    {
+                        NcDebug.Log("[CodeReaderView] QR code detected from Gallery." +
+                                    $" Text: {result.Text}" +
+                                    $", Format: {result.BarcodeFormat}");
+                        callback?.Invoke(result);
+                    }
+                    else
+                    {
+                        // NOTE: 이미지에서 QR 코드를 찾지 못한 경우.
+                        NcDebug.LogError("[CodeReaderView] QR code not detected from Image.");
+                        callback?.Invoke(null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // NOTE: 이미지에서 QR 코드를 찾지 못한 경우.
+                    NcDebug.LogException(ex);
+                    callback?.Invoke(null);
+                }
+            });
+
+            if (permission == NativeGallery.Permission.Denied)
+            {
+                NcDebug.Log("[CodeReaderView] Camera permission already denied.");
+                OpenSystemSettingsAndQuit();
+            }
+        }
+
         private IEnumerator CoRequestPermission(Action<Result> onSuccess = null)
         {
-            Debug.Log("[CodeReaderView] CoRequestPermission start.");
+            NcDebug.Log("[CodeReaderView] CoRequestPermission start.");
             rawCamImage.gameObject.SetActive(false);
             _shouldRequestPermissionWhenApplicationFocusedIn = false;
 #if UNITY_ANDROID
@@ -85,9 +151,24 @@ namespace Nekoyume.UI
                 Debug.Log("[CodeReaderView] Camera permission granted.");
             }
 #elif UNITY_IOS
-            if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
+            if (Application.HasUserAuthorization(UserAuthorization.WebCam))
             {
+                NcDebug.Log("[CodeReaderView] Camera permission already granted.");
+            }
+            else
+            {
+                NcDebug.Log("[CodeReaderView] Request camera permission.");
                 yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
+
+                if (Application.HasUserAuthorization(UserAuthorization.WebCam))
+                {
+                    NcDebug.Log("[CodeReaderView] Camera permission granted.");
+                }
+                else
+                {
+                    NcDebug.Log("[CodeReaderView] Camera permission already denied.");
+                    OpenSystemSettingsAndQuit();
+                }
             }
 #endif
 
@@ -98,7 +179,7 @@ namespace Nekoyume.UI
 
         private IEnumerator CoScanQrCode(Action<Result> onSuccess = null)
         {
-            Debug.Log("[CodeReaderView] CoScanQrCode start.");
+            NcDebug.Log("[CodeReaderView] CoScanQrCode start.");
             var rect = rawCamImage.rectTransform.rect;
             // NOTE: WebCamTexture need to construct after the camera permission granted.
             _camTexture = new WebCamTexture
@@ -121,10 +202,10 @@ namespace Nekoyume.UI
                 //       It may occur by native reasons.
                 if (!_camTexture.isPlaying)
                 {
-                    Debug.Log("[CodeReaderView] WebCamTexture is not playing. Now start playing and wait for playing.");
+                    NcDebug.Log("[CodeReaderView] WebCamTexture is not playing. Now start playing and wait for playing.");
                     _camTexture.Play();
                     yield return new WaitUntil(() => _camTexture.isPlaying);
-                    Debug.Log("[CodeReaderView] WebCamTexture is playing.");
+                    NcDebug.Log("[CodeReaderView] WebCamTexture is playing.");
                 }
 
                 var localScale = rawCamImage.rectTransform.localScale;
@@ -144,10 +225,10 @@ namespace Nekoyume.UI
                             _camTexture.Stop();
                         }
 
-                        Debug.Log("[CodeReaderView] QR code detected." +
+                        NcDebug.Log("[CodeReaderView] QR code detected." +
                                   $" Text: {result.Text}" +
                                   $", Format: {result.BarcodeFormat}");
-                        Debug.Log("[CodeReaderView] CoRequestPermission end.");
+                        NcDebug.Log("[CodeReaderView] CoRequestPermission end.");
                         onSuccess?.Invoke(result);
                     }
                 }
@@ -158,8 +239,12 @@ namespace Nekoyume.UI
                         _camTexture.Stop();
                     }
 
-                    Debug.LogError($"[CodeReaderView] Exception: {ex.Message}");
-                    Debug.LogException(ex);
+                    OneLineSystem.Push(
+                        MailType.System,
+                        L10nManager.Localize("ERROR_IMPORTKEY_SCANIMAGE"),
+                        NotificationCell.NotificationType.Alert);
+
+                    NcDebug.LogException(ex);
                     // Don't invoke onSuccess? with null. Just try again.
                 }
 
@@ -169,21 +254,21 @@ namespace Nekoyume.UI
 
         private void OnPermissionDenied(string permission)
         {
-            Debug.Log($"[CodeReaderView] OnPermissionDenied: {permission}");
+            NcDebug.Log($"[CodeReaderView] OnPermissionDenied: {permission}");
             _cameraPermissionState = PermissionState.Denied;
             OpenSystemSettingsAndQuit();
         }
 
         private void OnPermissionDeniedAndDontAskAgain(string permission)
         {
-            Debug.Log($"[CodeReaderView] OnPermissionDeniedAndDontAskAgain: {permission}");
+            NcDebug.Log($"[CodeReaderView] OnPermissionDeniedAndDontAskAgain: {permission}");
             _cameraPermissionState = PermissionState.DeniedAndDontAskAgain;
             OpenSystemSettingsAndQuit();
         }
 
         private void OnPermissionGranted(string permission)
         {
-            Debug.Log($"[CodeReaderView] OnPermissionGranted: {permission}");
+            NcDebug.Log($"[CodeReaderView] OnPermissionGranted: {permission}");
             _cameraPermissionState = PermissionState.Granted;
         }
 
@@ -199,19 +284,23 @@ namespace Nekoyume.UI
                 confirmText: L10nManager.Localize("BTN_OPEN_SYSTEM_SETTINGS"),
                 confirmCallback: () =>
                 {
-                    Debug.Log("[CodeReaderView] Open system settings.");
+#if UNITY_ANDROID
+                    NcDebug.Log("[CodeReaderView] Open system settings.");
                     _shouldRequestPermissionWhenApplicationFocusedIn = true;
                     SystemSettingsOpener.OpenApplicationDetailSettings();
+#elif UNITY_IOS
+                    Application.Quit();
+#endif
                 });
         }
 
         public void OnApplicationFocus(bool hasFocus)
         {
-            Debug.Log($"[CodeReaderView] OnApplicationFocus: {hasFocus}");
+            NcDebug.Log($"[CodeReaderView] OnApplicationFocus: {hasFocus}");
             if (hasFocus && _shouldRequestPermissionWhenApplicationFocusedIn)
             {
                 _shouldRequestPermissionWhenApplicationFocusedIn = false;
-                Debug.Log("[CodeReaderView] Request camera permission.(Retry)");
+                NcDebug.Log("[CodeReaderView] Request camera permission.(Retry)");
                 Permission.RequestUserPermission(
                     Permission.Camera,
                     _permissionCallbacks);

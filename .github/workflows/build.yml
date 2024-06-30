@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
@@ -30,7 +30,7 @@ jobs:
   build:
     name: Build for ${{ matrix.targetPlatform }}
     runs-on:
-      labels: ["linux", "8cores"]
+      group: linux-8cores
     defaults:
         run:
           shell: bash
@@ -58,7 +58,7 @@ jobs:
             Library-${{ matrix.projectPath }}-ubuntu-
             Library-
 
-      - uses: game-ci/unity-builder@v2
+      - uses: game-ci/unity-builder@v4
         with:
           projectPath: ${{ matrix.projectPath }}
           targetPlatform: ${{ matrix.targetPlatform }}
@@ -166,6 +166,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
           AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
+          NAVER_CLOUD_ACCESS_KEY: ${{ secrets.NAVER_CLOUD_ACCESS_KEY }}
+          NAVER_CLOUD_SECRET_KEY: ${{ secrets.NAVER_CLOUD_SECRET_KEY }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           ESIGNER_CREDENTIAL_ID: ${{ secrets.ESIGNER_CREDENTIAL_ID }}
           ESIGNER_USERNAME: ${{ secrets.ESIGNER_USERNAME }}
@@ -200,4 +202,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
           AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
+          NAVER_CLOUD_ACCESS_KEY: ${{ secrets.NAVER_CLOUD_ACCESS_KEY }}
+          NAVER_CLOUD_SECRET_KEY: ${{ secrets.NAVER_CLOUD_SECRET_KEY }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

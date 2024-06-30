@@ -90,8 +90,53 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
         //     //request to purchase to IAPService if there are missing receipts.
         // }
 
+        public async Task CheckProductAvailable(string productSku, Address agentAddr, string planetId, Action success, Action failed)
+        {
+            var categoryList = await GetProductsAsync(agentAddr, planetId);
+            if(categoryList == null)
+            {
+                failed();
+                return;
+            }
+
+            ProductSchema? selectedProduct = null;
+            foreach (var category in categoryList)
+            {
+                foreach (var product in category.ProductList)
+                {
+                    if (product.Sku == productSku)
+                    {
+                        selectedProduct = product;
+                        if(product.Active && product.Buyable)
+                        {
+                            success();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            if (selectedProduct != null)
+            {
+                Debug.LogError($"CheckProductAvailable Fail {productSku} Active:{selectedProduct.Active} Buyable:{selectedProduct.Buyable}");
+            }
+            else
+            {
+                Debug.LogError($"CheckProductAvailable Fail can't find {productSku}");
+            }
+            failed();
+
+            return;
+        }
+
         public async Task<IReadOnlyList<CategorySchema>?> GetProductsAsync(Address agentAddr, string planetId)
         {
+            if (string.IsNullOrEmpty(planetId))
+            {
+                Debug.LogWarning("planetId is null or empty.");
+                return null;
+            }
+
             if (!IsInitialized)
             {
                 Debug.LogWarning("IAPServiceManager is not initialized.");
@@ -217,6 +262,74 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             }
         }
 
+        public async Task<ReceiptDetailSchema?> PurchaseFreeAsync(
+            string agentAddr,
+            string avatarAddr,
+            string planetId,
+            string sku)
+        {
+            if (!IsInitialized)
+            {
+                Debug.LogWarning("IAPServiceManager is not initialized.");
+                return null;
+            }
+
+            var (code, error, mediaType, content) =
+                await _client.PurchaseFreeAsync(
+                    _store,
+                    agentAddr,
+                    avatarAddr,
+                    planetId,
+                    sku);
+            if (code != HttpStatusCode.OK ||
+                !string.IsNullOrEmpty(error))
+            {
+                Debug.LogError(
+                    $"Purchase Free failed: {code}, {sku}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            if (mediaType != "application/json")
+            {
+                Debug.LogError(
+                    $"Unexpected media type: {code}, {sku}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                Debug.LogError(
+                    $"Content is empty: {code}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            try
+            {
+                var result = JsonSerializer.Deserialize<ReceiptDetailSchema>(
+                    content!,
+                    IAPServiceClient.JsonSerializerOptions)!;
+                // NOTE: Enable this code if you want to use cache.
+                // _cache.PurchaseProcessResults[result.Uuid] = result;
+                if (result.Status == ReceiptStatus.Invalid ||
+                    result.Status == ReceiptStatus.Unknown)
+                {
+                    UnregisterAndCache(result);
+                }
+                // NOTE: Enable this code if you want to use poller.
+                // else
+                // {
+                //     _poller.Register(result.Uuid);
+                // }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return null;
+            }
+        }
+
         public async Task<Dictionary<string, ReceiptDetailSchema?>?> PurchaseStatusAsync(
             HashSet<string> uuids)
         {
@@ -254,6 +367,61 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
                 return JsonSerializer.Deserialize<Dictionary<string, ReceiptDetailSchema?>>(
                     content!,
                     IAPServiceClient.JsonSerializerOptions)!;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return null;
+            }
+        }
+
+        public async Task<string?> PurchaseLogAsync(
+            string agentAddr,
+            string avatarAddr,
+            string planetId,
+            string productId,
+            string orderId,
+            string data)
+        {
+            if (!IsInitialized)
+            {
+                Debug.LogWarning("IAPServiceManager is not initialized.");
+                return null;
+            }
+
+            var (code, error, mediaType, content) =
+                await _client.PurchaseLogAsync(
+                    agentAddr,
+                    avatarAddr,
+                    planetId,
+                    productId,
+                    orderId,
+                    data);
+            if (code != HttpStatusCode.OK ||
+                !string.IsNullOrEmpty(error))
+            {
+                Debug.LogError(
+                    $"Purchase failed: {code}, {productId}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            if (mediaType != "application/json")
+            {
+                Debug.LogError(
+                    $"Unexpected media type: {code}, {productId}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                Debug.LogError(
+                    $"Content is empty: {code}, {error}, {mediaType}, {content}");
+                return null;
+            }
+
+            try
+            {
+                return content;
             }
             catch (Exception e)
             {

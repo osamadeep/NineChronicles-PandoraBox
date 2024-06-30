@@ -14,6 +14,7 @@ using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Nekoyume.UI
@@ -36,8 +37,7 @@ namespace Nekoyume.UI
             public CraftType Type;
             public GameObject Icon;
             public GameObject OptionContainer;
-            public TextMeshProUGUI ItemLevel;
-            public ItemOptionView MainStatView;
+            public List<ItemOptionView> MainStatViews;
             public List<ItemOptionWithCountView> StatOptions;
             public List<ItemOptionView> SkillOptions;
         }
@@ -162,7 +162,7 @@ namespace Nekoyume.UI
                     SetEnhancementOption(GetInformation(type), ie);
                     break;
                 default:
-                    Debug.LogError(
+                    NcDebug.LogError(
                         $"[{nameof(CombinationSlotPopup)}] Not supported type. {slotState.Result.GetType().FullName}");
                     break;
             }
@@ -174,24 +174,33 @@ namespace Nekoyume.UI
         {
             if (!resultModel.itemUsable.TryGetOptionInfo(out var itemOptionInfo))
             {
-                Debug.LogError("Failed to create ItemOptionInfo");
+                NcDebug.LogError("Failed to create ItemOptionInfo");
                 return;
             }
 
             // Consumable case
             if (!resultModel.subRecipeId.HasValue)
             {
-                var (type, value, _) = itemOptionInfo.StatOptions[0];
-                information.MainStatView.UpdateView(
-                    $"{type} {type.ValueToString(value)}",
-                    string.Empty);
+                for (var i = 0; i < information.MainStatViews.Count; i++)
+                {
+                    var mainStatView = information.MainStatViews[i];
+                    if (i >= itemOptionInfo.StatOptions.Count)
+                    {
+                        mainStatView.Hide();
+                        continue;
+                    }
+
+                    var (type, value, _) = itemOptionInfo.StatOptions[i];
+                    mainStatView.UpdateView($"{type} {type.ValueToString(value)}", string.Empty);
+                    mainStatView.Show();
+                }
 
                 return;
             }
 
             var statType = itemOptionInfo.MainStat.type;
             var statValueString = statType.ValueToString(itemOptionInfo.MainStat.totalValue);
-            information.MainStatView.UpdateView($"{statType} {statValueString}", string.Empty);
+            information.MainStatViews[0].UpdateView($"{statType} {statValueString}", string.Empty);
 
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
@@ -230,42 +239,42 @@ namespace Nekoyume.UI
         {
             if (resultModel.itemUsable is not Equipment equipment)
             {
-                Debug.LogError("resultModel.itemUsable is not Equipment");
+                NcDebug.LogError("resultModel.itemUsable is not Equipment");
                 return;
             }
 
-            information.ItemLevel.text = $"+{equipment.level}";
             var sheet = Game.instance.TableSheets.EnhancementCostSheetV2;
             var grade = equipment.Grade;
             var level = equipment.level;
             var row = sheet.OrderedList.FirstOrDefault(x => x.Grade == grade && x.Level == level);
             if (row is null)
             {
-                Debug.LogError($"Not found row: {nameof(EnhancementCostSheetV2)} Grade({grade}) Level({level})");
+                NcDebug.LogError($"Not found row: {nameof(EnhancementCostSheetV2)} Grade({grade}) Level({level})");
                 return;
             }
 
             if (!resultModel.itemUsable.TryGetOptionInfo(out var itemOptionInfo))
             {
-                Debug.LogError("Failed to create ItemOptionInfo");
+                NcDebug.LogError("Failed to create ItemOptionInfo");
                 return;
             }
 
             var format = "{0} +({1:N0}% - {2:N0}%)";
+            var mainStatView = information.MainStatViews[0];
             if (row.BaseStatGrowthMin == 0 && row.BaseStatGrowthMax == 0)
             {
-                information.MainStatView.Hide();
+                mainStatView.Hide();
             }
             else
             {
-                information.MainStatView.UpdateView(
+                mainStatView.UpdateView(
                     string.Format(
                         format,
                         itemOptionInfo.MainStat.type,
                         row.BaseStatGrowthMin.NormalizeFromTenThousandths() * 100,
                         row.BaseStatGrowthMax.NormalizeFromTenThousandths() * 100),
                     string.Empty);
-                information.MainStatView.Show();
+                mainStatView.Show();
             }
 
             for (var i = 0; i < information.StatOptions.Count; i++)
@@ -319,20 +328,18 @@ namespace Nekoyume.UI
         {
             if (resultModel.itemUsable is not Equipment equipment)
             {
-                Debug.LogError("resultModel.itemUsable is not Equipment");
+                NcDebug.LogError("resultModel.itemUsable is not Equipment");
                 return;
             }
 
             if (resultModel.preItemUsable is not Equipment preEquipment)
             {
-                Debug.LogError("resultModel.preItemUsable is not Equipment");
+                NcDebug.LogError("resultModel.preItemUsable is not Equipment");
                 return;
             }
 
             var itemOptionInfoPre = new ItemOptionInfo(preEquipment);
             var itemOptionInfo = new ItemOptionInfo(equipment);
-
-            information.ItemLevel.text = $"+{equipment.level}";
 
             var statType = itemOptionInfo.MainStat.type;
             var statValueString = statType.ValueToString(itemOptionInfo.MainStat.totalValue);
@@ -341,10 +348,11 @@ namespace Nekoyume.UI
                 itemOptionInfo.MainStat.totalValue);
             var statRateString = statRate > 0 ? $" (+{statRate}%)" : string.Empty;
 
-            information.MainStatView.UpdateView(
+            var mainStatView = information.MainStatViews[0];
+            mainStatView.UpdateView(
                 $"{statType} {statValueString}{statRateString}",
                 string.Empty);
-            information.MainStatView.Show();
+            mainStatView.Show();
 
             for (var i = 0; i < information.StatOptions.Count; i++)
             {
@@ -379,7 +387,7 @@ namespace Nekoyume.UI
 
                 var (skillRow, power, chance, ratio, type) = itemOptionInfo.SkillOptions[i];
                 var (_, prePower, preChance, preRatio, _) = itemOptionInfoPre.SkillOptions[i];
-                int powerRate = 0;
+                long powerRate = 0;
 
                 if (prePower != power)
                 {
@@ -461,9 +469,9 @@ namespace Nekoyume.UI
             return _informations.FirstOrDefault(x => x.Type.Equals(type));
         }
 
-        private static int RateOfChange(decimal previous, decimal current)
+        private static long RateOfChange(decimal previous, decimal current)
         {
-            return (int)Math.Round((current - previous) / previous * 100);
+            return (long)Math.Round((current - previous) / previous * 100);
         }
     }
 }

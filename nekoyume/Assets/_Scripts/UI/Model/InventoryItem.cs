@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
+using System.Numerics;
 using Libplanet.Types.Assets;
+using Nekoyume.Action;
 using Nekoyume.Model.Item;
 using Nekoyume.Model.State;
 using UniRx;
@@ -20,9 +23,9 @@ namespace Nekoyume.UI.Model
         public readonly ReactiveProperty<bool> Selected;
         public readonly ReactiveProperty<bool> Focused;
         public readonly ReactiveProperty<bool> HasNotification;
-        public readonly ReactiveProperty<int> GrindingCount;
         public readonly ReactiveProperty<bool> Disabled;
-        public readonly Subject<bool> GrindingCountEnabled;
+        public readonly ReactiveProperty<bool> GrindingCountEnabled;
+        public readonly ReactiveProperty<bool> CollectionSelected;
 
         public InventoryItem(ItemBase itemBase, int count, bool limited, bool tradable)
         {
@@ -35,9 +38,9 @@ namespace Nekoyume.UI.Model
             Selected = new ReactiveProperty<bool>(false);
             Focused = new ReactiveProperty<bool>(false);
             HasNotification = new ReactiveProperty<bool>(false);
-            GrindingCount = new ReactiveProperty<int>(0);
             Disabled = new ReactiveProperty<bool>(false);
-            GrindingCountEnabled = new Subject<bool>();
+            GrindingCountEnabled = new ReactiveProperty<bool>(false);
+            CollectionSelected = new ReactiveProperty<bool>(false);
         }
 
         public InventoryItem(RuneState runeState)
@@ -51,26 +54,26 @@ namespace Nekoyume.UI.Model
             Selected = new ReactiveProperty<bool>(false);
             Focused = new ReactiveProperty<bool>(false);
             HasNotification = new ReactiveProperty<bool>(false);
-            GrindingCount = new ReactiveProperty<int>(0);
             Disabled = new ReactiveProperty<bool>(false);
-            GrindingCountEnabled = new Subject<bool>();
+            GrindingCountEnabled = new ReactiveProperty<bool>(false);
+            CollectionSelected = new ReactiveProperty<bool>(false);
         }
 
         public InventoryItem(FungibleAssetValue fungibleAssetValue)
         {
             FungibleAssetValue = fungibleAssetValue;
-            var count = Convert.ToInt32(fungibleAssetValue.GetQuantityString());
+            var count = MathematicsExtensions.ConvertToInt32(fungibleAssetValue.GetQuantityString());
             Count = new ReactiveProperty<int>(count);
             Equipped = new ReactiveProperty<bool>(false);
             LevelLimited = new ReactiveProperty<bool>(false);
-            Tradable = new ReactiveProperty<bool>(false);
+            Tradable = new ReactiveProperty<bool>(!RegisterProduct.NonTradableTickerCurrencies.Contains(fungibleAssetValue.Currency));
             DimObjectEnabled = new ReactiveProperty<bool>(count <= 0);
             Selected = new ReactiveProperty<bool>(false);
             Focused = new ReactiveProperty<bool>(false);
             HasNotification = new ReactiveProperty<bool>(false);
-            GrindingCount = new ReactiveProperty<int>(0);
             Disabled = new ReactiveProperty<bool>(false);
-            GrindingCountEnabled = new Subject<bool>();
+            GrindingCountEnabled = new ReactiveProperty<bool>(false);
+            CollectionSelected = new ReactiveProperty<bool>(false);
         }
     }
 

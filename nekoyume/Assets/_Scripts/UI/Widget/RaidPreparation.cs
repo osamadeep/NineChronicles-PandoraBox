@@ -20,7 +20,10 @@ using Libplanet.Action;
 using Libplanet.Types.Assets;
 using Nekoyume.Battle;
 using Nekoyume.EnumType;
+using Nekoyume.Game;
+using Nekoyume.Game.Battle;
 using Nekoyume.Model.EnumType;
+using UnityEngine.Serialization;
 using Toggle = UnityEngine.UI.Toggle;
 
 namespace Nekoyume.UI
@@ -78,7 +81,7 @@ namespace Nekoyume.UI
         private GameObject coverToBlockClick = null;
 
         [SerializeField]
-        private GameObject blockStartingTextObject;
+        private TMP_Text blockStartingText;
 
         [SerializeField]
         private GameObject crystalContainer;
@@ -90,6 +93,8 @@ namespace Nekoyume.UI
         private int _bossId;
         private readonly List<IDisposable> _disposables = new();
         private HeaderMenuStatic _headerMenu;
+
+        private long _txStageBlockIndex;
 
         public override bool CanHandleInputEvent =>
             base.CanHandleInputEvent && startButton.enabled;
@@ -155,9 +160,11 @@ namespace Nekoyume.UI
                 crystalContainer.SetActive(false);
             }
 
-            UpdateStartButton();
-            information.UpdateInventory(BattleType.Raid);
+            UpdateStartButton(currentBlockIndex);
+            Game.Game.instance.Agent.BlockIndexSubject.ObserveOnMainThread()
+                .Subscribe(UpdateStartButton).AddTo(_disposables);
 
+            information.UpdateInventory(BattleType.Raid);
 
             coverToBlockClick.SetActive(false);
 
@@ -187,7 +194,7 @@ namespace Nekoyume.UI
             var row = worldBossListSheet.FindRowByBlockIndex(currentBlockIndex);
             var fee = CrystalCalculator.CalculateEntranceFee(
                 currentAvatarState.level, row.EntranceFee);
-            var cost = Convert.ToInt32(fee.GetQuantityString());
+            var cost = MathematicsExtensions.ConvertToInt32(fee.GetQuantityString());
             return cost;
         }
 
@@ -263,10 +270,12 @@ namespace Nekoyume.UI
             var itemSlotState = States.Instance.CurrentItemSlotStates[BattleType.Raid];
             var equipments = itemSlotState.Equipments;
             var costumes = itemSlotState.Costumes;
-            var runeStates = States.Instance.GetEquippedRuneStates(BattleType.Raid);
+            var allRuneState = States.Instance.AllRuneState;
+            var runeSlotState = States.Instance.CurrentRuneSlotStates[BattleType.Raid];
             var consumables = information.GetEquippedConsumables().Select(x => x.ItemId).ToList();
             var tableSheets = Game.Game.instance.TableSheets;
             var avatarState = States.Instance.CurrentAvatarState;
+            var collectionState = Game.Game.instance.States.CollectionState;
             var items = new List<Guid>();
             items.AddRange(equipments);
             items.AddRange(costumes);
@@ -276,17 +285,23 @@ namespace Nekoyume.UI
                 new PracticeRandom(),
                 avatarState,
                 consumables,
-                runeStates,
+                allRuneState,
+                runeSlotState,
                 tableSheets.GetRaidSimulatorSheets(),
-                tableSheets.CostumeStatSheet
+                tableSheets.CostumeStatSheet,
+                collectionState.GetEffects(tableSheets.CollectionSheet),
+                tableSheets.DeBuffLimitSheet,
+                tableSheets.BuffLinkSheet
             );
             var log = simulator.Simulate();
-            var digest = new ArenaPlayerDigest(avatarState,
+            var digest = new ArenaPlayerDigest(
+                avatarState,
                 itemSlotState.Equipments,
                 itemSlotState.Costumes,
-                runeStates);
+                allRuneState,
+                runeSlotState);
             var raidStage = Game.Game.instance.RaidStage;
-            raidStage.Play(
+            var raidStartData = new RaidStage.RaidStartData(
                 avatarState.address,
                 simulator.BossId,
                 log,
@@ -297,6 +312,8 @@ namespace Nekoyume.UI
                 null,
                 new List<FungibleAssetValue>());
 
+            raidStage.Play(raidStartData);
+
             Find<WorldBoss>().ForceClose();
             Close();
         }
@@ -305,6 +322,7 @@ namespace Nekoyume.UI
         {
             startButton.enabled = false;
             coverToBlockClick.SetActive(true);
+
             var ticketAnimation = ShowMoveTicketAnimation();
             var avatarState = States.Instance.CurrentAvatarState;
             var raiderState = WorldBossStates.GetRaiderState(avatarState.address);
@@ -317,6 +335,8 @@ namespace Nekoyume.UI
             {
                 yield return new WaitWhile(() => ticketAnimation.IsPlaying);
             }
+
+            _txStageBlockIndex = Game.Game.instance.Agent.BlockIndex;
 
             Raid(false);
         }
@@ -398,15 +418,40 @@ namespace Nekoyume.UI
             Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Shop);
         }
 
-        private void UpdateStartButton()
+        /// <summary>
+        /// 마지막으로 Raid 전투를 수행했던 BlockIndex값을 가져옵니다.
+        /// RaidState가 없는경우 0을 리턴합니다.
+        /// </summary>
+        /// <returns>마지막으로 Raid전투를 수행했떤 BlockIndex, raidState가 없는경우 0리턴</returns>
+        private long GetUpdatedRaidBlockIndex()
         {
+            var avatarState = States.Instance.CurrentAvatarState;
+            var raiderState = WorldBossStates.GetRaiderState(avatarState.address);
+            var raidBlockIndex = Math.Max(raiderState?.UpdatedBlockIndex ?? 0, _txStageBlockIndex);
+            return raidBlockIndex;
+        }
+
+        private void UpdateStartButton(long blockIndex)
+        {
+            var worldBossRequiredInterval = States.Instance.GameConfigState.WorldBossRequiredInterval;
+            var isIntervalValid = blockIndex - GetUpdatedRaidBlockIndex() >= worldBossRequiredInterval;
+
             var (equipments, costumes) = States.Instance.GetEquippedItems(BattleType.Raid);
-            var runes = States.Instance.GetEquippedRuneStates(BattleType.Raid)
-                .Select(x=> x.RuneId).ToList();
             var consumables = information.GetEquippedConsumables().Select(x=> x.Id).ToList();
-            var canBattle = Util.CanBattle(equipments, costumes, consumables);
+
+            var isEquipValid = Util.CanBattle(equipments, costumes, consumables);
+            var canBattle = isEquipValid && isIntervalValid;
             startButton.gameObject.SetActive(canBattle);
-            blockStartingTextObject.SetActive(!canBattle);
+            blockStartingText.gameObject.SetActive(!canBattle);
+
+            if (canBattle)
+            {
+                return;
+            }
+
+            blockStartingText.text = isEquipValid
+                ? L10nManager.Localize("UI_BATTLE_INTERVAL", worldBossRequiredInterval)
+                : L10nManager.Localize("UI_EQUIP_FAILED");
         }
     }
 }

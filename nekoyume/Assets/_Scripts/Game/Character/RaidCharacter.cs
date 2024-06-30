@@ -9,6 +9,9 @@ using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.Elemental;
 using System.Linq;
 using System;
+using Cysharp.Threading.Tasks;
+using Nekoyume.Game.Battle;
+using Nekoyume.Helper;
 
 namespace Nekoyume.Game.Character
 {
@@ -25,7 +28,7 @@ namespace Nekoyume.Game.Character
         protected SpeechBubble _speechBubble;
         public HpBar HPBar { get; private set; }
 
-        protected int _currentHp;
+        protected long _currentHp;
 
         protected WorldBossBattle _worldBossBattle;
         protected float _attackTime;
@@ -40,6 +43,8 @@ namespace Nekoyume.Game.Character
         private bool _isAppQuitting = false;
         private readonly Dictionary<int, VFX.VFX> _persistingVFXMap = new();
         protected override Vector3 HUDOffset => base.HUDOffset + new Vector3(0f, 0.35f, 0f);
+
+        private readonly List<int> removedBuffVfxList = new();
 
         protected virtual void Awake()
         {
@@ -98,9 +103,7 @@ namespace Nekoyume.Game.Character
             UpdateStatusUI();
         }
 
-        public virtual void Set(
-            Model.CharacterBase model,
-            bool updateCurrentHP = false)
+        public virtual void Set(Model.CharacterBase model, bool updateCurrentHP = false)
         {
             _characterModel = model;
             if (updateCurrentHP)
@@ -119,7 +122,7 @@ namespace Nekoyume.Game.Character
 
         public virtual void UpdateHpBar()
         {
-            if (!Game.instance.IsInWorld)
+            if (!BattleRenderer.Instance.IsOnBattle)
                 return;
 
             if (!HPBar)
@@ -132,26 +135,32 @@ namespace Nekoyume.Game.Character
             HPBar.Set(_currentHp, _characterModel.AdditionalHP, _characterModel.HP);
             HPBar.SetBuffs(_characterModel.Buffs);
 
-            // delete existing vfx
-            var removedVfx = new List<int>();
-            foreach (var buff in _persistingVFXMap.Keys)
-            {
-                if (Model.IsDead ||
-                    !Model.Buffs.Keys.Contains(buff))
-                {
-                    _persistingVFXMap[buff].LazyStop();
-                    removedVfx.Add(buff);
-                }
-            }
-
-            foreach (var id in removedVfx)
-            {
-                _persistingVFXMap.Remove(id);
-            }
+            UpdateBuffVfx();
 
             HPBar.SetLevel(_characterModel.Level);
 
             //OnUpdateHPBar.OnNext(this);
+        }
+
+        public virtual void UpdateBuffVfx()
+        {
+            // delete existing vfx
+            removedBuffVfxList.Clear();
+            foreach (var buff in _persistingVFXMap.Keys)
+            {
+                if (!Model.IsDead && Model.Buffs.Keys.Contains(buff))
+                {
+                    continue;
+                }
+                _persistingVFXMap[buff].LazyStop();
+                removedBuffVfxList.Add(buff);
+            }
+
+            foreach (var id in removedBuffVfxList)
+            {
+                _persistingVFXMap.Remove(id);
+                OnBuffEnd?.Invoke(id);
+            }
         }
 
         public void DisableHUD()
@@ -181,7 +190,7 @@ namespace Nekoyume.Game.Character
 
         public virtual void UpdateStatusUI()
         {
-            if (!Game.instance.IsInWorld)
+            if (!BattleRenderer.Instance.IsOnBattle)
                 return;
 
             UpdateHpBar();
@@ -236,6 +245,87 @@ namespace Nekoyume.Game.Character
 
                 effect.Play();
                 ProcessAttack(target, info, true);
+            }
+        }
+
+        public IEnumerator CoShatterStrike(IReadOnlyList<Skill.SkillInfo> skillInfos)
+        {
+            if (skillInfos is null || skillInfos.Count == 0)
+                yield break;
+
+            Vector3 effectPos = transform.position + BuffHelper.GetDefaultBuffPosition();
+            var effectObj = Game.instance.Stage.objectPool.Get("ShatterStrike_casting", false, effectPos) ??
+                            Game.instance.Stage.objectPool.Get("ShatterStrike_casting", true, effectPos);
+            var castEffect = effectObj.GetComponent<VFX.VFX>();
+            if (castEffect != null)
+            {
+                castEffect.Play();
+            }
+
+            Animator.Cast();
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
+
+            yield return StartCoroutine(
+                    CoAnimationCastAttack(skillInfos.Any(skillInfo => skillInfo.Critical)));
+
+            for (var i = 0; i < skillInfos.Count; i++)
+            {
+                var info = skillInfos[i];
+                var target = info.Target.Id == Id ? this : _target;
+                if (target is null)
+                    continue;
+
+                Vector3 targetEffectPos = target.transform.position;
+                targetEffectPos.y = Stage.StageStartPosition + 0.32f;
+                var targetEffectObj = Game.instance.Stage.objectPool.Get("ShatterStrike_magical", false, targetEffectPos) ??
+                                Game.instance.Stage.objectPool.Get("ShatterStrike_magical", true, targetEffectPos);
+                var strikeEffect = targetEffectObj.GetComponent<VFX.VFX>();
+                if (strikeEffect is null)
+                    continue;
+                strikeEffect.Play();
+
+                ProcessAttack(target, info, true);
+            }
+        }
+        
+        public IEnumerator CoDoubleAttackWithCombo(
+            IReadOnlyList<Skill.SkillInfo> skillInfos)
+        {
+            if (skillInfos is null ||
+                skillInfos.Count == 0)
+                yield break;
+
+            var skillInfosFirst = skillInfos.First();
+            var skillInfosCount = skillInfos.Count;
+
+            var battleWidget = Widget.Find<Nekoyume.UI.Battle>();
+
+            for (var i = 0; i < skillInfosCount; i++)
+            {
+                var info = skillInfos[i];
+                var target = info.Target.Id == Id ? this : _target;
+                if (target is null)
+                    continue;
+
+                Vector3 effectPos = target.transform.position;
+                effectPos.x += 0.3f;
+                effectPos.y = Stage.StageStartPosition + 0.32f;
+
+                var first = skillInfosFirst == info;
+
+                yield return StartCoroutine(CoAnimationAttack(info.Critical));
+
+                var effectObj = Game.instance.Stage.objectPool.Get($"TwinAttack_0{i + 1}", false, effectPos) ??
+                            Game.instance.Stage.objectPool.Get($"TwinAttack_0{i + 1}", true, effectPos);
+                var effect = effectObj.GetComponent<VFX.VFX>();
+                if (effect != null)
+                {
+                    effect.Play();
+                }
+
+                ProcessAttack(target, info, true);
+                if (this is Player && !(this is EnemyPlayer))
+                    battleWidget.ShowComboText(info.Effect > 0);
             }
         }
 
@@ -359,15 +449,44 @@ namespace Nekoyume.Game.Character
                 skillInfos.Count == 0)
                 yield break;
 
-            yield return StartCoroutine(CoAnimationBuffCast(skillInfos.First()));
+            CastingOnceAsync().Forget();
+            foreach (var skillInfo in skillInfos)
+            {
+                if (skillInfo.Buff == null)
+                    continue;
 
+                yield return StartCoroutine(CoAnimationBuffCast(skillInfo));
+            }
+
+            HashSet<RaidCharacter> dispeledTargets = new HashSet<RaidCharacter>();
             foreach (var info in skillInfos)
             {
                 var target = info.Target.Id == Id ? this : _target;
                 target.ProcessBuff(target, info);
+                if (!info.Affected || (info.DispelList != null && info.DispelList.Count() > 0))
+                {
+                    dispeledTargets.Add(target);
+                }
             }
 
             Animator.Idle();
+
+            if (dispeledTargets.Count > 0)
+            {
+                yield return new WaitForSeconds(.4f);
+            }
+            foreach (var item in dispeledTargets)
+            {
+                Vector3 effectPos = item.transform.position;
+
+                var effectObj = Game.instance.Stage.objectPool.Get("buff_dispel_success", false, effectPos) ??
+                            Game.instance.Stage.objectPool.Get("buff_dispel_success", true, effectPos);
+                var dispellEffect = effectObj.GetComponent<VFX.VFX>();
+                if (dispellEffect != null)
+                {
+                    dispellEffect.Play();
+                }
+            }
         }
 
         public IEnumerator CoHeal(IReadOnlyList<Skill.SkillInfo> skillInfos)
@@ -381,7 +500,7 @@ namespace Nekoyume.Game.Character
             {
                 if (info.Target.Id != Id)
                 {
-                    Debug.LogWarning($"[{nameof(RaidCharacter)}] Heal target is different from expected.");
+                    NcDebug.LogWarning($"[{nameof(RaidCharacter)}] Heal target is different from expected.");
                 }
 
                 ProcessHeal(info);
@@ -399,7 +518,7 @@ namespace Nekoyume.Game.Character
             {
                 if (info.Target?.Id != Id)
                 {
-                    Debug.LogWarning($"[{nameof(RaidCharacter)}] Heal target is different from expected.");
+                    NcDebug.LogWarning($"[{nameof(RaidCharacter)}] Heal target is different from expected.");
                 }
 
                 ProcessHeal(info);
@@ -479,7 +598,7 @@ namespace Nekoyume.Game.Character
             var pos = transform.position;
             var effect = Game.instance.RaidStage.SkillController.Get(pos, info.ElementalType);
             effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
         }
 
         private IEnumerator CoAnimationBuffCast(Skill.SkillInfo info)
@@ -489,8 +608,15 @@ namespace Nekoyume.Game.Character
             Animator.Cast();
             var pos = transform.position;
             var effect = Game.instance.RaidStage.BuffController.Get(pos, info.Buff);
-            effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            if (BuffCastCoroutine.TryGetValue(info.Buff.BuffInfo.Id, out var coroutine))
+            {
+                yield return coroutine.Invoke(effect);
+            }
+            else
+            {
+                effect.Play();
+                yield return new WaitForSeconds(Game.DefaultSkillDelay);
+            }
         }
 
         public void ShowSpeech(string key, params int[] list)
@@ -595,12 +721,15 @@ namespace Nekoyume.Game.Character
             }
 
             var buff = info.Buff;
-            var effect = Game.instance.RaidStage.BuffController.Get<RaidCharacter, BuffVFX>(target, buff);
+            var effect = Game.instance.RaidStage.BuffController.Get<BuffVFX>(target.gameObject, buff);
+            effect.Target = target;
+            effect.Buff = buff;
+
             effect.Play();
             if (effect.IsPersisting)
             {
                 target.AttachPersistingVFX(buff.BuffInfo.GroupId, effect);
-                StartCoroutine(BuffController.CoChaseTarget(effect, target.transform));
+                StartCoroutine(BuffController.CoChaseTarget(effect, target, buff));
             }
 
             target.AddNextBuff(buff);
@@ -649,7 +778,7 @@ namespace Nekoyume.Game.Character
             }
 
             var value = _currentHp - dmg;
-            _currentHp = Mathf.Clamp(value, 0, _characterModel.HP);
+            _currentHp = Math.Clamp(value, 0, _characterModel.HP);
 
             Animator.Hit();
             UpdateStatusUI();

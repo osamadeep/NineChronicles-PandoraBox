@@ -2,12 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using BTAI;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Libplanet.Crypto;
+using Nekoyume.Game.Battle;
 using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
 using Nekoyume.Game.VFX.Skill;
+using Nekoyume.Helper;
 using Nekoyume.Model.BattleStatus.Arena;
 using Nekoyume.UI;
 using UnityEngine;
@@ -17,7 +21,7 @@ using Nekoyume.Model.Item;
 
 namespace Nekoyume.Game.Character
 {
-    using Nekoyume.Model;
+    using Model;
     using UniRx;
 
     public class ArenaCharacter : Character
@@ -38,16 +42,20 @@ namespace Nekoyume.Game.Character
         private HudContainer _hudContainer;
         private SpeechBubble _speechBubble;
         private Root _root;
+        // TODO: 어디에 쓰는것인지 모르겠음
         private bool _forceStop;
-        private int _currentHp;
+        private long _currentHp;
         private readonly List<Costume> _costumes = new List<Costume>();
         private readonly List<Equipment> _equipments = new List<Equipment>();
         private readonly Dictionary<int, VFX.VFX> _persistingVFXMap = new();
 
-        public List<ArenaActionParams> Actions { get; } = new List<ArenaActionParams>();
+        private readonly Queue<ArenaActionParams> _actionQueue = new();
+        
         public Pet Pet => appearance.Pet;
 
         private bool IsDead => _currentHp <= 0;
+
+        private readonly List<int> removedBuffVfxList = new();
 
         private void Awake()
         {
@@ -74,6 +82,7 @@ namespace Nekoyume.Game.Character
                 vfx.gameObject.SetActive(false);
             }
             _persistingVFXMap.Clear();
+            _actionQueue.Clear();
         }
 
         public void Init(
@@ -82,6 +91,7 @@ namespace Nekoyume.Game.Character
             ArenaCharacter target,
             bool isEnemy)
         {
+            IsFlipped = isEnemy;
             gameObject.SetActive(true);
             transform.localPosition = new Vector3(isEnemy ? StartPos : -StartPos, -1.2f, 0);
 
@@ -119,28 +129,32 @@ namespace Nekoyume.Game.Character
 
         public void UpdateStatusUI()
         {
-            if (!Game.instance.IsInWorld)
+            if (!BattleRenderer.Instance.IsOnBattle)
                 return;
 
             _hudContainer.UpdatePosition(ActionCamera.instance.Cam, gameObject, HUDOffset);
             _arenaBattle.UpdateStatus(CharacterModel.IsEnemy, _currentHp, CharacterModel.HP, CharacterModel.Buffs);
+            UpdateBuffVfx();
+        }
 
-
+        public virtual void UpdateBuffVfx()
+        {
             // delete existing vfx
-            var removedVfx = new List<int>();
+            removedBuffVfxList.Clear();
             foreach (var buff in _persistingVFXMap.Keys)
             {
-                if (CharacterModel.IsDead ||
-                    !CharacterModel.Buffs.Keys.Contains(buff))
+                if (!CharacterModel.IsDead && CharacterModel.Buffs.Keys.Contains(buff))
                 {
-                    _persistingVFXMap[buff].LazyStop();
-                    removedVfx.Add(buff);
+                    continue;
                 }
+                _persistingVFXMap[buff].LazyStop();
+                removedBuffVfxList.Add(buff);
             }
 
-            foreach (var id in removedVfx)
+            foreach (var id in removedBuffVfxList)
             {
                 _persistingVFXMap.Remove(id);
+                OnBuffEnd?.Invoke(id);
             }
         }
 
@@ -217,7 +231,7 @@ namespace Nekoyume.Game.Character
             _root = new Root();
             _root.OpenBranch(
                 BT.Selector().OpenBranch(
-                    BT.If(() => Actions.Any()).OpenBranch(
+                    BT.If(() => _actionQueue.Any()).OpenBranch(
                         BT.Call(ExecuteAction)
                     )
                 )
@@ -231,36 +245,64 @@ namespace Nekoyume.Game.Character
 
         private IEnumerator CoExecuteAction()
         {
-            if (_runningAction is null)
+            if (_runningAction is not null)
             {
-                _runningAction = Actions.First();
+                yield break;
+            }
+            _runningAction = _actionQueue.Dequeue();
 
-                var arena = Game.instance.Arena;
-                var waitSeconds = StageConfig.instance.actionDelay;
+            var cts = new CancellationTokenSource();
+            ActionTimer(cts).Forget();
 
-                foreach (var info in _runningAction.skillInfos)
+            foreach (var info in _runningAction.skillInfos)
+            {
+                var target = info.Target;
+                if (!target.IsDead)
                 {
-                    if (info.Target is Model.ArenaCharacter arenaCharacter)
-                    {
-                        if (arenaCharacter.IsDead)
-                        {
-                            var target = info.Target.Id == Id ? this : _target;
-                            if (target.Actions.Any())
-                            {
-                                var time = Time.time;
-                                yield return new WaitWhile(() =>
-                                    Time.time - time > 10f || target.Actions.Any());
-                            }
-                        }
-                    }
+                    continue;
+                }
+                
+                var targetActor = info.Target.Id == Id ? this : _target;
+                if (!targetActor || targetActor == this || !targetActor.HasAction())
+                {
+                    continue;
                 }
 
-                yield return new WaitForSeconds(waitSeconds);
-                var coroutine = StartCoroutine(arena.CoSkill(_runningAction));
-                yield return coroutine;
-                Actions.Remove(_runningAction);
-                _runningAction = null;
+                var time = Time.time;
+                yield return new WaitUntil(() => Time.time - time > 10f || !targetActor.HasAction());
+                if (Time.time - time > 10f)
+                {
+                    NcDebug.LogError($"[{nameof(ArenaCharacter)}] CoExecuteAction Timeout. {gameObject.name}");
+                    break;
+                }
             }
+
+            yield return new WaitForSeconds(StageConfig.instance.actionDelay);
+            if (_runningAction != null)
+            {
+                yield return StartCoroutine(Game.instance.Arena.CoSkill(_runningAction));
+            }
+            _runningAction = null;
+            // TODO: ForceStop??
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        private async UniTask ActionTimer(CancellationTokenSource cts)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(15), cancellationToken: cts.Token);
+            NcDebug.LogWarning($"[{nameof(ArenaCharacter)}] ActionTimer Timeout. {gameObject.name}");
+            _runningAction = null;
+        }
+
+        public bool HasAction()
+        {
+            return _actionQueue.Any() || _runningAction is not null;
+        }
+
+        public void AddAction(ArenaActionParams actionParams)
+        {
+            _actionQueue.Enqueue(actionParams);
         }
 
         private void ProcessAttack(ArenaCharacter target, ArenaSkill.ArenaSkillInfo skill, bool isConsiderElementalType)
@@ -286,7 +328,7 @@ namespace Nekoyume.Game.Character
             }
 
             var value = _currentHp - dmg;
-            _currentHp = Mathf.Clamp(value, 0, CharacterModel.HP);
+            _currentHp = Math.Clamp(value, 0, CharacterModel.HP);
 
             UpdateStatusUI();
             PopUpDmg(position, force, info, isConsiderElementalType);
@@ -316,13 +358,18 @@ namespace Nekoyume.Game.Character
             }
 
             var buff = info.Buff;
-            var effect = Game.instance.Arena.BuffController.Get<ArenaCharacter, BuffVFX>(target, buff);
+            var effect = Game.instance.Arena.BuffController.Get<BuffVFX>(target.gameObject, buff);
+            effect.Target = target;
+            effect.Buff = buff;
+
             effect.Play();
             if (effect.IsPersisting)
             {
                 target.AttachPersistingVFX(buff.BuffInfo.GroupId, effect);
-                StartCoroutine(BuffController.CoChaseTarget(effect, target.transform));
+                StartCoroutine(BuffController.CoChaseTarget(effect, target, buff));
             }
+
+            OnBuff?.Invoke(buff.BuffInfo.GroupId);
 
             target.CharacterModel = info.Target;
         }
@@ -406,18 +453,25 @@ namespace Nekoyume.Game.Character
             var pos = transform.position;
             var effect = Game.instance.Arena.SkillController.Get(pos, info.ElementalType);
             effect.Play();
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
         }
 
         private IEnumerator CoAnimationBuffCast(ArenaSkill.ArenaSkillInfo info)
         {
             var sfxCode = AudioController.GetElementalCastingSFX(info.ElementalType);
             AudioController.instance.PlaySfx(sfxCode);
-            Animator.Cast();
             var pos = transform.position;
             var effect = Game.instance.Arena.BuffController.Get(pos, info.Buff);
-            effect.Play();
-            yield return new WaitForSeconds(0.6f);
+
+            if (BuffCastCoroutine.TryGetValue(info.Buff.BuffInfo.Id, out var coroutine))
+            {
+                yield return coroutine.Invoke(effect);
+            }
+            else
+            {
+                effect.Play();
+                yield return new WaitForSeconds(Game.DefaultSkillDelay);
+            }
         }
         #endregion
 
@@ -489,6 +543,82 @@ namespace Nekoyume.Game.Character
             else
             {
                 yield return StartCoroutine(CoAnimationCastBlow(skillInfos));
+            }
+        }
+
+        public IEnumerator CoShatterStrike(IReadOnlyList<ArenaSkill.ArenaSkillInfo> skillInfos)
+        {
+            if (skillInfos is null ||
+                skillInfos.Count == 0)
+                yield break;
+
+            ActionPoint = () =>
+            {
+                for (var i = 0; i < skillInfos.Count; i++)
+                {
+                    var info = skillInfos[i];
+                    var target = info.Target.Id == Id ? this : _target;
+                    if (target is null)
+                        continue;
+
+                    Vector3 targetEffectPos = target.transform.position + BuffHelper.GetDefaultBuffPosition();
+                    var targetEffectObj = Game.instance.Stage.objectPool.Get("ShatterStrike_magical", false, targetEffectPos) ??
+                                    Game.instance.Stage.objectPool.Get("ShatterStrike_magical", true, targetEffectPos);
+                    var strikeEffect = targetEffectObj.GetComponent<VFX.VFX>();
+                    if (strikeEffect is null)
+                        continue;
+                    strikeEffect.Play();
+
+                    ProcessAttack(target, info, false);
+                }
+            };
+
+            Vector3 effectPos = transform.position + BuffHelper.GetDefaultBuffPosition();
+            var effectObj = Game.instance.Stage.objectPool.Get("ShatterStrike_casting", false, effectPos) ??
+                            Game.instance.Stage.objectPool.Get("ShatterStrike_casting", true, effectPos);
+            var castEffect = effectObj.GetComponent<VFX.VFX>();
+            if (castEffect != null)
+            {
+                castEffect.Play();
+            }
+
+            Animator.Cast();
+            yield return new WaitForSeconds(Game.DefaultSkillDelay);
+
+            yield return StartCoroutine(
+                    CoAnimationCastAttack(skillInfos.Any(skillInfo => skillInfo.Critical)));
+        }
+
+        public IEnumerator CoDoubleAttackWithCombo(IReadOnlyList<ArenaSkill.ArenaSkillInfo> skillInfos)
+        {
+            if (skillInfos is null || skillInfos.Count == 0)
+            {
+                yield break;
+            }
+
+            var skillInfosCount = skillInfos.Count;
+            for (var i = 0; i < skillInfosCount; i++)
+            {
+                var info = skillInfos[i];
+                ActionPoint = () =>
+                {
+                    var target = info.Target.Id == Id ? this : _target;
+
+                    Vector3 effectPos = target.transform.position;
+                    effectPos.x += 0.3f;
+                    effectPos.y = Stage.StageStartPosition + 0.32f;
+
+                    var effectObj = Game.instance.Stage.objectPool.Get($"TwinAttack_{i + 1:D2}", false, effectPos) ??
+                    Game.instance.Stage.objectPool.Get($"TwinAttack_0{i + 1}", true, effectPos);
+                    var effect = effectObj.GetComponent<VFX.VFX>();
+                    if (effect != null)
+                    {
+                        effect.Play();
+                    }
+
+                    ProcessAttack(target, info, true);
+                };
+                yield return StartCoroutine(CoAnimationAttack(info.Critical));
             }
         }
 
@@ -643,15 +773,42 @@ namespace Nekoyume.Game.Character
                 skillInfos.Count == 0)
                 yield break;
 
-            yield return StartCoroutine(CoAnimationBuffCast(skillInfos.First()));
+            CastingOnceAsync().Forget();
+            foreach (var skillInfo in skillInfos)
+            {
+                if (skillInfo.Buff == null)
+                    continue;
 
+                yield return StartCoroutine(CoAnimationBuffCast(skillInfo));
+            }
+
+            HashSet<ArenaCharacter> dispeledTargets = new HashSet<ArenaCharacter>();
             foreach (var info in skillInfos)
             {
                 var target = info.Target.Id == Id ? this : _target;
                 target.ProcessBuff(target, info);
+                if (!info.Affected || (info.DispelList != null && info.DispelList.Count() > 0))
+                {
+                    dispeledTargets.Add(target);
+                }
             }
 
-            Animator.Idle();
+            if (dispeledTargets.Count > 0)
+            {
+                yield return new WaitForSeconds(.4f);
+            }
+            foreach (var item in dispeledTargets)
+            {
+                Vector3 effectPos = item.transform.position;
+
+                var effectObj = Game.instance.Stage.objectPool.Get("buff_dispel_success", false, effectPos) ??
+                            Game.instance.Stage.objectPool.Get("buff_dispel_success", true, effectPos);
+                var dispellEffect = effectObj.GetComponent<VFX.VFX>();
+                if (dispellEffect != null)
+                {
+                    dispellEffect.Play();
+                }
+            }
         }
 
         public IEnumerator CoTickDamage(IReadOnlyList<ArenaSkill.ArenaSkillInfo> skillInfos)
@@ -660,15 +817,20 @@ namespace Nekoyume.Game.Character
                 skillInfos.Count == 0)
                 yield break;
 
-            yield return StartCoroutine(CoAnimationBuffCast(skillInfos.First()));
+            CastingOnceAsync().Forget();
+            foreach (var skillInfo in skillInfos)
+            {
+                if (skillInfo.Buff == null)
+                    continue;
+
+                yield return StartCoroutine(CoAnimationBuffCast(skillInfo));
+            }
 
             foreach (var info in skillInfos)
             {
                 var target = info.Target.Id == Id ? this : _target;
                 target.ProcessBuff(target, info);
             }
-
-            Animator.Idle();
         }
 
         #endregion
@@ -680,7 +842,7 @@ namespace Nekoyume.Game.Character
 
         private IEnumerator Dying()
         {
-            yield return new WaitWhile(() => Actions.Any());
+            yield return new WaitWhile(HasAction);
             OnDeadStart();
             yield return new WaitForSeconds(0.2f);
             _speechBubble.gameObject.SetActive(false);
@@ -701,10 +863,11 @@ namespace Nekoyume.Game.Character
         private void OnDeadEnd()
         {
             Animator.Idle();
-            Actions.Clear();
+            _actionQueue.Clear();
             gameObject.SetActive(false);
             _root = null;
             _runningAction = null;
+            _actionQueue.Clear();
         }
     }
 }

@@ -30,6 +30,9 @@ namespace Nekoyume.UI
         [SerializeField]
         private GameObject loadDataScreen;
 
+        [SerializeField]
+        private GameObject emptyCategoryPannel;
+
         private bool _isInitializedObj;
 
         private readonly Dictionary<string, IAPShopProductCellView> _allProductObjs =
@@ -37,6 +40,9 @@ namespace Nekoyume.UI
 
         private readonly Dictionary<string, List<IAPShopProductCellView>> _allProductObjByCategory =
             new Dictionary<string, List<IAPShopProductCellView>>();
+
+        private readonly Dictionary<string, IAPCategoryTab> _allCategoryTab =
+            new Dictionary<string, IAPCategoryTab>();
 
         private Toggle _recommendedToggle;
 
@@ -63,6 +69,18 @@ namespace Nekoyume.UI
             AirbridgeUnity.TrackEvent(evt);
 
             Find<ShopListPopup>().Show(product, purchasingData).Forget();
+        }
+
+        public async void ShowAsTab(string categoryName)
+        {
+            await ShowAsync();
+
+            if (_allCategoryTab.TryGetValue(categoryName, out var categoryTab))
+            {
+                var toggle = categoryTab.GetComponent<Toggle>();
+                // set to true to trigger OnValueChanged
+                toggle.isOn = !toggle.isOn;
+            }
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
@@ -93,6 +111,7 @@ namespace Nekoyume.UI
                             true,
                             IconAndButtonSystem.SystemType.Information);
                     }
+
                     await InitializeObj(categorySchemas);
 
                     _isInitializedObj = true;
@@ -105,7 +124,7 @@ namespace Nekoyume.UI
                         {
                             if (_allProductObjs.TryGetValue(item.Sku, out var cellView))
                             {
-                                cellView.SetData(item, category.Name == RecommendedString);
+                                cellView.SetData(item);
                             }
                         }
                     }
@@ -113,15 +132,27 @@ namespace Nekoyume.UI
             }
             catch (Exception e)
             {
-                Debug.LogError(e.Message);
+                NcDebug.LogError(e.Message);
                 loading.Close();
                 base.Show(ignoreShowAnimation);
                 Close();
-                Find<IconAndButtonSystem>().Show(
-                    "UI_ERROR",
-                    "ERROR_NO_ENTRY_SHOP",
-                    "UI_OK",
-                    true);
+                if (Game.LiveAsset.GameConfig.IsKoreanBuild)
+                {
+                    Find<IconAndButtonSystem>().Show(
+                        "UI_ALERT_NOT_IMPLEMENTED_TITLE",
+                        "UI_ALERT_NOT_IMPLEMENTED_CONTENT",
+                        "UI_OK",
+                        true,
+                        IconAndButtonSystem.SystemType.Information);
+                }
+                else
+                {
+                    Find<IconAndButtonSystem>().Show(
+                        "UI_ERROR",
+                        "ERROR_NO_ENTRY_SHOP",
+                        "UI_OK",
+                        true);
+                }
                 return;
             }
 
@@ -136,6 +167,8 @@ namespace Nekoyume.UI
                 _lastSelectedCategory = RecommendedString;
             }
 
+            RefreshAllCategoryNoti();
+
             AudioController.instance.PlayMusic(AudioController.MusicCode.Shop);
             loading.Close();
         }
@@ -148,26 +181,78 @@ namespace Nekoyume.UI
 
             foreach (var category in renderCategory)
             {
-                var categoryTabObj = Instantiate(originCategoryTab, tabToggleGroup.transform);
-
-                var iconSprite = await Util.DownloadTexture($"{MOBILE_L10N_SCHEMA.Host}/{category.Path}");
-                categoryTabObj.GetComponent<IAPCategoryTab>().SetData(category.L10n_Key, iconSprite);
-
-                categoryTabObj.onObject.SetActive(false);
-                categoryTabObj.offObject.SetActive(true);
-                categoryTabObj.group = tabToggleGroup;
-                tabToggleGroup.RegisterToggle(categoryTabObj);
-                categoryTabObj.onValueChanged.AddListener((isOn) =>
+                if (category == null)
                 {
-                    if (!isOn)
-                    {
-                        return;
-                    }
+                    NcDebug.LogError("category is null");
+                    continue;
+                }
 
-                    AudioController.PlayClick();
-                    RefreshGridByCategory(category.Name);
-                    _lastSelectedCategory = category.Name;
-                });
+                if (_allCategoryTab.ContainsKey(category.Name))
+                {
+                    NcDebug.LogError($"category {category.Name} is already exist");
+                    continue;
+                }
+
+                if (_allProductObjByCategory.ContainsKey(category.Name))
+                {
+                    NcDebug.LogError($"category {category.Name} is already exist");
+                    continue;
+                }
+
+                var categoryTabObj = Instantiate(originCategoryTab, tabToggleGroup.transform);
+                if (categoryTabObj == null)
+                {
+                    NcDebug.LogError("categoryTabObj is null");
+                    continue;
+                }
+
+                Sprite iconSprite = null;
+                try
+                {
+                    iconSprite = await Util.DownloadTexture($"{MOBILE_L10N_SCHEMA.Host}/{category.Path}");
+                }
+                catch (Exception e)
+                {
+                    NcDebug.LogError(e.Message);
+                    NcDebug.LogError($"Failed to download icon: {category.Path}");
+                }
+
+                var categoryTab = categoryTabObj.GetComponent<IAPCategoryTab>();
+
+                if (categoryTab == null)
+                {
+                    NcDebug.LogError("categoryTab is null");
+                    continue;
+                }
+
+                categoryTab.SetData(category.L10n_Key, iconSprite);
+
+                try
+                {
+                    categoryTabObj.onObject.SetActive(false);
+                    categoryTabObj.offObject.SetActive(true);
+                    categoryTabObj.group = tabToggleGroup;
+                    tabToggleGroup.RegisterToggle(categoryTabObj);
+                    categoryTabObj.onValueChanged.AddListener((isOn) =>
+                    {
+                        if (!isOn)
+                        {
+                            return;
+                        }
+
+                        AudioController.PlayClick();
+                        RefreshGridByCategory(category.Name);
+                        _lastSelectedCategory = category.Name;
+                    });
+                }
+                catch (Exception e)
+                {
+                    NcDebug.LogError(e.Message);
+                    NcDebug.LogError("Failed to set category tab");
+                    continue;
+                }
+
+                _allCategoryTab.Add(category.Name, categoryTab);
 
                 var productList = category.ProductList
                     .Where(p => p.Active)
@@ -180,7 +265,15 @@ namespace Nekoyume.UI
                     {
                         productObj = Instantiate(originProductCellView, iAPShopDynamicGridLayout.transform);
                         productObj.SetData(product, category.Name == RecommendedString);
-                        await productObj.RefreshLocalized();
+                        try
+                        {
+                            await productObj.RefreshLocalized();
+                        }
+                        catch (Exception e)
+                        {
+                            NcDebug.LogError(e.Message);
+                            NcDebug.LogError($"Failed to refresh localized: {product.Sku}");
+                        }
                         _allProductObjs.Add(product.Sku, productObj);
                     }
 
@@ -201,6 +294,7 @@ namespace Nekoyume.UI
         public static async Task LoadL10Ns()
         {
             MOBILE_L10N_SCHEMA = await Game.Game.instance.IAPServiceManager.L10NAsync();
+            await UniTask.SwitchToMainThread();
             await L10nManager.AdditionalL10nTableDownload($"{MOBILE_L10N_SCHEMA.Host}/{MOBILE_L10N_SCHEMA.Category}");
             await L10nManager.AdditionalL10nTableDownload($"{MOBILE_L10N_SCHEMA.Host}/{MOBILE_L10N_SCHEMA.Product}");
         }
@@ -227,6 +321,17 @@ namespace Nekoyume.UI
             {
                 cell.LocalPurchaseSuccess();
             }
+
+            RefreshAllCategoryNoti();
+        }
+
+        private void RefreshAllCategoryNoti()
+        {
+            foreach (var item in _allCategoryTab)
+            {
+                var noti = _allProductObjByCategory[item.Key].Any(product => product.IsNotification());
+                item.Value.SetNoti(noti);
+            }
         }
 
         private void RefreshGridByCategory(string categoryName)
@@ -242,10 +347,12 @@ namespace Nekoyume.UI
                 item.Value.gameObject.SetActive(false);
             }
 
-            foreach (var item in _allProductObjByCategory[categoryName].Where(item => item.IsBuyable()))
+            var buyableItems = _allProductObjByCategory[categoryName].Where(item => item.IsBuyable());
+            foreach (var item in buyableItems)
             {
                 item.gameObject.SetActive(true);
             }
+            emptyCategoryPannel.SetActive(buyableItems.Count() == 0);
 
             iAPShopDynamicGridLayout.Refresh();
         }

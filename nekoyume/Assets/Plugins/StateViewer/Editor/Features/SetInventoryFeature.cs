@@ -16,6 +16,7 @@ using StateViewer.Runtime;
 using UnityEditor;
 using UnityEngine;
 using Material = Nekoyume.Model.Item.Material;
+using Nekoyume;
 
 namespace StateViewer.Editor.Features
 {
@@ -90,6 +91,7 @@ namespace StateViewer.Editor.Features
                 _inventory = CreateInventory(_itemDataCsv, tableSheets);
                 _inventoryValue = _inventory.Serialize();
                 stateTreeView.SetData(
+                    accountAddr: null,
                     addr: null,
                     data: _inventoryValue);
             }
@@ -111,20 +113,21 @@ namespace StateViewer.Editor.Features
                 _inventoryValue.Kind != ValueKind.Null &&
                 !string.IsNullOrEmpty(_addrStr))
             {
-                Address addr;
+                Address accountAddr, addr;
                 try
                 {
+                    accountAddr = Addresses.Inventory;
                     addr = new Address(_addrStr);
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException(e);
+                    NcDebug.LogException(e);
                     return;
                 }
 
-                var stateList = new List<(Address addr, IValue value)>
+                var stateList = new List<(Address accountAddr, Address addr, IValue value)>
                 {
-                    (addr, _inventoryValue),
+                    (accountAddr, addr, _inventoryValue),
                 };
                 ActionManager.Instance?.ManipulateState(stateList, null);
             }
@@ -181,7 +184,7 @@ namespace StateViewer.Editor.Features
             {
                 if (!csvReader.TryGetField<int>("item_id", out var itemId))
                 {
-                    Debug.LogWarning("item_id column is not found.");
+                    NcDebug.LogWarning("item_id column is not found.");
                     continue;
                 }
 
@@ -202,7 +205,7 @@ namespace StateViewer.Editor.Features
 
                 if (!itemSheet.TryGetValue(itemId, out var itemRow))
                 {
-                    Debug.LogWarning($"{nameof(itemId)}({itemId}) does not exist.");
+                    NcDebug.LogWarning($"{nameof(itemId)}({itemId}) does not exist.");
                     continue;
                 }
 

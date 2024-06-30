@@ -8,7 +8,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Nekoyume.Action;
 using Nekoyume.Game;
 using Nekoyume.Game.Controller;
 using Nekoyume.Game.VFX;
@@ -50,13 +49,13 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI continueText = null;
 
-        [SerializeField]
+        [SerializeField] [Header("Quest")]
         private GameObject questRewards = null;
 
         [SerializeField]
         private SimpleCountableItemView[] questRewardViews = null;
 
-        [SerializeField]
+        [SerializeField] [Header("Recipe")]
         private GameObject recipeAreaParent = null;
 
         [SerializeField]
@@ -71,7 +70,7 @@ namespace Nekoyume.UI
         [SerializeField]
         private TextMeshProUGUI recipeOptionText = null;
 
-        [SerializeField]
+        [SerializeField] [Header("Menu")]
         private GameObject menuContainer = null;
 
         [SerializeField]
@@ -155,7 +154,7 @@ namespace Nekoyume.UI
             {
                 var sb = new StringBuilder($"[{nameof(CelebratesPopup)}]");
                 sb.Append($"Argument {nameof(row)} is null.");
-                Debug.LogError(sb.ToString());
+                NcDebug.LogError(sb.ToString());
                 return;
             }
 
@@ -172,7 +171,7 @@ namespace Nekoyume.UI
             {
                 var sb = new StringBuilder($"[{nameof(CelebratesPopup)}]");
                 sb.Append($"Argument {nameof(quest)} is null.");
-                Debug.LogError(sb.ToString());
+                NcDebug.LogError(sb.ToString());
                 return;
             }
 
@@ -217,6 +216,9 @@ namespace Nekoyume.UI
             PlayEffects();
             MakeNotification(quest.GetContent());
             UpdateLocalState(quest.Id, quest.Reward?.ItemMap);
+            // 퀘스트 받음 처리와 함께 퀘스트 리스트의 상태를 갱신해서 레드닷 제거
+            quest.isReceivable = false;
+            ReactiveAvatarState.UpdateQuestList(States.Instance.CurrentAvatarState.questList);
         }
 
         #endregion
@@ -229,7 +231,7 @@ namespace Nekoyume.UI
             {
                 var sb = new StringBuilder($"[{nameof(CelebratesPopup)}]");
                 sb.Append($"Argument {nameof(row)} is null.");
-                Debug.LogError(sb.ToString());
+                NcDebug.LogError(sb.ToString());
                 return;
             }
 
@@ -329,7 +331,7 @@ namespace Nekoyume.UI
             {
                 var sb = new StringBuilder($"[{nameof(CelebratesPopup)}]");
                 sb.Append($"Argument {nameof(rewards)} is null.");
-                Debug.LogError(sb.ToString());
+                NcDebug.LogError(sb.ToString());
                 return;
             }
 
@@ -342,10 +344,11 @@ namespace Nekoyume.UI
                 LocalLayerModifier.AddItem(
                     avatarAddress,
                     materialRow.Value.ItemId,
-                    reward.Item2);
+                    reward.Item2,
+                    false);
             }
 
-            LocalLayerModifier.RemoveReceivableQuest(avatarAddress, questId, true);
+            LocalLayerModifier.RemoveReceivableQuest(avatarAddress, questId, false);
         }
 
         private void PlayEffects()

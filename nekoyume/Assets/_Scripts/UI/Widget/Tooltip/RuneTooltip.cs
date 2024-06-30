@@ -12,6 +12,7 @@ using Nekoyume.Model.Mail;
 using Nekoyume.Model.Stat;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
+using Nekoyume.TableData.Rune;
 using Nekoyume.UI.Model;
 using Nekoyume.UI.Module;
 using Nekoyume.UI.Scroller;
@@ -188,7 +189,7 @@ namespace Nekoyume.UI
                 {
                     var (statMap, _) = option.Stats[i];
                     statViewList[i].gameObject.SetActive(true);
-                    statViewList[i].Show(statMap.StatType, statMap.TotalValueAsInt, true);
+                    statViewList[i].Show(statMap.StatType, statMap.TotalValueAsLong, true);
                 }
 
                 cpText.text = $"<size=80%>CP</size> {option.Cp}";
@@ -266,7 +267,7 @@ namespace Nekoyume.UI
                 {
                     var (statMap, _) = option.Stats[i];
                     statViewList[i].gameObject.SetActive(true);
-                    statViewList[i].Show(statMap.StatType, statMap.TotalValueAsInt, true);
+                    statViewList[i].Show(statMap.StatType, statMap.TotalValueAsLong, true);
                 }
 
                 cpText.text = $"<size=80%>CP</size> {option.Cp}";

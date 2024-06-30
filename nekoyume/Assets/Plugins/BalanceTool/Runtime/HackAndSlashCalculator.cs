@@ -14,16 +14,20 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.Extensions;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.State;
+using Nekoyume.Module;
+using Nekoyume.State;
 using Nekoyume.TableData;
 using Nekoyume.TableData.Crystal;
+using Nekoyume.TableData.Rune;
 
-namespace BalanceTool.Runtime
+namespace BalanceTool
 {
     public static partial class HackAndSlashCalculator
     {
         public static async UniTask<IEnumerable<PlayData>> CalculateAsync(
-            IAccount prevStates,
+            IWorld prevStates,
             int? randomSeed,
             long blockIndex,
             Address agentAddr,
@@ -55,6 +59,7 @@ namespace BalanceTool.Runtime
                     typeof(CrystalRandomBuffSheet),
                     typeof(StakeActionPointCoefficientSheet),
                     typeof(RuneListSheet),
+                    typeof(DeBuffLimitSheet),
                 });
 
             return await playDataList.Select(pd => ExecuteHackAndSlashAsync(
@@ -68,7 +73,7 @@ namespace BalanceTool.Runtime
         }
 
         private static async UniTask<PlayData> ExecuteHackAndSlashAsync(
-            IAccount states,
+            IWorld states,
             int? randomSeed,
             long blockIndex,
             Address agentAddr,
@@ -97,7 +102,7 @@ namespace BalanceTool.Runtime
 
             // Execute HackAndSlash and apply to playData.Result.
             var avatarAddr = Addresses.GetAvatarAddress(agentAddr, avatarIndex);
-            var avatarState = states.GetAvatarStateV2(avatarAddr);
+            var avatarState = states.GetAvatarState(avatarAddr);
             var inventory = avatarState.inventory;
             var has = new HackAndSlash
             {
@@ -116,10 +121,15 @@ namespace BalanceTool.Runtime
                 ApStoneCount = 0, // Fix to 0.
                 TotalPlayCount = 1, // Fix to 1.
             };
-            var runeStates = playData.Runes
-                .Select(tuple => RuneState.DeriveAddress(avatarAddr, tuple.runeId))
-                .Select(addr => new RuneState((List)states.GetState(addr)!))
-                .ToList();
+
+            var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddr, BattleType.Adventure);
+            var runeSlotState = states.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
+                ? new RuneSlotState(rawRuneSlotState)
+                : new RuneSlotState(BattleType.Adventure);
+            runeSlotState.UpdateSlot(has.RuneInfos, sheets.GetSheet<RuneListSheet>());
+
+            var allRuneState = states.GetRuneState(avatarAddr, out _);
+            var collectionState = states.GetCollectionState(avatarAddr);
             var skillsOnWaveStart = new List<Nekoyume.Model.Skill.Skill>();
             if (has.StageBuffId.HasValue)
             {
@@ -146,7 +156,8 @@ namespace BalanceTool.Runtime
                     blockIndex,
                     has,
                     avatarState,
-                    runeStates,
+                    allRuneState,
+                    runeSlotState,
                     skillsOnWaveStart,
                     sheets.GetSheet<StageSheet>()[has.StageId],
                     sheets.GetSheet<StageWaveSheet>()[has.StageId],
@@ -154,8 +165,12 @@ namespace BalanceTool.Runtime
                     sheets.GetSheet<EnemySkillSheet>(),
                     sheets.GetSheet<CostumeStatSheet>(),
                     sheets.GetSheet<MaterialItemSheet>(),
+                    collectionState,
+                    sheets.GetSheet<CollectionSheet>(),
                     sheets.GetSheet<WorldSheet>(),
                     sheets.GetSheet<WorldUnlockSheet>(),
+                    sheets.GetSheet<DeBuffLimitSheet>(),
+                    sheets.GetSheet<BuffLinkSheet>(),
                     exp);
                 result = ApplyToPlayResult(
                     exp,
@@ -171,7 +186,8 @@ namespace BalanceTool.Runtime
             long blockIndex,
             HackAndSlash has,
             AvatarState avatarState,
-            List<RuneState> runeStates,
+            AllRuneState allRuneState,
+            RuneSlotState runeSlotState,
             List<Nekoyume.Model.Skill.Skill> skillsOnWaveStart,
             StageSheet.Row stageRow,
             StageWaveSheet.Row stageWaveRow,
@@ -179,15 +195,20 @@ namespace BalanceTool.Runtime
             EnemySkillSheet enemySkillSheet,
             CostumeStatSheet costumeStatSheet,
             MaterialItemSheet materialItemSheet,
+            CollectionState collectionState,
+            CollectionSheet collectionSheet,
             WorldSheet worldSheet,
             WorldUnlockSheet worldUnlockSheet,
+            DeBuffLimitSheet deBuffLimitSheet,
+            BuffLinkSheet buffLinkSheet,
             int exp)
         {
             var simulator = new StageSimulator(
                 random,
                 avatarState,
                 has.Foods,
-                runeStates,
+                allRuneState,
+                runeSlotState,
                 skillsOnWaveStart,
                 has.WorldId,
                 has.StageId,
@@ -201,7 +222,13 @@ namespace BalanceTool.Runtime
                 StageSimulator.GetWaveRewards(
                     random,
                     stageRow,
-                    materialItemSheet));
+                    materialItemSheet),
+                collectionState.GetEffects(collectionSheet),
+                deBuffLimitSheet,
+                buffLinkSheet,
+                logEvent: true,
+                States.Instance.GameConfigState.ShatterStrikeMaxDamage
+                );
             simulator.Simulate();
 
             if (simulator.Log.IsClear)

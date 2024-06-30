@@ -36,7 +36,7 @@ namespace Nekoyume.UI
             public int summonSheetId;
             public Toggle tabToggle;
             public GameObject[] enableObj;
-            public float backgroundPositionY;
+            public CostType costType;
             public string nameEng;
             public string phrase1;
             public string phrase2;
@@ -153,7 +153,7 @@ namespace Nekoyume.UI
             }
 
             summonItem.backgroundRect
-                .DOAnchorPosY(currentInfo.backgroundPositionY, .5f)
+                .DOAnchorPosY(SummonUtil.GetBackGroundPosition(currentInfo.costType), .5f)
                 .SetEase(Ease.InOutCubic);
 
             var enablePhrase1 = !string.IsNullOrEmpty(currentInfo.phrase1);
@@ -201,7 +201,7 @@ namespace Nekoyume.UI
             if (count < totalCost)
             {
                 // Not enough
-                Debug.LogError($"Group : {groupId}, Material : {materialRow.GetLocalizedName()}, has :{count}.");
+                NcDebug.LogError($"Group : {groupId}, Material : {materialRow.GetLocalizedName()}, has :{count}.");
                 return;
             }
 
@@ -303,7 +303,7 @@ namespace Nekoyume.UI
 
         #endregion
 
-        private void SetMaterialAssets()
+        public void SetMaterialAssets()
         {
             if (!gameObject.activeSelf)
             {
@@ -368,8 +368,14 @@ namespace Nekoyume.UI
                 {
                     foreach (var recipe in recipes)
                     {
+                        if (!runeSheet.TryGetValue(recipe, out var rune))
+                        {
+                            NcDebug.LogError($"Invalid recipe id: {recipe}");
+                            continue;
+                        }
+
                         var fav = new FungibleAssetValue(
-                            Currencies.GetRune(runeSheet[recipe].Ticker), 1, 0);
+                            Currencies.GetRune(rune.Ticker), 1, 0);
                         loadingScreen.SpeechBubbleWithItem.SetItemMaterial(new Item(fav));
                         yield return new WaitForSeconds(.1f);
                     }
@@ -392,7 +398,10 @@ namespace Nekoyume.UI
             Find<Summon>().Close(true);
 
             Find<HeaderMenuStatic>().UpdateAssets(HeaderMenuStatic.AssetVisibleState.Shop);
-            Find<MobileShop>().Show();
+            if(TryFind<MobileShop>(out var mobileShop))
+            {
+                mobileShop.Show();
+            }
         }
 
         // Do not use with Aura summon tutorial. this logic is fake.

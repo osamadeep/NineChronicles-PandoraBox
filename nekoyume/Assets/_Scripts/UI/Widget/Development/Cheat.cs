@@ -4,10 +4,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Libplanet.Action;
+using Libplanet.Action.State;
 using Nekoyume.Action;
 using Nekoyume.Battle;
 using Nekoyume.EnumType;
+using Nekoyume.Game.Character;
 using Nekoyume.Model.BattleStatus;
+using Nekoyume.Model.EnumType;
 using Nekoyume.Model.Skill;
 using Nekoyume.Model.State;
 using Nekoyume.State;
@@ -15,7 +18,6 @@ using Nekoyume.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Enemy = Nekoyume.Game.Character.Enemy;
 using Skill = Nekoyume.Model.Skill.Skill;
 using Text = UnityEngine.UI.Text;
 
@@ -284,7 +286,7 @@ namespace Nekoyume
             TableSheetsDropdown.options = TableAssets.Keys.Select(s => new Dropdown.OptionData(s)).ToList();
             if (TableSheetsDropdown.options.Count == 0)
             {
-                Debug.Log("It seems there is no table having difference.");
+                NcDebug.Log("It seems there is no table having difference.");
                 Display(nameof(OnChainTableSheet), "No content.");
                 Display(nameof(LocalTableSheet), "No content.");
                 PatchButton.SetActive(false);
@@ -314,7 +316,9 @@ namespace Nekoyume
             foreach (var name in tableNames)
             {
                 var value = string.Empty;
-                var state = Game.Game.instance.Agent.GetState(Addresses.TableSheet.Derive(name));
+                var state = Game.Game.instance.Agent.GetState(
+                    ReservedAddresses.LegacyAccount,
+                    Addresses.TableSheet.Derive(name));
                 if (!(state is null))
                 {
                     value = state.ToDotnetString();
@@ -378,7 +382,7 @@ namespace Nekoyume
                 Log($"Level Up to {player.Level}");
             }
 
-            var enemy = enemyObj.GetComponent<Enemy>();
+            var enemy = enemyObj.GetComponent<StageMonster>();
             Game.Event.OnEnemyDeadStart.Invoke(enemy);
         }
 
@@ -412,10 +416,12 @@ namespace Nekoyume
             var tableSheets = Game.Game.instance.TableSheets;
             var random = new DebugRandom();
             var avatarState = States.Instance.CurrentAvatarState;
-            var simulator = new StageSimulatorV2(
+            var simulator = new StageSimulator(
                 random,
                 avatarState,
                 new List<Guid>(),
+                States.Instance.AllRuneState,
+                States.Instance.CurrentRuneSlotStates[BattleType.Adventure],
                 new List<Skill>(),
                 worldRow.Id,
                 stageId,
@@ -423,13 +429,18 @@ namespace Nekoyume
                 tableSheets.StageWaveSheet[stageId],
                 avatarState.worldInformation.IsStageCleared(stageId),
                 StageRewardExpHelper.GetExp(avatarState.level, stageId),
-                tableSheets.GetSimulatorSheetsV1(),
+                tableSheets.GetStageSimulatorSheets(),
                 tableSheets.EnemySkillSheet,
                 tableSheets.CostumeStatSheet,
-                StageSimulatorV2.GetWaveRewards(
+                StageSimulator.GetWaveRewards(
                     random,
                     tableSheets.StageSheet[stageId],
-                    tableSheets.MaterialItemSheet)
+                    tableSheets.MaterialItemSheet),
+                States.Instance.CollectionState.GetEffects(tableSheets.CollectionSheet),
+                tableSheets.DeBuffLimitSheet,
+                tableSheets.BuffLinkSheet,
+                logEvent: true,
+                States.Instance.GameConfigState.ShatterStrikeMaxDamage
             );
             simulator.Simulate();
             simulator.Log.result = _result;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bencodex.Types;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Helper;
@@ -65,14 +66,14 @@ namespace Nekoyume.UI.Model
         {
             if (recipes is null)
             {
-                Debug.LogError("Failed to load equipment recipe.");
+                NcDebug.LogError("Failed to load equipment recipe.");
                 return;
             }
 
             RecipeForTutorial = recipes.FirstOrDefault(x => x.Id == RecipeIdForTutorial);
             if (RecipeForTutorial is null)
             {
-                Debug.LogError($"Failed to load recipe for tutorial. id : {RecipeIdForTutorial}");
+                NcDebug.LogError($"Failed to load recipe for tutorial. id : {RecipeIdForTutorial}");
             }
 
             foreach (var recipe in recipes)
@@ -95,7 +96,7 @@ namespace Nekoyume.UI.Model
         {
             if (groups is null)
             {
-                Debug.LogError("Failed to load consumable recipe.");
+                NcDebug.LogError("Failed to load consumable recipe.");
                 return;
             }
 
@@ -158,7 +159,9 @@ namespace Nekoyume.UI.Model
         public async void UpdateUnlockedRecipesAsync(Address address)
         {
             var unlockedRecipeIdsAddress = address.Derive("recipe_ids");
-            var recipeState = await Game.Game.instance.Agent.GetStateAsync(unlockedRecipeIdsAddress);
+            var recipeState = await Game.Game.instance.Agent.GetStateAsync(
+                ReservedAddresses.LegacyAccount,
+                unlockedRecipeIdsAddress);
             var result = recipeState != null && !(recipeState is Null)
                 ? recipeState.ToList(StateExtensions.ToInteger)
                 : new List<int> { 1 };

@@ -31,6 +31,7 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             _endpoints = new IAPServiceEndpoints(url);
             _client = new HttpClient();
             _client.Timeout = TimeSpan.FromSeconds(10);
+            _client.DefaultRequestHeaders.Add("X-IAP-PackageName", UnityEngine.Application.identifier);
         }
 
         public void Dispose()
@@ -42,7 +43,7 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
             PingAsync()
         {
-            using var res = await _client.GetAsync(_endpoints.Ping);
+            var res = await _client.GetAsync(_endpoints.Ping);
             return await ProcessResponseAsync(res);
         }
 
@@ -50,11 +51,16 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
             ProductAsync(Address agentAddr, string planetId)
         {
+            if (string.IsNullOrEmpty(planetId))
+            {
+                throw new ArgumentException("planetId is null or empty.");
+            }
+
             var uriBuilder = new UriBuilder(_endpoints.Product);
             uriBuilder.Query = string.IsNullOrEmpty(uriBuilder.Query)
                 ? $"agent_addr={agentAddr.ToString()}&planet_id={planetId}"
                 : uriBuilder.Query[1..] + $"&agent_addr={agentAddr.ToString()}&planet_id={planetId}";
-            using var res = await _client.GetAsync(uriBuilder.Uri);
+            var res = await _client.GetAsync(uriBuilder.Uri);
             return await ProcessResponseAsync(res);
         }
 
@@ -70,7 +76,7 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
                 string appleOriginalTransactionID)
         {
             var receiptJson = JsonNode.Parse(receipt);
-            
+
             var reqJson = new JsonObject
             {
                 { "store", (int)store },
@@ -84,7 +90,7 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
 
             var reqContent = new StringContent(
                 reqJson.ToJsonString(JsonSerializerOptions),
-                System.Text.Encoding.UTF8,
+                Encoding.UTF8,
                 "application/json");
 
             reqContent.Headers.Add("agentAddress", agentAddr);
@@ -94,7 +100,38 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
                 reqContent.Headers.Add("appleOriginalTransactionID", appleOriginalTransactionID);
             }
 
-            using var res = await _client.PostAsync(_endpoints.PurchaseRequest, reqContent);
+            var res = await _client.PostAsync(_endpoints.PurchaseRequest, reqContent);
+            return await ProcessResponseAsync(res);
+        }
+
+        public async
+            Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
+            PurchaseFreeAsync(
+                Store store,
+                string agentAddr,
+                string avatarAddr,
+                string planetId,
+                string sku)
+        {
+            var reqJson = new JsonObject
+            {
+                { "sku", sku },
+                { "store", (int)store },
+                { "agentAddress", agentAddr },
+                { "avatarAddress", avatarAddr},
+                { "planetId", planetId},
+            };
+
+            Debug.Log($"PurchaseFreeAsync : {reqJson}");
+
+            var reqContent = new StringContent(
+                reqJson.ToJsonString(JsonSerializerOptions),
+                Encoding.UTF8,
+                "application/json");
+
+            reqContent.Headers.Add("agentAddress", agentAddr);
+
+            var res = await _client.PostAsync(_endpoints.PurchaseFree, reqContent);
             return await ProcessResponseAsync(res);
         }
 
@@ -113,7 +150,28 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             uriBuilder.Query = string.IsNullOrEmpty(uriBuilder.Query)
                 ? query
                 : uriBuilder.Query[1..] + query;
-            using var res = await _client.GetAsync(uriBuilder.Uri);
+            var res = await _client.GetAsync(uriBuilder.Uri);
+            return await ProcessResponseAsync(res);
+        }
+
+        public async
+            Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
+            PurchaseLogAsync(
+                string agentAddr,
+                string avatarAddr,
+                string planetId,
+                string productId,
+                string orderId,
+                string data)
+        {
+            var query = $"planet_id={planetId}&agent_address={agentAddr}&avatar_address={avatarAddr}&product_id={productId}&order_id={orderId}&data={data}";
+            Debug.Log($"PurchaseLogAsync [planet_id={planetId}&agent_address={agentAddr}&avatar_address={avatarAddr}&product_id={productId}&order_id={orderId}&data={data}]");
+            var uriBuilder = new UriBuilder(_endpoints.PurchaseLog);
+            uriBuilder.Query = string.IsNullOrEmpty(uriBuilder.Query)
+                ? query
+                : uriBuilder.Query[1..] + query;
+
+            var res = await _client.GetAsync(uriBuilder.Uri);
             return await ProcessResponseAsync(res);
         }
 
@@ -121,7 +179,7 @@ namespace NineChronicles.ExternalServices.IAPService.Runtime
             Task<(HttpStatusCode code, string? error, string? mediaType, string? content)>
             L10NAsync()
         {
-            using var res = await _client.GetAsync(_endpoints.L10N);
+            var res = await _client.GetAsync(_endpoints.L10N);
             return await ProcessResponseAsync(res);
         }
 

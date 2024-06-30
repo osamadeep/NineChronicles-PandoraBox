@@ -7,7 +7,7 @@ namespace Nekoyume.Game.Avatar
 {
     public class AvatarWeapon : MonoBehaviour
     {
-        private const string DefaultPmaShader = "Spine/Skeleton";
+        private const string DefaultPmaShader = "Spine/Skeleton Tint";
         private const string WeaponSlot = "weapon";
 
         [SerializeField]
@@ -18,10 +18,11 @@ namespace Nekoyume.Game.Avatar
 
         private void Awake()
         {
-            var shader = Shader.Find(DefaultPmaShader);
-            var weaponSlotIndex = skeletonGraphic.Skeleton.FindSlotIndex(WeaponSlot);
-            var weaponSprite = SpriteHelper.GetPlayerSpineTextureWeapon(weaponId);
-            var newWeapon = weaponSprite.ToRegionAttachmentPMAClone(shader);
+            var shader          = Shader.Find(DefaultPmaShader);
+            var weaponSlot      = skeletonGraphic.Skeleton.FindSlot(WeaponSlot);
+            var weaponSlotIndex = weaponSlot == null ? -1 : weaponSlot.Data.Index;
+            var weaponSprite    = SpriteHelper.GetPlayerSpineTextureWeapon(weaponId);
+            var newWeapon       = weaponSprite.ToRegionAttachmentPMAClone(shader);
             skeletonGraphic.Skeleton.Data.DefaultSkin
                 .SetAttachment(weaponSlotIndex, WeaponSlot, newWeapon);
             skeletonGraphic.Skeleton.SetSlotsToSetupPose();

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Cysharp.Threading.Tasks;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
+using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
 using LruCacheNet;
@@ -45,32 +48,27 @@ namespace Nekoyume.Blockchain
         protected static bool ValidateEvaluationForCurrentAgent<T>(ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
-            return !(States.Instance.AgentState is null) &&
+            return States.Instance?.AgentState is not null &&
                 evaluation.Signer.Equals(States.Instance.AgentState.address);
         }
 
         protected static AgentState GetAgentState<T>(ActionEvaluation<T> evaluation) where T : ActionBase
         {
             var agentAddress = States.Instance.AgentState.address;
-            return StateGetter.GetAgentState(agentAddress, evaluation.OutputState);
+            return StateGetter.GetAgentState(evaluation.OutputState, agentAddress);
         }
 
         protected GoldBalanceState GetGoldBalanceState<T>(ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
             var agentAddress = States.Instance.AgentState.address;
-            if (!evaluation.Signer.Equals(agentAddress))
-            {
-                return null;
-            }
 
             return StateGetter.GetGoldBalanceState(
+                evaluation.OutputState,
                 agentAddress,
-                GoldCurrency,
-                evaluation.OutputState);
+                GoldCurrency);
         }
 
-        // NOTE: The deposit in returned tuple is get from the IAgent not evaluation.OutputState.
         protected async UniTask<(
                 Address stakeAddr,
                 StakeStateV2? stakeStateV2,
@@ -82,58 +80,78 @@ namespace Nekoyume.Blockchain
         {
             var agentAddr = States.Instance.AgentState.address;
             var stakeAddr = StakeStateV2.DeriveAddress(agentAddr);
-            if (!StateGetter.TryGetStakeStateV2(agentAddr, evaluation.OutputState, out var stakeStateV2))
+            var agent = Game.Game.instance.Agent;
+            Address[] sheetAddrArr;
+            FungibleAssetValue balance;
+            StakeStateV2? nullableStakeState;
+            if (!StateGetter.TryGetStakeStateV2(evaluation.OutputState, agentAddr, out var stakeStateV2))
             {
-                return (stakeAddr, null, new FungibleAssetValue(), 0, null, null);
-            }
-
-            try
-            {
-                var agent = Game.Game.instance.Agent;
-                if (agent is null)
+                nullableStakeState = null;
+                var policySheet = TableSheets.Instance.StakePolicySheet;
+                sheetAddrArr = new[]
                 {
-                    return (stakeAddr, null, new FungibleAssetValue(), 0, null, null);
-                }
-
-                var balance = await agent.GetBalanceAsync(stakeAddr, GoldCurrency);
-                var sheetAddrArr = new[]
+                    Addresses.GetSheetAddress(policySheet.StakeRegularFixedRewardSheetValue),
+                    Addresses.GetSheetAddress(policySheet.StakeRegularRewardSheetValue)
+                };
+                balance = GoldCurrency * 0;
+            }
+            else
+            {
+                nullableStakeState = stakeStateV2;
+                balance = StateGetter.GetBalance(evaluation.OutputState, stakeAddr, GoldCurrency);
+                sheetAddrArr = new[]
                 {
                     Addresses.GetSheetAddress(
                         stakeStateV2.Contract.StakeRegularFixedRewardSheetTableName),
                     Addresses.GetSheetAddress(
                         stakeStateV2.Contract.StakeRegularRewardSheetTableName),
                 };
-                var sheetStates = await agent.GetStateBulkAsync(sheetAddrArr);
+            }
+
+            try
+            {
+                if (agent is null)
+                {
+                    return (stakeAddr, null, new FungibleAssetValue(), 0, null, null);
+                }
+
+                var sheetStates = await agent.GetStateBulkAsync(
+                    ReservedAddresses.LegacyAccount, sheetAddrArr);
                 var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
                 stakeRegularFixedRewardSheet.Set(
                     sheetStates[sheetAddrArr[0]].ToDotnetString());
                 var stakeRegularRewardSheet = new StakeRegularRewardSheet();
                 stakeRegularRewardSheet.Set(
                     sheetStates[sheetAddrArr[1]].ToDotnetString());
-                var level = stakeRegularFixedRewardSheet.FindLevelByStakedAmount(
-                    agentAddr,
-                    balance);
+                var level = nullableStakeState.HasValue
+                    ? stakeRegularFixedRewardSheet.FindLevelByStakedAmount(
+                        agentAddr,
+                        balance)
+                    : 0;
+
                 return (
                     stakeAddr,
-                    stakeStateV2,
+                    nullableStakeState,
                     balance,
                     level,
                     stakeRegularFixedRewardSheet,
                     stakeRegularRewardSheet);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return (stakeAddr, null, new FungibleAssetValue(), 0, null, null);
             }
         }
 
-        protected static CrystalRandomSkillState GetCrystalRandomSkillState<T>(
-            ActionEvaluation<T> evaluation) where T : ActionBase
+        protected static CrystalRandomSkillState GetCrystalRandomSkillState(
+            HashDigest<SHA256> states)
         {
             var avatarAddress = States.Instance.CurrentAvatarState.address;
             var buffStateAddress = Addresses.GetSkillStateAddressFromAvatarAddress(avatarAddress);
-            if (StateGetter.GetState(buffStateAddress, evaluation.OutputState) is
-                Bencodex.Types.List serialized)
+            if (StateGetter.GetState(
+                    states,
+                    ReservedAddresses.LegacyAccount,
+                    buffStateAddress) is Bencodex.Types.List serialized)
             {
                 var state = new CrystalRandomSkillState(buffStateAddress, serialized);
                 return state;
@@ -206,16 +224,14 @@ namespace Nekoyume.Blockchain
 
             var avatarAddress = States.Instance.AgentState.avatarAddresses[index];
             var state =
-                Game.Game.instance.Agent.GetAvatarStatesAsync(new[]
-                {
-                    avatarAddress
-                }, evaluation.OutputState).Result[avatarAddress];
+                Game.Game.instance.Agent.GetAvatarStatesAsync(
+                    evaluation.OutputState,
+                    new[] { avatarAddress }).Result[avatarAddress];
 
             await UpdateAvatarState(state, index);
         }
 
-        protected async UniTask UpdateCurrentAvatarStateAsync<T>(
-            ActionEvaluation<T> evaluation)
+        protected async UniTask UpdateCurrentAvatarStateAsync<T>(ActionEvaluation<T> evaluation)
             where T : ActionBase
         {
             var agentAddress = States.Instance.AgentState.address;
@@ -223,28 +239,14 @@ namespace Nekoyume.Blockchain
             try
             {
                 await UpdateCurrentAvatarStateAsync(
-                    States.Instance.CurrentAvatarState
-                        .UpdateAvatarStateV2(avatarAddress, evaluation.OutputState));
+                    Game.Game.instance.Agent.GetAvatarStatesAsync(
+                        evaluation.OutputState,
+                        new [] { avatarAddress }).Result[avatarAddress]);
             }
             catch (Exception e)
             {
-                Debug.LogError(
+                NcDebug.LogError(
                     $"Failed to Update AvatarState: {agentAddress}, {avatarAddress}\n{e.Message}");
-            }
-        }
-
-        protected async UniTask UpdateCurrentAvatarStateAsync()
-        {
-            var avatarAddress = States.Instance.CurrentAvatarState.address;
-            var avatars =
-                await Game.Game.instance.Agent.GetAvatarStatesAsync(new[] { avatarAddress });
-            if (avatars.TryGetValue(avatarAddress, out var avatarState))
-            {
-                await UpdateCurrentAvatarStateAsync(avatarState);
-            }
-            else
-            {
-                Debug.LogError($"Failed to get AvatarState: {avatarAddress}");
             }
         }
 
@@ -258,8 +260,7 @@ namespace Nekoyume.Blockchain
             }
 
             var avatarAddr = states.CurrentAvatarState.address;
-            var inventoryAddr = avatarAddr.Derive(LegacyInventoryKey);
-            var inventory = StateGetter.GetInventory(inventoryAddr, eval.OutputState);
+            var inventory = StateGetter.GetInventory(eval.OutputState, avatarAddr);
             var avatarState = states.CurrentAvatarState;
             avatarState.inventory = inventory;
             avatarState = LocalLayer.Instance.ModifyInventoryOnly(avatarState);
@@ -283,7 +284,7 @@ namespace Nekoyume.Blockchain
         protected static void UpdateCrystalRandomSkillState<T>(
             ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            var state = GetCrystalRandomSkillState(evaluation);
+            var state = GetCrystalRandomSkillState(evaluation.OutputState);
 
             if (state is { })
             {
@@ -293,7 +294,7 @@ namespace Nekoyume.Blockchain
 
         private static UniTask UpdateAgentStateAsync(AgentState state)
         {
-            UpdateCache(state);
+            UpdateCache(Addresses.Agent, state);
             return States.Instance.SetAgentStateAsync(state);
         }
 
@@ -319,17 +320,12 @@ namespace Nekoyume.Blockchain
 
         protected static void UpdateCrystalBalance<T>(ActionEvaluation<T> evaluation) where T : ActionBase
         {
-            if (!evaluation.Signer.Equals(States.Instance.AgentState.address))
-            {
-                return;
-            }
-
             try
             {
                 var crystal = StateGetter.GetBalance(
-                    evaluation.Signer,
-                    CrystalCalculator.CRYSTAL,
-                    evaluation.OutputState);
+                    evaluation.OutputState,
+                    States.Instance.AgentState.address,
+                    CrystalCalculator.CRYSTAL);
                 States.Instance.SetCrystalBalance(crystal);
             }
             catch (BalanceDoesNotExistsException)
@@ -341,7 +337,7 @@ namespace Nekoyume.Blockchain
             }
         }
 
-        protected async UniTaskVoid UpdateStakeStateAsync<T>(ActionEvaluation<T> evaluation) where T : ActionBase
+        protected async UniTask UpdateStakeStateAsync<T>(ActionEvaluation<T> evaluation) where T : ActionBase
         {
             var (
                     stakeAddr,
@@ -367,7 +363,7 @@ namespace Nekoyume.Blockchain
             // When in battle, do not immediately update the AvatarState, but pending it.
             if (Pending)
             {
-                Debug.Log($"[{nameof(ActionHandler)}] Pending AvatarState");
+                NcDebug.Log($"[{nameof(ActionHandler)}] Pending AvatarState");
                 Game.Game.instance.Stage.AvatarState = avatarState;
                 return;
             }
@@ -391,8 +387,15 @@ namespace Nekoyume.Blockchain
                 }
             }
 
-            UpdateCache(avatarState);
+            UpdateCache(Addresses.Avatar, avatarState);
             await UpdateAvatarState(avatarState, States.Instance.CurrentAvatarKey);
+        }
+
+        protected static long GetActionPoint<T>(ActionEvaluation<T> evaluation, Address avatarAddress) where T : ActionBase
+        {
+            return (Bencodex.Types.Integer)StateGetter.GetState(evaluation.OutputState,
+                Addresses.ActionPoint,
+                avatarAddress);
         }
 
         internal static void UpdateCombinationSlotState(
@@ -401,19 +404,26 @@ namespace Nekoyume.Blockchain
             CombinationSlotState state)
         {
             States.Instance.UpdateCombinationSlotState(avatarAddress, slotIndex, state);
-            UpdateCache(state);
+            UpdateCache(ReservedAddresses.LegacyAccount, state);
         }
 
-        private static void UpdateCache(Model.State.State state)
+        private static void UpdateCache(Address accountAddress, Model.State.State state)
         {
             if (state is null)
             {
                 return;
             }
 
-            if (Game.Game.instance.CachedStates.ContainsKey(state.address))
+            if (Game.Game.instance.CachedStates.ContainsKey(accountAddress.Derive(state.address.ToByteArray())))
             {
-                Game.Game.instance.CachedStates[state.address] = state.Serialize();
+                try
+                {
+                    Game.Game.instance.CachedStates[accountAddress.Derive(state.address.ToByteArray())] = state.Serialize();
+                }
+                catch (NotSupportedException)
+                {
+                    Game.Game.instance.CachedStates[accountAddress.Derive(state.address.ToByteArray())] = state.SerializeList();
+                }
             }
         }
 
@@ -428,9 +438,9 @@ namespace Nekoyume.Blockchain
             }
 
             var itemSlotState = StateGetter.GetItemSlotState(
+                evaluation.OutputState,
                 avatarState.address,
-                battleType,
-                evaluation.OutputState);
+                battleType);
             States.Instance.UpdateItemSlotState(itemSlotState);
         }
 
@@ -445,10 +455,25 @@ namespace Nekoyume.Blockchain
             }
 
             var runeSlotState = StateGetter.GetRuneSlotState(
+                evaluation.OutputState,
                 avatarState.address,
-                battleType,
-                evaluation.OutputState);
+                battleType);
             States.Instance.UpdateRuneSlotState(runeSlotState);
+        }
+
+        protected static void UpdateCurrentAvatarRuneStoneBalance<T>(
+            ActionEvaluation<T> evaluation) where T : ActionBase
+        {
+            var avatarAddress = States.Instance.CurrentAvatarState.address;
+            var runeSheet = TableSheets.Instance.RuneSheet;
+            foreach (var row in runeSheet.Values)
+            {
+                States.Instance.SetCurrentAvatarBalance(
+                    StateGetter.GetBalance(
+                        evaluation.OutputState,
+                        avatarAddress,
+                        RuneHelper.ToCurrency(row)));
+            }
         }
     }
 }

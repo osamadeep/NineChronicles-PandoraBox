@@ -1,8 +1,6 @@
 using Coffee.UIEffects;
-using Nekoyume.Game;
 using Nekoyume.Game.Character;
 using Nekoyume.Game.ScriptableObject;
-using Nekoyume.Helper;
 using Nekoyume.Model.Item;
 using Nekoyume.UI.Module;
 using TMPro;
@@ -108,13 +106,16 @@ namespace Nekoyume
         private GameObject grindingCountObject;
 
         [SerializeField]
-        private TMP_Text grindingCountText;
-
-        [SerializeField]
         private GameObject runeNotificationObj;
 
         [SerializeField]
         private GameObject runeSelectMove;
+
+        [SerializeField]
+        private GameObject selectCollectionObject;
+
+        [SerializeField]
+        private GameObject selectArrowObject;
 
         public GameObject Container => container;
         public GameObject EmptyObject => emptyObject;
@@ -135,6 +136,7 @@ namespace Nekoyume
         public GameObject MinusObject => minusObject;
         public GameObject FocusObject => focusObject;
         public GameObject ExpiredObject => expiredObject;
+        // TODO: 소유하지 않은 장비가 Tradable = true로 설정되어 있음. 네이밍이 꼬인것으로 추정되며 아이템 상태 개선이 필요해보임
         public GameObject TradableObject => tradableObject;
         public GameObject DimObject => dimObject;
         public GameObject LevelLimitObject => levelLimitObject;
@@ -146,11 +148,12 @@ namespace Nekoyume
         public GameObject LoadingObject => loadingObject;
         public ParticleSystem ItemGradeParticle => itemGradeParticle;
         public GameObject GrindingCountObject => grindingCountObject;
-        public TMP_Text GrindingCountText => grindingCountText;
         public GameObject RewardReceived;
 
         public GameObject RuneNotificationObj => runeNotificationObj;
         public GameObject RuneSelectMove => runeSelectMove;
+        public GameObject SelectCollectionObject => selectCollectionObject;
+        public GameObject SelectArrowObject => selectArrowObject;
 
         public static Sprite GetItemIcon(ItemBase itemBase)
         {

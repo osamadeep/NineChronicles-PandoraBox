@@ -14,11 +14,15 @@ using TimeSpan = System.TimeSpan;
 using Nekoyume.UI.Scroller;
 using mixpanel;
 using Nekoyume.State;
+using Nekoyume.Blockchain;
 
 namespace Nekoyume.UI
 {
     public class SettingPopup : PopupWidget
     {
+        [SerializeField]
+        private GameObject addressContainer;
+
         [SerializeField]
         private TextMeshProUGUI addressTitleText;
 
@@ -121,6 +125,7 @@ namespace Nekoyume.UI
         {
             base.Awake();
 
+            addressContainer.SetActive(!Game.LiveAsset.GameConfig.IsKoreanBuild);
             addressTitleText.text = L10nManager.Localize("UI_YOUR_ADDRESS");
             privateKeyTitleText.text = L10nManager.Localize("UI_YOUR_PRIVATE_KEY");
             warningText.text = L10nManager.Localize("UI_ACCOUNT_WARNING");
@@ -146,7 +151,12 @@ namespace Nekoyume.UI
 
             addressShareButton.OnClickAsObservable().Subscribe(_ =>
             {
-                if (LoginSystem.GetPassPhrase(Game.Game.instance.Agent.Address.ToString()).Equals(string.Empty))
+                var agent = Game.Game.instance.Agent;
+                var cachedPassphrase = KeyManager.GetCachedPassphrase(
+                    agent.Address,
+                    Util.AesDecrypt,
+                    defaultValue: string.Empty);
+                if (cachedPassphrase.Equals(string.Empty))
                 {
                     Find<LoginSystem>().ShowResetPassword();
                 }

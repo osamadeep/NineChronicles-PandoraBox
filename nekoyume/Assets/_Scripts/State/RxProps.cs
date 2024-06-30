@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Bencodex.Types;
 using Cysharp.Threading.Tasks;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Nekoyume.Blockchain;
 using Nekoyume.Game;
+using Nekoyume.Model.State;
 using Nekoyume.UI.Module.WorldBoss;
 using UnityEngine;
 
 namespace Nekoyume.State
 {
+    using Libplanet.Common;
+    using System.Security.Cryptography;
     using UniRx;
 
     public static partial class RxProps
@@ -38,7 +44,7 @@ namespace Nekoyume.State
                 throw new ArgumentNullException(nameof(tableSheets));
             }
 
-            Debug.Log("[RxProps] Start");
+            NcDebug.Log("[RxProps] Start");
             _agent = agent;
             _states = states;
             _tableSheets = tableSheets;
@@ -59,24 +65,23 @@ namespace Nekoyume.State
 
         public static void Stop()
         {
-            Debug.Log($"{nameof(RxProps)} stop");
+            NcDebug.Log($"{nameof(RxProps)} stop");
             _disposables.DisposeAllAndClear();
         }
 
         public static async UniTask SelectAvatarAsync(
             int avatarIndexToSelect,
+            HashDigest<SHA256> stateRootHash,
             bool forceNewSelection = false)
         {
             await States.Instance.SelectAvatarAsync(
                 avatarIndexToSelect,
                 forceNewSelection: forceNewSelection);
             await UniTask.WhenAll(
-                ArenaInfoTuple.UpdateAsync(),
-                EventDungeonInfo.UpdateAsync(),
+                ArenaInfoTuple.UpdateAsync(stateRootHash),
+                EventDungeonInfo.UpdateAsync(stateRootHash),
                 WorldBossStates.Set(States.Instance.CurrentAvatarState.address),
-                States.Instance.InitAvatarBalancesAsync(),
-                States.Instance.InitRuneStates(),
-                States.Instance.InitRuneSlotStates(),
+                UniTask.RunOnThreadPool(States.Instance.InitAvatarBalancesAsync).ToObservable().ObserveOnMainThread().ToUniTask(),
                 States.Instance.InitItemSlotStates());
         }
 

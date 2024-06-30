@@ -3,13 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using mixpanel;
-using Nekoyume.Action;
 using Nekoyume.Blockchain;
 using Nekoyume.EnumType;
 using Nekoyume.Extensions;
 using Nekoyume.Game;
+using Nekoyume.Game.Battle;
 using Nekoyume.Game.Controller;
-using Nekoyume.Game.VFX;
 using Nekoyume.L10n;
 using Nekoyume.Model.BattleStatus;
 using Nekoyume.Model.EnumType;
@@ -51,11 +50,12 @@ namespace Nekoyume.UI
             public int WorldID;
             public int StageID;
             public int ClearedWaveNumber;
-            public int ActionPoint;
+            public long ActionPoint;
             public int LastClearedStageId;
             public bool ActionPointNotEnough;
             public bool IsClear;
             public bool IsEndStage;
+            public int LastClearedStageIdBeforeResponse;
 
             /// <summary>
             /// [0]: The number of times a `BattleLog.clearedWaveNumber` is 0.
@@ -242,18 +242,48 @@ namespace Nekoyume.UI
             SubmitWidget = nextButton.onClick.Invoke;
 
             _victoryImageAnimator = victoryImageContainer.GetComponent<Animator>();
+
+            BattleRenderer.Instance.OnPrepareStage += NextPrepareStage;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            BattleRenderer.Instance.OnPrepareStage -= NextPrepareStage;
         }
 
         private IEnumerator OnClickClose()
         {
             _IsAlreadyOut = true;
             AudioController.PlayClick();
-            if (SharedModel.IsClear)
+
+            if (SharedModel.IsClear && SharedModel.StageType != StageType.EventDungeon)
             {
                 yield return CoDialog(SharedModel.StageID);
             }
 
-            GoToMain();
+            var worldClear = false;
+            if (States.Instance.CurrentAvatarState.worldInformation
+                .TryGetLastClearedStageId(out var lastClearedStageId))
+            {
+                if (SharedModel.IsClear
+                    && SharedModel.IsEndStage
+                    && lastClearedStageId == SharedModel.StageID
+                    && !Find<WorldMap>().SharedViewModel.UnlockedWorldIds.Contains(SharedModel.WorldID + 1)
+                    && SharedModel.StageID - 1 == SharedModel.LastClearedStageIdBeforeResponse)
+                {
+                    worldClear = true;
+                }
+            }
+
+            if (worldClear)
+            {
+                var worldClearPopup = Find<WorldClearPopup>();
+                worldClearPopup.Show(SharedModel.WorldID, SharedModel.WorldName);
+                yield return new WaitUntil(() => !worldClearPopup.Displaying);
+            }
+
+            GoToMain(worldClear);
         }
 
         private void OnClickStage()
@@ -359,11 +389,6 @@ namespace Nekoyume.UI
 
         private IEnumerator CoDialog(int stageId)
         {
-            if (SharedModel.StageType == StageType.EventDungeon)
-            {
-                yield break;
-            }
-
             var stageDialogs = TableSheets.Instance.StageDialogSheet
                 .OrderedList
                 .Where(i => i.StageId == stageId)
@@ -402,6 +427,7 @@ namespace Nekoyume.UI
                     ActionPointNotEnough = model.ActionPointNotEnough,
                     IsClear = model.IsClear,
                     IsEndStage = model.IsEndStage,
+                    LastClearedStageIdBeforeResponse = model.LastClearedStageIdBeforeResponse,
                     ClearedCountForEachWaves = ModelForMultiHackAndSlash.ClearedCountForEachWaves,
                 };
                 foreach (var item in ModelForMultiHackAndSlash.Rewards)
@@ -419,7 +445,6 @@ namespace Nekoyume.UI
                 true);
             worldStageId.text = $"{SharedModel.WorldName}" +
                                 $" {stageText}";
-            actionPoint.SetActionPoint(model.ActionPoint);
             actionPoint.SetEventTriggerEnabled(true);
 
             base.Show();
@@ -616,8 +641,8 @@ namespace Nekoyume.UI
             {
                 if (SharedModel.IsClear)
                 {
-                    stagePreparationButton.gameObject.SetActive(canExit);
-                    stagePreparationButton.interactable = canExit;
+                    stagePreparationButton.gameObject.SetActive(canExit && !SharedModel.IsEndStage);
+                    stagePreparationButton.interactable = canExit && !SharedModel.IsEndStage;
                 }
                 else
                 {
@@ -635,6 +660,13 @@ namespace Nekoyume.UI
             {
                 nextButton.gameObject.SetActive(true);
                 nextButton.interactable = true;
+            }
+
+            // for event EventDungeon
+            if (SharedModel.StageType == StageType.EventDungeon && SharedModel.IsEndStage && SharedModel.IsClear)
+            {
+                repeatButton.gameObject.SetActive(true);
+                repeatButton.interactable = true;
             }
 
             switch (SharedModel.NextState)
@@ -677,6 +709,7 @@ namespace Nekoyume.UI
             bottomText.text = string.Format(fullFormat, string.Format(secondsFormat, limitSeconds));
 
             yield return new WaitUntil(() => CanClose);
+            var dialog = Find<DialogPopup>();
 
             var floatTime = (float)limitSeconds;
             var floatTimeMinusOne = limitSeconds - 1f;
@@ -688,6 +721,11 @@ namespace Nekoyume.UI
                 if (floatTimeMinusOne < floatTime)
                 {
                     continue;
+                }
+
+                if (dialog.gameObject.activeSelf)
+                {
+                    yield break;
                 }
 
                 limitSeconds--;
@@ -817,16 +855,6 @@ namespace Nekoyume.UI
                         SharedModel.WorldID,
                         SharedModel.StageID + stageIdOffset)
                     .StartAsCoroutine(),
-                StageType.Mimisbrunnr => Game.Game.instance.ActionManager
-                    .MimisbrunnrBattle(
-                        costumes,
-                        equipments,
-                        new List<Consumable>(),
-                        runeSlotInfos,
-                        SharedModel.WorldID,
-                        SharedModel.StageID + stageIdOffset,
-                        1)
-                    .StartAsCoroutine(),
                 StageType.EventDungeon => Game.Game.instance.ActionManager
                     .EventDungeonBattle(
                         RxProps.EventScheduleRowForDungeon.Value.Id,
@@ -842,8 +870,11 @@ namespace Nekoyume.UI
             };
         }
 
-        public void NextStage(BattleLog log)
+        private void NextPrepareStage(BattleLog log)
         {
+            if (!IsActive() || !Find<StageLoadingEffect>().IsActive())
+                return;
+
             StartCoroutine(CoGoToNextStageClose(log));
         }
 
@@ -864,7 +895,8 @@ namespace Nekoyume.UI
 
             yield return StartCoroutine(stageLoadingEffect.CoClose());
 
-            Game.Event.OnStageStart.Invoke(log);
+            // TODO: WhenAll
+            yield return BattleRenderer.Instance.LoadStageResources(log);
             Close();
         }
 
@@ -882,11 +914,10 @@ namespace Nekoyume.UI
 
             yield return StartCoroutine(Find<StageLoadingEffect>().CoClose());
             yield return StartCoroutine(CoFadeOut());
-            Game.Event.OnStageStart.Invoke(log);
             Close();
         }
 
-        private void GoToMain()
+        private void GoToMain(bool worldClear)
         {
             var props = new Dictionary<string, Value>()
             {
@@ -902,35 +933,28 @@ namespace Nekoyume.UI
             AirbridgeUnity.TrackEvent(evt);
 
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
-            if (States.Instance.CurrentAvatarState.worldInformation.TryGetLastClearedStageId(
-                    out var lastClearedStageId))
+            if (worldClear)
             {
-                if (SharedModel.IsClear
-                    && SharedModel.IsEndStage
-                    && lastClearedStageId == SharedModel.StageID
-                    && !Find<WorldMap>().SharedViewModel.UnlockedWorldIds.Contains(SharedModel.WorldID + 1))
+                var worldMapLoading = Find<LoadingScreen>();
+                worldMapLoading.Show(LoadingScreen.LoadingType.Adventure);
+                Game.Game.instance.Stage.OnRoomEnterEnd.First().Subscribe(_ =>
                 {
-                    var worldMapLoading = Find<LoadingScreen>();
-                    worldMapLoading.Show();
-                    Game.Game.instance.Stage.OnRoomEnterEnd.First().Subscribe(_ =>
-                    {
-                        Find<HeaderMenuStatic>().Show();
-                        Find<Menu>().Close();
-                        Find<WorldMap>().Show(States.Instance.CurrentAvatarState.worldInformation);
-                        worldMapLoading.Close(true);
-                    });
-                }
+                    Find<HeaderMenuStatic>().Show();
+                    Find<Menu>().Close();
+                    Find<WorldMap>().Show(States.Instance.CurrentAvatarState.worldInformation);
+                    worldMapLoading.Close(true);
+                });
             }
         }
 
         private void GoToPreparation()
         {
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
@@ -994,7 +1018,7 @@ namespace Nekoyume.UI
         private void GoToMarket()
         {
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
@@ -1009,7 +1033,7 @@ namespace Nekoyume.UI
         private void GoToProduct()
         {
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
@@ -1024,7 +1048,7 @@ namespace Nekoyume.UI
         private void GoToCraft()
         {
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
@@ -1038,7 +1062,7 @@ namespace Nekoyume.UI
         private void GoToFood()
         {
             Find<Battle>().Close(true);
-            Game.Game.instance.Stage.DestroyBackground();
+            Game.Game.instance.Stage.ReleaseBattleAssets();
             Game.Event.OnRoomEnter.Invoke(true);
             Close();
 
@@ -1085,7 +1109,7 @@ namespace Nekoyume.UI
                 }
                 catch
                 {
-                    Debug.LogError("SharedModel.ClearedCountForEachWaves Sum Failed");
+                    NcDebug.LogError("SharedModel.ClearedCountForEachWaves Sum Failed");
                 }
 
                 if (SharedModel.StageType == StageType.EventDungeon)

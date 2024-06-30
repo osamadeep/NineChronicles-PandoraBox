@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Async;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,6 +15,7 @@ using Grpc.Core;
 using Ionic.Zlib;
 using Lib9c;
 using Lib9c.Renderers;
+using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
 using Libplanet.Types.Assets;
@@ -28,15 +28,15 @@ using MagicOnion.Unity;
 using MessagePack;
 using mixpanel;
 using Nekoyume.Action;
-using Nekoyume.Extensions;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
-using Nekoyume.Model.Stake;
+using Nekoyume.Model;
+using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Shared.Hubs;
 using Nekoyume.Shared.Services;
 using Nekoyume.State;
-using Nekoyume.TableData;
 using Nekoyume.UI;
 using NineChronicles.RPC.Shared.Exceptions;
 using UnityEngine;
@@ -96,6 +96,8 @@ namespace Nekoyume.Blockchain
         public readonly Subject<(RPCAgent, int retryCount)> OnRetryAttempt = new Subject<(RPCAgent, int)>();
 
         public BlockHash BlockTipHash { get; private set; }
+
+        public HashDigest<SHA256> BlockTipStateRootHash { get; private set; }
 
         private readonly Subject<(NCTx tx, List<ActionBase> actions)> _onMakeTransactionSubject =
             new Subject<(NCTx tx, List<ActionBase> actions)>();
@@ -159,7 +161,7 @@ namespace Nekoyume.Blockchain
             PrivateKey privateKey,
             Action<bool> callback)
         {
-            Debug.Log($"[RPCAgent] Start initialization: {options.RpcServerHost}:{options.RpcServerPort}");
+            NcDebug.Log($"[RPCAgent] Start initialization: {options.RpcServerHost}:{options.RpcServerPort}");
             PrivateKey = privateKey;
             _channel ??= GrpcChannelx.ForTarget(
                 new GrpcChannelTarget(options.RpcServerHost, options.RpcServerPort, true));
@@ -205,96 +207,115 @@ namespace Nekoyume.Blockchain
                 }
                 else
                 {
-                    yield return UniTask.RunOnThreadPool(UniTask.Action(async () =>
+                    yield return UniTask.Run(async () =>
                     {
                         var genesisBlockPath = options.GenesisBlockPath ?? BlockManager.GenesisBlockPath();
                         _genesis = await BlockManager.ImportBlockAsync(genesisBlockPath);
-                    })).ToCoroutine();
+                    }).ToCoroutine();
                 }
 
                 sw.Stop();
-                Debug.Log($"[RPCAgent] genesis block imported in {sw.ElapsedMilliseconds}ms.(elapsed)");
+                NcDebug.Log($"[RPCAgent] genesis block imported in {sw.ElapsedMilliseconds}ms.(elapsed)");
             }
 
             yield return getTipTask.ToCoroutine();
             RegisterDisconnectEvent(_hub);
             StartCoroutine(CoTxProcessor());
             StartCoroutine(CoJoin(callback));
-            Debug.Log($"[RPCAgent] Finish initialization");
+            NcDebug.Log($"[RPCAgent] Finish initialization");
         }
 
-        public IValue GetState(Address address)
+        public IValue GetState(Address accountAddress, Address address)
         {
-            var raw = _service.GetState(
-                address.ToByteArray(),
-                BlockTipHash.ToByteArray()
+            var raw = _service.GetStateByBlockHash(
+                BlockTipHash.ToByteArray(),
+                accountAddress.ToByteArray(),
+                address.ToByteArray()
             ).ResponseAsync.Result;
             return _codec.Decode(raw);
         }
 
-        public IValue GetState(Address address, HashDigest<SHA256> stateRootHash)
+        public IValue GetState(HashDigest<SHA256> stateRootHash, Address accountAddress, Address address)
         {
-            var raw = _service.GetStateBySrh(
-                address.ToByteArray(),
-                stateRootHash.ToByteArray()
+            var raw = _service.GetStateByStateRootHash(
+                stateRootHash.ToByteArray(),
+                accountAddress.ToByteArray(),
+                address.ToByteArray()
             ).ResponseAsync.Result;
             return _codec.Decode(raw);
         }
 
-        public async Task<IValue> GetStateAsync(Address address, long? blockIndex = null)
+        public async Task<IValue> GetStateAsync(Address accountAddress, Address address)
         {
             var game = Game.Game.instance;
             // Check state & cached because force update state after rpc disconnected.
-            if (!blockIndex.HasValue &&
-                game.CachedStateAddresses.TryGetValue(address, out var cached) &&
+            if (game.CachedStateAddresses.TryGetValue(accountAddress.Derive(address.ToByteArray()), out var cached) &&
                 cached &&
-                game.CachedStates.TryGetValue(address, out var value) &&
+                game.CachedStates.TryGetValue(accountAddress.Derive(address.ToByteArray()), out var value) &&
                 value is not Null)
             {
                 return value;
             }
 
-            var blockHash = await GetBlockHashAsync(blockIndex);
+            var blockHash = await GetBlockHashAsync(null);
             if (!blockHash.HasValue)
             {
-                Debug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                NcDebug.LogError("Failed to get tip block hash.");
                 return null;
             }
 
-            return await GetStateAsync(address, blockHash.Value);
+            return await GetStateAsync(blockHash.Value, accountAddress, address);
         }
 
-        public async Task<IValue> GetStateAsync(Address address, BlockHash blockHash)
+        public async Task<IValue> GetStateAsync(long blockIndex, Address accountAddress, Address address)
         {
-            var bytes = await _service.GetState(address.ToByteArray(), blockHash.ToByteArray());
-            var decoded = _codec.Decode(bytes);
-            var game = Game.Game.instance;
-            if (game.CachedStateAddresses.ContainsKey(address))
+            var blockHash = await GetBlockHashAsync(blockIndex);
+            if (!blockHash.HasValue)
             {
-                game.CachedStateAddresses[address] = true;
+                NcDebug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                return null;
             }
 
-            if (game.CachedStates.ContainsKey(address))
+            return await GetStateAsync(blockHash.Value, accountAddress, address);
+        }
+
+        public async Task<IValue> GetStateAsync(BlockHash blockHash, Address accountAddress, Address address)
+        {
+            var bytes = await _service.GetStateByBlockHash(
+                blockHash.ToByteArray(),
+                accountAddress.ToByteArray(),
+                address.ToByteArray());
+            var decoded = _codec.Decode(bytes);
+            var game = Game.Game.instance;
+            if (game.CachedStateAddresses.ContainsKey(accountAddress.Derive(address.ToByteArray())))
             {
-                game.CachedStates.AddOrUpdate(address, decoded);
+                game.CachedStateAddresses[accountAddress.Derive(address.ToByteArray())] = true;
+            }
+
+            if (game.CachedStates.ContainsKey(accountAddress.Derive(address.ToByteArray())))
+            {
+                game.CachedStates.AddOrUpdate(accountAddress.Derive(address.ToByteArray()), decoded);
             }
 
             return decoded;
         }
 
-        public async Task<IValue> GetStateAsync(Address address, HashDigest<SHA256> stateRootHash)
+        public async Task<IValue> GetStateAsync(HashDigest<SHA256> stateRootHash, Address accountAddress, Address address)
         {
-            var bytes = await _service.GetStateBySrh(address.ToByteArray(), stateRootHash.ToByteArray());
+            var bytes = await _service.GetStateByStateRootHash(
+                stateRootHash.ToByteArray(),
+                accountAddress.ToByteArray(),
+                address.ToByteArray());
             var decoded = _codec.Decode(bytes);
             var game = Game.Game.instance;
-            if (game.CachedStateAddresses.ContainsKey(address))
+            if (game.CachedStateAddresses.ContainsKey(accountAddress.Derive(address.ToByteArray())))
             {
-                game.CachedStateAddresses[address] = true;
+                game.CachedStateAddresses[accountAddress.Derive(address.ToByteArray())] = true;
             }
 
-            if (game.CachedStates.ContainsKey(address))
+            if (game.CachedStates.ContainsKey(accountAddress.Derive(address.ToByteArray())))
             {
-                game.CachedStates.AddOrUpdate(address, decoded);
+                game.CachedStates.AddOrUpdate(accountAddress.Derive(address.ToByteArray()), decoded);
             }
 
             return decoded;
@@ -307,8 +328,7 @@ namespace Nekoyume.Blockchain
 
         public async Task<FungibleAssetValue> GetBalanceAsync(
             Address addr,
-            Currency currency,
-            long? blockIndex = null)
+            Currency currency)
         {
             var game = Game.Game.instance;
             if (game.CachedBalance.TryGetValue(currency, out var cache) &&
@@ -319,14 +339,14 @@ namespace Nekoyume.Blockchain
                 return fav;
             }
 
-            var blockHash = await GetBlockHashAsync(blockIndex);
+            var blockHash = await GetBlockHashAsync(null);
             if (blockHash is null)
             {
-                Debug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                NcDebug.LogError($"Failed to get tup block hash.");
                 return 0 * currency;
             }
 
-            var balance = await GetBalanceAsync(addr, currency, blockHash.Value)
+            var balance = await GetBalanceAsync(blockHash.Value, addr, currency)
                 .ConfigureAwait(false);
             if (addr.Equals(Address))
             {
@@ -343,14 +363,51 @@ namespace Nekoyume.Blockchain
         }
 
         public async Task<FungibleAssetValue> GetBalanceAsync(
-            Address address,
-            Currency currency,
-            BlockHash blockHash)
+            long blockIndex,
+            Address addr,
+            Currency currency)
         {
-            var raw = await _service.GetBalance(
+            var game = Game.Game.instance;
+            if (game.CachedBalance.TryGetValue(currency, out var cache) &&
+                cache.TryGetValue(addr, out var fav) &&
+                !fav.Equals(default))
+            {
+                await Task.CompletedTask;
+                return fav;
+            }
+
+            var blockHash = await GetBlockHashAsync(blockIndex);
+            if (blockHash is null)
+            {
+                NcDebug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                return 0 * currency;
+            }
+
+            var balance = await GetBalanceAsync(blockHash.Value, addr, currency)
+                .ConfigureAwait(false);
+            if (addr.Equals(Address))
+            {
+                if (!game.CachedBalance.ContainsKey(currency))
+                {
+                    game.CachedBalance[currency] =
+                        new LruCache<Address, FungibleAssetValue>(2);
+                }
+
+                game.CachedBalance[currency][addr] = balance;
+            }
+
+            return balance;
+        }
+
+        public async Task<FungibleAssetValue> GetBalanceAsync(
+            BlockHash blockHash,
+            Address address,
+            Currency currency)
+        {
+            var raw = await _service.GetBalanceByBlockHash(
+                BlockTipHash.ToByteArray(),
                 address.ToByteArray(),
-                _codec.Encode(currency.Serialize()),
-                BlockTipHash.ToByteArray());
+                _codec.Encode(currency.Serialize()));
             var serialized = (List) _codec.Decode(raw);
             return FungibleAssetValue.FromRawValue(
                 new Currency(serialized.ElementAt(0)),
@@ -358,62 +415,215 @@ namespace Nekoyume.Blockchain
         }
 
         public async Task<FungibleAssetValue> GetBalanceAsync(
+            HashDigest<SHA256> stateRootHash,
             Address address,
-            Currency currency,
-            HashDigest<SHA256> stateRootHash)
+            Currency currency)
         {
-            var raw = await _service.GetBalanceBySrh(
+            var raw = await _service.GetBalanceByStateRootHash(
+                stateRootHash.ToByteArray(),
                 address.ToByteArray(),
-                _codec.Encode(currency.Serialize()),
-                stateRootHash.ToByteArray());
+                _codec.Encode(currency.Serialize()));
             var serialized = (List) _codec.Decode(raw);
             return FungibleAssetValue.FromRawValue(
                 new Currency(serialized.ElementAt(0)),
                 serialized.ElementAt(1).ToBigInteger());
         }
 
+        public async Task<AgentState> GetAgentStateAsync(Address address)
+        {
+            var blockHash = await GetBlockHashAsync(null);
+            if (blockHash is not { } blockHashNotNull)
+            {
+                NcDebug.LogError($"Failed to get tip block hash.");
+                return null;
+            }
+
+            var raw = await _service.GetAgentStatesByBlockHash(
+                blockHashNotNull.ToByteArray(),
+                new[] { address.ToByteArray() });
+            return ResolveAgentState(raw.Values.First());
+        }
+
+        public async Task<AgentState> GetAgentStateAsync(long blockIndex, Address address)
+        {
+            var blockHash = await GetBlockHashAsync(blockIndex);
+            if (blockHash is not { } blockHashNotNull)
+            {
+                NcDebug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                return null;
+            }
+
+            var raw = await _service.GetAgentStatesByBlockHash(
+                blockHashNotNull.ToByteArray(),
+                new[] { address.ToByteArray() });
+            return ResolveAgentState(raw.Values.First());
+        }
+
+        public async Task<AgentState> GetAgentStateAsync(HashDigest<SHA256> stateRootHash, Address address)
+        {
+            var raw = await _service.GetAgentStatesByStateRootHash(
+                stateRootHash.ToByteArray(),
+                new[] { address.ToByteArray() });
+            return ResolveAgentState(raw.Values.First());
+        }
+
+        private AgentState ResolveAgentState(byte[] raw)
+        {
+            IValue value = _codec.Decode(raw);
+            if (value is Dictionary dict)
+            {
+                return new AgentState(dict);
+            }
+            else if (value is List list)
+            {
+                return new AgentState(list);
+            }
+            else
+            {
+                NcDebug.LogError("Given raw is not a format of the AgentState.");
+                return null;
+            }
+        }
+
         public async Task<Dictionary<Address, AvatarState>> GetAvatarStatesAsync(
-            IEnumerable<Address> addressList,
-            long? blockIndex = null)
+            IEnumerable<Address> addressList)
+        {
+            var blockHash = await GetBlockHashAsync(null);
+            if (!blockHash.HasValue)
+            {
+                NcDebug.LogError($"Failed to get tip block hash.");
+                return null;
+            }
+
+            Dictionary<byte[], byte[]> raw = await _service.GetAvatarStatesByBlockHash(
+                blockHash.Value.ToByteArray(),
+                addressList.Select(a => a.ToByteArray()));
+            var result = new Dictionary<Address, AvatarState>();
+            foreach (var kv in raw)
+            {
+                result[new Address(kv.Key)] = ResolveAvatarState(kv.Value);
+            }
+            return result;
+        }
+
+        public async Task<Dictionary<Address, AvatarState>> GetAvatarStatesAsync(
+            long blockIndex,
+            IEnumerable<Address> addressList)
         {
             var blockHash = await GetBlockHashAsync(blockIndex);
             if (!blockHash.HasValue)
             {
-                Debug.LogError($"Failed to get block hash from block index: {blockIndex}");
+                NcDebug.LogError($"Failed to get block hash from block index: {blockIndex}");
                 return null;
             }
 
-            Dictionary<byte[], byte[]> raw = await _service.GetAvatarStates(
-                addressList.Select(a => a.ToByteArray()),
-                blockHash.Value.ToByteArray());
+            Dictionary<byte[], byte[]> raw = await _service.GetAvatarStatesByBlockHash(
+                blockHash.Value.ToByteArray(),
+                addressList.Select(a => a.ToByteArray()));
             var result = new Dictionary<Address, AvatarState>();
             foreach (var kv in raw)
             {
-                result[new Address(kv.Key)] = new AvatarState((Dictionary)_codec.Decode(kv.Value));
+                result[new Address(kv.Key)] = ResolveAvatarState(kv.Value);
             }
             return result;
         }
 
         public async Task<Dictionary<Address, AvatarState>> GetAvatarStatesAsync(
-            IEnumerable<Address> addressList,
-            HashDigest<SHA256> stateRootHash)
+            HashDigest<SHA256> stateRootHash,
+            IEnumerable<Address> addressList)
         {
-            Dictionary<byte[], byte[]> raw = await _service.GetAvatarStatesBySrh(
-                addressList.Select(a => a.ToByteArray()),
-                stateRootHash.ToByteArray());
+            Dictionary<byte[], byte[]> raw = await _service.GetAvatarStatesByStateRootHash(
+                stateRootHash.ToByteArray(),
+                addressList.Select(a => a.ToByteArray()));
             var result = new Dictionary<Address, AvatarState>();
             foreach (var kv in raw)
             {
-                result[new Address(kv.Key)] = new AvatarState((Dictionary)_codec.Decode(kv.Value));
+                result[new Address(kv.Key)] = ResolveAvatarState(kv.Value);
             }
             return result;
         }
 
-        public async Task<Dictionary<Address, IValue>> GetStateBulkAsync(IEnumerable<Address> addressList)
+        private AvatarState ResolveAvatarState(byte[] raw)
+        {
+            AvatarState avatarState;
+            if (!(_codec.Decode(raw) is List full))
+            {
+                NcDebug.LogError("Given raw is not a format of the AvatarState.");
+                return null;
+            }
+
+            if (full.Count == 1)
+            {
+                if (full[0] is Dictionary dict)
+                {
+                    avatarState = new AvatarState(dict);
+                }
+                else
+                {
+                    NcDebug.LogError("Given raw is not a format of the AvatarState.");
+                    return null;
+                }
+            }
+            else if (full.Count == 4)
+            {
+                if (full[0] is Dictionary dict)
+                {
+                    avatarState = new AvatarState(dict);
+                }
+                else if (full[0] is List list)
+                {
+                    avatarState = new AvatarState(list);
+                }
+                else
+                {
+                    NcDebug.LogError("Given raw is not a format of the AvatarState.");
+                    return null;
+                }
+
+                if (full[1] is not List inventoryList)
+                {
+                    NcDebug.LogError("Given raw is not a format of the inventory.");
+                    return null;
+                }
+
+                switch (full[2])
+                {
+                    case Dictionary questListDict:
+                        avatarState.questList = new QuestList(questListDict);
+                        break;
+                    case List questList:
+                        avatarState.questList = new QuestList(questList);
+                        break;
+                    default:
+                        NcDebug.LogError("Given raw is not a format of the questList.");
+                        return null;
+                }
+
+                if (full[3] is not Dictionary worldInformationDict)
+                {
+                    NcDebug.LogError("Given raw is not a format of the worldInformation.");
+                    return null;
+                }
+
+                avatarState.inventory = new Inventory(inventoryList);
+                avatarState.worldInformation = new WorldInformation(worldInformationDict);
+            }
+            else
+            {
+                NcDebug.LogError("Given raw is not a format of the AvatarState.");
+                return null;
+            }
+
+            return avatarState;
+        }
+
+        public async Task<Dictionary<Address, IValue>> GetStateBulkAsync(Address accountAddress, IEnumerable<Address> addressList)
         {
             Dictionary<byte[], byte[]> raw =
-                await _service.GetStateBulk(addressList.Select(a => a.ToByteArray()),
-                    BlockTipHash.ToByteArray());
+                await _service.GetBulkStateByBlockHash(
+                    BlockTipHash.ToByteArray(),
+                    accountAddress.ToByteArray(),
+                    addressList.Select(a => a.ToByteArray()));
             var result = new Dictionary<Address, IValue>();
             foreach (var kv in raw)
             {
@@ -423,13 +633,15 @@ namespace Nekoyume.Blockchain
         }
 
         public async Task<Dictionary<Address, IValue>> GetStateBulkAsync(
-            IEnumerable<Address> addressList,
-            HashDigest<SHA256> stateRootHash)
+            HashDigest<SHA256> stateRootHash,
+            Address accountAddress,
+            IEnumerable<Address> addressList)
         {
             Dictionary<byte[], byte[]> raw =
-                await _service.GetStateBulkBySrh(
-                    addressList.Select(a => a.ToByteArray()),
-                    stateRootHash.ToByteArray());
+                await _service.GetBulkStateByStateRootHash(
+                    stateRootHash.ToByteArray(),
+                    accountAddress.ToByteArray(),
+                    addressList.Select(a => a.ToByteArray()));
             var result = new Dictionary<Address, IValue>();
             foreach (var kv in raw)
             {
@@ -453,18 +665,19 @@ namespace Nekoyume.Blockchain
                 .ParallelForEachAsync(async list =>
                 {
                     Dictionary<byte[], byte[]> raw =
-                        await _service.GetSheets(list.Select(a => a.ToByteArray()),
-                            BlockTipHash.ToByteArray());
+                        await _service.GetSheets(
+                            BlockTipHash.ToByteArray(),
+                            list.Select(a => a.ToByteArray()));
                     await raw.ParallelForEachAsync(async pair =>
                     {
                         cd.TryAdd(pair.Key, pair.Value);
                         var size = Buffer.ByteLength(pair.Value);
-                        Debug.Log($"[GetSheets/{new Address(pair.Key)}] buffer size: {size}");
+                        NcDebug.Log($"[GetSheets/{new Address(pair.Key)}] buffer size: {size}");
                         await Task.CompletedTask;
                     });
                 });
             sw.Stop();
-            Debug.Log($"[SyncTableSheets/GetSheets] Get sheets. {sw.Elapsed}");
+            NcDebug.Log($"[SyncTableSheets/GetSheets] Get sheets. {sw.Elapsed}");
             sw.Restart();
             var result = new Dictionary<Address, IValue>();
             foreach (var kv in cd)
@@ -472,7 +685,7 @@ namespace Nekoyume.Blockchain
                 result[new Address(kv.Key)] = _codec.Decode(MessagePackSerializer.Deserialize<byte[]>(kv.Value, _lz4Options));
             }
             sw.Stop();
-            Debug.Log($"[SyncTableSheets/GetSheets] decode values. {sw.Elapsed}");
+            NcDebug.Log($"[SyncTableSheets/GetSheets] decode values. {sw.Elapsed}");
             return result;
         }
 
@@ -529,7 +742,7 @@ namespace Nekoyume.Blockchain
                 .ObserveOnMainThread()
                 .Subscribe(tuple =>
                 {
-                    Debug.Log($"Retry rpc connection. (remain count: {tuple.retryCount})");
+                    NcDebug.Log($"Retry rpc connection. (remain count: {tuple.retryCount})");
                     var tryCount = RpcConnectionRetryCount - tuple.retryCount;
                     if (tryCount > 0)
                     {
@@ -582,14 +795,14 @@ namespace Nekoyume.Blockchain
             Task currencyTask = Task.Run(async () =>
             {
                 var goldCurrency = new GoldCurrencyState(
-                    (Dictionary)await GetStateAsync(GoldCurrencyState.Address)
+                    (Dictionary)await GetStateAsync(
+                        ReservedAddresses.LegacyAccount,
+                        GoldCurrencyState.Address)
                 ).Currency;
                 ActionRenderHandler.Instance.GoldCurrency = goldCurrency;
 
                 await States.Instance.SetAgentStateAsync(
-                    await GetStateAsync(Address) is Dictionary agentDict
-                        ? new AgentState(agentDict)
-                        : new AgentState(Address));
+                    await GetAgentStateAsync(Address) ?? new AgentState(Address));
                 States.Instance.SetGoldBalanceState(
                     new GoldBalanceState(
                         Address,
@@ -597,7 +810,9 @@ namespace Nekoyume.Blockchain
                 States.Instance.SetCrystalBalance(
                     await GetBalanceAsync(Address, Currencies.Crystal));
 
-                if (await GetStateAsync(GameConfigState.Address) is Dictionary configDict)
+                if (await GetStateAsync(
+                        ReservedAddresses.LegacyAccount,
+                        GameConfigState.Address) is Dictionary configDict)
                 {
                     States.Instance.SetGameConfigState(new GameConfigState(configDict));
                 }
@@ -606,61 +821,13 @@ namespace Nekoyume.Blockchain
                     throw new FailedToInstantiateStateException<GameConfigState>();
                 }
 
-                // NOTE: Initialize staking states after setting GameConfigState.
-                var stakeAddr = StakeStateV2.DeriveAddress(Address);
-                if (await GetStateAsync(stakeAddr) is { } serializedStakeState)
-                {
-                    if (!StakeStateUtilsForClient.TryMigrate(
-                            serializedStakeState,
-                            States.Instance.GameConfigState,
-                            out var stakeStateV2))
-                    {
-                        States.Instance.SetStakeState(null, null, 0, null, null);
-                    }
-                    else
-                    {
-                        var balance = new FungibleAssetValue(goldCurrency);
-                        var level = 0;
-                        var stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
-                        var stakeRegularRewardSheet = new StakeRegularRewardSheet();
-                        try
-                        {
-                            balance = await GetBalanceAsync(stakeAddr, goldCurrency);
-                            var sheetAddrArr = new[]
-                            {
-                                Addresses.GetSheetAddress(
-                                    stakeStateV2.Contract.StakeRegularFixedRewardSheetTableName),
-                                Addresses.GetSheetAddress(
-                                    stakeStateV2.Contract.StakeRegularRewardSheetTableName),
-                            };
-                            var sheetStates = await GetStateBulkAsync(sheetAddrArr);
-                            stakeRegularFixedRewardSheet.Set(
-                                sheetStates[sheetAddrArr[0]].ToDotnetString());
-                            stakeRegularRewardSheet.Set(
-                                sheetStates[sheetAddrArr[1]].ToDotnetString());
-                            level = stakeRegularFixedRewardSheet.FindLevelByStakedAmount(
-                                Address,
-                                balance);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-
-                        States.Instance.SetStakeState(
-                            stakeStateV2,
-                            new GoldBalanceState(stakeAddr, balance),
-                            level,
-                            stakeRegularFixedRewardSheet,
-                            stakeRegularRewardSheet);
-                    }
-                }
-
                 var agentAddress = Address;
                 var pledgeAddress = agentAddress.GetPledgeAddress();
                 Address? patronAddress = null;
                 var approved = false;
-                if (await GetStateAsync(pledgeAddress) is List list)
+                if (await GetStateAsync(
+                        ReservedAddresses.LegacyAccount,
+                        pledgeAddress) is List list)
                 {
                     patronAddress = list[0].ToAddress();
                     approved = list[1].ToBoolean();
@@ -695,17 +862,17 @@ namespace Nekoyume.Blockchain
                 {
                     continue;
                 }
-                Debug.Log($"[RPCAgent] CoTxProcessor()... before MakeTransaction.({++i})");
+                NcDebug.Log($"[RPCAgent] CoTxProcessor()... before MakeTransaction.({++i})");
                 Task task = Task.Run(async () =>
                 {
                     await MakeTransaction(new List<ActionBase> { action });
                 });
                 yield return new WaitUntil(() => task.IsCompleted);
-                Debug.Log("[RPCAgent] CoTxProcessor()... after MakeTransaction." +
+                NcDebug.Log("[RPCAgent] CoTxProcessor()... after MakeTransaction." +
                           $" task completed({task.IsCompleted})");
                 if (task.IsFaulted)
                 {
-                    Debug.LogException(task.Exception);
+                    NcDebug.LogException(task.Exception);
                     // FIXME: Should restore this after fixing actual bug that MakeTransaction
                     // was throwing Exception.
                     /*Debug.LogError(
@@ -740,7 +907,7 @@ namespace Nekoyume.Blockchain
 
                 return action.GetActionTypeAttribute().TypeIdentifier.ToString();
             }));
-            Debug.Log("[RPCAgent] MakeTransaction()... w/" +
+            NcDebug.Log("[RPCAgent] MakeTransaction()... w/" +
                       $" nonce={nonce}" +
                       $" PrivateKeyAddr={PrivateKey.Address.ToString()}" +
                       $" GenesisBlockHash={_genesis?.Hash}" +
@@ -785,22 +952,25 @@ namespace Nekoyume.Blockchain
 
         public void OnRenderBlock(byte[] oldTip, byte[] newTip)
         {
-            UniTask.RunOnThreadPool<(long, BlockHash)>(() =>
+            UniTask.RunOnThreadPool<(long, BlockHash, HashDigest<SHA256>)>(() =>
             {
                 var dict = (Dictionary) _codec.Decode(newTip);
                 var newTipBlock = BlockMarshaler.UnmarshalBlock(dict);
-                return (newTipBlock.Index, new BlockHash(newTipBlock.Hash.ToByteArray()));
+                return (
+                    newTipBlock.Index,
+                    newTipBlock.Hash,
+                    newTipBlock.StateRootHash);
             }).ToObservable().ObserveOnMainThread().Subscribe(tuple =>
             {
                 _blockHashCache.Add(tuple.Item1, tuple.Item2);
                 BlockIndex = tuple.Item1;
                 BlockIndexSubject.OnNext(BlockIndex);
                 BlockTipHash = tuple.Item2;
+                BlockTipStateRootHash = tuple.Item3;
                 BlockTipHashSubject.OnNext(BlockTipHash);
                 _lastTipChangedAt = DateTimeOffset.UtcNow;
 
-                Debug.Log(
-                    $"[{nameof(RPCAgent)}] Render block: {BlockIndex}, {BlockTipHash.ToString()}");
+                NcDebug.Log($"[{nameof(RPCAgent)}] Render block: {BlockIndex}, {BlockTipHash.ToString()}", channel: "RenderBlock");
                 BlockRenderer.RenderBlock(null, null);
             });
         }
@@ -835,9 +1005,9 @@ namespace Nekoyume.Blockchain
                 }
                 try
                 {
-                    Debug.Log($"Trying to join hub...");
+                    NcDebug.Log($"Trying to join hub...");
                     await Join(true);
-                    Debug.Log($"Join complete! Registering disconnect event...");
+                    NcDebug.Log($"Join complete! Registering disconnect event...");
                     RegisterDisconnectEvent(_hub);
                     UpdateSubscribeAddresses();
                     OnRetryEnded.OnNext(this);
@@ -845,30 +1015,30 @@ namespace Nekoyume.Blockchain
                 }
                 catch (TimeoutException toe)
                 {
-                    Debug.LogWarning($"TimeoutException occurred. Retrying... {retryCount}\n{toe}");
+                    NcDebug.LogWarning($"TimeoutException occurred. Retrying... {retryCount}\n{toe}");
                     retryCount--;
                 }
                 catch (AggregateException ae)
                 {
                     if (ae.InnerException is RpcException re)
                     {
-                        Debug.LogWarning($"RpcException occurred. Retrying... {retryCount}\n{re}");
+                        NcDebug.LogWarning($"RpcException occurred. Retrying... {retryCount}\n{re}");
                         retryCount--;
                     }
                     else
                     {
-                        Debug.LogWarning($"Unexpected error occurred during rpc connection. {ae}");
+                        NcDebug.LogWarning($"Unexpected error occurred during rpc connection. {ae}");
                         break;
                     }
                 }
                 catch (ObjectDisposedException ode)
                 {
-                    Debug.LogWarning($"ObjectDisposedException occurred. Retrying... {retryCount}\n{ode}");
+                    NcDebug.LogWarning($"ObjectDisposedException occurred. Retrying... {retryCount}\n{ode}");
                     retryCount--;
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"Unexpected error occurred during rpc connection. {e}");
+                    NcDebug.LogWarning($"Unexpected error occurred during rpc connection. {e}");
                     break;
                 }
             }
@@ -901,7 +1071,7 @@ namespace Nekoyume.Blockchain
             BlockTipHashSubject.OnNext(BlockTipHash);
             _lastTipChangedAt = DateTimeOffset.UtcNow;
 
-            Debug.Log($"[{nameof(RPCAgent)}] Render reorg: {BlockIndex}, {BlockTipHash.ToString()}");
+            NcDebug.Log($"[{nameof(RPCAgent)}] Render reorg: {BlockIndex}, {BlockTipHash.ToString()}");
         }
 
         public void OnReorgEnd(byte[] oldTip, byte[] newTip, byte[] branchpoint)
@@ -928,7 +1098,7 @@ namespace Nekoyume.Blockchain
             var errorMsg = string.Format(L10nManager.Localize("UI_ERROR_RETRY_FORMAT"),
                 L10nManager.Localize(key), errorCode);
 
-            Debug.Log($"{message} (code: {code})");
+            NcDebug.Log($"{message} (code: {code})");
             Game.Event.OnRoomEnter.Invoke(true);
             Game.Game.instance.Stage.OnRoomEnterEnd
                 .First()
@@ -945,13 +1115,13 @@ namespace Nekoyume.Blockchain
         public void OnPreloadStart()
         {
             OnPreloadStarted.OnNext(this);
-            Debug.Log($"On Preload Start");
+            NcDebug.Log($"On Preload Start");
         }
 
         public void OnPreloadEnd()
         {
             OnPreloadEnded.OnNext(this);
-            Debug.Log($"On Preload End");
+            NcDebug.Log($"On Preload End");
         }
 
         public void UpdateSubscribeAddresses()
@@ -962,29 +1132,30 @@ namespace Nekoyume.Blockchain
                 return;
             }
 
-            var addresses = new List<Address> { Address };
+            var addresses = new List<(Address,Address)> {(Addresses.Agent,Address)};
 
             var currentAvatarState = States.Instance.CurrentAvatarState;
             if (!(currentAvatarState is null))
             {
-                addresses.Add(currentAvatarState.address);
-                var slotAddresses = currentAvatarState.combinationSlotAddresses.ToArray();
-                addresses.AddRange(slotAddresses);
+                addresses.Add((Addresses.Avatar,(currentAvatarState.address)));
+                addresses.AddRange(currentAvatarState.combinationSlotAddresses.Select(addr =>
+                    (ReservedAddresses.LegacyAccount, addr)));
             }
 
-            Debug.Log($"Subscribing addresses: {string.Join(", ", addresses)}");
+            NcDebug.Log($"Subscribing addresses: {string.Join(", ", addresses)}");
 
             foreach (var address in addresses)
             {
                 var game = Game.Game.instance;
-                game.CachedStateAddresses[address] = false;
-                if (!game.CachedStates.ContainsKey(address))
+                var derivedAddr = address.Item1.Derive(address.Item2.ToByteArray());
+                game.CachedStateAddresses[derivedAddr] = false;
+                if (!game.CachedStates.ContainsKey(derivedAddr))
                 {
-                    game.CachedStates.Add(address, Null.Value);
+                    game.CachedStates.Add(derivedAddr, Null.Value);
                 }
             }
 
-            _service.SetAddressesToSubscribe(Address.ToByteArray(), addresses.Select(addr => addr.ToByteArray()));
+            _service.SetAddressesToSubscribe(Address.ToByteArray(), addresses.Select(pair => pair.Item2.ToByteArray()));
         }
 
         public bool TryGetTxId(Guid actionId, out TxId txId) =>

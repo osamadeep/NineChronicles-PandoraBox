@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Nekoyume.Model.Stat;
 using TMPro;
 using UnityEngine;
@@ -9,15 +8,16 @@ namespace Nekoyume.UI.Module
     public class DetailedStatView : StatView
     {
         public TextMeshProUGUI additionalText;
+        public TextMeshProUGUI valueText2;
 
-        public void Show(StatType statType, int statValue, int additionalStatValue)
+        public void Show(StatType statType, long statValue, long additionalStatValue)
         {
             statTypeText.text = statType.ToString();
             valueText.text = statType.ValueToString(statValue);
             SetAdditional(statType, additionalStatValue);
         }
 
-        public void Show(StatType statType, (int valueMin, int valueMax) valueRange)
+        public void Show(StatType statType, (long valueMin, long valueMax) valueRange)
         {
             statTypeText.text = statType.ToString();
             var valueMin = statType.ValueToString(valueRange.valueMin);
@@ -28,17 +28,17 @@ namespace Nekoyume.UI.Module
             gameObject.SetActive(true);
         }
 
-        public void Show(string keyText, int statValue, int additionalStatValue)
+        public void Show(string keyText, long statValue, long additionalStatValue)
         {
             if (!Enum.TryParse<StatType>(keyText, out var statType))
             {
-                Debug.LogError("Failed to parse StatType.");
+                NcDebug.LogError("Failed to parse StatType.");
             }
 
             Show(statType, statValue, additionalStatValue);
         }
 
-        public void SetAdditional(StatType statType, int additionalStatValue)
+        public void SetAdditional(StatType statType, long additionalStatValue)
         {
             if (additionalStatValue == 0)
             {
@@ -52,6 +52,21 @@ namespace Nekoyume.UI.Module
             }
 
             gameObject.SetActive(true);
+        }
+
+        public void ShowModify(StatType statType, long addValue, long percentageValue)
+        {
+            const string none = "-";
+            statTypeText.text = statType.ToString();
+            valueText.text = addValue > 0 ? $"+{statType.ValueToString(addValue)}" : none;
+            valueText2.text = percentageValue > 0 ? $"+{percentageValue:0.#\\%}" : none;
+
+            gameObject.SetActive(true);
+        }
+
+        public override void Hide()
+        {
+            gameObject.SetActive(false);
         }
     }
 }

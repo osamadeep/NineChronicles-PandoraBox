@@ -10,11 +10,10 @@ using UnityEngine.UI;
 using Nekoyume.Model.State;
 using System.Collections;
 using System.Collections.Generic;
-using Lib9c.Renderers;
-using Nekoyume.Action;
 using Nekoyume.Game;
 using Nekoyume.Helper;
 using Nekoyume.L10n;
+using Nekoyume.Model.EnumType;
 
 namespace Nekoyume.UI
 {
@@ -112,15 +111,8 @@ namespace Nekoyume.UI
                 .Subscribe();
         }
 
-        public void OnRenderCreateAvatar(ActionEvaluation<CreateAvatar> eval)
+        public void OnRenderCreateAvatar()
         {
-            if (eval.Exception is { })
-            {
-                // NOTE: If eval has an exception then
-                // UIs will handled in other places.
-                return;
-            }
-
             var avatarState = States.Instance.CurrentAvatarState;
             StartCoroutine(CreateAndLoginAnimation(avatarState));
         }
@@ -145,7 +137,7 @@ namespace Nekoyume.UI
             var loadingScreen = Find<LoadingScreen>();
             loadingScreen.Show(
                 LoadingScreen.LoadingType.Entering, L10nManager.Localize("UI_IN_MINING_A_BLOCK"));
-            await RxProps.SelectAvatarAsync(_selectedIndex);
+            await RxProps.SelectAvatarAsync(_selectedIndex, Game.Game.instance.Agent.BlockTipStateRootHash);
             loadingScreen.Close();
             OnDidAvatarStateLoaded(States.Instance.CurrentAvatarState);
         }
@@ -185,8 +177,25 @@ namespace Nekoyume.UI
                     tableSheets.CharacterLevelSheet,
                     tableSheets.EquipmentItemSetEffectSheet
                 );
+
+                var runeStates = States.Instance.GetEquippedRuneStates(BattleType.Adventure);
+
+                var allRuneState = States.Instance.AllRuneState;
+                var runeListSheet = tableSheets.RuneListSheet;
+                var runeLevelBonusSheet = tableSheets.RuneLevelBonusSheet;
+                var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
+                    allRuneState, runeListSheet, runeLevelBonusSheet);
+
                 var costumeStatSheet = Game.Game.instance.TableSheets.CostumeStatSheet;
-                player.SetCostumeStat(costumeStatSheet);
+                var collectionState = States.Instance.CollectionState;
+                var collectionSheet = Game.Game.instance.TableSheets.CollectionSheet;
+                player.ConfigureStats(
+                    costumeStatSheet,
+                    runeStates,
+                    tableSheets.RuneOptionSheet,
+                    runeLevelBonus,
+                    tableSheets.SkillSheet,
+                    collectionState.GetEffects(collectionSheet));
             }
 
             // create new or login

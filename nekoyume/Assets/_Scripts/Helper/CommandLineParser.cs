@@ -1,6 +1,7 @@
 using CommandLine;
 using CommandLine.Text;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Nekoyume.Helper
@@ -10,8 +11,13 @@ namespace Nekoyume.Helper
         public static T GetCommandLineOptions<T>() where T : class
         {
             var args = Environment.GetCommandLineArgs();
-            var argsString = string.Join(" ", args);
-            Debug.Log($"[CommandLineParser] GetCommandLineOptions<{typeof(T).Name}> invoked" +
+
+            // args may contain raw private key string. like "--private-key={private-key}".
+            // and, WE MUST DO NOT LOG PRIVATE KEY.
+            var filteredArgs = args.Where(str =>
+                !str.Contains("private")).ToList();
+            var argsString = string.Join(" ", filteredArgs);
+            NcDebug.Log($"[CommandLineParser] GetCommandLineOptions<{typeof(T).Name}> invoked" +
                       $" with {argsString}");
 
             var parser = new Parser(with => with.IgnoreUnknownArguments = true);
@@ -21,7 +27,7 @@ namespace Nekoyume.Helper
                 return ((Parsed<T>)result).Value;
             }
 
-            result.WithNotParsed(_ => Debug.Log(HelpText.AutoBuild(result)));
+            result.WithNotParsed(_ => NcDebug.Log(HelpText.AutoBuild(result)));
             return null;
         }
     }

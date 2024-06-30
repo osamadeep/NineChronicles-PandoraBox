@@ -74,6 +74,9 @@ namespace Nekoyume.UI.Module
         private GameObject optionAreaRoot;
 
         [SerializeField]
+        private TextMeshProUGUI expText;
+
+        [SerializeField]
         private TextMeshProUGUI tradableText;
 
         [SerializeField]
@@ -85,12 +88,13 @@ namespace Nekoyume.UI.Module
         [SerializeField]
         private SkillPositionTooltip skillTooltip;
 
-        public void Set(ItemBase itemBase, int itemCount, bool levelLimit)
+        public void Set(ItemBase itemBase, int itemCount, bool levelLimit, bool displayExp = true)
         {
             UpdateViewIconArea(itemBase, itemCount, levelLimit);
             UpdateDescriptionArea(itemBase);
             UpdateOptionArea(itemBase, itemCount);
             UpdateTradableText(itemBase);
+            UpdateExpText(displayExp ? itemBase : null);
         }
 
         private void UpdateOptionArea(ItemBase itemBase, int itemCount)
@@ -170,7 +174,7 @@ namespace Nekoyume.UI.Module
                         var statView = statViewList[i];
                         if (i == 0)
                         {
-                            statView.Show(mainStatType, (int)mainStatTotalValue);
+                            statView.Show(mainStatType, mainStatTotalValue);
                             continue;
                         }
 
@@ -179,7 +183,7 @@ namespace Nekoyume.UI.Module
 
                     foreach (var (type, value, count) in optionInfo.StatOptions)
                     {
-                        AddStat(type, (int)value, count);
+                        AddStat(type, value, count);
                         statCount += count;
                     }
 
@@ -200,17 +204,20 @@ namespace Nekoyume.UI.Module
 
                     var stats = itemUsable.StatsMap.GetDecimalStats(true).ToList();
                     var usableStatCount = stats.Count;
-                    for(var i = 0; i < statViewList.Count; i++)
+                    for (var i = 0; i < statViewList.Count; i++)
                     {
                         var statView = statViewList[i];
                         if (i < usableStatCount)
                         {
-                            statView.Show(stats[i].StatType, stats[i].TotalValueAsInt);
+                            statView.Show(stats[i].StatType, stats[i].TotalValueAsLong);
                             continue;
                         }
 
                         statView.Hide();
                     }
+
+                    iconArea.countText.text = L10nManager.Localize("UI_COUNT_FORMAT", itemCount);
+                    iconArea.countObject.SetActive(true);
 
                     break;
                 }
@@ -231,7 +238,7 @@ namespace Nekoyume.UI.Module
                         var statView = statViewList[i];
                         if (i < usableStatCount)
                         {
-                            statView.Show(stats[i].StatType, stats[i].TotalValueAsInt);
+                            statView.Show(stats[i].StatType, stats[i].TotalValueAsLong);
                             statCount++;
                             continue;
                         }
@@ -280,13 +287,13 @@ namespace Nekoyume.UI.Module
             var starImage = statView.StarImages.FirstOrDefault();
             if (starImage is null)
             {
-                Debug.LogError("Failed to get star image for option.");
+                NcDebug.LogError("Failed to get star image for option.");
                 return;
             }
             starImage.SetActive(true);
         }
 
-        private void AddStat(StatType statType, int value, int count)
+        private void AddStat(StatType statType, long value, int count)
         {
             var statView = GetDisabledStatRow();
             if (statView.Equals(default) ||
@@ -299,7 +306,7 @@ namespace Nekoyume.UI.Module
                 var starImage = statView.StarImages.FirstOrDefault(x => !x.activeSelf);
                 if (starImage is null)
                 {
-                    Debug.LogError("Failed to get star image for option.");
+                    NcDebug.LogError("Failed to get star image for option.");
                     return;
                 }
 
@@ -376,6 +383,31 @@ namespace Nekoyume.UI.Module
             tradableText.color = isTradable
                 ? Palette.GetColor(ColorType.ButtonEnabled)
                 : Palette.GetColor(ColorType.TextDenial);
+        }
+
+        public void UpdateTradableText(bool isTradable)
+        {
+            tradableText.text = isTradable
+                ? L10nManager.Localize("UI_TRADABLE")
+                : L10nManager.Localize("UI_UNTRADABLE");
+            tradableText.color = isTradable
+                ? Palette.GetColor(ColorType.ButtonEnabled)
+                : Palette.GetColor(ColorType.TextDenial);
+        }
+
+        private void UpdateExpText(ItemBase itemBase)
+        {
+            var exp = 0L;
+            if (itemBase is Equipment equipment)
+            {
+                exp = equipment.Exp;
+            }
+
+            expText.gameObject.SetActive(exp > 0);
+            if (exp > 0 && expText)
+            {
+                expText.text = $"EXP : {exp.ToCurrencyNotation()}";
+            }
         }
     }
 }

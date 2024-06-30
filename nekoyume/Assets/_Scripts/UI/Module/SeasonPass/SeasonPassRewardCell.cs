@@ -58,6 +58,10 @@ namespace Nekoyume.UI.Module
                 ItemView.GrindingCountObject.SetActive((false));
                 ItemView.LevelLimitObject.SetActive(false);
                 ItemView.RewardReceived.SetActive(false);
+                ItemView.RuneNotificationObj.SetActiveSafe(false);
+                ItemView.RuneSelectMove.SetActive(false);
+                ItemView.SelectCollectionObject.SetActive(false);
+                ItemView.SelectArrowObject.SetActive(false);
 
                 disposable?.Dispose();
 
@@ -70,13 +74,13 @@ namespace Nekoyume.UI.Module
                     {
                         var itemSheetData = Game.Game.instance.TableSheets.ItemSheet[itemInfo.Id];
                         ItemView.GradeImage.sprite = SpriteHelper.GetItemBackground(itemSheetData.Grade);
-                        
+
                         var dummyItem = ItemFactory.CreateItem(itemSheetData, new Cheat.DebugRandom());
                         itemBaseForToolTip = dummyItem;
                     }
                     catch
                     {
-                        Debug.LogError($"Can't Find Item ID {itemInfo.Id} in ItemSheet");
+                        NcDebug.LogError($"Can't Find Item ID {itemInfo.Id} in ItemSheet");
                     }
                 }
                 else if(currencyInfo != null)
@@ -249,7 +253,7 @@ namespace Nekoyume.UI.Module
             {
                 if(index > premiums.Length)
                 {
-                    Debug.LogError("[SeasonPassRewardCell] out of range premiums item");
+                    NcDebug.LogError("[SeasonPassRewardCell] out of range premiums item");
                     continue;
                 }
                 premiums[index].SetData(item, null, rewardSchema.Level, false);
@@ -260,7 +264,7 @@ namespace Nekoyume.UI.Module
             {
                 if (index > premiums.Length)
                 {
-                    Debug.LogError("[SeasonPassRewardCell] out of range premiums currency");
+                    NcDebug.LogError("[SeasonPassRewardCell] out of range premiums currency");
                     continue;
                 }
                 premiums[index].SetData(null, item, rewardSchema.Level, false);

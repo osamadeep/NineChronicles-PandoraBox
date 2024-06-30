@@ -7,6 +7,7 @@ using Nekoyume.Action;
 using Nekoyume.Arena;
 using Nekoyume.Blockchain;
 using Nekoyume.Game;
+using Nekoyume.Game.Battle;
 using Nekoyume.Game.Controller;
 using Nekoyume.GraphQL;
 using Nekoyume.Model.Item;
@@ -74,6 +75,8 @@ namespace Nekoyume.UI
 
         private readonly List<IDisposable> _disposables = new();
 
+        private int? _chooseAvatarCp;
+
         public override bool CanHandleInputEvent =>
             base.CanHandleInputEvent &&
             (startButton.Interactable || !EnoughToPlay);
@@ -116,7 +119,7 @@ namespace Nekoyume.UI
             information.Initialize();
             startButton.SetCost(CostType.ArenaTicket, TicketCountToUse);
             startButton.OnSubmitSubject
-                .Where(_ => !Game.Game.instance.IsInWorld)
+                .Where(_ => !BattleRenderer.Instance.IsOnBattle)
                 .ThrottleFirst(TimeSpan.FromSeconds(2f))
                 .Subscribe(_ => OnClickBattle())
                 .AddTo(gameObject);
@@ -137,20 +140,23 @@ namespace Nekoyume.UI
             base.Show(ignoreShowAnimation);
             _roundData = roundData;
             _info = info;
-            enemyCp.text = chooseAvatarCp.ToString();
+
+            _chooseAvatarCp = chooseAvatarCp;
+            enemyCp.text = _chooseAvatarCp.ToString();
             UpdateStartButton();
-            information.UpdateInventory(BattleType.Arena, chooseAvatarCp);
+            information.UpdateInventory(BattleType.Arena, _chooseAvatarCp);
             coverToBlockClick.SetActive(false);
             AgentStateSubject.Crystal.Subscribe(_ => ReadyToBattle()).AddTo(_disposables);
         }
 
         public void UpdateInventory()
         {
-            information.UpdateInventory(BattleType.Arena);
+            information.UpdateInventory(BattleType.Arena, _chooseAvatarCp);
         }
 
         public override void Close(bool ignoreCloseAnimation = false)
         {
+            _chooseAvatarCp = null;
             _disposables.DisposeAllAndClear();
             base.Close(ignoreCloseAnimation);
         }
@@ -182,7 +188,7 @@ namespace Nekoyume.UI
         {
             AudioController.PlayClick();
 
-            if (Game.Game.instance.IsInWorld)
+            if (BattleRenderer.Instance.IsOnBattle)
             {
                 return;
             }
@@ -222,8 +228,8 @@ namespace Nekoyume.UI
         {
             coverToBlockClick.SetActive(true);
             var game = Game.Game.instance;
-            game.IsInWorld = true;
             game.Stage.IsShowHud = true;
+            BattleRenderer.Instance.IsOnBattle = true;
 
             var headerMenuStatic = Find<HeaderMenuStatic>();
             var currencyImage = costType switch
@@ -297,8 +303,6 @@ namespace Nekoyume.UI
         private void UpdateStartButton()
         {
             var (equipments, costumes) = States.Instance.GetEquippedItems(BattleType.Arena);
-            var runes = States.Instance.GetEquippedRuneStates(BattleType.Arena)
-                .Select(x => x.RuneId).ToList();
             var consumables = information.GetEquippedConsumables().Select(x => x.Id).ToList();
 
             var isEquipmentValid = Util.CanBattle(equipments, costumes, consumables);
@@ -319,7 +323,7 @@ namespace Nekoyume.UI
 
         private static bool IsIntervalValid(long blockIndex)
         {
-            var lastBattleBlockIndex = RxProps.LastBattleBlockIndex.Value;
+            var lastBattleBlockIndex = RxProps.LastArenaBattleBlockIndex.Value;
             var battleArenaInterval = States.Instance.GameConfigState.BattleArenaInterval;
 
             return blockIndex - lastBattleBlockIndex >= battleArenaInterval;

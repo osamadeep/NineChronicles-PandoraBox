@@ -103,7 +103,7 @@ namespace Nekoyume.Helper
             var options = CommandLineParser.GetCommandLineOptions<Url>();
             if (options is { Empty: false })
             {
-                Debug.Log($"Get options from commandline.");
+                NcDebug.Log($"Get options from commandline.");
                 return options;
             }
 
@@ -119,22 +119,26 @@ namespace Nekoyume.Helper
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 ReadCommentHandling = JsonCommentHandling.Skip,
             };
-#if !UNITY_EDITOR && UNITY_ANDROID
+#if !UNITY_EDITOR && (UNITY_ANDROID)
             UnityEngine.WWW www = new UnityEngine.WWW(localPath);
             while (!www.isDone)
             {
                 // wait for data load
             }
             return JsonSerializer.Deserialize<Url>(www.text, jsonOptions);
-#else
-            if (File.Exists(localPath))
-            {
-                Debug.Log($"Get url from local: {localPath}");
-                return JsonSerializer.Deserialize<Url>(File.ReadAllText(localPath), jsonOptions);
-            }
 #endif
-            Debug.LogErrorFormat("Failed to find {0}. Using default url.", localPath);
-            return new Url();
+            try
+            {
+                NcDebug.Log($"Get url from local: {localPath}");
+                var jsonText = File.ReadAllText(localPath);
+                NcDebug.Log($"loaded plain json: {jsonText}");
+                return JsonSerializer.Deserialize<Url>(jsonText, jsonOptions);
+            }
+            catch(Exception e)
+            {
+                NcDebug.LogErrorFormat("Failed to find {0}. Using default url.\nException: {1}", localPath, e);
+                return new Url();
+            }
         }
     }
 }

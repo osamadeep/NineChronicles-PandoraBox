@@ -19,6 +19,7 @@ namespace Nekoyume.UI.Module.Lobby
         Dcc,
         PatrolReward,
         SeasonPass,
+        Collection,
     }
 
     public class MainMenu : MonoBehaviour
@@ -49,7 +50,7 @@ namespace Nekoyume.UI.Module.Lobby
 
         #region Mono
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (!GetComponentInParent<Menu>())
                 throw new NotFoundComponentException<Menu>();
@@ -58,7 +59,6 @@ namespace Nekoyume.UI.Module.Lobby
             {
                 case MenuType.Combination:
                     _requireStage = Game.LiveAsset.GameConfig.RequiredStage.WorkShop;
-
                     break;
                 case MenuType.Ranking:
                     _requireStage = Game.LiveAsset.GameConfig.RequiredStage.Arena;
@@ -77,11 +77,15 @@ namespace Nekoyume.UI.Module.Lobby
                 case MenuType.WorldBoss:
                     _requireStage = Game.LiveAsset.GameConfig.RequiredStage.WorldBoss;
                     break;
+                case MenuType.SeasonPass:
+                    _requireStage = Game.LiveAsset.GameConfig.RequiredStage.SeasonPass;
+                    break;
                 // always allow
                 case MenuType.Staking:
                 case MenuType.Dcc:
                 case MenuType.PatrolReward:
-                    _requireStage = TutorialEndStage;
+                case MenuType.Collection:
+                    _requireStage = Game.LiveAsset.GameConfig.RequiredStage.TutorialEnd;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

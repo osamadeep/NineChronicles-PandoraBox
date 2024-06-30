@@ -55,7 +55,7 @@ namespace Nekoyume.UI
 
         public void Show(
             int bossId,
-            int score,
+            long score,
             bool isBest,
             List<FungibleAssetValue> battleRewards,
             List<FungibleAssetValue> killRewards)
@@ -91,7 +91,7 @@ namespace Nekoyume.UI
                     if (RuneFrontHelper.TryGetRuneData(ticker, out var data))
                     {
                         var view = rewardViews.First(x => !x.gameObject.activeSelf);
-                        var count = Convert.ToInt32(reward.GetQuantityString());
+                        var count = MathematicsExtensions.ConvertToInt32(reward.GetQuantityString());
                         view.Set(data, count);
                         view.gameObject.SetActive(true);
                     }
@@ -101,7 +101,7 @@ namespace Nekoyume.UI
             RefreshSeasonPassCourageAmount();
         }
 
-        public void ShowAsPractice(int bossId, int score)
+        public void ShowAsPractice(int bossId, long score)
         {
             foreach (var view in rewardViews)
             {

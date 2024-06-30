@@ -11,6 +11,7 @@ using Nekoyume.TableData.Event;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.Extensions;
+using EventType = Nekoyume.EnumType.EventType;
 
 namespace Nekoyume.UI.Module
 {
@@ -153,6 +154,8 @@ namespace Nekoyume.UI.Module
             StageType stageType,
             List<(int stageId, bool hasBoss)> stageTuples)
         {
+            var eventType = stageType == StageType.EventDungeon ? EventManager.GetEventInfo().EventType : EventType.Default;
+
             var stageWaveRowsCount = stageTuples.Count;
             var stageOffset = 0;
             var nextPageShouldHide = false;
@@ -190,7 +193,8 @@ namespace Nekoyume.UI.Module
                         var stageModel = new WorldMapStage.ViewModel(
                             SharedViewModel.StageType,
                             stageTuple.stageId,
-                            stageTuple.hasBoss,
+                            GetBossType(stageTuple.stageId, stageTuple.hasBoss),
+                            eventType,
                             WorldMapStage.State.Normal);
 
                         stageModels.Add(stageModel);
@@ -218,6 +222,26 @@ namespace Nekoyume.UI.Module
                 if (stageOffset >= stageWaveRowsCount)
                 {
                     nextPageShouldHide = true;
+                }
+
+                // todo: Remove this method, Read data from sheet
+                BossType GetBossType(int stageId, bool hasBoss)
+                {
+                    if (!hasBoss)
+                    {
+                        return BossType.None;
+                    }
+
+                    if (stageType == StageType.EventDungeon)
+                    {
+                        return stageId % 20 == 0
+                            ? BossType.LastBoss
+                            : BossType.MiddleBoss;
+                    }
+
+                    return stageId % 50 == 0
+                        ? BossType.LastBoss
+                        : BossType.MiddleBoss;
                 }
             }
 

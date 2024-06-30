@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
+using Cysharp.Threading.Tasks;
+using Libplanet.Action.State;
 using Libplanet.Crypto;
 using Nekoyume.Action;
 using Nekoyume.Arena;
@@ -18,6 +20,8 @@ using static Lib9c.SerializeKeys;
 
 namespace Nekoyume.State
 {
+    using Libplanet.Common;
+    using System.Security.Cryptography;
     using UniRx;
 
     public static partial class RxProps
@@ -36,10 +40,10 @@ namespace Nekoyume.State
 
         public static IReadOnlyReactiveProperty<int> PurchasedDuringInterval =>
             _purchasedDuringInterval;
-        private static readonly ReactiveProperty<long> _lastBattleBlockIndex = new();
+        private static readonly ReactiveProperty<long> _lastArenaBattleBlockIndex = new();
 
-        public static IReadOnlyReactiveProperty<long> LastBattleBlockIndex =>
-            _lastBattleBlockIndex;
+        public static IReadOnlyReactiveProperty<long> LastArenaBattleBlockIndex =>
+            _lastArenaBattleBlockIndex;
         public static IReadOnlyReactiveProperty<ArenaParticipantModel> PlayerArenaInfo =>
             _playerArenaInfo;
         public static
@@ -141,7 +145,7 @@ namespace Nekoyume.State
 
         private static async Task<(ArenaInformation current, ArenaInformation next)>
             UpdateArenaInfoTupleAsync(
-                (ArenaInformation current, ArenaInformation next) previous)
+                (ArenaInformation current, ArenaInformation next) previous, HashDigest<SHA256> stateRootHash)
         {
             var avatarAddress = _states.CurrentAvatarState?.address;
             if (!avatarAddress.HasValue)
@@ -160,7 +164,7 @@ namespace Nekoyume.State
             var sheet = _tableSheets.ArenaSheet;
             if (!sheet.TryGetCurrentRound(blockIndex, out var currentRoundData))
             {
-                Debug.Log($"Failed to get current round data. block index({blockIndex})");
+                NcDebug.Log($"Failed to get current round data. block index({blockIndex})");
                 return previous;
             }
 
@@ -175,6 +179,8 @@ namespace Nekoyume.State
                     nextRoundData.Round)
                 : default;
             var dict = await _agent.GetStateBulkAsync(
+                stateRootHash,
+                ReservedAddresses.LegacyAccount,
                 new[]
                 {
                     currentArenaInfoAddress,
@@ -193,7 +199,8 @@ namespace Nekoyume.State
         }
 
         private static async Task<List<ArenaParticipantModel>>
-            UpdateArenaInformationOrderedWithScoreAsync(List<ArenaParticipantModel> previous)
+            UpdateArenaInformationOrderedWithScoreAsync(
+            List<ArenaParticipantModel> previous, HashDigest<SHA256> stateRootHash)
         {
             var avatarAddress = _states.CurrentAvatarState?.address;
             List<ArenaParticipantModel> avatarAddrAndScoresWithRank =
@@ -226,12 +233,17 @@ namespace Nekoyume.State
                 playerArenaInfoAddr.Derive(BattleArena.PurchasedCountKey);
             var arenaAvatarAddress =
                 ArenaAvatarState.DeriveAddress(currentAvatarAddr);
+            var playerScoreAddr = ArenaScore.DeriveAddress(currentAvatarAddr,
+                currentRoundData.ChampionshipId,
+                currentRoundData.Round);
             var addrBulk = new List<Address>
             {
                 purchasedCountAddress,
                 arenaAvatarAddress,
+                playerScoreAddr
             };
-            var stateBulk = await agent.GetStateBulkAsync(addrBulk);
+            var stateBulk =
+                await agent.GetStateBulkAsync(stateRootHash, ReservedAddresses.LegacyAccount, addrBulk);
             var purchasedCountDuringInterval = stateBulk[purchasedCountAddress] is Integer iValue
                 ? (int)iValue
                 : 0;
@@ -242,17 +254,40 @@ namespace Nekoyume.State
             try
             {
                 var response = await Game.Game.instance.RpcGraphQLClient.QueryArenaInfoAsync(currentAvatarAddr);
-                arenaInfo = response.StateQuery.ArenaParticipants;
+                // Arrange my information so that it comes first when it's the same score.
+                arenaInfo = response.StateQuery.ArenaParticipants
+                    .ToList();
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                NcDebug.LogException(e);
                 // TODO: this is temporary code for local testing.
                 arenaInfo.AddRange(_states.AvatarStates.Values.Select(avatar => new ArenaParticipantModel
                 {
                     AvatarAddr = avatar.address,
                     NameWithHash = avatar.NameWithHash,
                 }));
+            }
+
+            string playerGuildName = null;
+            if (Game.Game.instance.GuildModels.Any())
+            {
+                var guildModels = Game.Game.instance.GuildModels;
+                foreach (var guildModel in guildModels)
+                {
+                    if (guildModel.AvatarModels.Any(a => a.AvatarAddress == currentAvatarAddr))
+                    {
+                        playerGuildName = guildModel.Name;
+                    }
+                    foreach (var info in arenaInfo)
+                    {
+                        var model = guildModel.AvatarModels.FirstOrDefault(a => a.AvatarAddress == info.AvatarAddr);
+                        if (model is not null)
+                        {
+                            info.GuildName = guildModel.Name;
+                        }
+                    }
+                }
             }
 
             var portraitId = Util.GetPortraitId(BattleType.Arena);
@@ -266,12 +301,13 @@ namespace Nekoyume.State
                 NameWithHash = currentAvatar.NameWithHash,
                 PortraitId = portraitId,
                 Cp = cp,
-                Level = currentAvatar.level
+                Level = currentAvatar.level,
+                GuildName = playerGuildName,
             };
 
             if (!arenaInfo.Any())
             {
-                Debug.Log($"Failed to get {nameof(ArenaParticipantModel)}");
+                NcDebug.Log($"Failed to get {nameof(ArenaParticipantModel)}");
 
                 // TODO!!!! [`_playersArenaParticipant`]를 이 문맥이 아닌 곳에서
                 // 따로 처리합니다.
@@ -282,21 +318,54 @@ namespace Nekoyume.State
             var playerArenaInfo = arenaInfo.FirstOrDefault(p => p.AvatarAddr == currentAvatarAddr);
             if (playerArenaInfo is null)
             {
-                playerArenaInf.Rank = arenaInfo.Max(r => r.Rank);
+                var maxRank = arenaInfo.Max(r => r.Rank);
+                var firstMaxRankIndex = arenaInfo.FindIndex(info => info.Rank == maxRank);
+                playerArenaInf.Rank = maxRank;
                 playerArenaInfo = playerArenaInf;
-                arenaInfo.Add(playerArenaInfo);
+                arenaInfo.Insert(firstMaxRankIndex, playerArenaInfo);
             }
             else
             {
                 playerArenaInfo.Cp = cp;
                 playerArenaInfo.PortraitId = portraitId;
+                var playerScoreValue = ((List)stateBulk[playerScoreAddr])?[1];
+                playerArenaInfo.Score = playerScoreValue == null ? 0 : (Integer)playerScoreValue;
             }
-            _playerArenaInfo.SetValueAndForceNotify(playerArenaInfo);
+
             // NOTE: If the [`addrBulk`] is too large, and split and get separately.
             _purchasedDuringInterval.SetValueAndForceNotify(purchasedCountDuringInterval);
-            _lastBattleBlockIndex.SetValueAndForceNotify(lastBattleBlockIndex);
+            _lastArenaBattleBlockIndex.SetValueAndForceNotify(lastBattleBlockIndex);
 
-            return arenaInfo;
+            // Calculate and Reset Rank.
+            var arenaInfoList = arenaInfo
+                .OrderByDescending(participant => participant.Score)
+                .ThenByDescending(participant => participant.AvatarAddr == currentAvatarAddr)
+                .ToList();
+            var playerIndex =
+                arenaInfoList.FindIndex(model => model.AvatarAddr == currentAvatarAddr);
+            var avatarCount = arenaInfoList.Count;
+            if (playerIndex == 0)
+            {
+                playerArenaInfo.Rank = 1;
+            }
+            else if (playerIndex < avatarCount - 1) // avoid out of range exception
+            {
+                // 다음 순서에 위치한 유저가 같은 점수일 경우, 같은 등수로 표기한다.
+                // 같지 않을 경우, 앞 순서에 있는 유저의 등수 - 1로 표기한다.
+                playerArenaInfo.Rank =
+                    arenaInfoList[playerIndex + 1].Score == playerArenaInfo.Score
+                        ? arenaInfoList[playerIndex + 1].Rank
+                        : arenaInfoList[playerIndex - 1].Rank + 1;
+            }
+
+            SetArenaInfoOnMainThreadAsync(playerArenaInfo).Forget();
+            return arenaInfoList;
+        }
+
+        private static async UniTask SetArenaInfoOnMainThreadAsync(ArenaParticipantModel playerArenaInfo)
+        {
+            await UniTask.SwitchToMainThread();
+            _playerArenaInfo.SetValueAndForceNotify(playerArenaInfo);
         }
     }
 }

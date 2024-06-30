@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nekoyume.Game.Character;
 using UnityEngine;
 using DG.Tweening;
 using Nekoyume.EnumType;
-using Nekoyume.Game.ScriptableObject;
 using Nekoyume.Helper;
 using Spine;
 using Spine.Unity;
@@ -15,8 +13,11 @@ namespace Nekoyume.Game.Avatar
 {
     public sealed class AvatarSpineController : MonoBehaviour
     {
-        private const string DefaultPmaShader = "Spine/Skeleton";
+        private const string DefaultPmaShader = "Spine/Skeleton Tint";
         private const string WeaponSlot = "weapon";
+
+        [SerializeField]
+        private Character.Character owner;
 
         [SerializeField]
         private List<AvatarParts> parts;
@@ -28,20 +29,17 @@ namespace Nekoyume.Game.Avatar
         private BoxCollider fullCostumeCollider;
 
         [SerializeField]
-        private AvatarScriptableObject avatarScriptableObject;
-
-        [SerializeField]
         private GameObject auraPos;
 
         private Shader _shader;
         private Spine.Animation _targetAnimation;
-        private Sequence _doFadeSequence;
+        private DG.Tweening.Sequence _doFadeSequence;
         private GameObject _cachedWeaponVFX;
         private GameObject _cachedAuraVFX;
         private readonly List<Tweener> _fadeTweener = new();
         private bool _isActiveFullCostume;
         private readonly Dictionary<AvatarPartsType, SkeletonAnimation> _parts = new();
-        private GameObject _prevAuraObj;
+        private GameObject _prevAuraPrefab;
         private GameObject _prevWeaponObj;
 
         public BoxCollider Collider => _isActiveFullCostume ? fullCostumeCollider : bodyCollider;
@@ -217,9 +215,10 @@ namespace Nekoyume.Game.Avatar
             }
 
             var skeletonAnimation = _parts[AvatarPartsType.body_front];
-            var weaponSlotIndex = skeletonAnimation.Skeleton.FindSlotIndex(WeaponSlot);
-            var weaponSprite = SpriteHelper.GetPlayerSpineTextureWeapon(weaponId);
-            var newWeapon = MakeAttachment(weaponSprite);
+            var weaponSlot        = skeletonAnimation.Skeleton.FindSlot(WeaponSlot);
+            var weaponSlotIndex   = weaponSlot == null ? -1 : weaponSlot.Data.Index;
+            var weaponSprite      = SpriteHelper.GetPlayerSpineTextureWeapon(weaponId);
+            var newWeapon         = MakeAttachment(weaponSprite);
             skeletonAnimation.Skeleton.Data.DefaultSkin
                 .SetAttachment(weaponSlotIndex, WeaponSlot, newWeapon);
             skeletonAnimation.Skeleton.SetSlotsToSetupPose();
@@ -243,8 +242,7 @@ namespace Nekoyume.Game.Avatar
             var boneFollower = parent.AddComponent<BoneFollower>();
             parent.transform.SetParent(transform);
             Instantiate(weaponVFXPrefab, parent.transform);
-            var weaponSlot = skeletonAnimation.Skeleton.FindSlot(WeaponSlot);
-            var boneName = weaponSlot.Bone.Data.Name;
+            var boneName = weaponSlot?.Bone.Data.Name ?? string.Empty;
             boneFollower.SkeletonRenderer = skeletonAnimation;
             boneFollower.SetBone(boneName);
             _cachedWeaponVFX = parent;
@@ -252,15 +250,24 @@ namespace Nekoyume.Game.Avatar
 
         public void UpdateAura(GameObject auraVFXPrefab = null)
         {
-            if (_prevAuraObj == auraVFXPrefab)
+            if (_prevAuraPrefab == auraVFXPrefab)
             {
+                if (auraVFXPrefab == null || _cachedAuraVFX == null)
+                {
+                    return;
+                }
+                
+                if (_cachedAuraVFX.TryGetComponent(out AuraPrefabBase cachedAuraObject))
+                {
+                    cachedAuraObject.Owner = owner;
+                }
                 return;
             }
-            _prevAuraObj = auraVFXPrefab;
+            _prevAuraPrefab = auraVFXPrefab;
 
             Destroy(_cachedAuraVFX);
 
-            if(auraVFXPrefab is null)
+            if(auraVFXPrefab == null)
             {
                 auraPos.SetActive(false);
                 return;
@@ -269,6 +276,10 @@ namespace Nekoyume.Game.Avatar
             auraPos.SetActive(true);
             var vfx = Instantiate(auraVFXPrefab, auraPos.transform);
             vfx.transform.localPosition = Vector3.zero;
+            if (vfx.TryGetComponent(out AuraPrefabBase auraPrefabBase))
+            {
+                auraPrefabBase.Owner = owner;
+            }
 
             _cachedAuraVFX = vfx;
         }
@@ -276,8 +287,15 @@ namespace Nekoyume.Game.Avatar
         public void UpdateFullCostume(int index, bool isDcc)
         {
             _isActiveFullCostume = true;
-            var name = $"{index}_SkeletonData";
-            var asset = avatarScriptableObject.FullCostume.FirstOrDefault(x => x.name == name);
+            var key   = $"{index}_SkeletonData";
+            var asset = ResourceManager.Instance.Load<SkeletonDataAsset>(key);
+
+            if (asset == null)
+            {
+                NcDebug.LogError($"Failed to load SkeletonDataAsset: {key}");
+                return;
+            }
+
             var isChange = UpdateSkeletonDataAsset(AvatarPartsType.full_costume, asset);
             if (isChange)
             {
@@ -313,10 +331,16 @@ namespace Nekoyume.Game.Avatar
                 skinTone -= 1;
             }
             var skinName = $"{index}-{skinTone}";
-            // Debug.Log($"[UpdateBody] : {preIndex} / {skinName}");
 
-            var name = $"body_skin_{preIndex}_SkeletonData";
-            var asset = avatarScriptableObject.Body.FirstOrDefault(x => x.name == name);
+            var key = $"body_skin_{preIndex}_SkeletonData";
+            var asset = ResourceManager.Instance.Load<SkeletonDataAsset>(key);
+
+            if (asset == null)
+            {
+                NcDebug.LogError($"Failed to load SkeletonDataAsset: {key}");
+                return;
+            }
+
             var isUpdatedAsset = UpdateSkeletonDataAsset(AvatarPartsType.body_back, asset);
             UpdateSkeletonDataAsset(AvatarPartsType.body_front, asset);
             var isUpdatedSkin = UpdateSkin(true, AvatarPartsType.body_back, skinName);
@@ -543,7 +567,6 @@ namespace Nekoyume.Game.Avatar
 
             skeletonAnimation.Skeleton.SetSkin(skinName);
             skeletonAnimation.Skeleton.SetSlotsToSetupPose();
-            skeletonAnimation.Skeleton.Update(0);
             return true;
         }
 
@@ -602,6 +625,29 @@ namespace Nekoyume.Game.Avatar
             }
 
             _fadeTweener.Clear();
+        }
+
+        public void SetSpineColor(Color color, int propertyID)
+        {
+            foreach (var skeletonAnimation in _parts.Values)
+            {
+                if (skeletonAnimation == null)
+                {
+                    continue;
+                }
+
+                if (skeletonAnimation.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                {
+                    var mpb = new MaterialPropertyBlock();
+                    meshRenderer.GetPropertyBlock(mpb);
+                    mpb.SetColor(propertyID, color);
+                    meshRenderer.SetPropertyBlock(mpb);
+                }
+                else
+                {
+                    NcDebug.LogError($"[{nameof(AvatarSpineController)}] No MeshRenderer found in {skeletonAnimation.name}.");
+                }
+            }
         }
     }
 }
