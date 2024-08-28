@@ -1,6 +1,7 @@
 using Libplanet;
 using Libplanet.Crypto;
 using Libplanet.KeyStore;
+using Nekoyume.Blockchain;
 using Nekoyume.Game.Controller;
 using Nekoyume.PandoraBox;
 using Nekoyume.UI;
@@ -39,7 +40,7 @@ namespace Nekoyume.PandoraBox
         [Space(10)] bool isAuth;
         int localKeystoreIndex = -1;
         int cloudCheckCounter;
-        IKeyStore KeyStore = Web3KeyStore.DefaultKeyStore;
+        //IKeyStore KeyStore = Web3KeyStore.DefaultKeyStore;
         Tuple<Guid, ProtectedPrivateKey> currentPPK;
 
         void Awake()
@@ -56,7 +57,7 @@ namespace Nekoyume.PandoraBox
                 PandoraAccounts[i].LoadData(i);
 
             // Initialize the key store with the provided path, or use the default key store if path is null
-            KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
+            //KeyStore = path is null ? Web3KeyStore.DefaultKeyStore : new Web3KeyStore(path);
 
             // Load the index of the last logged-in Pandora account from PlayerPrefs, default to 0 if not set
             Pandora.SelectedLoginAccountIndex =
@@ -139,12 +140,12 @@ namespace Nekoyume.PandoraBox
                 OnLoginSuccess =>
                 {
                     string tempAddress = "";
-                    for (int i = 0; i < KeyStore.List().Count(); i++)
+                    for (int i = 0; i < KeyManager.Instance.GetList().Count(); i++)
                     {
-                        if (KeyStore.List().ElementAt(i).Item2.Address.ToString().Substring(2, 20).ToLower() ==
+                        if (KeyManager.Instance.GetList().ElementAt(i).Item2.Address.ToString().Substring(2, 20).ToLower() ==
                             OnLoginSuccess.InfoResultPayload.AccountInfo.Username.ToLower())
                         {
-                            tempAddress = KeyStore.List().ElementAt(i).Item2.Address.ToString();
+                            tempAddress = KeyManager.Instance.GetList().ElementAt(i).Item2.Address.ToString();
                             break;
                         }
                     }
@@ -358,11 +359,11 @@ namespace Nekoyume.PandoraBox
 
             // Look up the address and password for the newly registered user from the key store
             currentPPK = null;
-            for (int i = 0; i < KeyStore.List().Count(); i++)
-                if (KeyStore.List().ElementAt(i).Item2.Address.ToString().Substring(2, 20).ToLower() ==
+            for (int i = 0; i < KeyManager.Instance.GetList().Count(); i++)
+                if (KeyManager.Instance.GetList().ElementAt(i).Item2.Address.ToString().Substring(2, 20).ToLower() ==
                     username.ToLower())
                 {
-                    currentPPK = KeyStore.List().ElementAt(i);
+                    currentPPK = KeyManager.Instance.GetList().ElementAt(i);
                     break;
                 }
 
@@ -394,15 +395,14 @@ namespace Nekoyume.PandoraBox
             if (nineLoginRememberToggle.isOn)
             {
                 loginSystem.loginField.text = slot.AddressPassword;
-                Login9cAccount();
+                Login9cAccount(slot.AddressPassword);
             }
         }
 
-        void Login9cAccount()
+        void Login9cAccount(string privateKey)
         {
             var loginSystem = Widget.Find<LoginSystem>();
-            loginSystem._privateKey = GetKey(loginSystem.loginField.text);
-            if (!(loginSystem._privateKey is null))
+            if (KeyManager.Instance.Has(privateKey))
             {
                 //save address password
                 var slot = PandoraAccounts[Pandora.SelectedLoginAccountIndex].SlotSettings;
@@ -414,7 +414,7 @@ namespace Nekoyume.PandoraBox
                 }
 
                 //if everything is ok
-                loginSystem.Login = true;
+                //loginSystem.Login = true;
                 loginSystem.Close();
             }
             else

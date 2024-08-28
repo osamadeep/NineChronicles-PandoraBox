@@ -118,7 +118,9 @@ namespace PlayFab.MultiplayerModels
         NCasT4_v3,
         Ddv4,
         Ddsv4,
-        HBv3
+        HBv3,
+        Ddv5,
+        Ddsv5
     }
 
     public enum AzureVmSize
@@ -191,7 +193,17 @@ namespace PlayFab.MultiplayerModels
         Standard_HB120_32rs_v3,
         Standard_HB120_64rs_v3,
         Standard_HB120_96rs_v3,
-        Standard_HB120rs_v3
+        Standard_HB120rs_v3,
+        Standard_D2d_v5,
+        Standard_D4d_v5,
+        Standard_D8d_v5,
+        Standard_D16d_v5,
+        Standard_D32d_v5,
+        Standard_D2ds_v5,
+        Standard_D4ds_v5,
+        Standard_D8ds_v5,
+        Standard_D16ds_v5,
+        Standard_D32ds_v5
     }
 
     [Serializable]
@@ -617,6 +629,10 @@ namespace PlayFab.MultiplayerModels
         /// </summary>
         public List<GameCertificateReferenceParams> GameCertificateReferences;
         /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReferenceParams> GameSecretReferences;
+        /// <summary>
         /// The Linux instrumentation configuration for the build.
         /// </summary>
         public LinuxInstrumentationConfiguration LinuxInstrumentationConfiguration;
@@ -695,6 +711,10 @@ namespace PlayFab.MultiplayerModels
         /// The game certificates for the build.
         /// </summary>
         public List<GameCertificateReference> GameCertificateReferences;
+        /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReference> GameSecretReferences;
         /// <summary>
         /// The Linux instrumentation configuration for this build.
         /// </summary>
@@ -777,6 +797,10 @@ namespace PlayFab.MultiplayerModels
         /// The game certificates for the build.
         /// </summary>
         public List<GameCertificateReferenceParams> GameCertificateReferences;
+        /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReferenceParams> GameSecretReferences;
         /// <summary>
         /// The directory containing the game executable. This would be the start path of the game assets that contain the main game
         /// server executable. If not provided, a best effort will be made to extract it from the start game command.
@@ -861,6 +885,10 @@ namespace PlayFab.MultiplayerModels
         /// The game certificates for the build.
         /// </summary>
         public List<GameCertificateReference> GameCertificateReferences;
+        /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReference> GameSecretReferences;
         /// <summary>
         /// The directory containing the game executable. This would be the start path of the game assets that contain the main game
         /// server executable. If not provided, a best effort will be made to extract it from the start game command.
@@ -950,12 +978,16 @@ namespace PlayFab.MultiplayerModels
         /// </summary>
         public List<GameCertificateReferenceParams> GameCertificateReferences;
         /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReferenceParams> GameSecretReferences;
+        /// <summary>
         /// The working directory for the game process. If this is not provided, the working directory will be set based on the
         /// mount path of the game server executable.
         /// </summary>
         public string GameWorkingDirectory;
         /// <summary>
-        /// The instrumentation configuration for the build.
+        /// The instrumentation configuration for the Build. Used only if it is a Windows Build.
         /// </summary>
         public InstrumentationConfiguration InstrumentationConfiguration;
         /// <summary>
@@ -963,6 +995,10 @@ namespace PlayFab.MultiplayerModels
         /// detect any breaking changes before they are released to retail. Retail builds should set this value to false.
         /// </summary>
         public bool? IsOSPreview;
+        /// <summary>
+        /// The Linux instrumentation configuration for the Build. Used only if it is a Linux Build.
+        /// </summary>
+        public LinuxInstrumentationConfiguration LinuxInstrumentationConfiguration;
         /// <summary>
         /// Metadata to tag the build. The keys are case insensitive. The build metadata is made available to the server through
         /// Game Server SDK (GSDK).Constraints: Maximum number of keys: 30, Maximum key length: 50, Maximum value length: 100
@@ -1036,6 +1072,10 @@ namespace PlayFab.MultiplayerModels
         /// </summary>
         public List<GameCertificateReference> GameCertificateReferences;
         /// <summary>
+        /// The game secrets for the build.
+        /// </summary>
+        public List<GameSecretReference> GameSecretReferences;
+        /// <summary>
         /// The working directory for the game process. If this is not provided, the working directory will be set based on the
         /// mount path of the game server executable.
         /// </summary>
@@ -1049,6 +1089,10 @@ namespace PlayFab.MultiplayerModels
         /// detect any breaking changes before they are released to retail. Retail builds should set this value to false.
         /// </summary>
         public bool? IsOSPreview;
+        /// <summary>
+        /// The Linux instrumentation configuration for this build.
+        /// </summary>
+        public LinuxInstrumentationConfiguration LinuxInstrumentationConfiguration;
         /// <summary>
         /// The metadata of the build.
         /// </summary>
@@ -1599,6 +1643,22 @@ namespace PlayFab.MultiplayerModels
         public string VmId;
     }
 
+    /// <summary>
+    /// Deletes a multiplayer server game secret.
+    /// </summary>
+    [Serializable]
+    public class DeleteSecretRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The name of the secret.
+        /// </summary>
+        public string Name;
+    }
+
     [Serializable]
     public class DifferenceRule : PlayFabBaseModel
     {
@@ -1913,6 +1973,24 @@ namespace PlayFab.MultiplayerModels
         /// <summary>
         /// The name of the game certificate. This name should match the name of a certificate that was previously uploaded to this
         /// title.
+        /// </summary>
+        public string Name;
+    }
+
+    [Serializable]
+    public class GameSecretReference : PlayFabBaseModel
+    {
+        /// <summary>
+        /// The name of the game secret. This name should match the name of a secret that was previously added to this title.
+        /// </summary>
+        public string Name;
+    }
+
+    [Serializable]
+    public class GameSecretReferenceParams : PlayFabBaseModel
+    {
+        /// <summary>
+        /// The name of the game secret. This name should match the name of a secret that was previously added to this title.
         /// </summary>
         public string Name;
     }
@@ -2730,6 +2808,45 @@ namespace PlayFab.MultiplayerModels
     }
 
     /// <summary>
+    /// Preview: Request to join a lobby as a server. Only callable by a game_server entity and this is restricted to client
+    /// owned lobbies which are using connections.
+    /// </summary>
+    [Serializable]
+    public class JoinLobbyAsServerRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// A field which indicates which lobby the game_server will be joining. This field is opaque to everyone except the Lobby
+        /// service.
+        /// </summary>
+        public string ConnectionString;
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The private key-value pairs which are visible to all entities in the lobby but can only be modified by the joined
+        /// server.At most 30 key - value pairs may be stored here, keys are limited to 30 characters and values to 1000.The total
+        /// size of all serverData values may not exceed 4096 bytes.
+        /// </summary>
+        public Dictionary<string,string> ServerData;
+        /// <summary>
+        /// The game_server entity which is joining the Lobby. If a different game_server entity has already joined the request will
+        /// fail unless the joined entity is disconnected, in which case the incoming game_server entity will replace the
+        /// disconnected entity.
+        /// </summary>
+        public EntityKey ServerEntity;
+    }
+
+    [Serializable]
+    public class JoinLobbyAsServerResult : PlayFabResultCommon
+    {
+        /// <summary>
+        /// Successfully joined lobby's id.
+        /// </summary>
+        public string LobbyId;
+    }
+
+    /// <summary>
     /// Request to join a lobby. Only a client can join a lobby.
     /// </summary>
     [Serializable]
@@ -2794,6 +2911,28 @@ namespace PlayFab.MultiplayerModels
     [Serializable]
     public class JoinMatchmakingTicketResult : PlayFabResultCommon
     {
+    }
+
+    /// <summary>
+    /// Preview: Request for server to leave a lobby. Only a game_server entity can leave and this is restricted to client owned
+    /// lobbies which are using connections.
+    /// </summary>
+    [Serializable]
+    public class LeaveLobbyAsServerRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The id of the lobby.
+        /// </summary>
+        public string LobbyId;
+        /// <summary>
+        /// The game_server entity leaving the lobby. If the game_server was subscribed to notifications, it will be unsubscribed.
+        /// If a the given game_server entity is not in the lobby, it will fail.
+        /// </summary>
+        public EntityKey ServerEntity;
     }
 
     /// <summary>
@@ -3272,6 +3411,10 @@ namespace PlayFab.MultiplayerModels
         /// deployed for the title.
         /// </summary>
         public bool? IncludeAllRegions;
+        /// <summary>
+        /// Indicates the Routing Preference used by the Qos servers. The default Routing Preference is Microsoft
+        /// </summary>
+        public string RoutingPreference;
     }
 
     [Serializable]
@@ -3285,6 +3428,43 @@ namespace PlayFab.MultiplayerModels
         /// The list of QoS servers.
         /// </summary>
         public List<QosServer> QosServers;
+        /// <summary>
+        /// The skip token for the paged response.
+        /// </summary>
+        public string SkipToken;
+    }
+
+    /// <summary>
+    /// Returns a list of multiplayer server game secrets for a title.
+    /// </summary>
+    [Serializable]
+    public class ListSecretSummariesRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The page size for the request.
+        /// </summary>
+        public int? PageSize;
+        /// <summary>
+        /// The skip token for the paged request.
+        /// </summary>
+        public string SkipToken;
+    }
+
+    [Serializable]
+    public class ListSecretSummariesResponse : PlayFabResultCommon
+    {
+        /// <summary>
+        /// The page size on the response.
+        /// </summary>
+        public int PageSize;
+        /// <summary>
+        /// The list of game secret.
+        /// </summary>
+        public List<SecretSummary> SecretSummaries;
         /// <summary>
         /// The skip token for the paged response.
         /// </summary>
@@ -3440,6 +3620,10 @@ namespace PlayFab.MultiplayerModels
         /// </summary>
         public Dictionary<string,string> SearchData;
         /// <summary>
+        /// Preview: Lobby joined server. This is not the server owner, rather the server that has joined a client owned lobby.
+        /// </summary>
+        public LobbyServer Server;
+        /// <summary>
         /// A flag which determines if connections are used. Defaults to true. Only set on create.
         /// </summary>
         public bool UseConnections;
@@ -3448,6 +3632,23 @@ namespace PlayFab.MultiplayerModels
     [Serializable]
     public class LobbyEmptyResult : PlayFabResultCommon
     {
+    }
+
+    [Serializable]
+    public class LobbyServer : PlayFabBaseModel
+    {
+        /// <summary>
+        /// Opaque string, stored on a Subscribe call, which indicates the connection a joined server has with PubSub.
+        /// </summary>
+        public string PubSubConnectionHandle;
+        /// <summary>
+        /// Key-value pairs specific to the joined server.
+        /// </summary>
+        public Dictionary<string,string> ServerData;
+        /// <summary>
+        /// The server entity key.
+        /// </summary>
+        public EntityKey ServerEntity;
     }
 
     [Serializable]
@@ -4290,6 +4491,40 @@ namespace PlayFab.MultiplayerModels
     }
 
     [Serializable]
+    public class Secret : PlayFabBaseModel
+    {
+        /// <summary>
+        /// Optional secret expiration date.
+        /// </summary>
+        public DateTime? ExpirationDate;
+        /// <summary>
+        /// A name for the secret. This is used to reference secrets in build configurations.
+        /// </summary>
+        public string Name;
+        /// <summary>
+        /// Secret value.
+        /// </summary>
+        public string Value;
+    }
+
+    [Serializable]
+    public class SecretSummary : PlayFabBaseModel
+    {
+        /// <summary>
+        /// Optional secret expiration date.
+        /// </summary>
+        public DateTime? ExpirationDate;
+        /// <summary>
+        /// The name of the secret.
+        /// </summary>
+        public string Name;
+        /// <summary>
+        /// The secret version auto-generated after upload.
+        /// </summary>
+        public string Version;
+    }
+
+    [Serializable]
     public class ServerDetails : PlayFabBaseModel
     {
         /// <summary>
@@ -4308,6 +4543,10 @@ namespace PlayFab.MultiplayerModels
         /// The server's region.
         /// </summary>
         public string Region;
+        /// <summary>
+        /// The string server ID of the multiplayer server generated by PlayFab.
+        /// </summary>
+        public string ServerId;
     }
 
     [Serializable]
@@ -4862,6 +5101,42 @@ namespace PlayFab.MultiplayerModels
     }
 
     /// <summary>
+    /// Preview: Request to update the serverData and serverEntity in case of migration. Only a game_server entity can update
+    /// this information and this is restricted to client owned lobbies which are using connections.
+    /// </summary>
+    [Serializable]
+    public class UpdateLobbyAsServerRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The id of the lobby.
+        /// </summary>
+        public string LobbyId;
+        /// <summary>
+        /// The private key-value pairs which are visible to all entities in the lobby and modifiable by the joined server.
+        /// Optional. Sets or updates key-value pairs on the lobby. Only the current lobby lobby server can set serverData. Keys may
+        /// be an arbitrary string of at most 30 characters. The total size of all serverData values may not exceed 4096 bytes.
+        /// Values are not individually limited. There can be up to 30 key-value pairs stored here. Keys are case sensitive.
+        /// </summary>
+        public Dictionary<string,string> ServerData;
+        /// <summary>
+        /// The keys to delete from the lobby serverData. Optional. Optional. Deletes key-value pairs on the lobby. Only the current
+        /// joined lobby server can delete serverData. All the specified keys will be removed from the serverData. Keys that do not
+        /// exist in the lobby are a no-op. If the key to delete exists in the serverData (same request) it will result in a bad
+        /// request.
+        /// </summary>
+        public List<string> ServerDataToDelete;
+        /// <summary>
+        /// The lobby server. Optional. Set a different server as the joined server of the lobby (there can only be 1 joined
+        /// server). When changing the server the previous server will automatically be unsubscribed.
+        /// </summary>
+        public EntityKey ServerEntity;
+    }
+
+    /// <summary>
     /// Request to update a lobby.
     /// </summary>
     [Serializable]
@@ -4970,6 +5245,26 @@ namespace PlayFab.MultiplayerModels
         /// The game certificate to upload.
         /// </summary>
         public Certificate GameCertificate;
+    }
+
+    /// <summary>
+    /// Uploads a multiplayer server game secret.
+    /// </summary>
+    [Serializable]
+    public class UploadSecretRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// Forces the secret renewal if the secret already exists. Default is false
+        /// </summary>
+        public bool? ForceUpdate;
+        /// <summary>
+        /// The game secret to add.
+        /// </summary>
+        public Secret GameSecret;
     }
 
     [Serializable]

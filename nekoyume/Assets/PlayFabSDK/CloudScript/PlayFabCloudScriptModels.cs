@@ -341,6 +341,23 @@ namespace PlayFab.CloudScriptModels
     }
 
     [Serializable]
+    public class EventHubFunctionModel : PlayFabBaseModel
+    {
+        /// <summary>
+        /// The connection string for the event hub.
+        /// </summary>
+        public string ConnectionString;
+        /// <summary>
+        /// The name of the event hub that triggers the Azure Function.
+        /// </summary>
+        public string EventHubName;
+        /// <summary>
+        /// The name the function was registered under.
+        /// </summary>
+        public string FunctionName;
+    }
+
+    [Serializable]
     public class ExecuteCloudScriptResult : PlayFabResultCommon
     {
         /// <summary>
@@ -587,6 +604,15 @@ namespace PlayFab.CloudScriptModels
         public string Username;
     }
 
+    [Serializable]
+    public class ListEventHubFunctionsResult : PlayFabResultCommon
+    {
+        /// <summary>
+        /// The list of EventHub triggered functions that are currently registered for the title.
+        /// </summary>
+        public List<EventHubFunctionModel> Functions;
+    }
+
     /// <summary>
     /// A title can have many functions, ListHttpFunctions will return a list of all the currently registered HTTP triggered
     /// functions for a given title.
@@ -675,7 +701,8 @@ namespace PlayFab.CloudScriptModels
         OpenIdConnect,
         Apple,
         NintendoSwitchAccount,
-        GooglePlayGames
+        GooglePlayGames,
+        XboxMobileStore
     }
 
     [Serializable]
@@ -960,6 +987,31 @@ namespace PlayFab.CloudScriptModels
         public string QueueName;
     }
 
+    /// <summary>
+    /// A title can have many functions, RegisterEventHubFunction associates a function name with an event hub name and
+    /// connection string.
+    /// </summary>
+    [Serializable]
+    public class RegisterEventHubFunctionRequest : PlayFabRequestCommon
+    {
+        /// <summary>
+        /// A connection string for the namespace of the event hub for the Azure Function.
+        /// </summary>
+        public string ConnectionString;
+        /// <summary>
+        /// The optional custom tags associated with the request (e.g. build number, external trace identifiers, etc.).
+        /// </summary>
+        public Dictionary<string,string> CustomTags;
+        /// <summary>
+        /// The name of the event hub for the Azure Function.
+        /// </summary>
+        public string EventHubName;
+        /// <summary>
+        /// The name of the function to register
+        /// </summary>
+        public string FunctionName;
+    }
+
     [Serializable]
     public class RegisterHttpFunctionRequest : PlayFabRequestCommon
     {
@@ -1094,7 +1146,8 @@ namespace PlayFab.CloudScriptModels
     public enum TriggerType
     {
         HTTP,
-        Queue
+        Queue,
+        EventHub
     }
 
     [Serializable]

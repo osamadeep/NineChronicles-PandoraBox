@@ -21,8 +21,142 @@ namespace PlayFab.PfEditor
         private static bool isInitialized; //used to check once, gets reset after each compile;
         public static bool isSdkSupported = true;
 
+        //change in local
+        private static int focusIndex;
+        private static bool isShiftKeyPressed = false;
+
+
+        private static void shiftKeyHandler()
+        {
+            var e = Event.current;
+            if (e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift)
+            {
+                isShiftKeyPressed = true;
+            }
+
+            if (e.type == EventType.KeyUp && (e.keyCode == KeyCode.LeftShift || e.keyCode == KeyCode.RightShift))
+            {
+                isShiftKeyPressed = false;
+            }
+        }
+        private static void SDKInputHandler()
+        {
+            var e = Event.current;
+            shiftKeyHandler();
+            if (e.type == EventType.KeyUp && e.keyCode == KeyCode.Tab)
+            {
+                if (!isShiftKeyPressed)
+                {
+                    switch (focusIndex)
+                    {
+                        case 0:
+                            EditorGUI.FocusTextInControl("remove_SDK");
+                            focusIndex = 1;
+                            break;
+                        case 1:
+                            EditorGUI.FocusTextInControl("upgrade");
+                            focusIndex = 2;
+                            break;
+                        case 2:
+                            EditorGUI.FocusTextInControl("set_my_title");
+                            focusIndex = 3;
+                            break;
+                        case 3:
+                            EditorGUI.FocusTextInControl("view_release_note");
+                            focusIndex = 4;
+                            break;
+                        case 4:
+                            GUI.FocusControl("logout");
+                            focusIndex = 0;
+                            break;
+
+                    }
+                }
+                else
+                {
+                    switch (focusIndex)
+                    {
+                        case 0:
+                            GUI.FocusControl("sdk");
+                            focusIndex = 0;
+                            break;
+                        case 1:
+                            GUI.FocusControl("remove_SDK");
+                            focusIndex = 0;
+                            break;
+                        case 2:
+                            GUI.FocusControl("upgrade");
+                            focusIndex = 1;
+                            break;
+                        case 3:
+                            GUI.FocusControl("set_my_title");
+                            focusIndex = 2;
+                            break;
+                        case 4:
+                            GUI.FocusControl("view_release_note");
+                            focusIndex = 3;
+                            break;
+
+                    }
+                }
+            }
+        }
+        private static void removeSDKInputHandler()
+        {
+            var e = Event.current;
+            shiftKeyHandler();
+            if (e.type == EventType.KeyUp && e.keyCode == KeyCode.Tab)
+            {
+                if (!isShiftKeyPressed)
+                {
+                    switch (focusIndex)
+                    {
+                        case 0:
+                            EditorGUI.FocusTextInControl("refresh");
+                            focusIndex = 0;
+                            break;
+                        case 1:
+                            EditorGUI.FocusTextInControl("install_playfabsdk");
+                            focusIndex = 1;
+                            break;
+                        case 2:
+                            GUI.FocusControl("logout");
+                            focusIndex = 2;
+                            break;
+                        case 3:
+                            EditorGUI.FocusTextInControl("refresh");
+                            focusIndex = 0;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (focusIndex)
+                    {
+                        case 0:
+                            GUI.FocusControl("logout");
+                            focusIndex = 3;
+                            break;                       
+                        case 1:
+                            GUI.FocusControl("install_playfabsdk");
+                            focusIndex = 1;
+                            break;
+                        case 2:
+                            GUI.FocusControl("refresh");
+                            focusIndex = 2;
+                            break;
+                        case 3:
+                            EditorGUI.FocusTextInControl("logout");
+                            focusIndex = 0;
+                            break;
+
+                    }
+                }
+            }
+        }
         public static void DrawSdkPanel()
         {
+            SDKInputHandler();
             if (!isInitialized)
             {
                 //SDK is installed.
@@ -39,9 +173,13 @@ namespace PlayFab.PfEditor
             }
 
             if (IsInstalled)
+            {
                 ShowSdkInstalledMenu();
+            }
             else
+            {
                 ShowSdkNotInstalledMenu();
+            }
         }
 
         private static void ShowSdkInstalledMenu()
@@ -79,7 +217,13 @@ namespace PlayFab.PfEditor
                 using (new UnityHorizontal(PlayFabEditorHelper.uiStyle.GetStyle("gpStyleClear")))
                 {
                     GUILayout.FlexibleSpace();
+                    Texture2D backgroundTexture = new Texture2D(1, 1);
+                    backgroundTexture.SetPixel(0, 0, Color.black); // Change Color.blue to the desired background color
+                    backgroundTexture.Apply();
+
                     sdkFolder = EditorGUILayout.ObjectField(sdkFolder, typeof(UnityEngine.Object), false, GUILayout.MaxWidth(200));
+                    EditorStyles.objectField.normal.background = backgroundTexture;
+                    EditorStyles.objectField.normal.textColor = new Color(1f, 1f, 1f, 2f);
                     GUILayout.FlexibleSpace();
                 }
 
@@ -95,7 +239,7 @@ namespace PlayFab.PfEditor
                     {
 
                         GUILayout.FlexibleSpace();
-
+                        GUI.SetNextControlName("remove_SDK");
                         if (GUILayout.Button("REMOVE SDK", PlayFabEditorHelper.uiStyle.GetStyle("textButton"), GUILayout.MinHeight(32), GUILayout.MinWidth(200)))
                         {
                             RemoveSdk();
@@ -144,6 +288,7 @@ namespace PlayFab.PfEditor
                         if (ShowSDKUpgrade() && isSdkSupported)
                         {
                             GUILayout.FlexibleSpace();
+                            GUI.SetNextControlName("upgrade");
                             if (GUILayout.Button("Upgrade to " + latestSdkVersion, PlayFabEditorHelper.uiStyle.GetStyle("Button"), GUILayout.MinHeight(32)))
                             {
                                 UpgradeSdk();
@@ -168,7 +313,8 @@ namespace PlayFab.PfEditor
                     using (new UnityHorizontal())
                     {
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("SET MY TITLE", PlayFabEditorHelper.uiStyle.GetStyle("textButton")))
+                        GUI.SetNextControlName("set_my_title");
+                        if (GUILayout.Button("SET MY TITLE ->", PlayFabEditorHelper.uiStyle.GetStyle("textButton")))
                         {
                             PlayFabEditorMenu.OnSettingsClicked();
                         }
@@ -180,8 +326,8 @@ namespace PlayFab.PfEditor
             using (new UnityHorizontal(PlayFabEditorHelper.uiStyle.GetStyle("gpStyleGray1")))
             {
                 GUILayout.FlexibleSpace();
-
-                if (GUILayout.Button("VIEW RELEASE NOTES", PlayFabEditorHelper.uiStyle.GetStyle("textButton"), GUILayout.MinHeight(32), GUILayout.MinWidth(200)))
+                GUI.SetNextControlName("view_release_note");
+                if (GUILayout.Button("VIEW RELEASE NOTES ->", PlayFabEditorHelper.uiStyle.GetStyle("textButton"), GUILayout.MinHeight(32), GUILayout.MinWidth(200)))
                 {
                     Application.OpenURL("https://docs.microsoft.com/en-us/gaming/playfab/release-notes/");
                 }
@@ -192,6 +338,7 @@ namespace PlayFab.PfEditor
 
         private static void ShowSdkNotInstalledMenu()
         {
+            removeSDKInputHandler();
             using (new UnityVertical(PlayFabEditorHelper.uiStyle.GetStyle("gpStyleGray1")))
             {
                 var labelStyle = new GUIStyle(PlayFabEditorHelper.uiStyle.GetStyle("titleLabel"));
@@ -202,9 +349,11 @@ namespace PlayFab.PfEditor
                 using (new UnityHorizontal(PlayFabEditorHelper.uiStyle.GetStyle("gpStyleGray1")))
                 {
                     GUILayout.FlexibleSpace();
+                    GUI.SetNextControlName("refresh");
                     if (GUILayout.Button("Refresh", PlayFabEditorHelper.uiStyle.GetStyle("Button"), GUILayout.MaxWidth(buttonWidth), GUILayout.MinHeight(32)))
                         playFabSettingsType = null;
                     GUILayout.FlexibleSpace();
+                    GUI.SetNextControlName("install_playfabsdk");
                     if (GUILayout.Button("Install PlayFab SDK", PlayFabEditorHelper.uiStyle.GetStyle("Button"), GUILayout.MaxWidth(buttonWidth), GUILayout.MinHeight(32)))
                         ImportLatestSDK();
 
